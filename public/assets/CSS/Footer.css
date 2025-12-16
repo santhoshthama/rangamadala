@@ -1,0 +1,127 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  font-size: 16px;
+  color: white;
+}
+
+/* ====== Footer Section ====== */
+footer {
+  background: #5A4500;
+  /* Dark rich golden brown */
+  padding-top: 50px;
+  color: #fff;
+}
+
+.footer-container {
+  width: 1140px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.footer-content {
+  width: 30%;
+  text-align: center;
+  padding: 10px;
+}
+
+h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #fff;
+  /* Gold titles */
+}
+
+.footer-content p {
+  width: 190px;
+  margin: auto;
+  padding: 7px;
+  color: #ddd;
+}
+
+.footer-content ul {
+  text-align: center;
+}
+
+.list {
+  padding: 0;
+}
+
+.list li {
+  width: auto;
+  text-align: center;
+  list-style-type: none;
+  padding: 5px;
+  position: relative;
+  color: #eee;
+}
+
+.list li::before {
+  content: '';
+  position: absolute;
+  transform: translate(-50%, -50%);
+  left: 50%;
+  top: 100%;
+  width: 0;
+  height: 2px;
+  background: #FFD700;
+  /* Bright gold hover underline */
+  transition-duration: .5s;
+}
+
+.list li:hover::before {
+  width: 70px;
+}
+
+/* ====== Social Icons ====== */
+.social-icons li {
+  display: inline-block;
+  margin: 0 8px;
+}
+
+a {
+  text-decoration: none;
+}
+
+.social-icons a i {
+  font-size: 25px;
+  color: white;
+  transition: color 0.3s ease;
+}
+
+/* Hover colors for social icons */
+.social-icons a:hover .fa-facebook {
+  color: #FFD700;
+}
+
+.social-icons a:hover .fa-instagram {
+  color: #FFD700;
+}
+
+.social-icons a:hover .fa-twitter {
+  color: #FFD700;
+}
+
+.social-icons a:hover .fa-youtube {
+  color: #FFD700;
+}
+
+/* ====== Bottom Bar ====== */
+.bottom-bar {
+  background: #3B2F00;
+  /* Even darker golden brown */
+  text-align: center;
+  padding: 10px 0;
+  margin-top: 50px;
+}
+
+.bottom-bar p {
+  color: #fff;
+  margin: 0;
+  font-size: 16px;
+  padding: 7px;
+}

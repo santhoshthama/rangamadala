@@ -1,0 +1,460 @@
+/*---------------- Reset ----------------*/
+*{
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+/*---------------- Header ----------------*/
+.header {
+    min-height: 100vh;
+    width: 100%;
+    background-image: linear-gradient(rgba(4,9,30,0.7), rgba(4,9,30,0.7)), url(../images/Homebackground.jpg);
+    background-position: center;
+    background-size: cover;
+    position: relative;
+}
+
+
+nav {
+    
+    display: flex;
+    padding: 8px 20px;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(218, 165, 32, 0.25); /* soft golden */
+}
+
+nav img{
+    padding: 0px 50px;
+    width: 60px;
+}
+
+.nav-links ul {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.nav-links ul li a {
+    line-height: 3.0;
+    padding: 0px 12px;
+    font-size: 16px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+/* Nav links hover effect */
+.nav-links ul li a:hover {
+    color: yellow; /* text turns yellow */
+    transition: color 0.3s ease; /* smooth transition */
+}
+
+.nav-links .btn {
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.nav-links .btn:hover {
+    background-color:#d4a017; /* button background turns yellow */
+    color: black; /* text color changes for contrast */
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+
+.login-btn {
+  background: transparent;
+  border: 1px solid #fff;
+  color: white;
+}
+
+.login-btn:hover {
+  background: white;
+  color: #000;
+}
+.signup-btn {
+  background-color: goldenrod;
+  color: white;
+}
+
+
+/*---------------- Hero Section ----------------*/
+.text-box {
+    width: 90%;
+    position: absolute;
+    color: #fff;
+    top: 27%; /* was 50% — now slightly lower */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+
+.text-box h1{
+    font-size: 62px;
+}
+
+.text-box p{
+    margin: 10px 0 40px;
+    font-size: 14px;
+    color:#fff;
+}
+
+.hero-btn{
+    display: inline-block;
+    text-decoration: none;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 12px 34px;
+    font-size: 13px;
+    background: transparent;
+    cursor: pointer;
+    transition: 0.5s;
+}
+
+.hero-btn:hover{
+    border: 1px solid #d4a017;
+    background: goldenrod;
+    transition: 0.5s;
+}
+
+/*---------------- Role Columns ----------------*/
+.role-columns {
+    padding: 40px;
+    text-align: center;
+    background-color: #FFF8DC; /* light beige background */
+    font-family: 'Poppins', sans-serif;
+}
+
+.tree-column-header h2 {
+    font-size: 28px;
+    margin-bottom: 40px;
+    color: #5A4500; /* dark golden brown */
+}
+
+.roles-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+}
+
+.role {
+    flex: 1 1 200px;
+    max-width: 250px;
+    background: lightgoldenrodyellow;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(218,165,32,0.4);
+    color: #5A4500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    text-decoration: none;
+}
+
+.role:hover {
+    background: linear-gradient(135deg, #ffd700, #ffecb3);
+    transform: scale(1.03);
+    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+}
+
+.role .icon {
+    width: 50px;                          
+    height: 50px;
+    border-radius: 50%;                   
+    background: radial-gradient(circle, goldenrod, #d4a017);
+    color: white;                         
+    font-size: 1.4rem;                    
+    display: flex;                         
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); 
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.role:hover .icon {
+    transform: rotate(8deg) scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+.role h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #5A4500; 
+}
+
+.role p {
+    font-size: 14px;
+    line-height: 20px;
+    margin-bottom: 15px;
+    color: #5A4500;
+}
+
+.role .btn {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 15px;
+    background: #B8860B; /* dark goldenrod button */
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background 0.3s ease;
+}
+
+.role .btn:hover {
+    background: #8B7500; /* darker golden hover */
+    color: #fff;
+}
+
+/*---------------- Swiper Section ----------------*/
+.drama-swiper {
+    width: 90%;
+    margin: 0 auto;
+    padding-top:285px; /* pushes content down inside the section */
+    padding-bottom: 40px;
+}
+
+
+.swiper-container {
+    width: 100%;
+    height: 350px;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.swiper-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/*---------------- Responsive ----------------*/
+@media(max-width: 768px) {
+    .text-box h1 {
+        font-size: 36px;
+    }
+    .roles-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    nav img{
+        padding: 0px 20px;
+        width: 50px;
+    }
+}
+/*---------------- About Section ----------------*/
+.about-section {
+    background-color:#fffdf0;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.about-container h2 {
+    font-size: 30px;
+    color: #5A4500;
+    margin-bottom: 20px;
+}
+
+.about-container p {
+    color: #5A4500;
+    max-width: 800px;
+    margin: 0 auto 30px;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.about-btn {
+    background: goldenrod;
+  color: #5A4500;
+    padding: 10px 25px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.3s ease;
+}
+
+.about-btn:hover {
+    background: #8B7500;
+}
+
+/*---------------- Community Section ----------------*/
+.community-section {
+    padding: 50px 20px;
+    background-color: #f9f9f9;
+    text-align: center;
+}
+
+.community-section h2 {
+    margin-bottom: 30px;
+    font-size: 2rem;
+    color: #333;
+}
+
+.community-card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 30px 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.community-card i {
+    font-size: 40px;
+    color: #8b5cf6;
+    margin-bottom: 15px;
+}
+
+.community-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.community-card p {
+    font-size: 0.95rem;
+    color: #666;
+}
+
+
+.community-grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 25px;
+}
+
+.community-card {
+    background: lightgoldenrodyellow;
+    padding: 25px;
+    border-radius: 12px;
+    width: 250px;
+    box-shadow: 0 4px 10px rgba(218,165,32,0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.community-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(255,215,0,0.4);
+}
+
+.community-card i {
+    font-size: 35px;
+    color: goldenrod;
+    margin-bottom: 15px;
+}
+
+.community-card h3 {
+    color: #5A4500;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+/*---------------- Gallery Section ----------------*/
+.gallery-section {
+    background-color: #fffdf0;
+    padding: 80px 40px;
+    text-align: center;
+}
+
+.gallery-section h2 {
+    color: #5A4500;
+    font-size: 32px;
+    margin-bottom: 50px;
+    font-family: "Poppins", sans-serif;
+    letter-spacing: 1px;
+}
+
+/* Responsive gallery grid */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Each image container */
+.gallery-grid img {
+    width: 100%;
+    height: 230px;
+    object-fit: cover;
+    border-radius: 18px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Hover effect — gentle zoom */
+.gallery-grid img:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+
+/*---------------- Testimonials ----------------*/
+.testimonials-section {
+  background: #fffdf0;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.testimonials-section h2 {
+  color: #5A4500;
+  font-size: 30px;
+  margin-bottom: 40px;
+}
+
+.testimonials-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+}
+
+.testimonial {
+  background: #fff;
+  border-radius: 14px;
+  padding: 25px;
+  width: 280px;
+  box-shadow: 0 6px 18px rgba(218, 165, 32, 0.25);
+  transition: all 0.3s ease;
+}
+
+.testimonial:hover {
+  transform: translateY(-8px);
+}
+
+.testimonial p {
+  color: #5A4500;
+  font-style: italic;
+  margin-bottom: 12px;
+}
+
+.testimonial h4 {
+  color: goldenrod;
+}
+
+
+
+/*---------------- Responsive Tweaks ----------------*/
+@media (max-width: 768px) {
+    .community-grid,
+    .testimonials-container,
+    .gallery-grid {
+        flex-direction: column;
+        align-items: center;
+    }
+}
