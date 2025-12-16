@@ -235,3 +235,74 @@ function initCategoryChart() {
     },
   });
 }
+
+// ===================================
+// BROWSE DRAMAS FUNCTIONALITY
+// ===================================
+document.addEventListener("DOMContentLoaded", function () {
+  const dramaSearch = document.getElementById("dramaSearch");
+  const categoryFilter = document.getElementById("categoryFilter");
+  const dramasGrid = document.getElementById("dramasGrid");
+  const dramaCount = document.getElementById("dramaCount");
+
+  if (!dramaSearch || !categoryFilter || !dramasGrid) return;
+
+  function filterDramas() {
+    const searchTerm = dramaSearch.value.toLowerCase().trim();
+    const selectedCategory = categoryFilter.value;
+    const dramaCards = dramasGrid.querySelectorAll(".drama-card");
+    let visibleCount = 0;
+
+    dramaCards.forEach((card) => {
+      const title = card.getAttribute("data-title") || "";
+      const category = card.getAttribute("data-category") || "";
+
+      const matchesSearch = !searchTerm || title.includes(searchTerm);
+      const matchesCategory = !selectedCategory || category === selectedCategory;
+
+      if (matchesSearch && matchesCategory) {
+        card.style.display = "";
+        visibleCount++;
+      } else {
+        card.style.display = "none";
+      }
+    });
+
+    // Update count
+    if (dramaCount) {
+      dramaCount.textContent = visibleCount;
+    }
+
+    // Show empty state if no results
+    const existingEmpty = dramasGrid.querySelector(".no-results-message");
+    if (existingEmpty) existingEmpty.remove();
+
+    if (visibleCount === 0 && !dramasGrid.querySelector(".empty-state")) {
+      const emptyMessage = document.createElement("div");
+      emptyMessage.className = "empty-state no-results-message";
+      emptyMessage.style.gridColumn = "1 / -1";
+      emptyMessage.innerHTML = `
+        <div class="empty-state-icon">
+          <span class="material-symbols-rounded">search_off</span>
+        </div>
+        <h3 class="empty-state-title">No Dramas Found</h3>
+        <p class="empty-state-description">Try adjusting your search or filter criteria</p>
+      `;
+      dramasGrid.appendChild(emptyMessage);
+    }
+  }
+
+  // Add event listeners
+  dramaSearch.addEventListener("input", filterDramas);
+  categoryFilter.addEventListener("change", filterDramas);
+
+  // Book button handlers
+  const bookButtons = document.querySelectorAll(".btn-book");
+  bookButtons.forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const dramaId = this.getAttribute("data-drama-id");
+      alert(`Booking functionality for Drama ID: ${dramaId} will be implemented soon!`);
+      // TODO: Implement actual booking functionality
+    });
+  });
+});

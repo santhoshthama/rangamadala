@@ -26,24 +26,25 @@ class Login
                 // set session and redirect to dashboard or home page
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['user_name'] = $user->full_name;
+                $_SESSION['user_role'] = $user->role;
 
-                if ($user->role === 'audience') {
+                // Redirect based on user role
+                if ($user->role === 'admin') {
+                    header("Location: " . ROOT . "/Admindashboard");
+                    exit;
+                } elseif ($user->role === 'artist') {
+                    header("Location: " . ROOT . "/ArtistDashboard");
+                    exit;
+                } elseif ($user->role === 'service_provider') {
+                    header("Location: " . ROOT . "/ServiceProviderDashboard");
+                    exit;
+                } elseif ($user->role === 'audience') {
                     header("Location: " . ROOT . "/Audiencedashboard");
                     exit;
                 }
 
-                if ($user->role === 'service_provider') {
-                    header("Location: " . ROOT . "/Audiencedashboard");
-                    exit;
-                }
-
-                if ($user->role === 'artist') {
-                    header("Location: " . ROOT . "/Audiencedashboard");
-                    exit;
-                }
-
-                // fallback (optional)
-                header("Location: " . ROOT . "/dashboard");
+                // fallback - redirect to home if role is unknown
+                header("Location: " . ROOT . "/Home");
                 exit();
             } else {
                 $data['error'] = "Invalid email or password.";

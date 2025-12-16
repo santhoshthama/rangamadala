@@ -49,24 +49,24 @@ background-size: cover;
 .wrapper
 {
    width: 420px;
-   background: transparent;
-   border: 2px solid rgba(255,255,255,0.2);
+   background: rgba(26, 20, 16, 0.95);
+   border: 2px solid rgba(212, 175, 55, 0.3);
    backdrop-filter: blur(20px);
-   box-shadow: 0 0 10px rgba(0,0,0,0.2);
-   color: #fff;
+   box-shadow: 0 0 30px rgba(212, 175, 55, 0.15);
+   color: #f5f0e8;
    border-radius: 10px;
    padding: 30px 40px;
 }
 .wrapper h1{
     font-size: 36px;
     text-align: center;
-
+    color: #d4af37;
 }
 .wrapper p{
     text-align: center;
     font-size: 12px;
     font-family: 'Backstage', sans-serif;
-    color:#D3D3D3;
+    color:#c9b896;
 }
 .wrapper .input-box{
     width: 100%;
@@ -77,24 +77,28 @@ background-size: cover;
 .input-box input{
     width: 100%;
     height: 100%;
-    background: transparent;
+    background: rgba(245, 240, 232, 0.05);
     border: none;
     outline: none;
-    border: 2px solid rgba(255,255,255,0.2);
+    border: 2px solid rgba(212, 175, 55, 0.2);
     border-radius: 40px;
     font-size: 16px;
-    color: #fff;
-    padding-right: 45px;
+    color: #f5f0e8;
     padding: 20px 45px 20px 20px;
+    transition: border-color 0.3s ease;
+}
+.input-box input:focus {
+    border-color: rgba(212, 175, 55, 0.6);
+    background: rgba(212, 175, 55, 0.05);
 }
 .btn:hover
 {
-    background: #dec90d;
-    color:#000;
+    background: #d4af37;
+    color: #1a1410;
     cursor: pointer;
 }
 .input-box input::placeholder{
-    color: #fff;
+    color: #8b7355;
 }
 .input-box i{
    position: absolute;
@@ -103,21 +107,21 @@ background-size: cover;
     transform: translateY(-50%);
     font-size: 20px;
     cursor: pointer;
-    color:#fff;
-
+    color: #d4af37;
 }
 .wrapper .remember-frogot{
     display: flex;
     justify-content: space-between;
     font-size: 14.5px;
     margin: -15px 0 15px;
+    color: #c9b896;
 }
 .remember-frogot label input{
-    accent-color: #fff;
+    accent-color: #d4af37;
     margin-right: 3px;
 }
 .remember-frogot a{
-    color: #fff;
+    color: #d4af37;
     text-decoration: none;
 }
 .remember-frogot a:hover{
@@ -126,15 +130,20 @@ background-size: cover;
 .wrapper .btn{
     width: 100%;
     height: 45px;
-    background: #fff;
+    background: linear-gradient(135deg, #d4af37, #aa8c2c);
     border: none;
     outline: none;
     border-radius: 40px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
     cursor: pointer;
     font-size: 16px;
-    color: #333;
+    color: #1a1410;
     font-weight: 600;
+    transition: 0.3s ease;
+}
+.wrapper .btn:hover {
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+    transform: translateY(-2px);
 }
 
 .wrapper .register-link{
@@ -143,10 +152,9 @@ background-size: cover;
     margin: 20px 0 15px;
 }
 .register-link p a{
-    color:#fff;
+    color: #d4af37;
     text-decoration: none;
     font-weight: 600;
-
 }
 .register-link p a:hover{
     text-decoration: underline;

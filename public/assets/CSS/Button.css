@@ -11,10 +11,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: transparent; /* gold */
-  color: #D3D3D3; /* black text */
+  background-color: transparent;
+  color: #d4af37;
   padding: 8px 14px;
-  border: none;
+  border: 2px solid #d4af37;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 500;
@@ -23,8 +23,8 @@
 }
 
 .back-btn:hover {
-  background-color: #fff; /* white on hover */
-  color: #000;
+  background-color: #d4af37;
+  color: #1a1410;
 }
 
 .back-btn i {

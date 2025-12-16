@@ -8,10 +8,11 @@
 
 /* ====== Footer Section ====== */
 footer {
-  background: #5A4500;
+  background: #1a1410;
   /* Dark rich golden brown */
   padding-top: 50px;
-  color: #fff;
+  color: #f5f0e8;
+  border-top: 2px solid rgba(212, 175, 55, 0.3);
 }
 
 .footer-container {

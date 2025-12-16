@@ -69,7 +69,7 @@
       </nav>
 
       <div class="sidebar-footer">
-        <a href="<?= ROOT ?>/home" class="btn btn-secondary sidebar-back-button">
+        <a href="<?= ROOT ?>/Logout" class="btn btn-secondary sidebar-back-button">
           <span class="material-symbols-rounded">logout</span>
           <span class="btn-label">Logout</span>
         </a>
@@ -100,7 +100,7 @@
             </div>
 
             <div class="user-menu-dropdown">
-              <a href="#" class="user-menu-item">
+              <a href="<?= ROOT ?>/AudienceProfile" class="user-menu-item">
                 <span class="icon material-symbols-rounded">person</span>
                 <span>Profile</span>
               </a>
@@ -112,7 +112,7 @@
                 </div>
               </div>
 
-              <a href="#" class="user-menu-item">
+              <a href="<?= ROOT ?>/Logout" class="user-menu-item">
                 <span class="icon material-symbols-rounded">logout</span>
                 <span>Logout</span>
               </a>
@@ -209,12 +209,94 @@
 
         <!-- Browse Dramas -->
         <div class="dashboard-view" id="browse">
-          <div class="empty-state">
-            <div class="empty-state-icon">
-              <span class="material-symbols-rounded">movie</span>
+          <div class="browse-dramas-container">
+            <div class="browse-header">
+              <h2 class="browse-title">Browse Dramas</h2>
+              <p class="browse-subtitle">Discover amazing theatrical performances</p>
             </div>
-            <h3 class="empty-state-title">Browse Dramas</h3>
-            <p class="empty-state-description">Explore latest dramas and stage shows.</p>
+
+            <!-- Search & Filter -->
+            <div class="browse-search-filter">
+              <div class="search-box">
+                <span class="material-symbols-rounded">search</span>
+                <input type="text" id="dramaSearch" placeholder="Search dramas..." />
+              </div>
+              <div class="filter-box">
+                <span class="material-symbols-rounded">filter_list</span>
+                <select id="categoryFilter">
+                  <option value="">All Categories</option>
+                  <?php if (!empty($data['categories'])): ?>
+                    <?php foreach ($data['categories'] as $category): ?>
+                      <option value="<?= $category->id ?>"><?= htmlspecialchars($category->name) ?></option>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
+                </select>
+              </div>
+            </div>
+
+            <!-- Results Info -->
+            <div class="browse-results-info">
+              <p>Found <strong id="dramaCount"><?= $data['total_dramas'] ?></strong> drama(s)</p>
+            </div>
+
+            <!-- Dramas Grid -->
+            <div class="dramas-grid" id="dramasGrid">
+              <?php if (!empty($data['dramas'])): ?>
+                <?php foreach ($data['dramas'] as $drama): ?>
+                  <div class="drama-card" data-category="<?= $drama->category_id ?>" data-title="<?= strtolower($drama->title) ?>">
+                    <div class="drama-image">
+                      <?php if (!empty($drama->image)): ?>
+                        <img src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($drama->image) ?>" alt="<?= htmlspecialchars($drama->title) ?>">
+                      <?php else: ?>
+                        <div class="placeholder-image">
+                          <span class="material-symbols-rounded">movie</span>
+                        </div>
+                      <?php endif; ?>
+                      <div class="category-badge"><?= htmlspecialchars($drama->category_name ?? 'Uncategorized') ?></div>
+                    </div>
+
+                    <div class="drama-content">
+                      <h3 class="drama-title"><?= htmlspecialchars($drama->title) ?></h3>
+                      <p class="drama-description"><?= htmlspecialchars(substr($drama->description ?? '', 0, 100)) ?>...</p>
+
+                      <div class="drama-info">
+                        <div class="info-item">
+                          <span class="material-symbols-rounded">calendar_today</span>
+                          <span><?= $drama->event_date ? date('M d, Y', strtotime($drama->event_date)) : 'TBA' ?></span>
+                        </div>
+                        <div class="info-item">
+                          <span class="material-symbols-rounded">schedule</span>
+                          <span><?= htmlspecialchars($drama->event_time ?? 'TBA') ?></span>
+                        </div>
+                        <div class="info-item">
+                          <span class="material-symbols-rounded">location_on</span>
+                          <span><?= htmlspecialchars($drama->venue ?? 'TBA') ?></span>
+                        </div>
+                      </div>
+
+                      <div class="drama-footer">
+                        <div class="price">
+                          <span class="material-symbols-rounded">sell</span>
+                          <span>LKR <?= number_format($drama->ticket_price ?? 0, 2) ?></span>
+                        </div>
+                        <button class="btn btn-secondary btn-book" data-drama-id="<?= $drama->id ?>">
+                          <span class="material-symbols-rounded">confirmation_number</span>
+                          <span>Book Now</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <div class="empty-state">
+                  <div class="empty-state-icon">
+                    <span class="material-symbols-rounded">theaters</span>
+                  </div>
+                  <h3 class="empty-state-title">No Dramas Available</h3>
+                  <p class="empty-state-description">Check back later for upcoming shows</p>
+                </div>
+              <?php endif; ?>
+            </div>
           </div>
         </div>
 
@@ -255,7 +337,7 @@
     </main>
   </div>
 
-  <script src="<?= ROOT ?>/assets/JS/admindashboard.js"></script>
+  <script src="<?= ROOT ?>/assets/JS/audiencedashboard.js"></script>
 </body>
 
 </html>

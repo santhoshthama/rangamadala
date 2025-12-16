@@ -28,9 +28,9 @@ body {
     align-items: center;
     gap: 6px;
     background-color: transparent;
-    color: #D3D3D3;
+    color: #d4af37;
     padding: 8px 14px;
-    border: none;
+    border: 2px solid #d4af37;
     border-radius: 6px;
     font-size: 16px;
     font-weight: 500;
@@ -39,8 +39,8 @@ body {
 }
 
 .back-btn:hover {
-    background: #fff;
-    color: #000;
+    background: #d4af37;
+    color: #1a1410;
 }
 
 /* Signup Form Box */
@@ -50,11 +50,11 @@ body {
 
 .form-box {
     width: 100%;
-    background: rgba(255,255,255,0.1);
-    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(26, 20, 16, 0.95);
+    border: 2px solid rgba(212, 175, 55, 0.3);
     backdrop-filter: blur(20px);
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    color: #fff;
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.15);
+    color: #f5f0e8;
     border-radius: 10px;
     padding: 30px 40px;
 }
@@ -63,6 +63,7 @@ body {
     text-align: center;
     font-size: 32px;
     margin-bottom: 10px;
+    color: #d4af37;
 }
 
 .form-box form {
@@ -76,18 +77,24 @@ body {
 .form-box input[type="file"] {
     width: 100%;
     height: 50px;
-    background: transparent;
-    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(245, 240, 232, 0.05);
+    border: 2px solid rgba(212, 175, 55, 0.2);
     border-radius: 40px;
     outline: none;
     padding: 0 20px;
     margin: 12px 0;
-    color: #fff;
+    color: #f5f0e8;
     font-size: 15px;
+    transition: border-color 0.3s ease;
+}
+
+.form-box input:focus {
+    border-color: rgba(212, 175, 55, 0.6);
+    background: rgba(212, 175, 55, 0.05);
 }
 
 .form-box input::placeholder {
-    color: #e9e9e9;
+    color: #8b7355;
 }
 
 .form-box input[type="file"] {

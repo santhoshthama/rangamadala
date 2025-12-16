@@ -110,7 +110,7 @@
                     <div class="theme-option" data-theme="dark">Dark</div>
                   </div>
                 </div>
-                <a href="#" class="user-menu-item">
+                <a href="<?= ROOT ?>/Logout" class="user-menu-item">
                   <span class="icon material-symbols-rounded">logout</span>
                   <span>Sign Out</span>
                 </a>

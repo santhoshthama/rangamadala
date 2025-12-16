@@ -32,9 +32,9 @@ background-size: cover;
     align-items: center;
     gap: 6px;
     background-color: transparent;
-    color: #D3D3D3;
+    color: #d4af37;
     padding: 8px 14px;
-    border: none;
+    border: 2px solid #d4af37;
     border-radius: 6px;
     font-size: 16px;
     font-weight: 500;
@@ -43,8 +43,8 @@ background-size: cover;
 }
 
 .back-btn:hover {
-    background-color: #fff;
-    color: #000;
+    background-color: #d4af37;
+    color: #1a1410;
 }
 
 .back-btn i {
@@ -63,13 +63,13 @@ background-size: cover;
 /* Header */
 .header-section h1 {
     font-size: 36px;
-    color: #fff;
+    color: #d4af37;
     margin-bottom: 10px;
 }
 
 .header-section p {
     font-size: 16px;
-    color: #D3D3D3;
+    color: #c9b896;
 }
 
 /* Role Selection Cards */
@@ -83,11 +83,11 @@ background-size: cover;
 
 .role-card {
     width: 300px;
-    background: rgba(255,255,255,0.05);
-    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(26, 20, 16, 0.85);
+    border: 2px solid rgba(212, 175, 55, 0.3);
     backdrop-filter: blur(20px);
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    color: #fff;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+    color: #f5f0e8;
     border-radius: 10px;
     padding: 30px;
     text-align: center;
@@ -97,23 +97,55 @@ background-size: cover;
 }
 
 .role-card:hover {
-    border-color: rgba(255,255,255,0.5);
+    border-color: rgba(212, 175, 55, 0.6);
     transform: translateY(-5px);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 30px rgba(212, 175, 55, 0.2);
 }
 
 .role-card i {
     font-size: 48px;
+    color: #d4af37;
     margin-bottom: 20px;
 }
 
 .role-card h3 {
     font-size: 24px;
     margin-bottom: 15px;
+    color: #d4af37;
 }
 
 .role-card p {
     font-size: 14px;
-    color: #D3D3D3;
+    color: #c9b896;
     line-height: 1.5;
 }
+
+.wrapper .register-link{
+    font-size: 14.5px;
+    text-align: center;
+    margin: 20px 0 15px;
+}
+.register-link p a{
+    color: #d4af37;
+    text-decoration: none;
+    font-weight: 600;
+}
+.register-link p a:hover{
+    text-decoration: underline;
+}
+.wrapper form .btn{
+    background: linear-gradient(135deg, #d4af37, #aa8c2c);
+    color: #1a1410;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: 0.3s ease;
+}
+.wrapper form .btn:hover {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+    transform: translateY(-2px);
+}
+
