@@ -71,5 +71,140 @@ class ServiceProviderRegister
         // 🔹 Send errors to the view
         $this->view('service_provider_register', ['errors' => $errors]);
     }
+
+    public function submit()
+    {
+        $errors = [];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ROOT . '/ServiceProviderRegister');
+            exit;
+        }
+
+        $model = new M_service_provider();
+
+        // Collect fields
+        $provider = [
+            'full_name' => trim($_POST['full_name'] ?? ''),
+            'professional_title' => trim($_POST['professional_title'] ?? ''),
+            'email' => trim($_POST['email'] ?? ''),
+            'phone' => trim($_POST['phone'] ?? ''),
+            'location' => trim($_POST['location'] ?? ''),
+            'website' => trim($_POST['website'] ?? ''),
+            'years_experience' => $_POST['years_experience'] ?? '',
+            'professional_summary' => trim($_POST['professional_summary'] ?? ''),
+            'availability' => isset($_POST['availability']) ? (int)$_POST['availability'] : 1,
+            'availability_notes' => trim($_POST['availability_notes'] ?? ''),
+            'business_cert_photo' => null,
+        ];
+
+        $password = trim($_POST['password'] ?? '');
+        $confirm_password = trim($_POST['confirm_password'] ?? '');
+
+        // Basic validations
+        if ($provider['full_name'] === '') $errors[] = 'Full name is required.';
+        if ($provider['professional_title'] === '') $errors[] = 'Professional title is required.';
+        if ($provider['email'] === '' || !filter_var($provider['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
+        if ($provider['phone'] === '') $errors[] = 'Phone number is required.';
+        if ($provider['location'] === '') $errors[] = 'Location is required.';
+        if ($provider['years_experience'] === '') $errors[] = 'Years of experience is required.';
+        if ($provider['professional_summary'] === '') $errors[] = 'Professional summary is required.';
+
+        // Password validations
+        if (empty($password) || strlen($password) < 6) $errors[] = 'Password must be at least 6 characters.';
+        if ($password !== $confirm_password) $errors[] = 'Passwords do not match.';
+
+        // Duplicate checks
+        if (empty($errors)) {
+            // Check email in both serviceprovider and users tables
+            if ($model->emailExists($provider['email']) || $model->emailExistsInUsers($provider['email'])) {
+                $errors[] = 'This email is already registered. Please use a different email.';
+            }
+            if ($model->nameExists($provider['full_name'])) {
+                $errors[] = 'A service provider with this full name is already registered.';
+            }
+        }
+
+        // If there are errors, return form with data preserved
+        if (!empty($errors)) {
+            $this->view('service_provider_register', [
+                'errors' => $errors,
+                'formData' => $provider,
+                'password' => $password,
+                'confirm_password' => $confirm_password,
+                'services' => $_POST['services'] ?? [],
+                'projects' => $_POST['projects'] ?? []
+            ]);
+            return;
+        }
+
+        // Handle business certificate photo upload
+        if (isset($_FILES['business_cert_photo']) && !empty($_FILES['business_cert_photo']['name'])) {
+            $targetDir = __DIR__ . '/../../public/uploads/business_certificates/';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $fileName = uniqid() . '_' . basename($_FILES['business_cert_photo']['name']);
+            $targetFile = $targetDir . $fileName;
+            
+            // Validate file size and type
+            $maxSize = 5 * 1024 * 1024; // 5MB
+            if ($_FILES['business_cert_photo']['size'] > $maxSize) {
+                $errors[] = 'Business certificate photo must be less than 5MB.';
+            } elseif (!in_array($_FILES['business_cert_photo']['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
+                $errors[] = 'Business certificate photo must be JPG or PNG.';
+            } elseif (is_uploaded_file($_FILES['business_cert_photo']['tmp_name'])) {
+                if (move_uploaded_file($_FILES['business_cert_photo']['tmp_name'], $targetFile)) {
+                    // Store full relative path for database retrieval by admin
+                    $provider['business_cert_photo'] = 'uploads/business_certificates/' . $fileName;
+                } else {
+                    $errors[] = 'Failed to upload business certificate photo.';
+                }
+            } else {
+                $errors[] = 'Invalid file upload. Please try again.';
+            }
+        }
+
+        if (!empty($errors)) {
+            $this->view('service_provider_register', [
+                'errors' => $errors,
+                'formData' => $provider,
+                'password' => $password,
+                'confirm_password' => $confirm_password,
+                'uploadedPhoto' => $provider['business_cert_photo'] ?? null,
+                'services' => $_POST['services'] ?? [],
+                'projects' => $_POST['projects'] ?? []
+            ]);
+            return;
+        }
+
+        // First, register user in users table
+        $userRegistered = $model->registerUser($provider['full_name'], $provider['email'], $password, $provider['phone'], 'service_provider');
+        
+        if (!$userRegistered) {
+            $this->view('service_provider_register', ['errors' => ['Email already exists or registration failed. Please try again.']]);
+            return;
+        }
+
+        // Get the newly created user ID
+        $user_id = $model->getUserIdByEmail($provider['email']);
+        if (!$user_id) {
+            $this->view('service_provider_register', ['errors' => ['Failed to retrieve user ID. Please try again.']]);
+            return;
+        }
+
+        // Then save serviceprovider profile with user_id
+        $services = $_POST['services'] ?? [];
+        $projects = $_POST['projects'] ?? [];
+
+        $savedId = $model->saveFullProfile($provider, $user_id, $services, $projects);
+
+        if ($savedId) {
+            header('Location: ' . ROOT . '/Login?registered=1');
+            exit;
+        } else {
+            $this->view('service_provider_register', ['errors' => ['Failed to save your profile. Please try again.']]);
+        }
+    }
 }
 ?>
