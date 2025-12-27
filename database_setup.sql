@@ -1,6 +1,21 @@
 -- Rangamadala Database Setup
 -- Run this SQL script in your rangamandala_db database
 
+-- Create users table
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `full_name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `role` enum('admin','artist','audience','service_provider') NOT NULL DEFAULT 'audience',
+  `nic_photo` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Create categories table
 CREATE TABLE IF NOT EXISTS `categories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -52,3 +67,49 @@ INSERT INTO `dramas` (`title`, `description`, `category_id`, `venue`, `event_dat
 ('Nari Bena', 'Traditional folk drama with dance and music', 7, 'BMICH, Colombo', '2025-02-10', '18:00:00', 105, 1200.00, NULL),
 ('Vijayaba Kollaya', 'Historical drama about ancient Sri Lankan warriors', 1, 'Regal Theatre, Colombo', '2025-02-15', '19:00:00', 135, 1800.00, NULL)
 ON DUPLICATE KEY UPDATE title=title;
+
+-- Create serviceprovider table
+CREATE TABLE IF NOT EXISTS `serviceprovider` (
+  `user_id` int NOT NULL,
+  `full_name` varchar(100) NOT NULL,
+  `professional_title` varchar(100) DEFAULT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `location` varchar(100) DEFAULT NULL,
+  `website` varchar(255) DEFAULT NULL,
+  `years_experience` int DEFAULT NULL,
+  `professional_summary` text,
+  `availability` tinyint(1) DEFAULT '1',
+  `availability_notes` varchar(255) DEFAULT NULL,
+  `business_cert_photo` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `email` (`email`),
+  CONSTRAINT `serviceprovider_ibfk_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create services table
+CREATE TABLE IF NOT EXISTS `services` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `provider_id` int NOT NULL,
+  `service_name` varchar(100) NOT NULL,
+  `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `description` text,
+  PRIMARY KEY (`id`),
+  KEY `provider_id` (`provider_id`),
+  CONSTRAINT `services_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `serviceprovider` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create projects table
+CREATE TABLE IF NOT EXISTS `projects` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `provider_id` int NOT NULL,
+  `year` int DEFAULT NULL,
+  `project_name` varchar(100) DEFAULT NULL,
+  `services_provided` varchar(255) DEFAULT NULL,
+  `description` text,
+  PRIMARY KEY (`id`),
+  KEY `provider_id` (`provider_id`),
+  CONSTRAINT `projects_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `serviceprovider` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
