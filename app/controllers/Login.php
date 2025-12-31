@@ -26,7 +26,7 @@ class Login
                 // set session and redirect to dashboard or home page
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['user_name'] = $user->full_name;
-                $_SESSION['user_role'] = $user->role;
+                $_SESSION['role'] = $user->role;
 
                 // Redirect based on user role
                 if ($user->role === 'admin') {

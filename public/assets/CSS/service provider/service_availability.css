@@ -1,0 +1,809 @@
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .title-section h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #8B4513;
+        }
+
+        .title-section p {
+            color: #A0522D;
+            font-size: 14px;
+        }
+
+        /* Legend Styles */
+        .legend-container {
+            display: flex;
+            gap: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(184, 134, 11, 0.1);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            border: 1px solid rgba(184, 134, 11, 0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #8B4513;
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .legend-dot.available {
+            background: #B8860B;
+        }
+
+        .legend-dot.booked {
+            background: #DC143C;
+        }
+
+        .legend-dot.past {
+            background: #D3D3D3;
+        }
+
+        .update-btn {
+            display: flex;
+            align-items: center;
+            background: #CD853F;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(205, 133, 63, 0.3);
+        }
+
+        .update-btn:hover {
+            background: #B8860B;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(184, 134, 11, 0.4);
+        }
+
+        .update-btn .btn-icon {
+            margin-right: 8px;
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .update-btn:hover .btn-icon {
+            transform: rotate(180deg);
+        }
+
+        .calendar-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .calendar-panel,
+        .dates-panel {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid rgba(184, 134, 11, 0.2);
+            box-shadow: 0 8px 25px rgba(184, 134, 11, 0.1);
+        }
+
+        .panel-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #8B4513;
+        }
+
+        .panel-header p {
+            color: #A0522D;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .calendar {
+            width: 100%;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #8B4513;
+        }
+
+        .nav-btn {
+            background: rgba(184, 134, 11, 0.1);
+            border: 1px solid rgba(184, 134, 11, 0.3);
+            color: #B8860B;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #B8860B;
+            color: #ffffff;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(184, 134, 11, 0.3);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        #calendarDays {
+            display: contents;
+        }
+
+        .day-header {
+            text-align: center;
+            padding: 12px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #A0522D;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+            background: rgba(184, 134, 11, 0.05);
+            border: 1px solid rgba(184, 134, 11, 0.1);
+            color: #8B4513;
+        }
+
+        .calendar-day.empty {
+            cursor: default;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+
+        .calendar-day:not(.empty):not(.past):hover {
+            background: rgba(184, 134, 11, 0.15);
+            transform: scale(1.1);
+            border-color: rgba(184, 134, 11, 0.4);
+            box-shadow: 0 4px 12px rgba(184, 134, 11, 0.2);
+        }
+
+        .calendar-day.selected {
+            background: #B8860B !important;
+            color: white;
+            font-weight: 700;
+            border-color: #DAA520;
+            box-shadow: 0 4px 12px rgba(184, 134, 11, 0.4);
+        }
+
+        .calendar-day.selected:hover {
+            background: #CD853F !important;
+        }
+
+        .calendar-day.booked {
+            background: #DC143C !important;
+            color: white;
+            font-weight: 700;
+            border-color: #B22222;
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.4);
+        }
+
+        .calendar-day.booked:hover {
+            background: #B22222 !important;
+        }
+
+        .calendar-day.booked::after {
+            content: '🔒';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 10px;
+        }
+
+        .calendar-day.highlight {
+            background: #CD853F !important;
+            color: white;
+            font-weight: 700;
+            border-color: #D2691E;
+            transform: scale(1.15);
+            box-shadow: 0 4px 16px rgba(205, 133, 63, 0.5);
+        }
+
+        .calendar-day.today {
+            border: 2px solid #DAA520;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(218, 165, 32, 0.3);
+        }
+
+        .calendar-day.past {
+            color: #D3D3D3;
+            background: rgba(211, 211, 211, 0.1) !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+            border-color: rgba(211, 211, 211, 0.2);
+        }
+
+        .calendar-day.past:hover {
+            background: rgba(211, 211, 211, 0.1) !important;
+            transform: none;
+            border-color: rgba(211, 211, 211, 0.2);
+            box-shadow: none;
+        }
+
+        .available-dates-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .date-item {
+            background: white;
+            border: 2px solid rgba(184, 134, 11, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .date-item:hover {
+            border-color: #B8860B;
+            transform: translateX(4px);
+            box-shadow: 0 4px 15px rgba(184, 134, 11, 0.3);
+        }
+
+        .date-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .date-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #8B4513;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.booked {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .date-description {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .booked-info {
+            background: #fff3cd;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .booked-info strong {
+            color: #856404;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .booked-info span {
+            color: #856404;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .date-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 15px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-accept {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-accept:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+
+        .btn-view {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #138496;
+            transform: scale(1.05);
+        }
+
+        .btn-remove {
+            background: #DC143C;
+            color: white;
+        }
+
+        .btn-remove:hover {
+            background: #B22222;
+            transform: scale(1.05);
+        }
+
+        .add-date-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background: rgba(184, 134, 11, 0.05);
+            color: #B8860B;
+            border: 2px dashed rgba(184, 134, 11, 0.3);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .add-date-btn:hover:not(:disabled) {
+            background: rgba(184, 134, 11, 0.1);
+            color: #8B4513;
+            border-color: rgba(184, 134, 11, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(184, 134, 11, 0.2);
+        }
+
+        .add-date-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .add-date-btn .btn-icon {
+            margin-right: 8px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(139, 69, 19, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            color: #adb5bd;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #8B4513;
+        }
+
+        .modal h3 {
+            color: #8B4513;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #8B4513;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(184, 134, 11, 0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #B8860B;
+            box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
+        }
+
+        .form-group input[readonly] {
+            background: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #CD853F;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #B8860B;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(184, 134, 11, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-danger {
+            background: #DC143C;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #B22222;
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3);
+        }
+
+        /* View Modal Specific Styles */
+        .date-details {
+            margin: 20px 0;
+        }
+
+        .detail-row {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(184, 134, 11, 0.2);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-row strong {
+            display: block;
+            color: #8B4513;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .detail-row span,
+        .detail-row p {
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .description-content {
+            background: rgba(184, 134, 11, 0.05);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border-left: 4px solid #B8860B;
+        }
+
+        .status-row .status-badge {
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        /* Scrollbar Styles */
+        .available-dates-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .available-dates-list::-webkit-scrollbar-track {
+            background: rgba(184, 134, 11, 0.1);
+            border-radius: 3px;
+        }
+
+        .available-dates-list::-webkit-scrollbar-thumb {
+            background: rgba(184, 134, 11, 0.4);
+            border-radius: 3px;
+        }
+
+        .available-dates-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(184, 134, 11, 0.6);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .calendar-day.selected::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 2s infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .calendar-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .title-section h1 {
+                font-size: 24px;
+            }
+            
+            .legend-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .modal {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .modal-actions {
+                flex-direction: column;
+            }
+            
+            .modal-actions .btn {
+                width: 100%;
+            }
+
+            .calendar-day {
+                font-size: 12px;
+            }
+            
+            .nav-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calendar-grid {
+                gap: 2px;
+            }
+            
+            .day-header {
+                font-size: 10px;
+                padding: 8px 0;
+            }
+            
+            .calendar-day {
+                font-size: 11px;
+            }
+            
+            .date-item {
+                padding: 12px;
+            }
+            
+            .date-actions {
+                flex-direction: column;
+            }
+            
+            .btn-small {
+                width: 100%;
+            }
+        }

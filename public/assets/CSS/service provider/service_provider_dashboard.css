@@ -1,0 +1,361 @@
+* {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-shadow: border-box;
+    font-family: sans-serif;
+}
+
+body {
+    display: flex;
+}
+
+.sidebar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    bottom: 240px;
+    width:60px;
+    height: 100vh;
+    padding: 0 1.7rem;
+    color: #fff;
+    overflow: hidden;
+    transition: all 0.5s linear;
+    background: rgba(186,142,35);
+}
+
+.sidebar:hover{
+    width:240px;
+    transition: 0.5s;
+}
+
+.logo {
+    height: 80px;
+    padding: 16px;
+}
+
+.menu {
+    height: 88%;
+    position: relative;
+    list-style: none;
+    padding: 0;
+}
+
+.menu li {
+    padding: 1rem;
+    margin: 8px 0;
+    border-radius: 8px;
+    transition: all 0.5s ease-in-out;
+}
+.menu li:hover , .active{
+    background: #e0e0e058;
+}
+.menu a{
+    color:#fff;
+    font-size:14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap:1.5rem;
+}
+.menu a span{
+    overflow: hidden;
+}
+.menu a i{
+    font-size: 1.2rem;
+}
+.logout{
+    position:absolute;
+    bottom:0;
+    left:0;
+    width:100%;
+}
+
+.main--content{
+    position:relative;
+    background: #ebe9e9;
+    width:100%;
+    padding:1rem;
+}
+.header--wrapper img{
+    width: 50px;
+    height: 50px;
+    cursor:pointer;
+    border-radius: 50%;
+}
+.header--wrapper{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #fff;
+    border-radius: 10px;
+    padding:10px 2rem;
+    margin-bottom: 1rem;
+}
+
+.header--title{
+    color: rgba(186,142,35);
+}
+.user--info{
+    display: flex;
+    align-items: center;
+    gap:1rem;
+}
+.search--box{
+    background: rgba(237,237,237);
+    border-radius: 15px;
+    color:rgba(186,142,35);
+    display:flex;
+    align-items: center;
+    gap:5px;
+    padding:4px 12px;
+}
+.search--box input{
+    background: transparent;
+    padding: 10px;
+}
+.search--box i{
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.5s ease-out;
+}
+
+.search--box i:hover{
+    transform: scale(1.2);
+}
+
+    .card--container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+    }
+    .card--wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .main--title {
+      color: rgba(186, 142, 35);
+      padding-bottom: 10px;
+      font-size: 15px;
+    }
+    .productionCount--card {
+      background: rgb(229, 223, 223);
+      border-radius: 10px;
+      padding: 1.2rem;
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.5s ease-in-out;
+      position: relative; /* for absolute icon positioning */
+    }
+    .productionCount--card:hover {
+      transform: translateY(-5px);
+    }
+    .Count {
+      display: flex;
+      flex-direction: column;
+    }
+    .title {
+      font-size: 12px;
+      font-weight: 200;
+    }
+    .Count-value {
+      font-size: 24px;
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 600;
+    }
+    .icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #fff;
+      background:goldenrod;
+      border-radius: 50%;
+      font-size: 0.9rem; /* smaller icon */
+      padding: 0.5rem;   /* smaller circle */
+    }
+    .light-gold
+    {
+        background:#EBB866;
+    }
+
+    /* nav bar for select productions,SR,Budget,schedule */
+    .navbar {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+}
+.navbar button {
+    background-color: #fff;
+    color: #000;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.navbar button.active {
+    background-color:#fff ;
+}
+.navbar button:hover {
+    background-color: lightyellow;
+}
+.production-card {
+    background-color: #2e2e44;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+}
+.production-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+.production-details {
+    font-size: 14px;
+    margin-top: 5px;
+    color: #ccc;
+}
+/* Work criteria */
+.main-works{
+    margin-top:20px;
+    text-transform:capitalize;
+}
+.work-box{
+    width:100%;
+    padding:10px;
+    margin-top: 10px;
+    background:#fff;
+    border-radius: 10px;
+    box-shadow: 0 20px 35px rgba(0,0,0,1);
+}
+
+.work-box ul{
+    list-style: none;
+    display:felx;
+
+}
+.work-box ul li{
+    margin:10px;
+    color:gray;
+    cursor:pointer;
+
+
+}
+
+.work{
+    margin-top: 20px;
+    text-transform: capitalize;
+}
+ .tabs {
+        width: 100%;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Hide radio buttons */
+    input[type="radio"] {
+        display: none;
+    }
+
+    /* Tab labels */
+    body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #f4f6f8;
+    padding: 30px;
+}
+
+/* Tabs container */
+.tabs {
+    max-width: 100%;
+    margin: auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Hide radio inputs */
+input[type="radio"] {
+    display: none;
+}
+
+/* Tab labels */
+.tab-label {
+    display: inline-block;
+    padding: 14px 25px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #555;
+    background: #f0f2f5;
+    border-right: 1px solid #ddd;
+    transition: all 0.3s ease;
+}
+.tab-label:last-of-type {
+    border-right: none;
+}
+
+/* Hover effect */
+.tab-label:hover {
+    background: #e6e9ed;
+}
+
+/* Active tab */
+input[type="radio"]:checked + .tab-label {
+    background: goldenrod;
+    color: white;
+    border-bottom: 2px solid gold;
+}
+
+/* Tab content */
+.tab-content {
+    display: none;
+    padding: 25px;
+    background: white;
+    border-top: 1px solid #ddd;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Show the active content */
+#tab1:checked ~ #content1,
+#tab2:checked ~ #content2,
+#tab3:checked ~ #content3,
+#tab4:checked ~ #content4 {
+    display: block;
+}
+
+
+.back-button {
+            background: white;
+            color: #4b5563;
+            border: 1px solid #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+
+        .back-button:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+/* Smooth fade animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+
+
