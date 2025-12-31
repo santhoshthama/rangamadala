@@ -1,16 +1,23 @@
 <?php
 
-class ServiceProviderDashboard {
+class ServiceProviderDashboard
+{
     use Controller;
 
-    public function index() {
-        // Check if user is logged in and is a service provider
-        if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'service_provider') {
-            header('Location: ' . ROOT . '/Login');
+    public function index()
+    {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: " . ROOT . "/Login");
             exit;
         }
 
-        // Render the dashboard view
+        // Check if user has service_provider role
+        if ($_SESSION['user_role'] !== 'service_provider') {
+            header("Location: " . ROOT . "/Home");
+            exit;
+        }
+
         $this->view('service_provider_dashboard');
     }
 }

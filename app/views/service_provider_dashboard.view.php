@@ -7,12 +7,7 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
             crossorigin="anonymous" />
-        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service_provider_dashboard.css">
-        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_requests.css">
-        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_availability.css">
-        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_payment.css">
-        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_analytics.css">
-        <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service_provider_dashboard.css">        
         <title><?= APP_NAME ?> - Service Provider Dashboard</title>
     </head>
     <body>
