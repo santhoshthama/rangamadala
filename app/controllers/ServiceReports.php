@@ -1,6 +1,6 @@
 <?php
 
-class ServiceAvailability
+class ServiceReports
 {
     use Controller;
 
@@ -24,9 +24,9 @@ class ServiceAvailability
         
         $data = [
             'provider' => $provider,
-            'pageTitle' => 'Availability Calendar'
+            'pageTitle' => 'Reports'
         ];
 
-        $this->view('service_availability', $data);
+        $this->view('service_reports', $data);
     }
 }

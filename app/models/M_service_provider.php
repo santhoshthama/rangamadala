@@ -40,6 +40,24 @@ class M_service_provider extends M_signup {
         return $row ? (int)$row->id : false;
     }
 
+    public function getProviderById($user_id) {
+        $this->db->query("SELECT * FROM serviceprovider WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->single();
+    }
+
+    public function getServicesByProviderId($user_id) {
+        $this->db->query("SELECT * FROM services WHERE provider_id = :user_id");
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->resultSet();
+    }
+
+    public function getProjectsByProviderId($user_id) {
+        $this->db->query("SELECT * FROM projects WHERE provider_id = :user_id ORDER BY year DESC");
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->resultSet();
+    }
+
     public function saveFullProfile($provider, $user_id, $services = [], $projects = []) {
         $providerId = (int)$user_id;
 
@@ -132,5 +150,171 @@ class M_service_provider extends M_signup {
         }
 
         return $providerId;
+    }
+
+    // Service CRUD Methods
+    public function insertService($provider_id, $service_name, $rate_per_hour, $description = '') {
+        $this->db->query("INSERT INTO services (provider_id, service_name, rate_per_hour, description) 
+                         VALUES (:provider_id, :service_name, :rate_per_hour, :description)");
+        $this->db->bind(':provider_id', $provider_id);
+        $this->db->bind(':service_name', $service_name);
+        $this->db->bind(':rate_per_hour', $rate_per_hour);
+        $this->db->bind(':description', $description);
+        return $this->db->execute();
+    }
+
+    public function getServiceById($service_id) {
+        $this->db->query("SELECT * FROM services WHERE id = :id");
+        $this->db->bind(':id', $service_id);
+        return $this->db->single();
+    }
+
+    public function updateService($service_id, $service_name, $rate_per_hour, $description = '') {
+        $this->db->query("UPDATE services SET 
+                         service_name = :service_name, 
+                         rate_per_hour = :rate_per_hour, 
+                         description = :description
+                         WHERE id = :id");
+        $this->db->bind(':service_name', $service_name);
+        $this->db->bind(':rate_per_hour', $rate_per_hour);
+        $this->db->bind(':description', $description);
+        $this->db->bind(':id', $service_id);
+        return $this->db->execute();
+    }
+
+    public function deleteService($service_id) {
+        $this->db->query("DELETE FROM services WHERE id = :id");
+        $this->db->bind(':id', $service_id);
+        return $this->db->execute();
+    }
+
+    // Project CRUD Methods
+    public function insertProject($provider_id, $year, $project_name, $services_provided, $description = '') {
+        $this->db->query("INSERT INTO projects (provider_id, year, project_name, services_provided, description) 
+                         VALUES (:provider_id, :year, :project_name, :services_provided, :description)");
+        $this->db->bind(':provider_id', $provider_id);
+        $this->db->bind(':year', $year);
+        $this->db->bind(':project_name', $project_name);
+        $this->db->bind(':services_provided', $services_provided);
+        $this->db->bind(':description', $description);
+        return $this->db->execute();
+    }
+
+    public function getProjectById($project_id) {
+        $this->db->query("SELECT * FROM projects WHERE id = :id");
+        $this->db->bind(':id', $project_id);
+        return $this->db->single();
+    }
+
+    public function updateProject($project_id, $year, $project_name, $services_provided, $description = '') {
+        $this->db->query("UPDATE projects SET 
+                         year = :year, 
+                         project_name = :project_name, 
+                         services_provided = :services_provided,
+                         description = :description
+                         WHERE id = :id");
+        $this->db->bind(':year', $year);
+        $this->db->bind(':project_name', $project_name);
+        $this->db->bind(':services_provided', $services_provided);
+        $this->db->bind(':description', $description);
+        $this->db->bind(':id', $project_id);
+        return $this->db->execute();
+    }
+
+    public function deleteProject($project_id) {
+        $this->db->query("DELETE FROM projects WHERE id = :id");
+        $this->db->bind(':id', $project_id);
+        return $this->db->execute();
+    }
+
+    // Provider Basic Info Update
+    public function updateBasicInfo($provider_id, $full_name, $professional_title, $email, $phone, 
+                                    $location, $website, $years_experience, $professional_summary, 
+                                    $availability, $availability_notes) {
+        $this->db->query("UPDATE serviceprovider SET 
+                         full_name = :full_name, 
+                         professional_title = :professional_title, 
+                         email = :email, 
+                         phone = :phone, 
+                         location = :location, 
+                         website = :website, 
+                         years_experience = :years_experience,
+                         professional_summary = :professional_summary,
+                         availability = :availability,
+                         availability_notes = :availability_notes
+                         WHERE user_id = :user_id");
+        $this->db->bind(':full_name', $full_name);
+        $this->db->bind(':professional_title', $professional_title);
+        $this->db->bind(':email', $email);
+        $this->db->bind(':phone', $phone);
+        $this->db->bind(':location', $location);
+        $this->db->bind(':website', $website);
+        $this->db->bind(':years_experience', $years_experience);
+        $this->db->bind(':professional_summary', $professional_summary);
+        $this->db->bind(':availability', $availability);
+        $this->db->bind(':availability_notes', $availability_notes);
+        $this->db->bind(':user_id', $provider_id);
+        return $this->db->execute();
+    }
+
+    // Update password with current password verification
+    public function updatePasswordWithVerification($user_id, $current_password, $new_password) {
+        // Get current password hash from users table
+        $this->db->query("SELECT password FROM users WHERE id = :user_id");
+        $this->db->bind(':user_id', $user_id);
+        $user = $this->db->single();
+        
+        if (!$user) {
+            return false;
+        }
+        
+        // Verify current password
+        if (!password_verify($current_password, $user->password)) {
+            return false;
+        }
+        
+        // Update to new password
+        $new_password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+        $this->db->query("UPDATE users SET password = :password WHERE id = :user_id");
+        $this->db->bind(':password', $new_password_hash);
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->execute();
+    }
+
+    // Delete Provider Profile (with cascade)
+    public function deleteProvider($provider_id) {
+        try {
+            $this->db->beginTransaction();
+            
+            // Delete services
+            $this->db->query("DELETE FROM services WHERE provider_id = :provider_id");
+            $this->db->bind(':provider_id', $provider_id);
+            $this->db->execute();
+            
+            // Delete projects
+            $this->db->query("DELETE FROM projects WHERE provider_id = :provider_id");
+            $this->db->bind(':provider_id', $provider_id);
+            $this->db->execute();
+            
+            // Delete provider profile
+            $this->db->query("DELETE FROM serviceprovider WHERE user_id = :user_id");
+            $this->db->bind(':user_id', $provider_id);
+            $this->db->execute();
+            
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log('deleteProvider failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Update Profile Image (SEPARATE from business certificate)
+    public function updateProfileImage($user_id, $filename) {
+        $this->db->query("UPDATE serviceprovider SET profile_image = :profile_image WHERE user_id = :user_id");
+        $this->db->bind(':profile_image', $filename);
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->execute();
     }
 }

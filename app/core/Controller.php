@@ -5,7 +5,8 @@ trait Controller
     {
         $filename = "../app/views/" . $name . ".view.php";
         if (file_exists($filename)) {
-            require $filename;
+               extract($data);
+               require $filename;
         } else {
             require "../app/views/_404.view.php";
         }

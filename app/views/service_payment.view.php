@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Management</title>
+    <title><?= isset($pageTitle) ? $pageTitle : 'Payments' ?> - Rangamadala</title>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service_provider_dashboard.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_payment.css">
-
+    <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
 <body>
-    <div class="container">
+    <?php $activePage = 'payments'; include 'includes/service_provider/sidebar.php'; ?>
+    
+    <div class="main--content">
+        <?php include 'includes/service_provider/header.php'; ?>
+
+        <div class="container">
         <div class="header">
             <div class="title-section">
                 <h1>Payment Management</h1>
@@ -120,5 +130,6 @@
     </div>
 
     <script src="script.js"></script>
+    </div>
 </body>
 </html>
