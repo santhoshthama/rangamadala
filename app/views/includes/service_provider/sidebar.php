@@ -12,6 +12,7 @@ $activePage = $activePage ?? '';
 
 <div class="sidebar">
     <div class="logo">
+        <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala" style="width: 100%; max-width: 180px; display: block; margin: 0 auto 30px auto; padding: 20px 0;">
         <ul class="menu">
             <li class="<?= $activePage === 'home' ? 'active' : '' ?>">
                 <a href="<?= ROOT ?>/Home">

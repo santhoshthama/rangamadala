@@ -317,4 +317,72 @@ class M_service_provider extends M_signup {
         $this->db->bind(':user_id', $user_id);
         return $this->db->execute();
     }
-}
+
+    // Browse/Search Methods for Production Managers
+    public function getAllProvidersWithServices($filters = []) {
+        $sql = "SELECT DISTINCT sp.*, 
+                GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ', ') as services,
+                GROUP_CONCAT(DISTINCT s.rate_per_hour ORDER BY s.rate_per_hour SEPARATOR ', ') as rates
+                FROM serviceprovider sp
+                LEFT JOIN services s ON sp.user_id = s.provider_id
+                WHERE 1=1";
+
+        // Apply filters
+        if (!empty($filters['service_type'])) {
+            $sql .= " AND s.service_name LIKE :service_type";
+        }
+        if (!empty($filters['location'])) {
+            $sql .= " AND sp.location LIKE :location";
+        }
+        if (!empty($filters['availability'])) {
+            $sql .= " AND sp.availability = :availability";
+        }
+        if (!empty($filters['min_rate']) || !empty($filters['max_rate'])) {
+            $sql .= " AND s.rate_per_hour IS NOT NULL";
+            if (!empty($filters['min_rate'])) {
+                $sql .= " AND s.rate_per_hour >= :min_rate";
+            }
+            if (!empty($filters['max_rate'])) {
+                $sql .= " AND s.rate_per_hour <= :max_rate";
+            }
+        }
+
+        $sql .= " GROUP BY sp.user_id ORDER BY sp.full_name ASC";
+
+        $this->db->query($sql);
+
+        if (!empty($filters['service_type'])) {
+            $this->db->bind(':service_type', '%' . $filters['service_type'] . '%');
+        }
+        if (!empty($filters['location'])) {
+            $this->db->bind(':location', '%' . $filters['location'] . '%');
+        }
+        if (!empty($filters['availability'])) {
+            $this->db->bind(':availability', (int)$filters['availability']);
+        }
+        if (!empty($filters['min_rate'])) {
+            $this->db->bind(':min_rate', (float)$filters['min_rate']);
+        }
+        if (!empty($filters['max_rate'])) {
+            $this->db->bind(':max_rate', (float)$filters['max_rate']);
+        }
+
+        return $this->db->resultSet();
+    }
+
+    public function getAllLocations() {
+        $this->db->query("SELECT DISTINCT location FROM serviceprovider WHERE location IS NOT NULL ORDER BY location ASC");
+        return $this->db->resultSet();
+    }
+
+    public function getProviderServices($provider_id) {
+        $this->db->query("SELECT * FROM services WHERE provider_id = :provider_id ORDER BY service_name ASC");
+        $this->db->bind(':provider_id', $provider_id);
+        return $this->db->resultSet();
+    }
+
+    public function getProviderProjects($provider_id) {
+        $this->db->query("SELECT * FROM projects WHERE provider_id = :provider_id ORDER BY year DESC");
+        $this->db->bind(':provider_id', $provider_id);
+        return $this->db->resultSet();
+    }}
