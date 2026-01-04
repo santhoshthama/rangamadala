@@ -100,6 +100,7 @@ class ServiceProviderRegister
 
         $password = trim($_POST['password'] ?? '');
         $confirm_password = trim($_POST['confirm_password'] ?? '');
+        $existingCert = trim($_POST['existing_business_cert_photo'] ?? '');
 
         // Basic validations
         if ($provider['full_name'] === '') $errors[] = 'Full name is required.';
@@ -113,6 +114,35 @@ class ServiceProviderRegister
         // Password validations
         if (empty($password) || strlen($password) < 6) $errors[] = 'Password must be at least 6 characters.';
         if ($password !== $confirm_password) $errors[] = 'Passwords do not match.';
+
+        // Handle business certificate photo upload or reuse existing before any early return
+        if (!empty($existingCert) && empty($_FILES['business_cert_photo']['name'])) {
+            $provider['business_cert_photo'] = $existingCert;
+        } elseif (!empty($_FILES['business_cert_photo']['name'])) {
+            $targetDir = __DIR__ . '/../../public/uploads/business_certificates/';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $fileName = uniqid() . '_' . basename($_FILES['business_cert_photo']['name']);
+            $targetFile = $targetDir . $fileName;
+
+            $maxSize = 5 * 1024 * 1024; // 5MB
+            if ($_FILES['business_cert_photo']['size'] > $maxSize) {
+                $errors[] = 'Business certificate photo must be less than 5MB.';
+            } elseif (!in_array($_FILES['business_cert_photo']['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
+                $errors[] = 'Business certificate photo must be JPG or PNG.';
+            } elseif (is_uploaded_file($_FILES['business_cert_photo']['tmp_name'])) {
+                if (move_uploaded_file($_FILES['business_cert_photo']['tmp_name'], $targetFile)) {
+                    $provider['business_cert_photo'] = 'uploads/business_certificates/' . $fileName;
+                } else {
+                    $errors[] = 'Failed to upload business certificate photo.';
+                }
+            } else {
+                $errors[] = 'Invalid file upload. Please try again.';
+            }
+        } else {
+            $errors[] = 'Business certificate photo is required.';
+        }
 
         // Duplicate checks
         if (empty($errors)) {
@@ -133,47 +163,8 @@ class ServiceProviderRegister
                 'password' => $password,
                 'confirm_password' => $confirm_password,
                 'services' => $_POST['services'] ?? [],
-                'projects' => $_POST['projects'] ?? []
-            ]);
-            return;
-        }
-
-        // Handle business certificate photo upload
-        if (isset($_FILES['business_cert_photo']) && !empty($_FILES['business_cert_photo']['name'])) {
-            $targetDir = __DIR__ . '/../../public/uploads/business_certificates/';
-            if (!is_dir($targetDir)) {
-                mkdir($targetDir, 0777, true);
-            }
-            $fileName = uniqid() . '_' . basename($_FILES['business_cert_photo']['name']);
-            $targetFile = $targetDir . $fileName;
-            
-            // Validate file size and type
-            $maxSize = 5 * 1024 * 1024; // 5MB
-            if ($_FILES['business_cert_photo']['size'] > $maxSize) {
-                $errors[] = 'Business certificate photo must be less than 5MB.';
-            } elseif (!in_array($_FILES['business_cert_photo']['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
-                $errors[] = 'Business certificate photo must be JPG or PNG.';
-            } elseif (is_uploaded_file($_FILES['business_cert_photo']['tmp_name'])) {
-                if (move_uploaded_file($_FILES['business_cert_photo']['tmp_name'], $targetFile)) {
-                    // Store full relative path for database retrieval by admin
-                    $provider['business_cert_photo'] = 'uploads/business_certificates/' . $fileName;
-                } else {
-                    $errors[] = 'Failed to upload business certificate photo.';
-                }
-            } else {
-                $errors[] = 'Invalid file upload. Please try again.';
-            }
-        }
-
-        if (!empty($errors)) {
-            $this->view('service_provider_register', [
-                'errors' => $errors,
-                'formData' => $provider,
-                'password' => $password,
-                'confirm_password' => $confirm_password,
-                'uploadedPhoto' => $provider['business_cert_photo'] ?? null,
-                'services' => $_POST['services'] ?? [],
-                'projects' => $_POST['projects'] ?? []
+                'projects' => $_POST['projects'] ?? [],
+                'uploadedPhoto' => $provider['business_cert_photo'] ?? $existingCert,
             ]);
             return;
         }
