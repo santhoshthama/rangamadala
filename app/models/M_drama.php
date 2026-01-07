@@ -81,23 +81,32 @@ class M_drama {
     }
 
     public function createDrama($data) {
-        $this->db->query("INSERT INTO dramas 
-            (title, description, category_id, venue, event_date, event_time, duration, ticket_price, image, created_by) 
-            VALUES 
-            (:title, :description, :category_id, :venue, :event_date, :event_time, :duration, :ticket_price, :image, :created_by)");
+        try {
+            $this->db->query("INSERT INTO dramas 
+                (title, description, category_id, venue, event_date, event_time, duration, ticket_price, image, created_by, creator_artist_id) 
+                VALUES 
+                (:title, :description, :category_id, :venue, :event_date, :event_time, :duration, :ticket_price, :image, :created_by, :creator_artist_id)");
 
-        $this->db->bind(':title', $data['title']);
-        $this->db->bind(':description', $data['description']);
-        $this->db->bind(':category_id', $data['category_id']);
-        $this->db->bind(':venue', $data['venue']);
-        $this->db->bind(':event_date', $data['event_date']);
-        $this->db->bind(':event_time', $data['event_time']);
-        $this->db->bind(':duration', $data['duration']);
-        $this->db->bind(':ticket_price', $data['ticket_price']);
-        $this->db->bind(':image', $data['image']);
-        $this->db->bind(':created_by', $data['created_by']);
+            $this->db->bind(':title', $data['title']);
+            $this->db->bind(':description', $data['description']);
+            $this->db->bind(':category_id', $data['category_id']);
+            $this->db->bind(':venue', $data['venue']);
+            $this->db->bind(':event_date', $data['event_date']);
+            $this->db->bind(':event_time', $data['event_time']);
+            $this->db->bind(':duration', $data['duration']);
+            $this->db->bind(':ticket_price', $data['ticket_price']);
+            $this->db->bind(':image', $data['image']);
+            $this->db->bind(':created_by', $data['created_by']);
+            $this->db->bind(':creator_artist_id', $data['created_by']); // Artist becomes director
 
-        return $this->db->execute();
+            if ($this->db->execute()) {
+                return $this->db->lastInsertId();
+            }
+            return false;
+        } catch (Exception $e) {
+            error_log("Error in createDrama: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function countDramas($search = '', $category = '') {
@@ -165,6 +174,34 @@ class M_drama {
             error_log("Error in getDramasPaginated: " . $e->getMessage());
             return [];
         }
+    }
+
+    public function get_dramas_by_director($user_id) {
+        try {
+            $this->db->query("SELECT d.*, c.name as category_name,
+                             'active' as status
+                             FROM dramas d
+                             LEFT JOIN categories c ON d.category_id = c.id
+                             WHERE d.creator_artist_id = :user_id
+                             ORDER BY d.created_at DESC");
+            $this->db->bind(':user_id', $user_id);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in get_dramas_by_director: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function get_dramas_by_manager($user_id) {
+        // TODO: Implement drama_managers table and functionality
+        // For now, return empty array as this feature is not yet implemented
+        return [];
+    }
+
+    public function get_dramas_by_actor($user_id) {
+        // TODO: Implement roles and role_assignments tables and functionality
+        // For now, return empty array as this feature is not yet implemented
+        return [];
     }
 }
 
