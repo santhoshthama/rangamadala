@@ -35,6 +35,7 @@
                                 <option value="Video Production" <?= ($data['filters']['service_type'] ?? '') === 'Video Production' ? 'selected' : '' ?>>Video Production</option>
                                 <option value="Set Design" <?= ($data['filters']['service_type'] ?? '') === 'Set Design' ? 'selected' : '' ?>>Set Design</option>
                                 <option value="Costume Design" <?= ($data['filters']['service_type'] ?? '') === 'Costume Design' ? 'selected' : '' ?>>Costume Design</option>
+                                <option value="Other" <?= ($data['filters']['service_type'] ?? '') === 'Other' ? 'selected' : '' ?>>Other</option>
                             </select>
                         </div>
 
