@@ -81,23 +81,32 @@ class M_drama {
     }
 
     public function createDrama($data) {
-        $this->db->query("INSERT INTO dramas 
-            (title, description, category_id, venue, event_date, event_time, duration, ticket_price, image, created_by) 
-            VALUES 
-            (:title, :description, :category_id, :venue, :event_date, :event_time, :duration, :ticket_price, :image, :created_by)");
+        try {
+            $this->db->query("INSERT INTO dramas 
+                (title, description, category_id, venue, event_date, event_time, duration, ticket_price, image, created_by, creator_artist_id) 
+                VALUES 
+                (:title, :description, :category_id, :venue, :event_date, :event_time, :duration, :ticket_price, :image, :created_by, :creator_artist_id)");
 
-        $this->db->bind(':title', $data['title']);
-        $this->db->bind(':description', $data['description']);
-        $this->db->bind(':category_id', $data['category_id']);
-        $this->db->bind(':venue', $data['venue']);
-        $this->db->bind(':event_date', $data['event_date']);
-        $this->db->bind(':event_time', $data['event_time']);
-        $this->db->bind(':duration', $data['duration']);
-        $this->db->bind(':ticket_price', $data['ticket_price']);
-        $this->db->bind(':image', $data['image']);
-        $this->db->bind(':created_by', $data['created_by']);
+            $this->db->bind(':title', $data['title']);
+            $this->db->bind(':description', $data['description']);
+            $this->db->bind(':category_id', $data['category_id']);
+            $this->db->bind(':venue', $data['venue']);
+            $this->db->bind(':event_date', $data['event_date']);
+            $this->db->bind(':event_time', $data['event_time']);
+            $this->db->bind(':duration', $data['duration']);
+            $this->db->bind(':ticket_price', $data['ticket_price']);
+            $this->db->bind(':image', $data['image']);
+            $this->db->bind(':created_by', $data['created_by']);
+            $this->db->bind(':creator_artist_id', $data['created_by']); // Artist becomes director
 
-        return $this->db->execute();
+            if ($this->db->execute()) {
+                return $this->db->lastInsertId();
+            }
+            return false;
+        } catch (Exception $e) {
+            error_log("Error in createDrama: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function countDramas($search = '', $category = '') {
@@ -169,14 +178,11 @@ class M_drama {
 
     public function get_dramas_by_director($user_id) {
         try {
-            $this->db->query("SELECT d.*, 
-                             COUNT(DISTINCT r.id) as total_roles,
-                             COUNT(DISTINCT ra.id) as filled_roles
+            $this->db->query("SELECT d.*, c.name as category_name,
+                             'active' as status
                              FROM dramas d
-                             LEFT JOIN roles r ON d.id = r.drama_id
-                             LEFT JOIN role_assignments ra ON r.id = ra.role_id AND ra.status = 'accepted'
+                             LEFT JOIN categories c ON d.category_id = c.id
                              WHERE d.creator_artist_id = :user_id
-                             GROUP BY d.id
                              ORDER BY d.created_at DESC");
             $this->db->bind(':user_id', $user_id);
             return $this->db->resultSet();
@@ -187,40 +193,15 @@ class M_drama {
     }
 
     public function get_dramas_by_manager($user_id) {
-        try {
-            $this->db->query("SELECT d.*, dm.responsibilities, dm.assigned_date,
-                             u.name as director_name
-                             FROM dramas d
-                             INNER JOIN drama_managers dm ON d.id = dm.drama_id
-                             INNER JOIN users u ON d.creator_artist_id = u.id
-                             WHERE dm.artist_id = :user_id 
-                             AND dm.status = 'active'
-                             ORDER BY dm.assigned_date DESC");
-            $this->db->bind(':user_id', $user_id);
-            return $this->db->resultSet();
-        } catch (Exception $e) {
-            error_log("Error in get_dramas_by_manager: " . $e->getMessage());
-            return [];
-        }
+        // TODO: Implement drama_managers table and functionality
+        // For now, return empty array as this feature is not yet implemented
+        return [];
     }
 
     public function get_dramas_by_actor($user_id) {
-        try {
-            $this->db->query("SELECT d.*, r.role_name, ra.status as assignment_status,
-                             u.name as director_name
-                             FROM dramas d
-                             INNER JOIN roles r ON d.id = r.drama_id
-                             INNER JOIN role_assignments ra ON r.id = ra.role_id
-                             INNER JOIN users u ON d.creator_artist_id = u.id
-                             WHERE ra.artist_id = :user_id 
-                             AND ra.status = 'accepted'
-                             ORDER BY ra.response_date DESC");
-            $this->db->bind(':user_id', $user_id);
-            return $this->db->resultSet();
-        } catch (Exception $e) {
-            error_log("Error in get_dramas_by_actor: " . $e->getMessage());
-            return [];
-        }
+        // TODO: Implement roles and role_assignments tables and functionality
+        // For now, return empty array as this feature is not yet implemented
+        return [];
     }
 }
 

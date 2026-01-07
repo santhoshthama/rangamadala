@@ -596,11 +596,19 @@ if(isset($data) && is_array($data)) {
                             <i class="fas fa-film"></i>
                             <h3>No Dramas Yet</h3>
                             <p>You haven't created any dramas. Start your journey as a director!</p>
-                            <button class="btn btn-primary" style="margin-top: 16px;" onclick="window.location.href='<?=ROOT?>/drama/create'">
+                            <button class="btn btn-primary" style="margin-top: 16px;" onclick="window.location.href='<?=ROOT?>/createDrama'">
                                 <i class="fas fa-plus"></i> Create Drama
                             </button>
                         </div>
                     <?php else: ?>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 style="margin: 0; color: var(--ink);">
+        
+                            </h3>
+                            <button class="btn btn-primary" onclick="window.location.href='<?=ROOT?>/createDrama'">
+                                <i class="fas fa-plus"></i> Create New Drama
+                            </button>
+                        </div>
                         <div class="artists-grid">
                             <?php foreach ($dramas_as_director as $drama): ?>
                                 <div class="artist-card">
