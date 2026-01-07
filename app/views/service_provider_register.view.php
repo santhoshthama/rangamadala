@@ -132,6 +132,11 @@
                 </div>
 
                 <!-- Basic Information -->
+                <?php 
+                    $servicesData = $data['services'] ?? [];
+                    $projectsData = $data['projects'] ?? [];
+                    $formData     = $data['formData'] ?? [];
+                ?>
                 <form id="serviceForm" action="<?= ROOT ?>/ServiceProviderRegister/submit" method="POST" enctype="multipart/form-data">
                     <div class="form-page active">
                     <div class="section">
@@ -197,17 +202,32 @@
                     <div class="section">
                         <h3 class="section-title">Business Registration Certificate (Photo Upload)</h3>
 
-                        <?php if (!empty($data['uploadedPhoto'])): ?>
-                            <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                                <p style="margin: 0; color: #155724;">
-                                    <strong>✓ File Uploaded:</strong> <?= basename($data['uploadedPhoto']) ?>
-                                </p>
+                        <?php $existingCert = $data['uploadedPhoto'] ?? ($formData['business_cert_photo'] ?? ''); ?>
+                        
+                        <!-- File Preview Section -->
+                        <div id="filePreviewSection" style="<?= !empty($existingCert) ? '' : 'display: none;' ?> background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 20px;">
+                                <img id="certPreview" src="<?= !empty($existingCert) ? ROOT . '/' . $existingCert : '' ?>" alt="Certificate" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                        <span style="color: #28a745; font-size: 20px;">✓</span>
+                                        <strong style="color: #28a745;">Certificate Uploaded</strong>
+                                    </div>
+                                    <p id="certFileName" style="margin: 0 0 12px 0; color: #6c757d; font-size: 14px;">
+                                        <?= !empty($existingCert) ? basename($existingCert) : '' ?>
+                                    </p>
+                                    <button type="button" onclick="removeCertificate()" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                                        🗑️ Remove File
+                                    </button>
+                                </div>
                             </div>
-                        <?php endif; ?>
+                        </div>
 
-                        <div class="upload-instructions">
+                        <input type="hidden" name="existing_business_cert_photo" id="existingCertPath" value="<?= htmlspecialchars($existingCert) ?>">
+
+                        <div class="upload-instructions" id="uploadSection" style="<?= !empty($existingCert) ? 'display: none;' : '' ?>">
                             <div class="drag-drop-zone">
-                                <input type="file" name="business_cert_photo" accept=".jpg,.jpeg,.png" class="form-input" <?= empty($data['uploadedPhoto']) ? 'required' : '' ?>>
+                                <input type="file" name="business_cert_photo" id="businessCertInput" accept=".jpg,.jpeg,.png" class="form-input" <?= empty($existingCert) ? 'required' : '' ?> onchange="previewCertificate(this)">
                             </div>
                             <div class="upload-specs">
                                 <div class="spec-item">
@@ -242,12 +262,13 @@
                         <h3 class="section-title">Availability</h3>
                         <div class="availability-toggle">
                             <span class="toggle-label">Currently Available for New Projects</span>
-                            <input type="hidden" name="availability" id="availabilityInput" value="1">
-                            <div id="availabilityToggle" class="toggle active" onclick="toggleAvailability()"></div>
+                            <?php $avail = isset($formData['availability']) ? (int)$formData['availability'] : 1; ?>
+                            <input type="hidden" name="availability" id="availabilityInput" value="<?= $avail ?>">
+                            <div id="availabilityToggle" class="toggle <?= $avail ? 'active' : '' ?>" onclick="toggleAvailability()"></div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Availability Notes</label>
-                            <input type="text" name="availability_notes" class="form-input" placeholder="e.g., Available weekdays, weekends only, etc.">
+                            <input type="text" name="availability_notes" class="form-input" placeholder="e.g., Available weekdays, weekends only, etc." value="<?= isset($formData['availability_notes']) ? htmlspecialchars($formData['availability_notes']) : '' ?>">
                         </div>
                     </div>
                     </div>
@@ -257,10 +278,11 @@
                     <div class="section">
                         <h3 class="section-title">Services & Rates</h3>
                         
+                        <?php $svc0 = $servicesData[0] ?? []; ?>
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[0][selected]" class="checkbox" id="service1">
+                                    <input type="checkbox" name="services[0][selected]" class="checkbox" id="service1" <?= isset($svc0['selected']) ? 'checked' : '' ?>>
                                     <label for="service1" class="service-name">🎭 Theater Production</label>
                                     <input type="hidden" name="services[0][name]" value="Theater Production">
                                 </div>
@@ -268,22 +290,23 @@
                                     <label>Rate per hour:</label>
                                     <div class="input-wrapper">
                                         <span class="currency">Rs</span>
-                                        <input type="number" name="services[0][rate]" class="service-rate" placeholder="0.00">
+                                        <input type="number" name="services[0][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc0['rate']) ? htmlspecialchars($svc0['rate']) : '' ?>">
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="form-group">
                                 <label class="form-label">Description </label>
-                                <textarea name="services[0][description]" class="form-input textarea" placeholder="Add a description about this service..." ></textarea>
+                                <textarea name="services[0][description]" class="form-input textarea" placeholder="Add a description about this service..." ><?= isset($svc0['description']) ? htmlspecialchars($svc0['description']) : '' ?></textarea>
                             </div>
                             
                         </div>
 
+                        <?php $svc1 = $servicesData[1] ?? []; ?>
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[1][selected]" class="checkbox" id="service2">
+                                    <input type="checkbox" name="services[1][selected]" class="checkbox" id="service2" <?= isset($svc1['selected']) ? 'checked' : '' ?>>
                                     <label for="service2" class="service-name">💡 Lighting Design</label>
                                     <input type="hidden" name="services[1][name]" value="Lighting Design">
                                 </div>
@@ -291,21 +314,22 @@
                                     <label>Rate per hour:</label>
                                     <div class="input-wrapper">
                                         <span class="currency">Rs</span>
-                                        <input type="number" name="services[1][rate]" class="service-rate" placeholder="0.00">
+                                        <input type="number" name="services[1][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc1['rate']) ? htmlspecialchars($svc1['rate']) : '' ?>">
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Description </label>
-                                <textarea name="services[1][description]" class="form-input textarea" placeholder="Add a description about this service..."></textarea>
+                                <textarea name="services[1][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc1['description']) ? htmlspecialchars($svc1['description']) : '' ?></textarea>
                             </div>
 
                         </div>
 
+                        <?php $svc2 = $servicesData[2] ?? []; ?>
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[2][selected]" class="checkbox" id="service3">
+                                    <input type="checkbox" name="services[2][selected]" class="checkbox" id="service3" <?= isset($svc2['selected']) ? 'checked' : '' ?>>
                                     <label for="service3" class="service-name">🔊 Sound Systems</label>
                                     <input type="hidden" name="services[2][name]" value="Sound Systems">
 
@@ -314,20 +338,21 @@
                                     <label>Rate per hour:</label>
                                     <div class="input-wrapper">
                                         <span class="currency">Rs</span>
-                                        <input type="number" name="services[2][rate]" class="service-rate" placeholder="0.00">
+                                        <input type="number" name="services[2][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc2['rate']) ? htmlspecialchars($svc2['rate']) : '' ?>">
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Description</label>
-                                <textarea name="services[2][description]" class="form-input textarea" placeholder="Add a description about this service..." ></textarea>
+                                <textarea name="services[2][description]" class="form-input textarea" placeholder="Add a description about this service..." ><?= isset($svc2['description']) ? htmlspecialchars($svc2['description']) : '' ?></textarea>
                             </div>
                         </div>
 
+                        <?php $svc3 = $servicesData[3] ?? []; ?>
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[3][selected]" class="checkbox" id="service4">
+                                    <input type="checkbox" name="services[3][selected]" class="checkbox" id="service4" <?= isset($svc3['selected']) ? 'checked' : '' ?>>
                                     <label for="service4" class="service-name">🎬 Video Production</label>
                                     <input type="hidden" name="services[3][name]" value="Video Production">
                                 </div>
@@ -336,20 +361,21 @@
                                     <label>Rate per hour:</label>
                                     <div class="input-wrapper">
                                         <span class="currency">Rs</span>
-                                        <input type="number" name="services[3][rate]" class="service-rate" placeholder="0.00">
+                                        <input type="number" name="services[3][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc3['rate']) ? htmlspecialchars($svc3['rate']) : '' ?>">
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Description </label>
-                                <textarea name="services[3][description]" class="form-input textarea" placeholder="Add a description about this service..."></textarea>
+                                <textarea name="services[3][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc3['description']) ? htmlspecialchars($svc3['description']) : '' ?></textarea>
                             </div>
                         </div>
 
+                        <?php $svc4 = $servicesData[4] ?? []; ?>
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[4][selected]" class="checkbox" id="service5">
+                                    <input type="checkbox" name="services[4][selected]" class="checkbox" id="service5" <?= isset($svc4['selected']) ? 'checked' : '' ?>>
                                     <label for="service5" class="service-name">🎨 Set Design</label>
                                     <input type="hidden" name="services[4][name]" value="Set Design">
                                 </div>
@@ -358,20 +384,21 @@
                                     <label>Rate per hour:</label>
                                     <div class="input-wrapper">
                                         <span class="currency">Rs</span>
-                                        <input type="number" name="services[4][rate]" class="service-rate" placeholder="0.00">
+                                        <input type="number" name="services[4][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc4['rate']) ? htmlspecialchars($svc4['rate']) : '' ?>">
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Description </label>
-                                <textarea name="services[4][description]" class="form-input textarea" placeholder="Add a description about this service..."></textarea>
+                                <textarea name="services[4][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc4['description']) ? htmlspecialchars($svc4['description']) : '' ?></textarea>
                             </div>
                         </div>
 
+                        <?php $svc5 = $servicesData[5] ?? []; ?>
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[5][selected]" class="checkbox" id="service6">
+                                    <input type="checkbox" name="services[5][selected]" class="checkbox" id="service6" <?= isset($svc5['selected']) ? 'checked' : '' ?>>
                                     <label for="service6" class="service-name">👗 Costume Design</label>
                                     <input type="hidden" name="services[5][name]" value="Costume Design">
                                 </div>
@@ -379,13 +406,13 @@
                                     <label>Rate per hour:</label>
                                     <div class="input-wrapper">
                                         <span class="currency">Rs</span>
-                                        <input type="number" name="services[5][rate]" class="service-rate" placeholder="0.00">
+                                        <input type="number" name="services[5][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc5['rate']) ? htmlspecialchars($svc5['rate']) : '' ?>">
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Description </label>
-                                <textarea name="services[5][description]" class="form-input textarea" placeholder="Add a description about this service..."></textarea>
+                                <textarea name="services[5][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc5['description']) ? htmlspecialchars($svc5['description']) : '' ?></textarea>
                             </div>
                         </div>
                     </div>
@@ -399,7 +426,31 @@
                             <button type="button" class="add-btn" onclick="addProject()">+ Add Project</button>
                         </h3>
                         <div id="projectList">
-                            <!-- Project items will be added here -->
+                            <?php if (!empty($projectsData) && is_array($projectsData)): ?>
+                                <?php foreach ($projectsData as $idx => $proj): ?>
+                                    <div class="project-item">
+                                        <button type="button" class="remove-btn" onclick="removeProject(this)">×</button>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">Year <span class="required">*</span></label>
+                                                <input type="number" name="projects[<?= $idx ?>][year]" class="form-input" min="1970" max="2030" placeholder="2024" value="<?= htmlspecialchars($proj['year'] ?? '') ?>">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Project Name <span class="required">*</span></label>
+                                                <input type="text" name="projects[<?= $idx ?>][project_name]" class="form-input" placeholder="e.g., Romeo & Juliet" value="<?= htmlspecialchars($proj['project_name'] ?? '') ?>">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Services Provided</label>
+                                            <input type="text" name="projects[<?= $idx ?>][services_provided]" class="form-input" placeholder="e.g., Lighting Design, Sound Systems" value="<?= htmlspecialchars($proj['services_provided'] ?? '') ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Description</label>
+                                            <textarea name="projects[<?= $idx ?>][description]" class="form-input textarea" placeholder="Brief project description..."><?= htmlspecialchars($proj['description'] ?? '') ?></textarea>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -425,7 +476,7 @@
   </div>
 
   <script>
-        let projectCount = 0;
+        let projectCount = document.querySelectorAll('#projectList .project-item').length;
         let currentPage = 1;
         const totalPages = 4;
 
@@ -496,6 +547,15 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Initialize toggle based on preserved value
+            const toggle = document.getElementById('availabilityToggle');
+            const input = document.getElementById('availabilityInput');
+            if (input.value === '1') {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+
             showPage(1);
         });
 
@@ -543,6 +603,30 @@
 
         function removeProject(btn) {
             btn.parentElement.remove();
+        }
+
+        // Certificate file preview and removal
+        function previewCertificate(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('certPreview').src = e.target.result;
+                    document.getElementById('certFileName').textContent = file.name;
+                    document.getElementById('filePreviewSection').style.display = 'block';
+                    document.getElementById('uploadSection').style.display = 'none';
+                    document.getElementById('businessCertInput').removeAttribute('required');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeCertificate() {
+            document.getElementById('businessCertInput').value = '';
+            document.getElementById('existingCertPath').value = '';
+            document.getElementById('filePreviewSection').style.display = 'none';
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('businessCertInput').setAttribute('required', 'required');
         }
 
         
