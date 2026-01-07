@@ -35,6 +35,13 @@ class ServiceProviderProfile
         // Fetch services
         $services = $model->getServicesByProviderId($provider_id);
         
+        // Fetch service details for each service
+        if (!empty($services)) {
+            foreach ($services as $service) {
+                $service->details = $model->getServiceDetails($service->id, $service->service_name);
+            }
+        }
+        
         // Fetch projects
         $projects = $model->getProjectsByProviderId($provider_id);
 
@@ -114,7 +121,17 @@ class ServiceProviderProfile
 
         // Handle form submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $result = $model->updateService($service_id, $_POST['service_name'], $_POST['rate_per_hour'], $_POST['description'] ?? '');
+            // Collect all POST data as extras
+            $extras = $_POST;
+            unset($extras['service_name'], $extras['rate_per_hour'], $extras['description']);
+            
+            $result = $model->updateService(
+                $service_id, 
+                $_POST['service_name'], 
+                $_POST['rate_per_hour'], 
+                $_POST['description'] ?? '', 
+                $extras
+            );
             
             if ($result) {
                 $service = $model->getServiceById($service_id);
@@ -133,7 +150,13 @@ class ServiceProviderProfile
             exit;
         }
 
-        $data = ['service' => $service];
+        // Fetch service-specific details
+        $details = $model->getServiceDetails($service_id, $service->service_name);
+
+        $data = [
+            'service' => $service,
+            'details' => $details
+        ];
         $this->view('service_edit_service', $data);
     }
 

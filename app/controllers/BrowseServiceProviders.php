@@ -52,6 +52,13 @@ class BrowseServiceProviders
         // Get provider's services
         $services = $model->getProviderServices($id);
         
+        // Fetch service details for each service
+        if (!empty($services)) {
+            foreach ($services as $service) {
+                $service->details = $model->getServiceDetails($service->id, $service->service_name);
+            }
+        }
+        
         // Get provider's projects
         $projects = $model->getProviderProjects($id);
 
