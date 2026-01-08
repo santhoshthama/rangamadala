@@ -13,7 +13,7 @@ class ServiceProviderProfile
         }
 
         // Check if user has service_provider role
-        if ($_SESSION['role'] !== 'service_provider') {
+        if ($_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Home");
             exit;
         }
@@ -70,7 +70,7 @@ class ServiceProviderProfile
             exit;
         }
 
-        if ($_SESSION['role'] !== 'service_provider') {
+        if ($_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Home");
             exit;
         }
@@ -106,7 +106,7 @@ class ServiceProviderProfile
     // Edit Service
     public function editService()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -163,7 +163,7 @@ class ServiceProviderProfile
     // Delete Service
     public function deleteService()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -199,7 +199,7 @@ class ServiceProviderProfile
     // Add Project
     public function addProject()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -233,7 +233,7 @@ class ServiceProviderProfile
     // Edit Project
     public function editProject()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -280,7 +280,7 @@ class ServiceProviderProfile
     // Delete Project
     public function deleteProject()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -316,7 +316,7 @@ class ServiceProviderProfile
     // Edit Basic Info
     public function editBasicInfo()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -363,7 +363,7 @@ class ServiceProviderProfile
     // Change Password
     public function changePassword()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -412,7 +412,7 @@ class ServiceProviderProfile
     // Delete Profile
     public function deleteProfile()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -430,7 +430,7 @@ class ServiceProviderProfile
         if ($result) {
             $_SESSION['success'] = "Profile deleted successfully!";
             unset($_SESSION['user_id']);
-            unset($_SESSION['role']);
+            unset($_SESSION['user_role']);
             session_destroy();
             header("Location: " . ROOT . "/Home");
             exit;
@@ -444,7 +444,7 @@ class ServiceProviderProfile
     // Upload Profile Image (SEPARATE from business certificate)
     public function uploadProfileImage()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
             header("Location: " . ROOT . "/Login");
             exit;
         }

@@ -38,13 +38,16 @@ CREATE TABLE IF NOT EXISTS `dramas` (
   `ticket_price` decimal(10,2) DEFAULT NULL,
   `image` varchar(255) DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
+  `creator_artist_id` int(11) DEFAULT NULL COMMENT 'The artist who is the director',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `category_id` (`category_id`),
   KEY `created_by` (`created_by`),
+  KEY `creator_artist_id` (`creator_artist_id`),
   CONSTRAINT `dramas_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `dramas_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  CONSTRAINT `dramas_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `dramas_ibfk_3` FOREIGN KEY (`creator_artist_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Insert sample categories
@@ -93,9 +96,7 @@ CREATE TABLE IF NOT EXISTS `serviceprovider` (
 CREATE TABLE IF NOT EXISTS `services` (
   `id` int NOT NULL AUTO_INCREMENT,
   `provider_id` int NOT NULL,
-  `service_name` varchar(100) NOT NULL,
-  `rate_per_hour` decimal(10,2) DEFAULT NULL,
-  `description` text,
+  `service_type` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `provider_id` (`provider_id`),
   CONSTRAINT `services_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `serviceprovider` (`user_id`) ON DELETE CASCADE
@@ -104,6 +105,8 @@ CREATE TABLE IF NOT EXISTS `services` (
 -- Theater Production details
 CREATE TABLE IF NOT EXISTS `service_theater_details` (
   `service_id` int NOT NULL,
+  `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `description` text,
   `num_actors` int DEFAULT NULL,
   `expected_audience` int DEFAULT NULL,
   `stage_proscenium` tinyint(1) DEFAULT NULL,
@@ -119,6 +122,8 @@ CREATE TABLE IF NOT EXISTS `service_theater_details` (
 -- Lighting Design details
 CREATE TABLE IF NOT EXISTS `service_lighting_details` (
   `service_id` int NOT NULL,
+  `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `description` text,
   `stage_lighting` tinyint(1) DEFAULT NULL,
   `spotlights` tinyint(1) DEFAULT NULL,
   `custom_programming` tinyint(1) DEFAULT NULL,
@@ -134,6 +139,8 @@ CREATE TABLE IF NOT EXISTS `service_lighting_details` (
 -- Sound Systems details
 CREATE TABLE IF NOT EXISTS `service_sound_details` (
   `service_id` int NOT NULL,
+  `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `description` text,
   `pa_system` tinyint(1) DEFAULT NULL,
   `microphones` tinyint(1) DEFAULT NULL,
   `sound_mixing` tinyint(1) DEFAULT NULL,
@@ -150,6 +157,8 @@ CREATE TABLE IF NOT EXISTS `service_sound_details` (
 -- Video Production details
 CREATE TABLE IF NOT EXISTS `service_video_details` (
   `service_id` int NOT NULL,
+  `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `description` text,
   `full_event` tinyint(1) DEFAULT NULL,
   `highlight_reel` tinyint(1) DEFAULT NULL,
   `short_promo` tinyint(1) DEFAULT NULL,
@@ -168,6 +177,8 @@ CREATE TABLE IF NOT EXISTS `service_video_details` (
 -- Set Design details
 CREATE TABLE IF NOT EXISTS `service_set_details` (
   `service_id` int NOT NULL,
+  `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `description` text,
   `set_design` tinyint(1) DEFAULT NULL,
   `set_construction` tinyint(1) DEFAULT NULL,
   `set_rental` tinyint(1) DEFAULT NULL,
@@ -184,6 +195,8 @@ CREATE TABLE IF NOT EXISTS `service_set_details` (
 -- Costume Design details
 CREATE TABLE IF NOT EXISTS `service_costume_details` (
   `service_id` int NOT NULL,
+  `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `description` text,
   `costume_design` tinyint(1) DEFAULT NULL,
   `costume_creation` tinyint(1) DEFAULT NULL,
   `costume_rental` tinyint(1) DEFAULT NULL,
