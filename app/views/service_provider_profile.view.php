@@ -316,6 +316,16 @@
                                     <?php echo nl2br(htmlspecialchars($details->location_address ?? '')); ?>
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Theatre Photos</label>
+                                <?php if (!empty($details->theatre_photos)): ?>
+                                    <p style="margin-top: 10px; font-size: 14px; color: #6b7280;">
+                                        <a href="<?php echo ROOT . '/' . htmlspecialchars($details->theatre_photos); ?>" target="_blank" style="color: #3b82f6;">View Photos</a>
+                                    </p>
+                                <?php else: ?>
+                                    <p style="margin-top: 10px; font-size: 14px; color: #6b7280;">No theatre photos uploaded</p>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <?php endif; ?>
 

@@ -121,7 +121,24 @@ class ServiceProviderProfile
                 if (isset($_FILES['services']['name'][$idx])) {
                     // Theater photos
                     if (isset($_FILES['services']['name'][$idx]['theatre_photos']) && !empty($_FILES['services']['name'][$idx]['theatre_photos'][0])) {
-                        // Handle multiple files for theater
+                        $tmp = $_FILES['services']['tmp_name'][$idx]['theatre_photos'][0] ?? null;
+                        $type = $_FILES['services']['type'][$idx]['theatre_photos'][0] ?? '';
+                        $size = $_FILES['services']['size'][$idx]['theatre_photos'][0] ?? 0;
+                        if ($tmp && is_uploaded_file($tmp)) {
+                            $targetDir = __DIR__ . '/../../public/uploads/theatre_photos/';
+                            if (!is_dir($targetDir)) {
+                                mkdir($targetDir, 0777, true);
+                            }
+                            $unique = uniqid('theatre_');
+                            $targetFile = $targetDir . $unique . '_' . basename($_FILES['services']['name'][$idx]['theatre_photos'][0]);
+                            $allowed = ['image/jpeg','image/png','image/jpg'];
+                            $maxSize = 10 * 1024 * 1024;
+                            if ($size <= $maxSize && in_array($type, $allowed)) {
+                                if (move_uploaded_file($tmp, $targetFile)) {
+                                    $extras['theatre_photos'] = 'uploads/theatre_photos/' . $unique . '_' . basename($_FILES['services']['name'][$idx]['theatre_photos'][0]);
+                                }
+                            }
+                        }
                     }
                     // Set designs
                     if (isset($_FILES['services']['name'][$idx]['sample_set_designs']) && !empty($_FILES['services']['name'][$idx]['sample_set_designs'])) {
@@ -261,6 +278,28 @@ class ServiceProviderProfile
                 }
             }
 
+            // Handle optional theatre photos upload for theater production service edit
+            if (isset($_FILES['theatre_photos']) && !empty($_FILES['theatre_photos']['name'])) {
+                $tmp = $_FILES['theatre_photos']['tmp_name'] ?? null;
+                $type = $_FILES['theatre_photos']['type'] ?? '';
+                $size = $_FILES['theatre_photos']['size'] ?? 0;
+                if ($tmp && is_uploaded_file($tmp)) {
+                    $targetDir = __DIR__ . '/../../public/uploads/theatre_photos/';
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0777, true);
+                    }
+                    $unique = uniqid('theatre_');
+                    $targetFile = $targetDir . $unique . '_' . basename($_FILES['theatre_photos']['name']);
+                    $allowed = ['image/jpeg','image/png','image/jpg'];
+                    $maxSize = 10 * 1024 * 1024;
+                    if ($size <= $maxSize && in_array($type, $allowed)) {
+                        if (move_uploaded_file($tmp, $targetFile)) {
+                            $extras['theatre_photos'] = 'uploads/theatre_photos/' . $unique . '_' . basename($_FILES['theatre_photos']['name']);
+                        }
+                    }
+                }
+            }
+
             // Handle optional sample makeup photos upload for makeup service edit
             if (isset($_FILES['sample_makeup_photos']) && !empty($_FILES['sample_makeup_photos']['name'])) {
                 $tmp = $_FILES['sample_makeup_photos']['tmp_name'] ?? null;
@@ -305,9 +344,18 @@ class ServiceProviderProfile
                 }
             }
 
+            // Ensure we have a service name; fall back to existing service type
+            $existingService = $model->getServiceById($service_id);
+            $serviceName = $_POST['service_name'] ?? ($existingService->service_type ?? null);
+            if (empty($serviceName)) {
+                $_SESSION['error'] = "Service type is required";
+                header("Location: " . ROOT . "/ServiceProviderProfile/editService?id=" . $service_id);
+                exit;
+            }
+
             $result = $model->updateService(
                 $service_id, 
-                $_POST['service_name'],
+                $serviceName,
                 $_POST['description'] ?? '', 
                 $extras
             );

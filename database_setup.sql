@@ -144,6 +144,7 @@ CREATE TABLE IF NOT EXISTS `service_theater_details` (
   `equipment_rent` text,
   `stage_crew_available` varchar(10) DEFAULT NULL,
   `location_address` text,
+  `theatre_photos` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`service_id`),
   CONSTRAINT `theater_details_fk_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

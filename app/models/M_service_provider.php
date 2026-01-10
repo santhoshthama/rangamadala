@@ -289,6 +289,7 @@ class M_service_provider extends M_signup {
                         'equipment_rent' => $svc['equipment_rent'] ?? null,
                         'stage_crew_available' => $svc['stage_crew_available'] ?? null,
                         'location_address' => $svc['location_address'] ?? null,
+                        'theatre_photos' => $svc['theatre_photos'] ?? null,
                     ],
                 ];
 

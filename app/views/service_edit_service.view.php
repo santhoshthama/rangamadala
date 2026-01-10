@@ -29,6 +29,7 @@
                     <div class="form-group">
                         <label class="form-label">Service Type</label>
                         <input type="text" class="form-input" value="<?php echo htmlspecialchars($data['service']->service_type ?? ''); ?>" disabled style="background: #f3f4f6; cursor: not-allowed;">
+                        <input type="hidden" name="service_name" value="<?php echo htmlspecialchars($data['service']->service_type ?? ''); ?>">
                     </div>
 
                     <div class="form-row">
@@ -126,6 +127,14 @@
                     <div class="form-group">
                         <label class="form-label">Location / Address</label>
                         <textarea name="location_address" class="form-input textarea" placeholder="Full address"><?php echo htmlspecialchars($details->location_address ?? ''); ?></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Theatre Photos</label>
+                        <input type="file" name="theatre_photos" class="form-input" accept="image/*">
+                        <?php if (!empty($details->theatre_photos)): ?>
+                            <p style="margin-top: 10px; font-size: 14px; color: #6b7280;">Current: <a href="<?php echo ROOT; ?>/public/<?php echo htmlspecialchars($details->theatre_photos); ?>" target="_blank" style="color: #3b82f6;">View Photo</a></p>
+                        <?php endif; ?>
                     </div>
                     <?php endif; ?>
 

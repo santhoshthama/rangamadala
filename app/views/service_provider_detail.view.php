@@ -199,6 +199,14 @@
                                                     <label>Location / Address:</label>
                                                     <span><?= htmlspecialchars($details->location_address ?? '-') ?></span>
                                                 </div>
+                                                <div class="detail-item" style="grid-column: 1 / -1;">
+                                                    <label>Theatre Photos:</label>
+                                                    <?php if (!empty($details->theatre_photos)): ?>
+                                                    <span><a href="<?= ROOT . '/' . htmlspecialchars($details->theatre_photos) ?>" target="_blank" style="color: #3b82f6;">View Photos</a></span>
+                                                    <?php else: ?>
+                                                    <span>-</span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                         

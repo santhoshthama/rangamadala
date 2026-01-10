@@ -268,6 +268,29 @@ class ServiceProviderRegister
                 'traditional_cultural_makeup_expertise' => $svc['traditional_cultural_makeup_expertise'] ?? null,
             ];
 
+            // Handle theatre photos file upload if present for this index
+            if (isset($_FILES['services']['name'][$idx]['theatre_photos']) && !empty($_FILES['services']['name'][$idx]['theatre_photos'][0])) {
+                $fileName = $_FILES['services']['name'][$idx]['theatre_photos'][0];
+                $tmpName = $_FILES['services']['tmp_name'][$idx]['theatre_photos'][0] ?? null;
+                $size = $_FILES['services']['size'][$idx]['theatre_photos'][0] ?? 0;
+                $type = $_FILES['services']['type'][$idx]['theatre_photos'][0] ?? '';
+                if ($tmpName && is_uploaded_file($tmpName)) {
+                    $targetDir = __DIR__ . '/../../public/uploads/theatre_photos/';
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0777, true);
+                    }
+                    $unique = uniqid('theatre_');
+                    $targetFile = $targetDir . $unique . '_' . basename($fileName);
+                    $allowed = ['image/jpeg','image/png','image/jpg'];
+                    $maxSize = 10 * 1024 * 1024;
+                    if ($size <= $maxSize && in_array($type, $allowed)) {
+                        if (move_uploaded_file($tmpName, $targetFile)) {
+                            $processed[$idx]['theatre_photos'] = 'uploads/theatre_photos/' . $unique . '_' . basename($fileName);
+                        }
+                    }
+                }
+            }
+
             // Handle set design sample file upload if present for this index
             if (isset($_FILES['services']['name'][$idx]['sample_set_designs']) && !empty($_FILES['services']['name'][$idx]['sample_set_designs'])) {
                 $fileName = $_FILES['services']['name'][$idx]['sample_set_designs'];
