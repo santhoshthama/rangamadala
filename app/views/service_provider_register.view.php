@@ -187,13 +187,13 @@
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Social Media Link</label>
-                                <input type="url" name="website" class="form-input" placeholder="https://www.facebook.com/yourprofile" value="<?= isset($data['formData']['website']) ? htmlspecialchars($data['formData']['website']) : '' ?>">
+                                <label class="form-label">Years of Experience</label>
+                                <input type="number" name="years_experience" class="form-input" placeholder="Enter your years of experience" value="<?= isset($data['formData']['years_experience']) ? htmlspecialchars($data['formData']['years_experience']) : '' ?>"> 
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Years of Experience</label>
-                                <input type="number" name="years_experience" class="form-input" placeholder="Enter your years of experience" value="<?= isset($data['formData']['years_experience']) ? htmlspecialchars($data['formData']['years_experience']) : '' ?>"> 
+                                <label class="form-label">Social Media Link</label>
+                                <input type="url" name="website" class="form-input" placeholder="https://www.facebook.com/yourprofile" value="<?= isset($data['formData']['website']) ? htmlspecialchars($data['formData']['website']) : '' ?>">
                             </div>
 
                         </div>
