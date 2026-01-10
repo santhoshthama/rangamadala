@@ -176,81 +176,140 @@
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Location <span class="required">*</span></label>
-                                <input type="text" name="location" class="form-input" placeholder="City, Country" value="<?= isset($data['formData']['location']) ? htmlspecialchars($data['formData']['location']) : '' ?>" required>
+                                <label class="form-label">NIC Number <span class="required">*</span></label>
+                                <input type="text" name="nic_number" class="form-input" placeholder="e.g., 200012345678 or 199512345V" value="<?= isset($data['formData']['nic_number']) ? htmlspecialchars($data['formData']['nic_number']) : '' ?>" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Website</label>
-                                <input type="url" name="website" class="form-input" placeholder="https://yourwebsite.com" value="<?= isset($data['formData']['website']) ? htmlspecialchars($data['formData']['website']) : '' ?>">
+                                <label class="form-label">Location</label>
+                                <input type="text" name="location" class="form-input" placeholder="City, Country" value="<?= isset($data['formData']['location']) ? htmlspecialchars($data['formData']['location']) : '' ?>">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Social Media Link</label>
+                                <input type="url" name="website" class="form-input" placeholder="https://www.facebook.com/yourprofile" value="<?= isset($data['formData']['website']) ? htmlspecialchars($data['formData']['website']) : '' ?>">
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Years of Experience <span class="required">*</span></label>
-                                <input type="number" name="years_experience" class="form-input" placeholder="Enter your years of experience" value="<?= isset($data['formData']['years_experience']) ? htmlspecialchars($data['formData']['years_experience']) : '' ?>" required> 
+                                <label class="form-label">Years of Experience</label>
+                                <input type="number" name="years_experience" class="form-input" placeholder="Enter your years of experience" value="<?= isset($data['formData']['years_experience']) ? htmlspecialchars($data['formData']['years_experience']) : '' ?>"> 
                             </div>
 
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Professional Summary <span class="required">*</span></label>
-                            <textarea name="professional_summary" class="form-input textarea" placeholder="Describe your experience, expertise, and what makes you unique..." required><?= isset($data['formData']['professional_summary']) ? htmlspecialchars($data['formData']['professional_summary']) : '' ?></textarea>
+                            <label class="form-label">Professional Summary</label>
+                            <textarea name="professional_summary" class="form-input textarea" placeholder="Describe your experience, expertise, and what makes you unique..."><?= isset($data['formData']['professional_summary']) ? htmlspecialchars($data['formData']['professional_summary']) : '' ?></textarea>
                         </div>
                     </div>
                     </div>
 
                     <div class="form-page">
                     <div class="section">
-                        <h3 class="section-title">Business Registration Certificate (Photo Upload)</h3>
+                        <h3 class="section-title">NIC (Both Sides Photo Upload)</h3>
 
-                        <?php $existingCert = $data['uploadedPhoto'] ?? ($formData['business_cert_photo'] ?? ''); ?>
+                        <?php 
+                        $existingFront = $data['uploadedPhotoFront'] ?? ($formData['nic_photo_front'] ?? '');
+                        $existingBack = $data['uploadedPhotoBack'] ?? ($formData['nic_photo_back'] ?? '');
+                        ?>
                         
-                        <!-- File Preview Section -->
-                        <div id="filePreviewSection" style="<?= !empty($existingCert) ? '' : 'display: none;' ?> background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                            <div style="display: flex; align-items: center; gap: 20px;">
-                                <img id="certPreview" src="<?= !empty($existingCert) ? ROOT . '/' . $existingCert : '' ?>" alt="Certificate" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6;">
-                                <div style="flex: 1;">
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                        <span style="color: #28a745; font-size: 20px;">✓</span>
-                                        <strong style="color: #28a745;">Certificate Uploaded</strong>
+                        <!-- Front Side Upload -->
+                        <div style="margin-bottom: 30px;">
+                            <h4 style="color: #333; font-weight: 600; margin-bottom: 15px;">Front Side of NIC</h4>
+                            
+                            <!-- File Preview Section -->
+                            <div id="filePreviewSectionFront" style="<?= !empty($existingFront) ? '' : 'display: none;' ?> background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 20px;">
+                                    <img id="certPreviewFront" src="<?= !empty($existingFront) ? ROOT . '/' . $existingFront : '' ?>" alt="NIC Front" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6;">
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                            <span style="color: #28a745; font-size: 20px;">✓</span>
+                                            <strong style="color: #28a745;">Front Side Uploaded</strong>
+                                        </div>
+                                        <p id="certFileNameFront" style="margin: 0 0 12px 0; color: #6c757d; font-size: 14px;">
+                                            <?= !empty($existingFront) ? basename($existingFront) : '' ?>
+                                        </p>
+                                        <button type="button" onclick="removeCertificateFront()" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                                            🗑️ Remove File
+                                        </button>
                                     </div>
-                                    <p id="certFileName" style="margin: 0 0 12px 0; color: #6c757d; font-size: 14px;">
-                                        <?= !empty($existingCert) ? basename($existingCert) : '' ?>
-                                    </p>
-                                    <button type="button" onclick="removeCertificate()" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
-                                        🗑️ Remove File
-                                    </button>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="existing_nic_photo_front" id="existingCertPathFront" value="<?= htmlspecialchars($existingFront) ?>">
+
+                            <div class="upload-instructions" id="uploadSectionFront" style="<?= !empty($existingFront) ? 'display: none;' : '' ?>">
+                                <div class="drag-drop-zone">
+                                    <input type="file" name="nic_photo_front" id="nicPhotoFrontInput" accept=".jpg,.jpeg,.png" class="form-input" <?= empty($existingFront) ? 'required' : '' ?> onchange="previewCertificateFront(this)">
+                                </div>
+                                <div class="upload-specs">
+                                    <div class="spec-item">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                        </svg>
+                                        <span>Max size: 5MB</span>
+                                    </div>
+                                    <div class="spec-item">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                            <polyline points="21 15 16 10 5 21"></polyline>
+                                        </svg>
+                                        <span>JPG, PNG formats</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <input type="hidden" name="existing_business_cert_photo" id="existingCertPath" value="<?= htmlspecialchars($existingCert) ?>">
-
-                        <div class="upload-instructions" id="uploadSection" style="<?= !empty($existingCert) ? 'display: none;' : '' ?>">
-                            <div class="drag-drop-zone">
-                                <input type="file" name="business_cert_photo" id="businessCertInput" accept=".jpg,.jpeg,.png" class="form-input" <?= empty($existingCert) ? 'required' : '' ?> onchange="previewCertificate(this)">
+                        <!-- Back Side Upload -->
+                        <div>
+                            <h4 style="color: #333; font-weight: 600; margin-bottom: 15px;">Back Side of NIC</h4>
+                            
+                            <!-- File Preview Section -->
+                            <div id="filePreviewSectionBack" style="<?= !empty($existingBack) ? '' : 'display: none;' ?> background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 20px;">
+                                    <img id="certPreviewBack" src="<?= !empty($existingBack) ? ROOT . '/' . $existingBack : '' ?>" alt="NIC Back" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid #dee2e6;">
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                            <span style="color: #28a745; font-size: 20px;">✓</span>
+                                            <strong style="color: #28a745;">Back Side Uploaded</strong>
+                                        </div>
+                                        <p id="certFileNameBack" style="margin: 0 0 12px 0; color: #6c757d; font-size: 14px;">
+                                            <?= !empty($existingBack) ? basename($existingBack) : '' ?>
+                                        </p>
+                                        <button type="button" onclick="removeCertificateBack()" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                                            🗑️ Remove File
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="upload-specs">
-                                <div class="spec-item">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                    </svg>
-                                    <span>Max size: 5MB</span>
+
+                            <input type="hidden" name="existing_nic_photo_back" id="existingCertPathBack" value="<?= htmlspecialchars($existingBack) ?>">
+
+                            <div class="upload-instructions" id="uploadSectionBack" style="<?= !empty($existingBack) ? 'display: none;' : '' ?>">
+                                <div class="drag-drop-zone">
+                                    <input type="file" name="nic_photo_back" id="nicPhotoBackInput" accept=".jpg,.jpeg,.png" class="form-input" <?= empty($existingBack) ? 'required' : '' ?> onchange="previewCertificateBack(this)">
                                 </div>
-                                <div class="spec-item">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                        <polyline points="21 15 16 10 5 21"></polyline>
-                                    </svg>
-                                    <span>JPG, PNG formats</span>
-                                </div>
-                                <div class="spec-item">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                    <span>Recommended: 400x400px</span>
+                                <div class="upload-specs">
+                                    <div class="spec-item">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                        </svg>
+                                        <span>Max size: 5MB</span>
+                                    </div>
+                                    <div class="spec-item">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                            <polyline points="21 15 16 10 5 21"></polyline>
+                                        </svg>
+                                        <span>JPG, PNG formats</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

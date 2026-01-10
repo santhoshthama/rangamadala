@@ -13,7 +13,8 @@ class ServiceProviderRegister
             $email = trim($_POST['email'] ?? '');
             $password = trim($_POST['password'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
-            $nic_photo = $_FILES['nic_photo']['name'] ?? null;
+            $nic_photo_front = $_FILES['nic_photo_front']['name'] ?? null;
+            $nic_photo_back = $_FILES['nic_photo_back']['name'] ?? null;
 
             // 🔹 Basic validation
             if (empty($full_name)) {
@@ -30,34 +31,46 @@ class ServiceProviderRegister
             if (empty($phone)) {
                 $errors[] = "Phone number is required.";
             }
-            if (!$nic_photo) {
-                $errors[] = "NIC photo is required.";
+            if (!$nic_photo_front) {
+                $errors[] = "NIC front photo is required.";
+            }
+            if (!$nic_photo_back) {
+                $errors[] = "NIC back photo is required.";
             }
 
             if (empty($errors)) {
                 $model = new M_service_provider();
 
-                // 🔹 Handle file upload (save to app/uploads/)
-                $uploadDir = __DIR__ . '/../uploads/';
+                // 🔹 Handle file uploads (save to public/uploads/nic_photos/)
+                $uploadDir = __DIR__ . '/../../public/uploads/nic_photos/';
                 if (!file_exists($uploadDir)) {
                     mkdir($uploadDir, 0777, true); // create folder if missing
                 }
 
-                $uniqueName = uniqid() . "_" . basename($nic_photo);
-                $uploadPath = $uploadDir . $uniqueName;
-                $dbPath = 'app/uploads/' . $uniqueName; // for database storage
+                $frontName = uniqid() . "_front_" . basename($nic_photo_front);
+                $backName = uniqid() . "_back_" . basename($nic_photo_back);
+                $frontPath = $uploadDir . $frontName;
+                $backPath = $uploadDir . $backName;
+                $frontDbPath = 'uploads/nic_photos/' . $frontName;
+                $backDbPath = 'uploads/nic_photos/' . $backName;
 
-                if (is_uploaded_file($_FILES['nic_photo']['tmp_name'])) {
-                    if (!move_uploaded_file($_FILES['nic_photo']['tmp_name'], $uploadPath)) {
-                        $errors[] = "Failed to upload NIC photo.";
+                if (is_uploaded_file($_FILES['nic_photo_front']['tmp_name'])) {
+                    if (!move_uploaded_file($_FILES['nic_photo_front']['tmp_name'], $frontPath)) {
+                        $errors[] = "Failed to upload NIC front photo.";
+                    }
+                }
+
+                if (is_uploaded_file($_FILES['nic_photo_back']['tmp_name'])) {
+                    if (!move_uploaded_file($_FILES['nic_photo_back']['tmp_name'], $backPath)) {
+                        $errors[] = "Failed to upload NIC back photo.";
                     }
                 }
 
                 if (empty($errors)) {
-                    // 🔹 Save artist to DB
-                    if ($model->register($full_name, $email, $password, $phone, $dbPath)) {
+                    // 🔹 Save provider to DB
+                    if ($model->register($full_name, $email, $password, $phone, $frontDbPath, $backDbPath)) {
                         echo "<script>
-                                alert('Artist registered successfully!');
+                                alert('Service Provider registered successfully!');
                                 window.location = '" . ROOT . "/login';
                               </script>";
                         exit;
@@ -90,58 +103,98 @@ class ServiceProviderRegister
             'email' => trim($_POST['email'] ?? ''),
             'phone' => trim($_POST['phone'] ?? ''),
             'location' => trim($_POST['location'] ?? ''),
+            'nic_number' => trim($_POST['nic_number'] ?? ''),
             'website' => trim($_POST['website'] ?? ''),
             'years_experience' => $_POST['years_experience'] ?? '',
             'professional_summary' => trim($_POST['professional_summary'] ?? ''),
             'availability' => isset($_POST['availability']) ? (int)$_POST['availability'] : 1,
             'availability_notes' => trim($_POST['availability_notes'] ?? ''),
-            'business_cert_photo' => null,
+            'nic_photo_front' => null,
+            'nic_photo_back' => null,
         ];
 
         $password = trim($_POST['password'] ?? '');
         $confirm_password = trim($_POST['confirm_password'] ?? '');
-        $existingCert = trim($_POST['existing_business_cert_photo'] ?? '');
+        $existingCertFront = trim($_POST['existing_nic_photo_front'] ?? '');
+        $existingCertBack = trim($_POST['existing_nic_photo_back'] ?? '');
 
         // Basic validations
         if ($provider['full_name'] === '') $errors[] = 'Full name is required.';
         if ($provider['professional_title'] === '') $errors[] = 'Professional title is required.';
         if ($provider['email'] === '' || !filter_var($provider['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
         if ($provider['phone'] === '') $errors[] = 'Phone number is required.';
-        if ($provider['location'] === '') $errors[] = 'Location is required.';
-        if ($provider['years_experience'] === '') $errors[] = 'Years of experience is required.';
-        if ($provider['professional_summary'] === '') $errors[] = 'Professional summary is required.';
+        
+        // NIC number validation
+        if ($provider['nic_number'] === '') {
+            $errors[] = 'NIC number is required.';
+        } else {
+            // Validate NIC format (Old: 9 digits + V/X, New: 12 digits)
+            $nicPattern = '/^(?:\d{9}[VvXx]|\d{12})$/';
+            if (!preg_match($nicPattern, $provider['nic_number'])) {
+                $errors[] = 'Invalid NIC format. Use old format (e.g., 199512345V) or new format (e.g., 200012345678).';
+            }
+        }
 
         // Password validations
         if (empty($password) || strlen($password) < 6) $errors[] = 'Password must be at least 6 characters.';
         if ($password !== $confirm_password) $errors[] = 'Passwords do not match.';
 
-        // Handle business certificate photo upload or reuse existing before any early return
-        if (!empty($existingCert) && empty($_FILES['business_cert_photo']['name'])) {
-            $provider['business_cert_photo'] = $existingCert;
-        } elseif (!empty($_FILES['business_cert_photo']['name'])) {
-            $targetDir = __DIR__ . '/../../public/uploads/business_certificates/';
+        // Handle NIC photo front upload
+        if (!empty($existingCertFront) && empty($_FILES['nic_photo_front']['name'])) {
+            $provider['nic_photo_front'] = $existingCertFront;
+        } elseif (!empty($_FILES['nic_photo_front']['name'])) {
+            $targetDir = __DIR__ . '/../../public/uploads/nic_photos/';
             if (!is_dir($targetDir)) {
                 mkdir($targetDir, 0777, true);
             }
-            $fileName = uniqid() . '_' . basename($_FILES['business_cert_photo']['name']);
+            $fileName = uniqid() . '_front_' . basename($_FILES['nic_photo_front']['name']);
             $targetFile = $targetDir . $fileName;
 
             $maxSize = 5 * 1024 * 1024; // 5MB
-            if ($_FILES['business_cert_photo']['size'] > $maxSize) {
-                $errors[] = 'Business certificate photo must be less than 5MB.';
-            } elseif (!in_array($_FILES['business_cert_photo']['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
-                $errors[] = 'Business certificate photo must be JPG or PNG.';
-            } elseif (is_uploaded_file($_FILES['business_cert_photo']['tmp_name'])) {
-                if (move_uploaded_file($_FILES['business_cert_photo']['tmp_name'], $targetFile)) {
-                    $provider['business_cert_photo'] = 'uploads/business_certificates/' . $fileName;
+            if ($_FILES['nic_photo_front']['size'] > $maxSize) {
+                $errors[] = 'NIC front photo must be less than 5MB.';
+            } elseif (!in_array($_FILES['nic_photo_front']['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
+                $errors[] = 'NIC front photo must be JPG or PNG.';
+            } elseif (is_uploaded_file($_FILES['nic_photo_front']['tmp_name'])) {
+                if (move_uploaded_file($_FILES['nic_photo_front']['tmp_name'], $targetFile)) {
+                    $provider['nic_photo_front'] = 'uploads/nic_photos/' . $fileName;
                 } else {
-                    $errors[] = 'Failed to upload business certificate photo.';
+                    $errors[] = 'Failed to upload NIC front photo.';
                 }
             } else {
                 $errors[] = 'Invalid file upload. Please try again.';
             }
         } else {
-            $errors[] = 'Business certificate photo is required.';
+            $errors[] = 'NIC front photo is required.';
+        }
+
+        // Handle NIC photo back upload
+        if (!empty($existingCertBack) && empty($_FILES['nic_photo_back']['name'])) {
+            $provider['nic_photo_back'] = $existingCertBack;
+        } elseif (!empty($_FILES['nic_photo_back']['name'])) {
+            $targetDir = __DIR__ . '/../../public/uploads/nic_photos/';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $fileName = uniqid() . '_back_' . basename($_FILES['nic_photo_back']['name']);
+            $targetFile = $targetDir . $fileName;
+
+            $maxSize = 5 * 1024 * 1024; // 5MB
+            if ($_FILES['nic_photo_back']['size'] > $maxSize) {
+                $errors[] = 'NIC back photo must be less than 5MB.';
+            } elseif (!in_array($_FILES['nic_photo_back']['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
+                $errors[] = 'NIC back photo must be JPG or PNG.';
+            } elseif (is_uploaded_file($_FILES['nic_photo_back']['tmp_name'])) {
+                if (move_uploaded_file($_FILES['nic_photo_back']['tmp_name'], $targetFile)) {
+                    $provider['nic_photo_back'] = 'uploads/nic_photos/' . $fileName;
+                } else {
+                    $errors[] = 'Failed to upload NIC back photo.';
+                }
+            } else {
+                $errors[] = 'Invalid file upload. Please try again.';
+            }
+        } else {
+            $errors[] = 'NIC back photo is required.';
         }
 
         // Duplicate checks
@@ -164,7 +217,8 @@ class ServiceProviderRegister
                 'confirm_password' => $confirm_password,
                 'services' => $this->processServicesData($_POST['services'] ?? []),
                 'projects' => $_POST['projects'] ?? [],
-                'uploadedPhoto' => $provider['business_cert_photo'] ?? $existingCert,
+                'uploadedPhotoFront' => $provider['nic_photo_front'] ?? $existingCertFront,
+                'uploadedPhotoBack' => $provider['nic_photo_back'] ?? $existingCertBack,
             ]);
             return;
         }

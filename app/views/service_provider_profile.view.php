@@ -146,9 +146,9 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Website</label>
+                    <label class="form-label">Social Media Link</label>
                     <div class="form-input" style="background: #f8f9fa; cursor: default;">
-                        <?php echo $data['provider']->website ? htmlspecialchars($data['provider']->website) : 'Not provided'; ?>
+                        <?php echo $data['provider']->social_media_link ? htmlspecialchars($data['provider']->social_media_link) : 'Not provided'; ?>
                     </div>
                 </div>
             </div>

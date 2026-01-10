@@ -73,11 +73,11 @@
                 <div class="card-body">
                     <p class="provider-summary"><?= nl2br(htmlspecialchars($data['provider']->professional_summary)) ?></p>
                     
-                    <?php if (!empty($data['provider']->website)): ?>
+                    <?php if (!empty($data['provider']->social_media_link)): ?>
                         <div class="website-link">
-                            <i class="fas fa-globe"></i>
-                            <a href="<?= htmlspecialchars($data['provider']->website) ?>" target="_blank" rel="noopener">
-                                <?= htmlspecialchars($data['provider']->website) ?>
+                            <i class="fas fa-share-alt"></i>
+                            <a href="<?= htmlspecialchars($data['provider']->social_media_link) ?>" target="_blank" rel="noopener">
+                                <?= htmlspecialchars($data['provider']->social_media_link) ?>
                             </a>
                         </div>
                     <?php endif; ?>

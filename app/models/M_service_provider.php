@@ -8,8 +8,8 @@ class M_service_provider extends M_signup {
         $this->db = new Database();
     }
 
-    public function register($full_name, $email, $password, $phone, $nic_photo = null) {
-        return $this->registerUser($full_name, $email, $password, $phone, 'service_provider', $nic_photo);
+    public function register($full_name, $email, $password, $phone, $nic_photo_front = null, $nic_photo_back = null) {
+        return $this->registerUser($full_name, $email, $password, $phone, 'service_provider', $nic_photo_front, $nic_photo_back);
     }
 
     public function emailExists($email) {
@@ -69,13 +69,13 @@ class M_service_provider extends M_signup {
             $this->db->beginTransaction();
 
             $this->db->query("INSERT INTO serviceprovider (
-                user_id, full_name, professional_title, email, phone, location,
-                website, years_experience, professional_summary,
-                availability, availability_notes, business_cert_photo
+                user_id, full_name, professional_title, email, phone, location, nic_number,
+                social_media_link, years_experience, professional_summary,
+                availability, availability_notes, nic_photo_front, nic_photo_back
             ) VALUES (
-                :user_id, :full_name, :professional_title, :email, :phone, :location,
-                :website, :years_experience, :professional_summary,
-                :availability, :availability_notes, :business_cert_photo
+                :user_id, :full_name, :professional_title, :email, :phone, :location, :nic_number,
+                :social_media_link, :years_experience, :professional_summary,
+                :availability, :availability_notes, :nic_photo_front, :nic_photo_back
             )
             ON DUPLICATE KEY UPDATE
                 full_name = VALUES(full_name),
@@ -83,12 +83,14 @@ class M_service_provider extends M_signup {
                 email = VALUES(email),
                 phone = VALUES(phone),
                 location = VALUES(location),
-                website = VALUES(website),
+                nic_number = VALUES(nic_number),
+                social_media_link = VALUES(social_media_link),
                 years_experience = VALUES(years_experience),
                 professional_summary = VALUES(professional_summary),
                 availability = VALUES(availability),
                 availability_notes = VALUES(availability_notes),
-                business_cert_photo = VALUES(business_cert_photo)");
+                nic_photo_front = VALUES(nic_photo_front),
+                nic_photo_back = VALUES(nic_photo_back)");
 
             $this->db->bind(':user_id', $providerId);
             $this->db->bind(':full_name', $provider['full_name'] ?? null);
@@ -96,12 +98,14 @@ class M_service_provider extends M_signup {
             $this->db->bind(':email', $provider['email'] ?? null);
             $this->db->bind(':phone', $provider['phone'] ?? null);
             $this->db->bind(':location', $provider['location'] ?? null);
-            $this->db->bind(':website', $provider['website'] ?? null);
+            $this->db->bind(':nic_number', $provider['nic_number'] ?? null);
+            $this->db->bind(':social_media_link', $provider['website'] ?? null);
             $this->db->bind(':years_experience', isset($provider['years_experience']) && $provider['years_experience'] !== '' ? (int)$provider['years_experience'] : null);
             $this->db->bind(':professional_summary', $provider['professional_summary'] ?? null);
             $this->db->bind(':availability', isset($provider['availability']) ? (int)$provider['availability'] : 1);
             $this->db->bind(':availability_notes', $provider['availability_notes'] ?? null);
-            $this->db->bind(':business_cert_photo', $provider['business_cert_photo'] ?? null);
+            $this->db->bind(':nic_photo_front', $provider['nic_photo_front'] ?? null);
+            $this->db->bind(':nic_photo_back', $provider['nic_photo_back'] ?? null);
 
             $this->db->execute();
             $this->db->commit();
