@@ -92,29 +92,58 @@ CREATE TABLE IF NOT EXISTS `serviceprovider` (
   CONSTRAINT `serviceprovider_ibfk_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Create service_types table
+CREATE TABLE IF NOT EXISTS `service_types` (
+  `service_type_id` int NOT NULL AUTO_INCREMENT,
+  `service_type` varchar(100) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`service_type_id`),
+  UNIQUE KEY `service_type` (`service_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert service types
+INSERT INTO `service_types` (`service_type`) VALUES
+('Theater Production'),
+('Lighting Design'),
+('Sound Systems'),
+('Video Production'),
+('Set Design'),
+('Costume Design'),
+('Other')
+ON DUPLICATE KEY UPDATE service_type=service_type;
+
 -- Create services table
 CREATE TABLE IF NOT EXISTS `services` (
   `id` int NOT NULL AUTO_INCREMENT,
   `provider_id` int NOT NULL,
-  `service_type` varchar(100) NOT NULL,
+  `service_type_id` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `provider_id` (`provider_id`),
-  CONSTRAINT `services_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `serviceprovider` (`user_id`) ON DELETE CASCADE
+  KEY `service_type_id` (`service_type_id`),
+  CONSTRAINT `services_ibfk_provider` FOREIGN KEY (`provider_id`) REFERENCES `serviceprovider` (`user_id`) ON DELETE CASCADE,
+  CONSTRAINT `services_ibfk_service_type` FOREIGN KEY (`service_type_id`) REFERENCES `service_types` (`service_type_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create services table
 
 -- Theater Production details
 CREATE TABLE IF NOT EXISTS `service_theater_details` (
   `service_id` int NOT NULL,
   `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `rate_type` enum('hourly','daily') DEFAULT 'hourly',
   `description` text,
-  `num_actors` int DEFAULT NULL,
-  `expected_audience` int DEFAULT NULL,
-  `stage_proscenium` tinyint(1) DEFAULT NULL,
-  `stage_black_box` tinyint(1) DEFAULT NULL,
-  `stage_open_floor` tinyint(1) DEFAULT NULL,
-  `seating_requirement` varchar(255) DEFAULT NULL,
-  `parking_requirement` varchar(255) DEFAULT NULL,
-  `special_tech` text,
+  `theatre_name` varchar(255) DEFAULT NULL,
+  `seating_capacity` int DEFAULT NULL,
+  `stage_dimensions` varchar(255) DEFAULT NULL,
+  `stage_type` varchar(100) DEFAULT NULL,
+  `available_facilities` text,
+  `technical_facilities` text,
+  `equipment_rent` text,
+  `stage_crew_available` varchar(10) DEFAULT NULL,
+  `location_address` text,
   PRIMARY KEY (`service_id`),
   CONSTRAINT `theater_details_fk_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -123,15 +152,12 @@ CREATE TABLE IF NOT EXISTS `service_theater_details` (
 CREATE TABLE IF NOT EXISTS `service_lighting_details` (
   `service_id` int NOT NULL,
   `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `rate_type` enum('hourly','daily') DEFAULT 'hourly',
   `description` text,
-  `stage_lighting` tinyint(1) DEFAULT NULL,
-  `spotlights` tinyint(1) DEFAULT NULL,
-  `custom_programming` tinyint(1) DEFAULT NULL,
-  `moving_heads` tinyint(1) DEFAULT NULL,
-  `num_lights` int DEFAULT NULL,
-  `effects` varchar(255) DEFAULT NULL,
-  `technician_needed` enum('Yes','No') DEFAULT NULL,
-  `notes` text,
+  `lighting_equipment_provided` text,
+  `max_stage_size` varchar(255) DEFAULT NULL,
+  `lighting_design_service` varchar(10) DEFAULT NULL,
+  `lighting_crew_available` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`service_id`),
   CONSTRAINT `lighting_details_fk_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -140,16 +166,13 @@ CREATE TABLE IF NOT EXISTS `service_lighting_details` (
 CREATE TABLE IF NOT EXISTS `service_sound_details` (
   `service_id` int NOT NULL,
   `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `rate_type` enum('hourly','daily') DEFAULT 'hourly',
   `description` text,
-  `pa_system` tinyint(1) DEFAULT NULL,
-  `microphones` tinyint(1) DEFAULT NULL,
-  `sound_mixing` tinyint(1) DEFAULT NULL,
-  `background_music` tinyint(1) DEFAULT NULL,
-  `special_effects` tinyint(1) DEFAULT NULL,
-  `num_mics` int DEFAULT NULL,
-  `stage_monitor` enum('Yes','No') DEFAULT NULL,
-  `sound_engineer` enum('Yes','No') DEFAULT NULL,
-  `notes` text,
+  `sound_equipment_provided` text,
+  `max_audience_size` int DEFAULT NULL,
+  `sound_effects_handling` varchar(10) DEFAULT NULL,
+  `sound_engineer_included` varchar(10) DEFAULT NULL,
+  `equipment_brands` text,
   PRIMARY KEY (`service_id`),
   CONSTRAINT `sound_details_fk_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -158,18 +181,19 @@ CREATE TABLE IF NOT EXISTS `service_sound_details` (
 CREATE TABLE IF NOT EXISTS `service_video_details` (
   `service_id` int NOT NULL,
   `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `rate_type` enum('hourly','daily') DEFAULT 'hourly',
   `description` text,
-  `full_event` tinyint(1) DEFAULT NULL,
-  `highlight_reel` tinyint(1) DEFAULT NULL,
-  `short_promo` tinyint(1) DEFAULT NULL,
-  `num_cameras` int DEFAULT NULL,
-  `drone_needed` enum('Yes','No') DEFAULT NULL,
-  `gimbals` enum('Yes','No') DEFAULT NULL,
-  `editing` enum('Yes','No') DEFAULT NULL,
-  `delivery_mp4` tinyint(1) DEFAULT NULL,
-  `delivery_raw` tinyint(1) DEFAULT NULL,
-  `delivery_social` tinyint(1) DEFAULT NULL,
-  `notes` text,
+  `services_offered` text,
+  `equipment_used` text,
+  `num_crew_members` int DEFAULT NULL,
+  `editing_software` varchar(255) DEFAULT NULL,
+  `drone_service_available` varchar(10) DEFAULT NULL,
+  `max_video_resolution` varchar(50) DEFAULT NULL,
+  `photo_editing_included` varchar(10) DEFAULT NULL,
+  `delivery_time` varchar(255) DEFAULT NULL,
+  `raw_footage_provided` varchar(10) DEFAULT NULL,
+  `portfolio_links` text,
+  `sample_videos` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`service_id`),
   CONSTRAINT `video_details_fk_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -178,16 +202,14 @@ CREATE TABLE IF NOT EXISTS `service_video_details` (
 CREATE TABLE IF NOT EXISTS `service_set_details` (
   `service_id` int NOT NULL,
   `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `rate_type` enum('hourly','daily') DEFAULT 'hourly',
   `description` text,
-  `set_design` tinyint(1) DEFAULT NULL,
-  `set_construction` tinyint(1) DEFAULT NULL,
-  `set_rental` tinyint(1) DEFAULT NULL,
-  `production_stage` varchar(50) DEFAULT NULL,
-  `materials` varchar(255) DEFAULT NULL,
-  `dimensions` varchar(255) DEFAULT NULL,
-  `budget_range` varchar(100) DEFAULT NULL,
-  `deadline` date DEFAULT NULL,
-  `notes` text,
+  `types_of_sets_designed` text,
+  `set_construction_provided` varchar(10) DEFAULT NULL,
+  `stage_installation_support` varchar(10) DEFAULT NULL,
+  `max_stage_size_supported` varchar(255) DEFAULT NULL,
+  `materials_used` text,
+  `sample_set_designs` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`service_id`),
   CONSTRAINT `set_details_fk_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -196,19 +218,35 @@ CREATE TABLE IF NOT EXISTS `service_set_details` (
 CREATE TABLE IF NOT EXISTS `service_costume_details` (
   `service_id` int NOT NULL,
   `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `rate_type` enum('hourly','daily') DEFAULT 'hourly',
   `description` text,
-  `costume_design` tinyint(1) DEFAULT NULL,
-  `costume_creation` tinyint(1) DEFAULT NULL,
-  `costume_rental` tinyint(1) DEFAULT NULL,
-  `num_characters` int DEFAULT NULL,
-  `num_costumes` int DEFAULT NULL,
-  `measurements_required` enum('Yes','No') DEFAULT NULL,
-  `fitting_dates` date DEFAULT NULL,
-  `budget_range` varchar(100) DEFAULT NULL,
-  `deadline` date DEFAULT NULL,
-  `notes` text,
+  `types_of_costumes_provided` text,
+  `custom_costume_design_available` varchar(10) DEFAULT NULL,
+  `available_sizes` varchar(100) DEFAULT NULL,
+  `alterations_provided` varchar(10) DEFAULT NULL,
+  `number_of_costumes_available` int DEFAULT NULL,
   PRIMARY KEY (`service_id`),
   CONSTRAINT `costume_details_fk_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Makeup & Hair details
+CREATE TABLE IF NOT EXISTS `service_makeup_details` (
+  `service_id` int NOT NULL,
+  `rate_per_hour` decimal(10,2) DEFAULT NULL,
+  `rate_type` enum('hourly','daily') DEFAULT 'hourly',
+  `description` text,
+  `type_of_makeup_services` text,
+  `experience_stage_makeup_years` int DEFAULT NULL,
+  `character_based_makeup_available` varchar(10) DEFAULT NULL,
+  `can_handle_full_cast` varchar(10) DEFAULT NULL,
+  `maximum_actors_per_show` int DEFAULT NULL,
+  `bring_own_makeup_kit` varchar(10) DEFAULT NULL,
+  `onsite_service_available` varchar(10) DEFAULT NULL,
+  `touchup_service_during_show` varchar(10) DEFAULT NULL,
+  `traditional_cultural_makeup_expertise` text,
+  `sample_makeup_photos` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`service_id`),
+  CONSTRAINT `makeup_details_fk_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create projects table

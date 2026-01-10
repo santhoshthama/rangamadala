@@ -282,59 +282,103 @@
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[0][selected]" class="checkbox" id="service1" <?= isset($svc0['selected']) ? 'checked' : '' ?>>
+                                    <input type="checkbox" name="services[0][selected]" class="checkbox" id="service1" <?= !empty($svc0['selected']) ? 'checked' : '' ?>>
                                     <label for="service1" class="service-name">🎭 Theater Production</label>
                                     <input type="hidden" name="services[0][name]" value="Theater Production">
                                 </div>
-                                <div class="rate-input-group" id="service1Rate" style="<?= isset($svc0['selected']) ? '' : 'display:none;' ?>">
-                                    <label>Rate per hour:</label>
-                                    <div class="input-wrapper">
-                                        <span class="currency">Rs</span>
-                                        <input type="number" name="services[0][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc0['rate']) ? htmlspecialchars($svc0['rate']) : '' ?>">
+                                <div class="rate-input-group" id="service1Rate" style="<?= !empty($svc0['selected']) ? '' : 'display:none;' ?>">
+                                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate Type:</label>
+                                            <select name="services[0][rate_type]" class="form-input" style="padding: 8px 12px; font-size: 14px; min-width: 130px;">
+                                                <option value="hourly" <?= isset($svc0['rate_type']) && $svc0['rate_type'] === 'daily' ? '' : 'selected' ?>>Per Hour</option>
+                                                <option value="daily" <?= isset($svc0['rate_type']) && $svc0['rate_type'] === 'daily' ? 'selected' : '' ?>>Per Day</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
+                                            <div class="input-wrapper">
+                                                <span class="currency">Rs</span>
+                                                <input type="number" name="services[0][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc0['rate']) ? htmlspecialchars($svc0['rate']) : '' ?>">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group" id="service1Desc" style="<?= isset($svc0['selected']) ? '' : 'display:none;' ?>">
+                            <div class="form-group" id="service1Desc" style="<?= !empty($svc0['selected']) ? '' : 'display:none;' ?>">
                                 <label class="form-label">Description </label>
                                 <textarea name="services[0][description]" class="form-input textarea" placeholder="Add a description about this service..." ><?= isset($svc0['description']) ? htmlspecialchars($svc0['description']) : '' ?></textarea>
                             </div>
                             
-                            <!-- Theater-specific fields -->
-                            <div class="service-details" id="service1Details" style="<?= isset($svc0['selected']) ? '' : 'display:none;' ?>">
+                            <!-- Theatre-specific fields -->
+                            <div class="service-details" id="service1Details" style="<?= !empty($svc0['selected']) ? '' : 'display:none;' ?>">
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Number of Actors/Participants</label>
-                                        <input type="number" name="services[0][num_actors]" class="form-input" placeholder="e.g., 15" value="<?= isset($svc0['num_actors']) ? htmlspecialchars($svc0['num_actors']) : '' ?>">
+                                        <label class="form-label">Theatre Name</label>
+                                        <input type="text" name="services[0][theatre_name]" class="form-input" placeholder="e.g., City Hall Theatre" value="<?= isset($svc0['theatre_name']) ? htmlspecialchars($svc0['theatre_name']) : '' ?>">
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Expected Audience (for shows)</label>
-                                        <input type="number" name="services[0][expected_audience]" class="form-input" placeholder="e.g., 200" value="<?= isset($svc0['expected_audience']) ? htmlspecialchars($svc0['expected_audience']) : '' ?>">
+                                        <label class="form-label">Seating Capacity</label>
+                                        <input type="number" name="services[0][seating_capacity]" class="form-input" placeholder="e.g., 500" value="<?= isset($svc0['seating_capacity']) ? htmlspecialchars($svc0['seating_capacity']) : '' ?>">
                                     </div>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Stage Requirements</label>
-                                    <div class="checkbox-group-vertical">
-                                        <label><input type="checkbox" name="services[0][stage_req][]" value="Proscenium" <?= isset($svc0['stage_req']) && in_array('Proscenium', (array)$svc0['stage_req']) ? 'checked' : '' ?>> Proscenium</label>
-                                        <label><input type="checkbox" name="services[0][stage_req][]" value="Black box" <?= isset($svc0['stage_req']) && in_array('Black box', (array)$svc0['stage_req']) ? 'checked' : '' ?>> Black box</label>
-                                        <label><input type="checkbox" name="services[0][stage_req][]" value="Open floor" <?= isset($svc0['stage_req']) && in_array('Open floor', (array)$svc0['stage_req']) ? 'checked' : '' ?>> Open floor</label>
-                                    </div>
-                                </div>
-                                
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Seating Requirement</label>
-                                        <input type="text" name="services[0][seating]" class="form-input" placeholder="e.g., 300 seats" value="<?= isset($svc0['seating']) ? htmlspecialchars($svc0['seating']) : '' ?>">
+                                        <label class="form-label">Stage Dimensions (Width × Depth)</label>
+                                        <input type="text" name="services[0][stage_dimensions]" class="form-input" placeholder="e.g., 30ft × 20ft" value="<?= isset($svc0['stage_dimensions']) ? htmlspecialchars($svc0['stage_dimensions']) : '' ?>">
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Parking Requirement</label>
-                                        <input type="text" name="services[0][parking]" class="form-input" placeholder="e.g., 50 vehicles" value="<?= isset($svc0['parking']) ? htmlspecialchars($svc0['parking']) : '' ?>">
+                                        <label class="form-label">Stage Type</label>
+                                        <input type="text" name="services[0][stage_type]" class="form-input" placeholder="e.g., Proscenium, Black box" value="<?= isset($svc0['stage_type']) ? htmlspecialchars($svc0['stage_type']) : '' ?>">
                                     </div>
                                 </div>
-                                
                                 <div class="form-group">
-                                    <label class="form-label">Special Technical Requirements</label>
-                                    <textarea name="services[0][special_tech]" class="form-input textarea" placeholder="Describe any special technical needs..."><?= isset($svc0['special_tech']) ? htmlspecialchars($svc0['special_tech']) : '' ?></textarea>
+                                    <label class="form-label">Available Facilities</label>
+                                    <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                        <?php $af = (array)($svc0['available_facilities'] ?? []); ?>
+                                        <label><input type="checkbox" name="services[0][available_facilities][]" value="Dressing rooms" <?= in_array('Dressing rooms', $af) ? 'checked' : '' ?>> Dressing rooms</label>
+                                        <label><input type="checkbox" name="services[0][available_facilities][]" value="AC" <?= in_array('AC', $af) ? 'checked' : '' ?>> AC</label>
+                                        <label><input type="checkbox" name="services[0][available_facilities][]" value="Parking" <?= in_array('Parking', $af) ? 'checked' : '' ?>> Parking</label>
+                                        <label><input type="checkbox" name="services[0][available_facilities][]" value="Washrooms" <?= in_array('Washrooms', $af) ? 'checked' : '' ?>> Washrooms</label>
+                                        <label><input type="checkbox" name="services[0][available_facilities][]" value="Green Room" <?= in_array('Green Room', $af) ? 'checked' : '' ?>> Green Room</label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Technical Facilities</label>
+                                    <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                        <?php $tf = (array)($svc0['technical_facilities'] ?? []); ?>
+                                        <label><input type="checkbox" name="services[0][technical_facilities][]" value="Lighting system" <?= in_array('Lighting system', $tf) ? 'checked' : '' ?>> Lighting system</label>
+                                        <label><input type="checkbox" name="services[0][technical_facilities][]" value="Sound system" <?= in_array('Sound system', $tf) ? 'checked' : '' ?>> Sound system</label>
+                                        <label><input type="checkbox" name="services[0][technical_facilities][]" value="Projector" <?= in_array('Projector', $tf) ? 'checked' : '' ?>> Projector</label>
+                                        <label><input type="checkbox" name="services[0][technical_facilities][]" value="Backdrops" <?= in_array('Backdrops', $tf) ? 'checked' : '' ?>> Backdrops</label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Additional Equipment for Rent</label>
+                                    <textarea name="services[0][equipment_rent]" class="form-input textarea" placeholder="Describe equipment"><?= isset($svc0['equipment_rent']) ? htmlspecialchars($svc0['equipment_rent']) : '' ?></textarea>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Stage Crew Available</label>
+                                        <?php $crew = $svc0['stage_crew_available'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[0][stage_crew_available]" value="Yes" <?= $crew === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[0][stage_crew_available]" value="No" <?= $crew === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Location / Address</label>
+                                    <textarea name="services[0][location_address]" class="form-input textarea" placeholder="Full address"><?= isset($svc0['location_address']) ? htmlspecialchars($svc0['location_address']) : '' ?></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Upload Theatre Photos</label>
+                                    <input type="file" name="services[0][theatre_photos][]" class="form-input" multiple accept="image/*">
                                 </div>
                             </div>
                         </div>
@@ -343,60 +387,63 @@
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[1][selected]" class="checkbox" id="service2" <?= isset($svc1['selected']) ? 'checked' : '' ?>>
+                                    <input type="checkbox" name="services[1][selected]" class="checkbox" id="service2" <?= !empty($svc1['selected']) ? 'checked' : '' ?>>
                                     <label for="service2" class="service-name">💡 Lighting Design</label>
                                     <input type="hidden" name="services[1][name]" value="Lighting Design">
                                 </div>
-                                <div class="rate-input-group" id="service2Rate" style="<?= isset($svc1['selected']) ? '' : 'display:none;' ?>">
-                                    <label>Rate per hour:</label>
-                                    <div class="input-wrapper">
-                                        <span class="currency">Rs</span>
-                                        <input type="number" name="services[1][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc1['rate']) ? htmlspecialchars($svc1['rate']) : '' ?>">
+                                <div class="rate-input-group" id="service2Rate" style="<?= !empty($svc1['selected']) ? '' : 'display:none;' ?>">
+                                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate Type:</label>
+                                            <select name="services[1][rate_type]" class="form-input" style="padding: 8px 12px; font-size: 14px; min-width: 130px;">
+                                                <option value="hourly" <?= isset($svc1['rate_type']) && $svc1['rate_type'] === 'daily' ? '' : 'selected' ?>>Per Hour</option>
+                                                <option value="daily" <?= isset($svc1['rate_type']) && $svc1['rate_type'] === 'daily' ? 'selected' : '' ?>>Per Day</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
+                                            <div class="input-wrapper">
+                                                <span class="currency">Rs</span>
+                                                <input type="number" name="services[1][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc1['rate']) ? htmlspecialchars($svc1['rate']) : '' ?>">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group" id="service2Desc" style="<?= isset($svc1['selected']) ? '' : 'display:none;' ?>">
+                            <div class="form-group" id="service2Desc" style="<?= !empty($svc1['selected']) ? '' : 'display:none;' ?>">
                                 <label class="form-label">Description </label>
                                 <textarea name="services[1][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc1['description']) ? htmlspecialchars($svc1['description']) : '' ?></textarea>
                             </div>
                             
                             <!-- Lighting-specific fields -->
-                            <div class="service-details" id="service2Details" style="<?= isset($svc1['selected']) ? '' : 'display:none;' ?>">
+                            <div class="service-details" id="service2Details" style="<?= !empty($svc1['selected']) ? '' : 'display:none;' ?>">
                                 <div class="form-group">
-                                    <label class="form-label">Required Lighting Services</label>
-                                    <div class="checkbox-group-vertical">
-                                        <label><input type="checkbox" name="services[1][lighting_services][]" value="Stage Lighting" <?= isset($svc1['lighting_services']) && in_array('Stage Lighting', (array)$svc1['lighting_services']) ? 'checked' : '' ?>> Stage Lighting</label>
-                                        <label><input type="checkbox" name="services[1][lighting_services][]" value="Spotlights" <?= isset($svc1['lighting_services']) && in_array('Spotlights', (array)$svc1['lighting_services']) ? 'checked' : '' ?>> Spotlights</label>
-                                        <label><input type="checkbox" name="services[1][lighting_services][]" value="Custom Lighting Programming" <?= isset($svc1['lighting_services']) && in_array('Custom Lighting Programming', (array)$svc1['lighting_services']) ? 'checked' : '' ?>> Custom Lighting Programming</label>
-                                        <label><input type="checkbox" name="services[1][lighting_services][]" value="Moving Heads" <?= isset($svc1['lighting_services']) && in_array('Moving Heads', (array)$svc1['lighting_services']) ? 'checked' : '' ?>> Moving Heads</label>
-                                    </div>
+                                    <label class="form-label">Lighting Equipment Provided</label>
+                                    <textarea name="services[1][lighting_equipment_provided]" class="form-input textarea" placeholder="Describe the equipment provided (e.g., fixtures, controllers, trussing)"><?= isset($svc1['lighting_equipment_provided']) ? htmlspecialchars($svc1['lighting_equipment_provided']) : '' ?></textarea>
                                 </div>
-                                
+
+                                <div class="form-group">
+                                    <label class="form-label">Maximum Stage Size Supported</label>
+                                    <input type="text" name="services[1][max_stage_size]" class="form-input" placeholder="e.g., 40ft × 30ft" value="<?= isset($svc1['max_stage_size']) ? htmlspecialchars($svc1['max_stage_size']) : '' ?>">
+                                </div>
+
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Number of Lights Required</label>
-                                        <input type="number" name="services[1][num_lights]" class="form-input" placeholder="e.g., 20" value="<?= isset($svc1['num_lights']) ? htmlspecialchars($svc1['num_lights']) : '' ?>">
+                                        <label class="form-label">Lighting Design Service</label>
+                                        <?php $lds = $svc1['lighting_design_service'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[1][lighting_design_service]" value="Yes" <?= $lds === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[1][lighting_design_service]" value="No" <?= $lds === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Required Lighting Effects</label>
-                                        <input type="text" name="services[1][lighting_effects]" class="form-input" placeholder="e.g., Color changes, Strobe effects" value="<?= isset($svc1['lighting_effects']) ? htmlspecialchars($svc1['lighting_effects']) : '' ?>">
+                                        <label class="form-label">Lighting Crew Available</label>
+                                        <?php $lca = $svc1['lighting_crew_available'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[1][lighting_crew_available]" value="Yes" <?= $lca === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[1][lighting_crew_available]" value="No" <?= $lca === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label class="form-label">On-site Technician Needed?</label>
-                                        <select name="services[1][technician_needed]" class="form-input">
-                                            <option value="">Select an option</option>
-                                            <option value="Yes" <?= isset($svc1['technician_needed']) && $svc1['technician_needed'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
-                                            <option value="No" <?= isset($svc1['technician_needed']) && $svc1['technician_needed'] === 'No' ? 'selected' : '' ?>>No</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Additional Notes</label>
-                                    <textarea name="services[1][additional_notes]" class="form-input textarea" placeholder="Any additional requirements or notes..."><?= isset($svc1['additional_notes']) ? htmlspecialchars($svc1['additional_notes']) : '' ?></textarea>
                                 </div>
                             </div>
                         </div>
@@ -405,64 +452,70 @@
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[2][selected]" class="checkbox" id="service3" <?= isset($svc2['selected']) ? 'checked' : '' ?>>
+                                    <input type="checkbox" name="services[2][selected]" class="checkbox" id="service3" <?= !empty($svc2['selected']) ? 'checked' : '' ?>>
                                     <label for="service3" class="service-name">🔊 Sound Systems</label>
                                     <input type="hidden" name="services[2][name]" value="Sound Systems">
 
                                 </div>
-                                <div class="rate-input-group" id="service3Rate" style="<?= isset($svc2['selected']) ? '' : 'display:none;' ?>">
-                                    <label>Rate per hour:</label>
-                                    <div class="input-wrapper">
-                                        <span class="currency">Rs</span>
-                                        <input type="number" name="services[2][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc2['rate']) ? htmlspecialchars($svc2['rate']) : '' ?>">
+                                <div class="rate-input-group" id="service3Rate" style="<?= !empty($svc2['selected']) ? '' : 'display:none;' ?>">
+                                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate Type:</label>
+                                            <select name="services[2][rate_type]" class="form-input" style="padding: 8px 12px; font-size: 14px; min-width: 130px;">
+                                                <option value="hourly" <?= isset($svc2['rate_type']) && $svc2['rate_type'] === 'daily' ? '' : 'selected' ?>>Per Hour</option>
+                                                <option value="daily" <?= isset($svc2['rate_type']) && $svc2['rate_type'] === 'daily' ? 'selected' : '' ?>>Per Day</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
+                                            <div class="input-wrapper">
+                                                <span class="currency">Rs</span>
+                                                <input type="number" name="services[2][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc2['rate']) ? htmlspecialchars($svc2['rate']) : '' ?>">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group" id="service3Desc" style="<?= isset($svc2['selected']) ? '' : 'display:none;' ?>">
+                            <div class="form-group" id="service3Desc" style="<?= !empty($svc2['selected']) ? '' : 'display:none;' ?>">
                                 <label class="form-label">Description</label>
                                 <textarea name="services[2][description]" class="form-input textarea" placeholder="Add a description about this service..." ><?= isset($svc2['description']) ? htmlspecialchars($svc2['description']) : '' ?></textarea>
                             </div>
                             
                             <!-- Sound-specific fields -->
-                            <div class="service-details" id="service3Details" style="<?= isset($svc2['selected']) ? '' : 'display:none;' ?>">
+                            <div class="service-details" id="service3Details" style="<?= !empty($svc2['selected']) ? '' : 'display:none;' ?>">
                                 <div class="form-group">
-                                    <label class="form-label">Required Sound Services</label>
-                                    <div class="checkbox-group-vertical">
-                                        <label><input type="checkbox" name="services[2][sound_services][]" value="PA system" <?= isset($svc2['sound_services']) && in_array('PA system', (array)$svc2['sound_services']) ? 'checked' : '' ?>> PA system</label>
-                                        <label><input type="checkbox" name="services[2][sound_services][]" value="Microphones" <?= isset($svc2['sound_services']) && in_array('Microphones', (array)$svc2['sound_services']) ? 'checked' : '' ?>> Microphones</label>
-                                        <label><input type="checkbox" name="services[2][sound_services][]" value="Sound Mixing" <?= isset($svc2['sound_services']) && in_array('Sound Mixing', (array)$svc2['sound_services']) ? 'checked' : '' ?>> Sound Mixing</label>
-                                        <label><input type="checkbox" name="services[2][sound_services][]" value="Background Music" <?= isset($svc2['sound_services']) && in_array('Background Music', (array)$svc2['sound_services']) ? 'checked' : '' ?>> Background Music</label>
-                                        <label><input type="checkbox" name="services[2][sound_services][]" value="Special Effects" <?= isset($svc2['sound_services']) && in_array('Special Effects', (array)$svc2['sound_services']) ? 'checked' : '' ?>> Special Effects</label>
-                                    </div>
+                                    <label class="form-label">Sound Equipment Provided</label>
+                                    <textarea name="services[2][sound_equipment_provided]" class="form-input textarea" placeholder="Describe the equipment provided (e.g., PA, mixers, microphones)"><?= isset($svc2['sound_equipment_provided']) ? htmlspecialchars($svc2['sound_equipment_provided']) : '' ?></textarea>
                                 </div>
-                                
+
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Number of Wireless Mics</label>
-                                        <input type="number" name="services[2][num_mics]" class="form-input" placeholder="e.g., 8" value="<?= isset($svc2['num_mics']) ? htmlspecialchars($svc2['num_mics']) : '' ?>">
+                                        <label class="form-label">Maximum Audience Size Supported</label>
+                                        <input type="number" name="services[2][max_audience_size]" class="form-input" placeholder="e.g., 500" value="<?= isset($svc2['max_audience_size']) ? htmlspecialchars($svc2['max_audience_size']) : '' ?>">
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Stage Monitor Requirement?</label>
-                                        <select name="services[2][stage_monitor]" class="form-input">
-                                            <option value="">Select an option</option>
-                                            <option value="Yes" <?= isset($svc2['stage_monitor']) && $svc2['stage_monitor'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
-                                            <option value="No" <?= isset($svc2['stage_monitor']) && $svc2['stage_monitor'] === 'No' ? 'selected' : '' ?>>No</option>
-                                        </select>
+                                        <label class="form-label">Equipment Brands</label>
+                                        <input type="text" name="services[2][equipment_brands]" class="form-input" placeholder="e.g., Yamaha, Shure, JBL" value="<?= isset($svc2['equipment_brands']) ? htmlspecialchars($svc2['equipment_brands']) : '' ?>">
                                     </div>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Sound Engineer Needed?</label>
-                                    <select name="services[2][sound_engineer]" class="form-input">
-                                        <option value="">Select an option</option>
-                                        <option value="Yes" <?= isset($svc2['sound_engineer']) && $svc2['sound_engineer'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
-                                        <option value="No" <?= isset($svc2['sound_engineer']) && $svc2['sound_engineer'] === 'No' ? 'selected' : '' ?>>No</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Additional Notes</label>
-                                    <textarea name="services[2][additional_notes]" class="form-input textarea" placeholder="Any additional requirements..."><?= isset($svc2['additional_notes']) ? htmlspecialchars($svc2['additional_notes']) : '' ?></textarea>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Sound Effects Handling</label>
+                                        <?php $seh = $svc2['sound_effects_handling'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[2][sound_effects_handling]" value="Yes" <?= $seh === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[2][sound_effects_handling]" value="No" <?= $seh === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Sound Engineer Included</label>
+                                        <?php $sei = $svc2['sound_engineer_included'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[2][sound_engineer_included]" value="Yes" <?= $sei === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[2][sound_engineer_included]" value="No" <?= $sei === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -471,81 +524,110 @@
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[3][selected]" class="checkbox" id="service4" <?= isset($svc3['selected']) ? 'checked' : '' ?>>
+                                    <input type="checkbox" name="services[3][selected]" class="checkbox" id="service4" <?= !empty($svc3['selected']) ? 'checked' : '' ?>>
                                     <label for="service4" class="service-name">🎬 Video Production</label>
                                     <input type="hidden" name="services[3][name]" value="Video Production">
                                 </div>
 
-                                <div class="rate-input-group" id="service4Rate" style="<?= isset($svc3['selected']) ? '' : 'display:none;' ?>">
-                                    <label>Rate per hour:</label>
-                                    <div class="input-wrapper">
-                                        <span class="currency">Rs</span>
-                                        <input type="number" name="services[3][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc3['rate']) ? htmlspecialchars($svc3['rate']) : '' ?>">
+                                <div class="rate-input-group" id="service4Rate" style="<?= !empty($svc3['selected']) ? '' : 'display:none;' ?>">
+                                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate Type:</label>
+                                            <select name="services[3][rate_type]" class="form-input" style="padding: 8px 12px; font-size: 14px; min-width: 130px;">
+                                                <option value="hourly" <?= isset($svc3['rate_type']) && $svc3['rate_type'] === 'daily' ? '' : 'selected' ?>>Per Hour</option>
+                                                <option value="daily" <?= isset($svc3['rate_type']) && $svc3['rate_type'] === 'daily' ? 'selected' : '' ?>>Per Day</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
+                                            <div class="input-wrapper">
+                                                <span class="currency">Rs</span>
+                                                <input type="number" name="services[3][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc3['rate']) ? htmlspecialchars($svc3['rate']) : '' ?>">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group" id="service4Desc" style="<?= isset($svc3['selected']) ? '' : 'display:none;' ?>">
+                            <div class="form-group" id="service4Desc" style="<?= !empty($svc3['selected']) ? '' : 'display:none;' ?>">
                                 <label class="form-label">Description </label>
                                 <textarea name="services[3][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc3['description']) ? htmlspecialchars($svc3['description']) : '' ?></textarea>
                             </div>
                             
                             <!-- Video-specific fields -->
-                            <div class="service-details" id="service4Details" style="<?= isset($svc3['selected']) ? '' : 'display:none;' ?>">
+                            <div class="service-details" id="service4Details" style="<?= !empty($svc3['selected']) ? '' : 'display:none;' ?>">
                                 <div class="form-group">
-                                    <label class="form-label">Video Production Purpose</label>
-                                    <div class="checkbox-group-vertical">
-                                        <label><input type="checkbox" name="services[3][video_purpose][]" value="Full Event Recording" <?= isset($svc3['video_purpose']) && in_array('Full Event Recording', (array)$svc3['video_purpose']) ? 'checked' : '' ?>> Full Event Recording</label>
-                                        <label><input type="checkbox" name="services[3][video_purpose][]" value="Highlight Reel" <?= isset($svc3['video_purpose']) && in_array('Highlight Reel', (array)$svc3['video_purpose']) ? 'checked' : '' ?>> Highlight Reel</label>
-                                        <label><input type="checkbox" name="services[3][video_purpose][]" value="Short Promo" <?= isset($svc3['video_purpose']) && in_array('Short Promo', (array)$svc3['video_purpose']) ? 'checked' : '' ?>> Short Promo</label>
-                                    </div>
+                                    <label class="form-label">Services Offered (Video/Photography/etc.)</label>
+                                    <textarea name="services[3][services_offered]" class="form-input textarea" placeholder="Describe services (e.g., event videography, product photography, aerial video)"><?= isset($svc3['services_offered']) ? htmlspecialchars($svc3['services_offered']) : '' ?></textarea>
                                 </div>
-                                
+
+                                <div class="form-group">
+                                    <label class="form-label">Equipment Used (Cameras, lenses, lights)</label>
+                                    <textarea name="services[3][equipment_used]" class="form-input textarea" placeholder="List cameras, lenses, lighting equipment used"><?= isset($svc3['equipment_used']) ? htmlspecialchars($svc3['equipment_used']) : '' ?></textarea>
+                                </div>
+
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Number of Cameras Required</label>
-                                        <input type="number" name="services[3][num_cameras]" class="form-input" placeholder="e.g., 3" value="<?= isset($svc3['num_cameras']) ? htmlspecialchars($svc3['num_cameras']) : '' ?>">
+                                        <label class="form-label">Number of Crew Members</label>
+                                        <input type="number" name="services[3][num_crew_members]" class="form-input" placeholder="e.g., 3" value="<?= isset($svc3['num_crew_members']) ? htmlspecialchars($svc3['num_crew_members']) : '' ?>">
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Drone Coverage?</label>
-                                        <select name="services[3][drone_needed]" class="form-input">
-                                            <option value="">Select an option</option>
-                                            <option value="Yes" <?= isset($svc3['drone_needed']) && $svc3['drone_needed'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
-                                            <option value="No" <?= isset($svc3['drone_needed']) && $svc3['drone_needed'] === 'No' ? 'selected' : '' ?>>No</option>
-                                        </select>
+                                        <label class="form-label">Editing Software Used</label>
+                                        <input type="text" name="services[3][editing_software]" class="form-input" placeholder="e.g., Adobe Premiere, DaVinci Resolve, Final Cut Pro" value="<?= isset($svc3['editing_software']) ? htmlspecialchars($svc3['editing_software']) : '' ?>">
                                     </div>
                                 </div>
-                                
+
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Gimbals/Steadicams?</label>
-                                        <select name="services[3][gimbals]" class="form-input">
-                                            <option value="">Select an option</option>
-                                            <option value="Yes" <?= isset($svc3['gimbals']) && $svc3['gimbals'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
-                                            <option value="No" <?= isset($svc3['gimbals']) && $svc3['gimbals'] === 'No' ? 'selected' : '' ?>>No</option>
-                                        </select>
+                                        <label class="form-label">Drone Service Available</label>
+                                        <?php $dsa = $svc3['drone_service_available'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[3][drone_service_available]" value="Yes" <?= $dsa === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[3][drone_service_available]" value="No" <?= $dsa === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Editing Required?</label>
-                                        <select name="services[3][editing]" class="form-input">
-                                            <option value="">Select an option</option>
-                                            <option value="Yes" <?= isset($svc3['editing']) && $svc3['editing'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
-                                            <option value="No" <?= isset($svc3['editing']) && $svc3['editing'] === 'No' ? 'selected' : '' ?>>No</option>
+                                        <label class="form-label">Maximum Video Resolution</label>
+                                        <select name="services[3][max_video_resolution]" class="form-input">
+                                            <option value="">Select resolution</option>
+                                            <option value="1080p" <?= isset($svc3['max_video_resolution']) && $svc3['max_video_resolution'] === '1080p' ? 'selected' : '' ?>>1080p</option>
+                                            <option value="4K" <?= isset($svc3['max_video_resolution']) && $svc3['max_video_resolution'] === '4K' ? 'selected' : '' ?>>4K</option>
+                                            <option value="6K" <?= isset($svc3['max_video_resolution']) && $svc3['max_video_resolution'] === '6K' ? 'selected' : '' ?>>6K</option>
                                         </select>
                                     </div>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Preferred Delivery Format</label>
-                                    <div class="checkbox-group-vertical">
-                                        <label><input type="checkbox" name="services[3][delivery_format][]" value="MP4" <?= isset($svc3['delivery_format']) && in_array('MP4', (array)$svc3['delivery_format']) ? 'checked' : '' ?>> MP4</label>
-                                        <label><input type="checkbox" name="services[3][delivery_format][]" value="RAW files" <?= isset($svc3['delivery_format']) && in_array('RAW files', (array)$svc3['delivery_format']) ? 'checked' : '' ?>> RAW files</label>
-                                        <label><input type="checkbox" name="services[3][delivery_format][]" value="Social Media Format" <?= isset($svc3['delivery_format']) && in_array('Social Media Format', (array)$svc3['delivery_format']) ? 'checked' : '' ?>> Social Media Format</label>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Photo Editing Included</label>
+                                        <?php $pei = $svc3['photo_editing_included'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[3][photo_editing_included]" value="Yes" <?= $pei === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[3][photo_editing_included]" value="No" <?= $pei === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Delivery Time for Final Output</label>
+                                        <input type="text" name="services[3][delivery_time]" class="form-input" placeholder="e.g., 5-7 business days, 2 weeks" value="<?= isset($svc3['delivery_time']) ? htmlspecialchars($svc3['delivery_time']) : '' ?>">
                                     </div>
                                 </div>
-                                
+
                                 <div class="form-group">
-                                    <label class="form-label">Additional Notes</label>
-                                    <textarea name="services[3][additional_notes]" class="form-input textarea" placeholder="Any additional crew or requirements..."><?= isset($svc3['additional_notes']) ? htmlspecialchars($svc3['additional_notes']) : '' ?></textarea>
+                                    <label class="form-label">Raw Footage/Photos Provided</label>
+                                    <?php $rfp = $svc3['raw_footage_provided'] ?? ''; ?>
+                                    <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                        <label><input type="radio" name="services[3][raw_footage_provided]" value="Yes" <?= $rfp === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                        <label><input type="radio" name="services[3][raw_footage_provided]" value="No" <?= $rfp === 'No' ? 'checked' : '' ?>> No</label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Portfolio / Sample Links</label>
+                                    <input type="text" name="services[3][portfolio_links]" class="form-input" placeholder="e.g., https://yourportfolio.com or multiple URLs separated by commas" value="<?= isset($svc3['portfolio_links']) ? htmlspecialchars($svc3['portfolio_links']) : '' ?>">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Upload Sample Photos/Videos</label>
+                                    <input type="file" name="services[3][sample_videos]" class="form-input" accept="image/*,video/*">
                                 </div>
                             </div>
                         </div>
@@ -554,69 +636,75 @@
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[4][selected]" class="checkbox" id="service5" <?= isset($svc4['selected']) ? 'checked' : '' ?>>
+                                    <input type="checkbox" name="services[4][selected]" class="checkbox" id="service5" <?= !empty($svc4['selected']) ? 'checked' : '' ?>>
                                     <label for="service5" class="service-name">🎨 Set Design</label>
                                     <input type="hidden" name="services[4][name]" value="Set Design">
                                 </div>
 
-                                <div class="rate-input-group" id="service5Rate" style="<?= isset($svc4['selected']) ? '' : 'display:none;' ?>">
-                                    <label>Rate per hour:</label>
-                                    <div class="input-wrapper">
-                                        <span class="currency">Rs</span>
-                                        <input type="number" name="services[4][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc4['rate']) ? htmlspecialchars($svc4['rate']) : '' ?>">
+                                <div class="rate-input-group" id="service5Rate" style="<?= !empty($svc4['selected']) ? '' : 'display:none;' ?>">
+                                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate Type:</label>
+                                            <select name="services[4][rate_type]" class="form-input" style="padding: 8px 12px; font-size: 14px; min-width: 130px;">
+                                                <option value="hourly" <?= isset($svc4['rate_type']) && $svc4['rate_type'] === 'daily' ? '' : 'selected' ?>>Per Hour</option>
+                                                <option value="daily" <?= isset($svc4['rate_type']) && $svc4['rate_type'] === 'daily' ? 'selected' : '' ?>>Per Day</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
+                                            <div class="input-wrapper">
+                                                <span class="currency">Rs</span>
+                                                <input type="number" name="services[4][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc4['rate']) ? htmlspecialchars($svc4['rate']) : '' ?>">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group" id="service5Desc" style="<?= isset($svc4['selected']) ? '' : 'display:none;' ?>">
+                            <div class="form-group" id="service5Desc" style="<?= !empty($svc4['selected']) ? '' : 'display:none;' ?>">
                                 <label class="form-label">Description </label>
                                 <textarea name="services[4][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc4['description']) ? htmlspecialchars($svc4['description']) : '' ?></textarea>
                             </div>
                             
                             <!-- Set Design-specific fields -->
-                            <div class="service-details" id="service5Details" style="<?= isset($svc4['selected']) ? '' : 'display:none;' ?>">
+                            <div class="service-details" id="service5Details" style="<?= !empty($svc4['selected']) ? '' : 'display:none;' ?>">
                                 <div class="form-group">
-                                    <label class="form-label">Required Service Type</label>
-                                    <div class="checkbox-group-vertical">
-                                        <label><input type="checkbox" name="services[4][set_service][]" value="Set Design" <?= isset($svc4['set_service']) && in_array('Set Design', (array)$svc4['set_service']) ? 'checked' : '' ?>> Set Design</label>
-                                        <label><input type="checkbox" name="services[4][set_service][]" value="Set Construction" <?= isset($svc4['set_service']) && in_array('Set Construction', (array)$svc4['set_service']) ? 'checked' : '' ?>> Set Construction</label>
-                                        <label><input type="checkbox" name="services[4][set_service][]" value="Set Rental" <?= isset($svc4['set_service']) && in_array('Set Rental', (array)$svc4['set_service']) ? 'checked' : '' ?>> Set Rental</label>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Production Stage</label>
-                                    <select name="services[4][production_stage]" class="form-input">
-                                        <option value="">Select a stage</option>
-                                        <option value="Early concept" <?= isset($svc4['production_stage']) && $svc4['production_stage'] === 'Early concept' ? 'selected' : '' ?>>Early concept</option>
-                                        <option value="Ready for fabrication" <?= isset($svc4['production_stage']) && $svc4['production_stage'] === 'Ready for fabrication' ? 'selected' : '' ?>>Ready for fabrication</option>
-                                    </select>
+                                    <label class="form-label">Types of Sets Designed</label>
+                                    <textarea name="services[4][types_of_sets_designed]" class="form-input textarea" placeholder="Describe set types (e.g., theatrical, exhibitions)"><?= isset($svc4['types_of_sets_designed']) ? htmlspecialchars($svc4['types_of_sets_designed']) : '' ?></textarea>
                                 </div>
                                 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Preferred Materials</label>
-                                        <input type="text" name="services[4][materials]" class="form-input" placeholder="e.g., Wood, Metal, Fabric" value="<?= isset($svc4['materials']) ? htmlspecialchars($svc4['materials']) : '' ?>">
+                                        <label class="form-label">Set Construction Provided</label>
+                                        <?php $scp = $svc4['set_construction_provided'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[4][set_construction_provided]" value="Yes" <?= $scp === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[4][set_construction_provided]" value="No" <?= $scp === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Stage Dimensions</label>
-                                        <input type="text" name="services[4][dimensions]" class="form-input" placeholder="e.g., 20ft x 15ft x 12ft" value="<?= isset($svc4['dimensions']) ? htmlspecialchars($svc4['dimensions']) : '' ?>">
+                                        <label class="form-label">Stage Installation Support</label>
+                                        <?php $sis = $svc4['stage_installation_support'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[4][stage_installation_support]" value="Yes" <?= $sis === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[4][stage_installation_support]" value="No" <?= $sis === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
                                     </div>
                                 </div>
                                 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Budget Range (Rs)</label>
-                                        <input type="text" name="services[4][budget]" class="form-input" placeholder="e.g., 50,000 - 100,000" value="<?= isset($svc4['budget']) ? htmlspecialchars($svc4['budget']) : '' ?>">
+                                        <label class="form-label">Maximum Stage Size Supported</label>
+                                        <input type="text" name="services[4][max_stage_size_supported]" class="form-input" placeholder="e.g., 40ft x 30ft" value="<?= isset($svc4['max_stage_size_supported']) ? htmlspecialchars($svc4['max_stage_size_supported']) : '' ?>">
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Delivery/Completion Deadline</label>
-                                        <input type="date" name="services[4][deadline]" class="form-input" value="<?= isset($svc4['deadline']) ? htmlspecialchars($svc4['deadline']) : '' ?>">
+                                        <label class="form-label">Materials Used</label>
+                                        <textarea name="services[4][materials_used]" class="form-input textarea" placeholder="e.g., Wood, metal, fabric"><?= isset($svc4['materials_used']) ? htmlspecialchars($svc4['materials_used']) : '' ?></textarea>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label class="form-label">Additional Notes</label>
-                                    <textarea name="services[4][additional_notes]" class="form-input textarea" placeholder="Script notes, design references, special requirements..."><?= isset($svc4['additional_notes']) ? htmlspecialchars($svc4['additional_notes']) : '' ?></textarea>
+                                    <label class="form-label">Sample Set Designs</label>
+                                    <input type="file" name="services[4][sample_set_designs]" class="form-input" accept="image/*,application/pdf">
                                 </div>
                             </div>
                         </div>
@@ -625,74 +713,69 @@
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[5][selected]" class="checkbox" id="service6" <?= isset($svc5['selected']) ? 'checked' : '' ?>>
+                                    <input type="checkbox" name="services[5][selected]" class="checkbox" id="service6" <?= !empty($svc5['selected']) ? 'checked' : '' ?>>
                                     <label for="service6" class="service-name">👗 Costume Design</label>
                                     <input type="hidden" name="services[5][name]" value="Costume Design">
                                 </div>
-                                <div class="rate-input-group" id="service6Rate" style="<?= isset($svc5['selected']) ? '' : 'display:none;' ?>">
-                                    <label>Rate per hour:</label>
-                                    <div class="input-wrapper">
-                                        <span class="currency">Rs</span>
-                                        <input type="number" name="services[5][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc5['rate']) ? htmlspecialchars($svc5['rate']) : '' ?>">
+                                <div class="rate-input-group" id="service6Rate" style="<?= !empty($svc5['selected']) ? '' : 'display:none;' ?>">
+                                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate Type:</label>
+                                            <select name="services[5][rate_type]" class="form-input" style="padding: 8px 12px; font-size: 14px; min-width: 130px;">
+                                                <option value="hourly" <?= isset($svc5['rate_type']) && $svc5['rate_type'] === 'daily' ? '' : 'selected' ?>>Per Hour</option>
+                                                <option value="daily" <?= isset($svc5['rate_type']) && $svc5['rate_type'] === 'daily' ? 'selected' : '' ?>>Per Day</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
+                                            <div class="input-wrapper">
+                                                <span class="currency">Rs</span>
+                                                <input type="number" name="services[5][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc5['rate']) ? htmlspecialchars($svc5['rate']) : '' ?>">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group" id="service6Desc" style="<?= isset($svc5['selected']) ? '' : 'display:none;' ?>">
+                            <div class="form-group" id="service6Desc" style="<?= !empty($svc5['selected']) ? '' : 'display:none;' ?>">
                                 <label class="form-label">Description </label>
                                 <textarea name="services[5][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc5['description']) ? htmlspecialchars($svc5['description']) : '' ?></textarea>
                             </div>
                             
                             <!-- Costume Design-specific fields -->
-                            <div class="service-details" id="service6Details" style="<?= isset($svc5['selected']) ? '' : 'display:none;' ?>">
+                            <div class="service-details" id="service6Details" style="<?= !empty($svc5['selected']) ? '' : 'display:none;' ?>">
                                 <div class="form-group">
-                                    <label class="form-label">Required Service Type</label>
-                                    <div class="checkbox-group-vertical">
-                                        <label><input type="checkbox" name="services[5][costume_service][]" value="Costume Design" <?= isset($svc5['costume_service']) && in_array('Costume Design', (array)$svc5['costume_service']) ? 'checked' : '' ?>> Costume Design</label>
-                                        <label><input type="checkbox" name="services[5][costume_service][]" value="Costume Creation" <?= isset($svc5['costume_service']) && in_array('Costume Creation', (array)$svc5['costume_service']) ? 'checked' : '' ?>> Costume Creation</label>
-                                        <label><input type="checkbox" name="services[5][costume_service][]" value="Costume Rental" <?= isset($svc5['costume_service']) && in_array('Costume Rental', (array)$svc5['costume_service']) ? 'checked' : '' ?>> Costume Rental</label>
-                                    </div>
+                                    <label class="form-label">Types of Costumes Provided</label>
+                                    <textarea name="services[5][types_of_costumes_provided]" class="form-input textarea" placeholder="Describe the types (e.g., traditional, modern, period, dance)"><?= isset($svc5['types_of_costumes_provided']) ? htmlspecialchars($svc5['types_of_costumes_provided']) : '' ?></textarea>
                                 </div>
-                                
+
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Number of Characters</label>
-                                        <input type="number" name="services[5][num_characters]" class="form-input" placeholder="e.g., 8" value="<?= isset($svc5['num_characters']) ? htmlspecialchars($svc5['num_characters']) : '' ?>">
+                                        <label class="form-label">Custom Costume Design Available</label>
+                                        <?php $ccd = $svc5['custom_costume_design_available'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[5][custom_costume_design_available]" value="Yes" <?= $ccd === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[5][custom_costume_design_available]" value="No" <?= $ccd === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Number of Costumes</label>
-                                        <input type="number" name="services[5][num_costumes]" class="form-input" placeholder="e.g., 12" value="<?= isset($svc5['num_costumes']) ? htmlspecialchars($svc5['num_costumes']) : '' ?>">
+                                        <label class="form-label">Available Sizes</label>
+                                        <input type="text" name="services[5][available_sizes]" class="form-input" placeholder="e.g., XS–XL, kids sizes" value="<?= isset($svc5['available_sizes']) ? htmlspecialchars($svc5['available_sizes']) : '' ?>">
                                     </div>
                                 </div>
-                                
+
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label class="form-label">Measurements Required?</label>
-                                        <select name="services[5][measurements]" class="form-input">
-                                            <option value="">Select an option</option>
-                                            <option value="Yes" <?= isset($svc5['measurements']) && $svc5['measurements'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
-                                            <option value="No" <?= isset($svc5['measurements']) && $svc5['measurements'] === 'No' ? 'selected' : '' ?>>No</option>
-                                        </select>
+                                        <label class="form-label">Alterations Provided</label>
+                                        <?php $ap = $svc5['alterations_provided'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[5][alterations_provided]" value="Yes" <?= $ap === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[5][alterations_provided]" value="No" <?= $ap === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Fitting Dates</label>
-                                        <input type="date" name="services[5][fitting_dates]" class="form-input" value="<?= isset($svc5['fitting_dates']) ? htmlspecialchars($svc5['fitting_dates']) : '' ?>">
+                                        <label class="form-label">Number of Costumes Available</label>
+                                        <input type="number" name="services[5][number_of_costumes_available]" class="form-input" placeholder="e.g., 50" value="<?= isset($svc5['number_of_costumes_available']) ? htmlspecialchars($svc5['number_of_costumes_available']) : '' ?>">
                                     </div>
-                                </div>
-                                
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label class="form-label">Budget Range (Rs)</label>
-                                        <input type="text" name="services[5][budget]" class="form-input" placeholder="e.g., 30,000 - 80,000" value="<?= isset($svc5['budget']) ? htmlspecialchars($svc5['budget']) : '' ?>">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Delivery Deadline</label>
-                                        <input type="date" name="services[5][deadline]" class="form-input" value="<?= isset($svc5['deadline']) ? htmlspecialchars($svc5['deadline']) : '' ?>">
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Additional Notes</label>
-                                    <textarea name="services[5][additional_notes]" class="form-input textarea" placeholder="Character descriptions, style preferences, any special requirements..."><?= isset($svc5['additional_notes']) ? htmlspecialchars($svc5['additional_notes']) : '' ?></textarea>
                                 </div>
                             </div>
                         </div>
@@ -701,21 +784,141 @@
                         <div class="service-item">
                             <div class="service-header">
                                 <div class="checkbox-group">
-                                    <input type="checkbox" name="services[6][selected]" class="checkbox" id="service7" <?= isset($svc6['selected']) ? 'checked' : '' ?>>
-                                    <label for="service7" class="service-name">📋 Other</label>
-                                    <input type="hidden" name="services[6][name]" value="Other">
+                                    <input type="checkbox" name="services[6][selected]" class="checkbox" id="service7" <?= !empty($svc6['selected']) ? 'checked' : '' ?>>
+                                    <label for="service7" class="service-name">💄 Makeup & Hair</label>
+                                    <input type="hidden" name="services[6][name]" value="Makeup & Hair">
                                 </div>
-                                <div class="rate-input-group" id="service7Rate" style="<?= isset($svc6['selected']) ? '' : 'display:none;' ?>">
-                                    <label>Rate per hour:</label>
-                                    <div class="input-wrapper">
-                                        <span class="currency">Rs</span>
-                                        <input type="number" name="services[6][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc6['rate']) ? htmlspecialchars($svc6['rate']) : '' ?>">
+                                <div class="rate-input-group" id="service7Rate" style="<?= !empty($svc6['selected']) ? '' : 'display:none;' ?>">
+                                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate Type:</label>
+                                            <select name="services[6][rate_type]" class="form-input" style="padding: 8px 12px; font-size: 14px; min-width: 130px;">
+                                                <option value="hourly" <?= isset($svc6['rate_type']) && $svc6['rate_type'] === 'daily' ? '' : 'selected' ?>>Per Hour</option>
+                                                <option value="daily" <?= isset($svc6['rate_type']) && $svc6['rate_type'] === 'daily' ? 'selected' : '' ?>>Per Day</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
+                                            <div class="input-wrapper">
+                                                <span class="currency">Rs</span>
+                                                <input type="number" name="services[6][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc6['rate']) ? htmlspecialchars($svc6['rate']) : '' ?>">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group" id="service7Desc" style="<?= isset($svc6['selected']) ? '' : 'display:none;' ?>">
+                            <div class="form-group" id="service7Desc" style="<?= !empty($svc6['selected']) ? '' : 'display:none;' ?>">
                                 <label class="form-label">Description </label>
                                 <textarea name="services[6][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc6['description']) ? htmlspecialchars($svc6['description']) : '' ?></textarea>
+                            </div>
+
+                            <!-- Makeup & Hair-specific fields -->
+                            <div class="service-details" id="service7Details" style="<?= !empty($svc6['selected']) ? '' : 'display:none;' ?>">
+                                <div class="form-group">
+                                    <label class="form-label">Type of Make-up Services</label>
+                                    <textarea name="services[6][type_of_makeup_services]" class="form-input textarea" placeholder="Describe the makeup services (e.g., bridal, stage, character)"><?= isset($svc6['type_of_makeup_services']) ? htmlspecialchars($svc6['type_of_makeup_services']) : '' ?></textarea>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Experience in Stage Make-up (years)</label>
+                                        <input type="number" name="services[6][experience_stage_makeup_years]" class="form-input" placeholder="e.g., 5" value="<?= isset($svc6['experience_stage_makeup_years']) ? htmlspecialchars($svc6['experience_stage_makeup_years']) : '' ?>">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Maximum Actors Per Show</label>
+                                        <input type="number" name="services[6][maximum_actors_per_show]" class="form-input" placeholder="e.g., 50" value="<?= isset($svc6['maximum_actors_per_show']) ? htmlspecialchars($svc6['maximum_actors_per_show']) : '' ?>">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Character-based Make-up Available</label>
+                                        <?php $cbm = $svc6['character_based_makeup_available'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[6][character_based_makeup_available]" value="Yes" <?= $cbm === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[6][character_based_makeup_available]" value="No" <?= $cbm === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Can Handle Full Cast</label>
+                                        <?php $chf = $svc6['can_handle_full_cast'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[6][can_handle_full_cast]" value="Yes" <?= $chf === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[6][can_handle_full_cast]" value="No" <?= $chf === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Bring Own Make-up Kit</label>
+                                        <?php $bomu = $svc6['bring_own_makeup_kit'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[6][bring_own_makeup_kit]" value="Yes" <?= $bomu === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[6][bring_own_makeup_kit]" value="No" <?= $bomu === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">On-site Service Available</label>
+                                        <?php $osa = $svc6['onsite_service_available'] ?? ''; ?>
+                                        <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                            <label><input type="radio" name="services[6][onsite_service_available]" value="Yes" <?= $osa === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                            <label><input type="radio" name="services[6][onsite_service_available]" value="No" <?= $osa === 'No' ? 'checked' : '' ?>> No</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Touch-up Service During Show</label>
+                                    <?php $tds = $svc6['touchup_service_during_show'] ?? ''; ?>
+                                    <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
+                                        <label><input type="radio" name="services[6][touchup_service_during_show]" value="Yes" <?= $tds === 'Yes' ? 'checked' : '' ?>> Yes</label>
+                                        <label><input type="radio" name="services[6][touchup_service_during_show]" value="No" <?= $tds === 'No' ? 'checked' : '' ?>> No</label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Traditional/Cultural Make-up Expertise</label>
+                                    <textarea name="services[6][traditional_cultural_makeup_expertise]" class="form-input textarea" placeholder="e.g., Kathakali, Bharatanatyam, classical makeup styles"><?= isset($svc6['traditional_cultural_makeup_expertise']) ? htmlspecialchars($svc6['traditional_cultural_makeup_expertise']) : '' ?></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Sample Make-up Photos</label>
+                                    <input type="file" name="services[6][sample_makeup_photos]" class="form-input" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+
+                        <?php $svc7 = $servicesData[7] ?? []; ?>
+                        <div class="service-item">
+                            <div class="service-header">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" name="services[7][selected]" class="checkbox" id="service8" <?= !empty($svc7['selected']) ? 'checked' : '' ?>>
+                                    <label for="service8" class="service-name">📋 Other</label>
+                                    <input type="hidden" name="services[7][name]" value="Other">
+                                </div>
+                                <div class="rate-input-group" id="service8Rate" style="<?= !empty($svc7['selected']) ? '' : 'display:none;' ?>">
+                                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate Type:</label>
+                                            <select name="services[7][rate_type]" class="form-input" style="padding: 8px 12px; font-size: 14px; min-width: 130px;">
+                                                <option value="hourly" <?= isset($svc7['rate_type']) && $svc7['rate_type'] === 'daily' ? '' : 'selected' ?>>Per Hour</option>
+                                                <option value="daily" <?= isset($svc7['rate_type']) && $svc7['rate_type'] === 'daily' ? 'selected' : '' ?>>Per Day</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
+                                            <div class="input-wrapper">
+                                                <span class="currency">Rs</span>
+                                                <input type="number" name="services[7][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc7['rate']) ? htmlspecialchars($svc7['rate']) : '' ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" id="service8Desc" style="<?= !empty($svc7['selected']) ? '' : 'display:none;' ?>">
+                                <label class="form-label">Description </label>
+                                <textarea name="services[7][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc7['description']) ? htmlspecialchars($svc7['description']) : '' ?></textarea>
                             </div>
                         </div>
                     </div>
@@ -879,6 +1082,22 @@
             }
 
             [1,2,3,4,5,6,7].forEach(wireServiceToggle);
+            
+            // Wire the makeup service (service6b)
+            const checkboxMakeup = document.getElementById('service6b');
+            if (checkboxMakeup) {
+                function updateMakeupVisibility() {
+                    const visible = checkboxMakeup.checked;
+                    const rate = document.getElementById('service6bRate');
+                    const desc = document.getElementById('service6bDesc');
+                    const details = document.getElementById('service6bDetails');
+                    if (rate) rate.style.display = visible ? '' : 'none';
+                    if (desc) desc.style.display = visible ? '' : 'none';
+                    if (details) details.style.display = visible ? '' : 'none';
+                }
+                checkboxMakeup.addEventListener('change', updateMakeupVisibility);
+                updateMakeupVisibility();
+            }
         });
 
         // Photo upload handler

@@ -204,13 +204,14 @@
                 <?php foreach ($data['services'] as $service): ?>
                     <?php 
                     $details = $service->details ?? null;
-                    $serviceName = strtolower(trim($service->service_name));
+                    $resolvedType = $service->service_type ?? ($details->service_type ?? '');
+                    $serviceName = strtolower(trim($resolvedType));
                     ?>
                     <div class="service-item" style="display: flex; flex-direction: column; align-items: flex-start;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; margin-bottom: 15px;">
                             <div style="display: flex; align-items: center;">
                                 <input type="checkbox" class="checkbox" checked disabled style="margin-right: 10px;">
-                                <span style="font-size: 24px; font-weight: 600; color: #333;"><?php echo htmlspecialchars($service->service_name); ?></span>
+                                <span style="font-size: 24px; font-weight: 600; color: #333;"><?php echo htmlspecialchars($resolvedType ?: 'Unknown Service'); ?></span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/editService?id=<?php echo $service->id; ?>" class="btn btn-secondary" style="text-decoration: none; padding: 5px 10px; font-size: 14px;">
@@ -221,55 +222,99 @@
                                 </button>
                             </div>
                         </div>
-                        <div style="margin-bottom: 10px;">
-                            <label class="form-label">Rate per hour:</label>
-                            <div class="form-input" style="background: #f8f9fa; display: inline-block; width: 200px;">
-                                Rs. <?php echo number_format($service->rate_per_hour, 2); ?>
+                        <div class="form-row" style="margin-bottom: 10px;">
+                            <div class="form-group">
+                                <label class="form-label">Rate:</label>
+                                <div class="form-input" style="background: #f8f9fa; cursor: default;">
+                                    Rs. <?php echo number_format($details->rate_per_hour ?? 0, 2); ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Rate Type:</label>
+                                <div class="form-input" style="background: #f8f9fa; cursor: default;">
+                                    <?php echo ucfirst($details->rate_type ?? 'hourly'); ?>
+                                </div>
                             </div>
                         </div>
-                        <?php if ($service->description): ?>
+                        <?php if (isset($details->description) && $details->description): ?>
                             <div class="form-group" style="margin-bottom: 15px; width: 100%;">
                                 <label class="form-label">Description</label>
                                 <div class="form-input" style="background: #f8f9fa; cursor: default;">
-                                    <?php echo nl2br(htmlspecialchars($service->description)); ?>
+                                    <?php echo nl2br(htmlspecialchars($details->description)); ?>
                                 </div>
                             </div>
                         <?php endif; ?>
 
                         <?php if ($serviceName === 'theater production' && $details): ?>
+                        <?php
+                            $afRaw = $details->available_facilities ?? '';
+                            $afDisplay = is_array($afRaw) ? implode(', ', $afRaw) : $afRaw;
+                            $tfRaw = $details->technical_facilities ?? '';
+                            $tfDisplay = is_array($tfRaw) ? implode(', ', $tfRaw) : $tfRaw;
+                        ?>
                         <div class="service-details" style="width: 100%; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                             <h4 style="margin: 0 0 10px 0; color: #333;">Theater Production Details</h4>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Number of Actors</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->num_actors ?? ''); ?></div>
+                                    <label class="form-label">Theatre Name</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->theatre_name ?? ''); ?>
+                                    </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Expected Audience</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->expected_audience ?? ''); ?></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Stage Requirements</label>
-                                <div style="display: flex; gap: 15px; padding: 10px; background: #fff; border-radius: 6px;">
-                                    <span><?php echo $details->stage_proscenium ? '✓' : '○'; ?> Proscenium</span>
-                                    <span><?php echo $details->stage_black_box ? '✓' : '○'; ?> Black box</span>
-                                    <span><?php echo $details->stage_open_floor ? '✓' : '○'; ?> Open floor</span>
+                                    <label class="form-label">Seating Capacity</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->seating_capacity ?? ''); ?>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Seating Requirement</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->seating_requirement ?? ''); ?></div>
+                                    <label class="form-label">Stage Dimensions (Width × Depth)</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->stage_dimensions ?? ''); ?>
+                                    </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Parking Requirement</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->parking_requirement ?? ''); ?></div>
+                                    <label class="form-label">Stage Type</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->stage_type ?? ''); ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Available Facilities</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($afDisplay); ?>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Technical Facilities</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($tfDisplay); ?>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Special Technical Requirements</label>
-                                <div class="form-input" style="background: #fff; cursor: default;"><?php echo nl2br(htmlspecialchars($details->special_tech ?? '')); ?></div>
+                                <label class="form-label">Additional Equipment for Rent</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo nl2br(htmlspecialchars($details->equipment_rent ?? '')); ?>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Stage Crew Available</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->stage_crew_available ?? ''); ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Location / Address</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo nl2br(htmlspecialchars($details->location_address ?? '')); ?>
+                                </div>
                             </div>
                         </div>
                         <?php endif; ?>
@@ -278,31 +323,30 @@
                         <div class="service-details" style="width: 100%; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                             <h4 style="margin: 0 0 10px 0; color: #333;">Lighting Design Details</h4>
                             <div class="form-group">
-                                <label class="form-label">Lighting Services</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 15px; padding: 10px; background: #fff; border-radius: 6px;">
-                                    <span><?php echo $details->stage_lighting ? '✓' : '○'; ?> Stage Lighting</span>
-                                    <span><?php echo $details->spotlights ? '✓' : '○'; ?> Spotlights</span>
-                                    <span><?php echo $details->custom_programming ? '✓' : '○'; ?> Custom Programming</span>
-                                    <span><?php echo $details->moving_heads ? '✓' : '○'; ?> Moving Heads</span>
+                                <label class="form-label">Lighting Equipment Provided</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo nl2br(htmlspecialchars($details->lighting_equipment_provided ?? '')); ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Maximum Stage Size Supported</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo htmlspecialchars($details->max_stage_size ?? ''); ?>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Number of Lights</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->num_lights ?? ''); ?></div>
+                                    <label class="form-label">Lighting Design Service</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->lighting_design_service ?? ''); ?>
+                                    </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Lighting Effects</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->effects ?? ''); ?></div>
+                                    <label class="form-label">Lighting Crew Available</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->lighting_crew_available ?? ''); ?>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Technician Needed</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->technician_needed ?? ''); ?></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Additional Notes</label>
-                                <div class="form-input" style="background: #fff; cursor: default;"><?php echo nl2br(htmlspecialchars($details->notes ?? '')); ?></div>
                             </div>
                         </div>
                         <?php endif; ?>
@@ -311,32 +355,28 @@
                         <div class="service-details" style="width: 100%; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                             <h4 style="margin: 0 0 10px 0; color: #333;">Sound Systems Details</h4>
                             <div class="form-group">
-                                <label class="form-label">Sound Services</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 15px; padding: 10px; background: #fff; border-radius: 6px;">
-                                    <span><?php echo $details->pa_system ? '✓' : '○'; ?> PA system</span>
-                                    <span><?php echo $details->microphones ? '✓' : '○'; ?> Microphones</span>
-                                    <span><?php echo $details->sound_mixing ? '✓' : '○'; ?> Sound Mixing</span>
-                                    <span><?php echo $details->background_music ? '✓' : '○'; ?> Background Music</span>
-                                    <span><?php echo $details->special_effects ? '✓' : '○'; ?> Special Effects</span>
+                                <label class="form-label">Sound Equipment Provided</label>
+                                <div class="form-input" style="background: #fff; cursor: default;"><?php echo nl2br(htmlspecialchars($details->sound_equipment_provided ?? '')); ?></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Maximum Audience Size Supported</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->max_audience_size ?? ''); ?></div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Equipment Brands</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->equipment_brands ?? ''); ?></div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Number of Mics</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->num_mics ?? ''); ?></div>
+                                    <label class="form-label">Sound Effects Handling</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->sound_effects_handling ?? ''); ?></div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Stage Monitor</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->stage_monitor ?? ''); ?></div>
+                                    <label class="form-label">Sound Engineer Included</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->sound_engineer_included ?? ''); ?></div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Sound Engineer</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->sound_engineer ?? ''); ?></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Additional Notes</label>
-                                <div class="form-input" style="background: #fff; cursor: default;"><?php echo nl2br(htmlspecialchars($details->notes ?? '')); ?></div>
                             </div>
                         </div>
                         <?php endif; ?>
@@ -345,43 +385,67 @@
                         <div class="service-details" style="width: 100%; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                             <h4 style="margin: 0 0 10px 0; color: #333;">Video Production Details</h4>
                             <div class="form-group">
-                                <label class="form-label">Video Purpose</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 15px; padding: 10px; background: #fff; border-radius: 6px;">
-                                    <span><?php echo $details->full_event ? '✓' : '○'; ?> Full Event Recording</span>
-                                    <span><?php echo $details->highlight_reel ? '✓' : '○'; ?> Highlight Reel</span>
-                                    <span><?php echo $details->short_promo ? '✓' : '○'; ?> Short Promo</span>
+                                <label class="form-label">Services Offered</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo nl2br(htmlspecialchars($details->services_offered ?? '')); ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Equipment Used</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo nl2br(htmlspecialchars($details->equipment_used ?? '')); ?>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Number of Cameras</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->num_cameras ?? ''); ?></div>
+                                    <label class="form-label">Number of Crew Members</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->num_crew_members ?? ''); ?></div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Drone Coverage</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->drone_needed ?? ''); ?></div>
+                                    <label class="form-label">Editing Software Used</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->editing_software ?? ''); ?></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Drone Service Available</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->drone_service_available ?? ''); ?></div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Gimbals/Steadicams</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->gimbals ?? ''); ?></div>
+                                    <label class="form-label">Maximum Video Resolution</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->max_video_resolution ?? ''); ?></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Photo Editing Included</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->photo_editing_included ?? ''); ?></div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Editing Required</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->editing ?? ''); ?></div>
+                                    <label class="form-label">Delivery Time for Final Output</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->delivery_time ?? ''); ?></div>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Delivery Format</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 15px; padding: 10px; background: #fff; border-radius: 6px;">
-                                    <span><?php echo $details->delivery_mp4 ? '✓' : '○'; ?> MP4</span>
-                                    <span><?php echo $details->delivery_raw ? '✓' : '○'; ?> RAW files</span>
-                                    <span><?php echo $details->delivery_social ? '✓' : '○'; ?> Social Media Format</span>
-                                </div>
+                                <label class="form-label">Raw Footage/Photos Provided</label>
+                                <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->raw_footage_provided ?? ''); ?></div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Additional Notes</label>
-                                <div class="form-input" style="background: #fff; cursor: default;"><?php echo nl2br(htmlspecialchars($details->notes ?? '')); ?></div>
+                                <label class="form-label">Portfolio / Sample Links</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php if (!empty($details->portfolio_links)): ?>
+                                        <a href="<?php echo htmlspecialchars($details->portfolio_links); ?>" target="_blank" style="color: #3b82f6;">View Portfolio</a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
+                            <?php if (!empty($details->sample_videos)): ?>
+                            <div class="form-group">
+                                <label class="form-label">Sample Photos/Videos</label>
+                                <div style="margin-top: 8px;">
+                                    <a href="<?php echo ROOT . '/' . htmlspecialchars($details->sample_videos); ?>" target="_blank">View sample</a>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
                         <?php endif; ?>
 
@@ -389,41 +453,37 @@
                         <div class="service-details" style="width: 100%; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                             <h4 style="margin: 0 0 10px 0; color: #333;">Set Design Details</h4>
                             <div class="form-group">
-                                <label class="form-label">Service Type</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 15px; padding: 10px; background: #fff; border-radius: 6px;">
-                                    <span><?php echo $details->set_design ? '✓' : '○'; ?> Set Design</span>
-                                    <span><?php echo $details->set_construction ? '✓' : '○'; ?> Set Construction</span>
-                                    <span><?php echo $details->set_rental ? '✓' : '○'; ?> Set Rental</span>
+                                <label class="form-label">Types of Sets Designed</label>
+                                <div class="form-input" style="background: #fff; cursor: default;"><?php echo nl2br(htmlspecialchars($details->types_of_sets_designed ?? '')); ?></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Set Construction Provided</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->set_construction_provided ?? ''); ?></div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Stage Installation Support</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->stage_installation_support ?? ''); ?></div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Production Stage</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->production_stage ?? ''); ?></div>
+                                    <label class="form-label">Maximum Stage Size Supported</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->max_stage_size_supported ?? ''); ?></div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Materials</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->materials ?? ''); ?></div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Dimensions</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->dimensions ?? ''); ?></div>
+                                    <label class="form-label">Materials Used</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo nl2br(htmlspecialchars($details->materials_used ?? '')); ?></div>
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Budget Range</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;">Rs. <?php echo htmlspecialchars($details->budget_range ?? ''); ?></div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Deadline</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->deadline ?? ''); ?></div>
-                                </div>
-                            </div>
+                            <?php if (!empty($details->sample_set_designs)): ?>
                             <div class="form-group">
-                                <label class="form-label">Additional Notes</label>
-                                <div class="form-input" style="background: #fff; cursor: default;"><?php echo nl2br(htmlspecialchars($details->notes ?? '')); ?></div>
+                                <label class="form-label">Sample Set Designs</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <a href="<?php echo ROOT . '/' . htmlspecialchars($details->sample_set_designs); ?>" target="_blank">View sample</a>
+                                </div>
                             </div>
+                            <?php endif; ?>
                         </div>
                         <?php endif; ?>
 
@@ -431,45 +491,113 @@
                         <div class="service-details" style="width: 100%; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                             <h4 style="margin: 0 0 10px 0; color: #333;">Costume Design Details</h4>
                             <div class="form-group">
-                                <label class="form-label">Service Type</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 15px; padding: 10px; background: #fff; border-radius: 6px;">
-                                    <span><?php echo $details->costume_design ? '✓' : '○'; ?> Costume Design</span>
-                                    <span><?php echo $details->costume_creation ? '✓' : '○'; ?> Costume Creation</span>
-                                    <span><?php echo $details->costume_rental ? '✓' : '○'; ?> Costume Rental</span>
+                                <label class="form-label">Types of Costumes Provided</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo nl2br(htmlspecialchars($details->types_of_costumes_provided ?? '')); ?>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Number of Characters</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->num_characters ?? ''); ?></div>
+                                    <label class="form-label">Custom Costume Design Available</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->custom_costume_design_available ?? ''); ?>
+                                    </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Number of Costumes</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->num_costumes ?? ''); ?></div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Measurements Required</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->measurements_required ?? ''); ?></div>
+                                    <label class="form-label">Available Sizes</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->available_sizes ?? ''); ?>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Fitting Dates</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->fitting_dates ?? ''); ?></div>
+                                    <label class="form-label">Alterations Provided</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->alterations_provided ?? ''); ?>
+                                    </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Budget Range</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;">Rs. <?php echo htmlspecialchars($details->budget_range ?? ''); ?></div>
+                                    <label class="form-label">Number of Costumes Available</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->number_of_costumes_available ?? ''); ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($serviceName === 'makeup & hair' && $details): ?>
+                        <div class="service-details" style="width: 100%; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #333;">Makeup & Hair Details</h4>
+                            <div class="form-group">
+                                <label class="form-label">Type of Make-up Services</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo nl2br(htmlspecialchars($details->type_of_makeup_services ?? '')); ?>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Experience in Stage Make-up (years)</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->experience_stage_makeup_years ?? ''); ?>
+                                    </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Deadline</label>
-                                    <div class="form-input" style="background: #fff; cursor: default;"><?php echo htmlspecialchars($details->deadline ?? ''); ?></div>
+                                    <label class="form-label">Maximum Actors Per Show</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->maximum_actors_per_show ?? ''); ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Character-based Make-up Available</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->character_based_makeup_available ?? ''); ?>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Can Handle Full Cast</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->can_handle_full_cast ?? ''); ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Bring Own Make-up Kit</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->bring_own_makeup_kit ?? ''); ?>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">On-site Service Available</label>
+                                    <div class="form-input" style="background: #fff; cursor: default;">
+                                        <?php echo htmlspecialchars($details->onsite_service_available ?? ''); ?>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Additional Notes</label>
-                                <div class="form-input" style="background: #fff; cursor: default;"><?php echo nl2br(htmlspecialchars($details->notes ?? '')); ?></div>
+                                <label class="form-label">Touch-up Service During Show</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo htmlspecialchars($details->touchup_service_during_show ?? ''); ?>
+                                </div>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Traditional/Cultural Make-up Expertise</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo nl2br(htmlspecialchars($details->traditional_cultural_makeup_expertise ?? '')); ?>
+                                </div>
+                            </div>
+                            <?php if (!empty($details->sample_makeup_photos)): ?>
+                            <div class="form-group">
+                                <label class="form-label">Sample Make-up Photos</label>
+                                <div style="margin-top: 8px;">
+                                    <a href="<?php echo ROOT . '/' . htmlspecialchars($details->sample_makeup_photos); ?>" target="_blank">View sample</a>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
                         <?php endif; ?>
                     </div>

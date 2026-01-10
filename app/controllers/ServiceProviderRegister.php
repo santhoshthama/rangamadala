@@ -162,7 +162,7 @@ class ServiceProviderRegister
                 'formData' => $provider,
                 'password' => $password,
                 'confirm_password' => $confirm_password,
-                'services' => $_POST['services'] ?? [],
+                'services' => $this->processServicesData($_POST['services'] ?? []),
                 'projects' => $_POST['projects'] ?? [],
                 'uploadedPhoto' => $provider['business_cert_photo'] ?? $existingCert,
             ]);
@@ -185,7 +185,7 @@ class ServiceProviderRegister
         }
 
         // Then save serviceprovider profile with user_id
-        $services = $_POST['services'] ?? [];
+        $services = $this->processServicesData($_POST['services'] ?? []);
         $projects = $_POST['projects'] ?? [];
 
         $savedId = $model->saveFullProfile($provider, $user_id, $services, $projects);
@@ -197,5 +197,146 @@ class ServiceProviderRegister
             $this->view('service_provider_register', ['errors' => ['Failed to save your profile. Please try again.']]);
         }
     }
+
+    /**
+     * Process services data to ensure rate_type is included
+     */
+    private function processServicesData($services) {
+        if (empty($services) || !is_array($services)) {
+            return [];
+        }
+
+        $processed = [];
+        foreach ($services as $idx => $svc) {
+            $processed[$idx] = [
+                'selected' => isset($svc['selected']) ? 1 : 0,
+                'name' => $svc['name'] ?? '',
+                'rate' => $svc['rate'] ?? '',
+                'rate_type' => $svc['rate_type'] ?? 'hourly',
+                'description' => $svc['description'] ?? '',
+                // Theater Production fields
+                'theatre_name' => $svc['theatre_name'] ?? null,
+                'seating_capacity' => $svc['seating_capacity'] ?? null,
+                'stage_dimensions' => $svc['stage_dimensions'] ?? null,
+                'stage_type' => $svc['stage_type'] ?? null,
+                'available_facilities' => $svc['available_facilities'] ?? [],
+                'technical_facilities' => $svc['technical_facilities'] ?? [],
+                'equipment_rent' => $svc['equipment_rent'] ?? null,
+                'stage_crew_available' => $svc['stage_crew_available'] ?? null,
+                'location_address' => $svc['location_address'] ?? null,
+                'lighting_equipment_provided' => $svc['lighting_equipment_provided'] ?? null,
+                'max_stage_size' => $svc['max_stage_size'] ?? null,
+                'lighting_design_service' => $svc['lighting_design_service'] ?? null,
+                'lighting_crew_available' => $svc['lighting_crew_available'] ?? null,
+                'sound_equipment_provided' => $svc['sound_equipment_provided'] ?? null,
+                'max_audience_size' => $svc['max_audience_size'] ?? null,
+                'sound_effects_handling' => $svc['sound_effects_handling'] ?? null,
+                'sound_engineer_included' => $svc['sound_engineer_included'] ?? null,
+                'equipment_brands' => $svc['equipment_brands'] ?? null,
+                // New video production fields
+                'services_offered' => $svc['services_offered'] ?? null,
+                'equipment_used' => $svc['equipment_used'] ?? null,
+                'num_crew_members' => $svc['num_crew_members'] ?? null,
+                'editing_software' => $svc['editing_software'] ?? null,
+                'drone_service_available' => $svc['drone_service_available'] ?? null,
+                'max_video_resolution' => $svc['max_video_resolution'] ?? null,
+                'photo_editing_included' => $svc['photo_editing_included'] ?? null,
+                'delivery_time' => $svc['delivery_time'] ?? null,
+                'raw_footage_provided' => $svc['raw_footage_provided'] ?? null,
+                'portfolio_links' => $svc['portfolio_links'] ?? null,
+                // Set Design fields
+                'types_of_sets_designed' => $svc['types_of_sets_designed'] ?? null,
+                'set_construction_provided' => $svc['set_construction_provided'] ?? null,
+                'stage_installation_support' => $svc['stage_installation_support'] ?? null,
+                'max_stage_size_supported' => $svc['max_stage_size_supported'] ?? null,
+                'materials_used' => $svc['materials_used'] ?? null,
+                // New costume fields
+                'types_of_costumes_provided' => $svc['types_of_costumes_provided'] ?? null,
+                'custom_costume_design_available' => $svc['custom_costume_design_available'] ?? null,
+                'available_sizes' => $svc['available_sizes'] ?? null,
+                'alterations_provided' => $svc['alterations_provided'] ?? null,
+                'number_of_costumes_available' => $svc['number_of_costumes_available'] ?? null,
+                // New makeup fields
+                'type_of_makeup_services' => $svc['type_of_makeup_services'] ?? null,
+                'experience_stage_makeup_years' => $svc['experience_stage_makeup_years'] ?? null,
+                'character_based_makeup_available' => $svc['character_based_makeup_available'] ?? null,
+                'can_handle_full_cast' => $svc['can_handle_full_cast'] ?? null,
+                'maximum_actors_per_show' => $svc['maximum_actors_per_show'] ?? null,
+                'bring_own_makeup_kit' => $svc['bring_own_makeup_kit'] ?? null,
+                'onsite_service_available' => $svc['onsite_service_available'] ?? null,
+                'touchup_service_during_show' => $svc['touchup_service_during_show'] ?? null,
+                'traditional_cultural_makeup_expertise' => $svc['traditional_cultural_makeup_expertise'] ?? null,
+            ];
+
+            // Handle set design sample file upload if present for this index
+            if (isset($_FILES['services']['name'][$idx]['sample_set_designs']) && !empty($_FILES['services']['name'][$idx]['sample_set_designs'])) {
+                $fileName = $_FILES['services']['name'][$idx]['sample_set_designs'];
+                $tmpName = $_FILES['services']['tmp_name'][$idx]['sample_set_designs'] ?? null;
+                $size = $_FILES['services']['size'][$idx]['sample_set_designs'] ?? 0;
+                $type = $_FILES['services']['type'][$idx]['sample_set_designs'] ?? '';
+                if ($tmpName && is_uploaded_file($tmpName)) {
+                    $targetDir = __DIR__ . '/../../public/uploads/set_designs/';
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0777, true);
+                    }
+                    $unique = uniqid('set_');
+                    $targetFile = $targetDir . $unique . '_' . basename($fileName);
+                    $allowed = ['image/jpeg','image/png','image/jpg','application/pdf'];
+                    $maxSize = 10 * 1024 * 1024;
+                    if ($size <= $maxSize && in_array($type, $allowed)) {
+                        if (move_uploaded_file($tmpName, $targetFile)) {
+                            $processed[$idx]['sample_set_designs'] = 'uploads/set_designs/' . $unique . '_' . basename($fileName);
+                        }
+                    }
+                }
+            }
+
+            // Handle makeup photos file upload if present for this index
+            if (isset($_FILES['services']['name'][$idx]['sample_makeup_photos']) && !empty($_FILES['services']['name'][$idx]['sample_makeup_photos'])) {
+                $fileName = $_FILES['services']['name'][$idx]['sample_makeup_photos'];
+                $tmpName = $_FILES['services']['tmp_name'][$idx]['sample_makeup_photos'] ?? null;
+                $size = $_FILES['services']['size'][$idx]['sample_makeup_photos'] ?? 0;
+                $type = $_FILES['services']['type'][$idx]['sample_makeup_photos'] ?? '';
+                if ($tmpName && is_uploaded_file($tmpName)) {
+                    $targetDir = __DIR__ . '/../../public/uploads/makeup_photos/';
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0777, true);
+                    }
+                    $unique = uniqid('makeup_');
+                    $targetFile = $targetDir . $unique . '_' . basename($fileName);
+                    $allowed = ['image/jpeg','image/png','image/jpg'];
+                    $maxSize = 10 * 1024 * 1024;
+                    if ($size <= $maxSize && in_array($type, $allowed)) {
+                        if (move_uploaded_file($tmpName, $targetFile)) {
+                            $processed[$idx]['sample_makeup_photos'] = 'uploads/makeup_photos/' . $unique . '_' . basename($fileName);
+                        }
+                    }
+                }
+            }
+
+            // Handle sample videos file upload if present for this index
+            if (isset($_FILES['services']['name'][$idx]['sample_videos']) && !empty($_FILES['services']['name'][$idx]['sample_videos'])) {
+                $fileName = $_FILES['services']['name'][$idx]['sample_videos'];
+                $tmpName = $_FILES['services']['tmp_name'][$idx]['sample_videos'] ?? null;
+                $size = $_FILES['services']['size'][$idx]['sample_videos'] ?? 0;
+                $type = $_FILES['services']['type'][$idx]['sample_videos'] ?? '';
+                if ($tmpName && is_uploaded_file($tmpName)) {
+                    $targetDir = __DIR__ . '/../../public/uploads/sample_videos/';
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0777, true);
+                    }
+                    $unique = uniqid('video_');
+                    $targetFile = $targetDir . $unique . '_' . basename($fileName);
+                    $allowed = ['image/jpeg','image/png','image/jpg','video/mp4','video/quicktime','application/x-mov'];
+                    $maxSize = 500 * 1024 * 1024; // 500MB for videos
+                    if ($size <= $maxSize && in_array($type, $allowed)) {
+                        if (move_uploaded_file($tmpName, $targetFile)) {
+                            $processed[$idx]['sample_videos'] = 'uploads/sample_videos/' . $unique . '_' . basename($fileName);
+                        }
+                    }
+                }
+            }
+        }
+        return $processed;
+    }
 }
-?>

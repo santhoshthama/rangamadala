@@ -13,7 +13,7 @@ class ServiceProviderProfile
         }
 
         // Check if user has service_provider role
-        if ($_SESSION['user_role'] !== 'service_provider') {
+        if (($_SESSION['role'] ?? '') !== 'service_provider') {
             header("Location: " . ROOT . "/Home");
             exit;
         }
@@ -38,7 +38,11 @@ class ServiceProviderProfile
         // Fetch service details for each service
         if (!empty($services)) {
             foreach ($services as $service) {
-                $service->details = $model->getServiceDetails($service->id, $service->service_name);
+                $detail = $model->getServiceDetails($service->id, $service->service_type ?? '');
+                if ($detail && empty($service->service_type) && !empty($detail->service_type)) {
+                    $service->service_type = $detail->service_type; // backfill for legacy rows
+                }
+                $service->details = $detail;
             }
         }
         
@@ -70,7 +74,7 @@ class ServiceProviderProfile
             exit;
         }
 
-        if ($_SESSION['user_role'] !== 'service_provider') {
+        if (($_SESSION['role'] ?? '') !== 'service_provider') {
             header("Location: " . ROOT . "/Home");
             exit;
         }
@@ -80,33 +84,143 @@ class ServiceProviderProfile
         // Handle form submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $model = new M_service_provider();
-            $result = $model->insertService($provider_id, $_POST['service_name'], $_POST['rate_per_hour'], $_POST['description'] ?? '');
-            
-            if ($result) {
-                $_SESSION['success'] = "Service added successfully!";
+            $services = $_POST['services'] ?? [];
+            $addedCount = 0;
+            $errors = [];
+
+            // Fetch existing service types for this provider
+            $existingServices = $model->getServicesByProviderId($provider_id);
+            $existingTypes = array_map(function($s) { return strtolower(trim($s->service_type ?? '')); }, $existingServices);
+
+            // Process each service from the registration-style form
+            foreach ($services as $idx => $svc) {
+                // Only add if selected
+                if (empty($svc['selected'])) {
+                    continue;
+                }
+
+                $serviceName = $svc['name'] ?? null;
+                $description = $svc['description'] ?? '';
+                
+                if (!$serviceName) {
+                    $errors[] = "Service #{$idx} missing name";
+                    continue;
+                }
+
+                // Check if this service type already exists
+                if (in_array(strtolower(trim($serviceName)), $existingTypes)) {
+                    $errors[] = "$serviceName already added (one per type allowed)";
+                    continue;
+                }
+
+                // Extract service-specific fields from the svc array
+                $extras = $svc;
+                unset($extras['selected'], $extras['name'], $extras['description']);
+
+                // Handle file uploads for this service
+                if (isset($_FILES['services']['name'][$idx])) {
+                    // Theater photos
+                    if (isset($_FILES['services']['name'][$idx]['theatre_photos']) && !empty($_FILES['services']['name'][$idx]['theatre_photos'][0])) {
+                        // Handle multiple files for theater
+                    }
+                    // Set designs
+                    if (isset($_FILES['services']['name'][$idx]['sample_set_designs']) && !empty($_FILES['services']['name'][$idx]['sample_set_designs'])) {
+                        $tmp = $_FILES['services']['tmp_name'][$idx]['sample_set_designs'] ?? null;
+                        $type = $_FILES['services']['type'][$idx]['sample_set_designs'] ?? '';
+                        $size = $_FILES['services']['size'][$idx]['sample_set_designs'] ?? 0;
+                        if ($tmp && is_uploaded_file($tmp)) {
+                            $targetDir = __DIR__ . '/../../public/uploads/set_designs/';
+                            if (!is_dir($targetDir)) {
+                                mkdir($targetDir, 0777, true);
+                            }
+                            $unique = uniqid('set_');
+                            $targetFile = $targetDir . $unique . '_' . basename($_FILES['services']['name'][$idx]['sample_set_designs']);
+                            $allowed = ['image/jpeg','image/png','image/jpg','application/pdf'];
+                            $maxSize = 10 * 1024 * 1024;
+                            if ($size <= $maxSize && in_array($type, $allowed)) {
+                                if (move_uploaded_file($tmp, $targetFile)) {
+                                    $extras['sample_set_designs'] = 'uploads/set_designs/' . $unique . '_' . basename($_FILES['services']['name'][$idx]['sample_set_designs']);
+                                }
+                            }
+                        }
+                    }
+                    // Makeup photos
+                    if (isset($_FILES['services']['name'][$idx]['sample_makeup_photos']) && !empty($_FILES['services']['name'][$idx]['sample_makeup_photos'])) {
+                        $tmp = $_FILES['services']['tmp_name'][$idx]['sample_makeup_photos'] ?? null;
+                        $type = $_FILES['services']['type'][$idx]['sample_makeup_photos'] ?? '';
+                        $size = $_FILES['services']['size'][$idx]['sample_makeup_photos'] ?? 0;
+                        if ($tmp && is_uploaded_file($tmp)) {
+                            $targetDir = __DIR__ . '/../../public/uploads/makeup_photos/';
+                            if (!is_dir($targetDir)) {
+                                mkdir($targetDir, 0777, true);
+                            }
+                            $unique = uniqid('makeup_');
+                            $targetFile = $targetDir . $unique . '_' . basename($_FILES['services']['name'][$idx]['sample_makeup_photos']);
+                            $allowed = ['image/jpeg','image/png','image/jpg'];
+                            $maxSize = 10 * 1024 * 1024;
+                            if ($size <= $maxSize && in_array($type, $allowed)) {
+                                if (move_uploaded_file($tmp, $targetFile)) {
+                                    $extras['sample_makeup_photos'] = 'uploads/makeup_photos/' . $unique . '_' . basename($_FILES['services']['name'][$idx]['sample_makeup_photos']);
+                                }
+                            }
+                        }
+                    }
+                    // Sample videos
+                    if (isset($_FILES['services']['name'][$idx]['sample_videos']) && !empty($_FILES['services']['name'][$idx]['sample_videos'])) {
+                        $tmp = $_FILES['services']['tmp_name'][$idx]['sample_videos'] ?? null;
+                        $type = $_FILES['services']['type'][$idx]['sample_videos'] ?? '';
+                        $size = $_FILES['services']['size'][$idx]['sample_videos'] ?? 0;
+                        if ($tmp && is_uploaded_file($tmp)) {
+                            $targetDir = __DIR__ . '/../../public/uploads/sample_videos/';
+                            if (!is_dir($targetDir)) {
+                                mkdir($targetDir, 0777, true);
+                            }
+                            $unique = uniqid('video_');
+                            $targetFile = $targetDir . $unique . '_' . basename($_FILES['services']['name'][$idx]['sample_videos']);
+                            $allowed = ['image/jpeg','image/png','image/jpg','video/mp4','video/quicktime','application/x-mov'];
+                            $maxSize = 500 * 1024 * 1024;
+                            if ($size <= $maxSize && in_array($type, $allowed)) {
+                                if (move_uploaded_file($tmp, $targetFile)) {
+                                    $extras['sample_videos'] = 'uploads/sample_videos/' . $unique . '_' . basename($_FILES['services']['name'][$idx]['sample_videos']);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $result = $model->insertService($provider_id, $serviceName, $description, $extras);
+                if ($result) {
+                    $addedCount++;
+                } else {
+                    $errors[] = "Failed to add $serviceName";
+                }
+            }
+
+            if ($addedCount > 0) {
+                $_SESSION['success'] = "Added $addedCount service(s) successfully!";
                 header("Location: " . ROOT . "/ServiceProviderProfile/index?id=" . $provider_id);
                 exit;
             } else {
-                $_SESSION['error'] = "Error adding service";
+                $_SESSION['error'] = empty($errors) ? "No services selected" : implode(', ', $errors);
             }
         }
 
-        // Predefined service options
-        $service_options = [
-            'Theater Production', 'Lighting Design', 'Sound Systems', 'Video Production',
-            'Set Design', 'Costume Design', 'Audio Engineering', 'Cinematography',
-            'Music Direction', 'Makeup & Hair', 'Stage Management', 'Film Editing',
-            'Photography', 'Graphic Design', 'Other'
-        ];
+        // Fetch existing services to disable them in the form
+        $model = new M_service_provider();
+        $existingServices = $model->getServicesByProviderId($provider_id);
+        $existingServiceTypes = array_map(function($s) { return $s->service_type ?? ''; }, $existingServices);
 
-        $data = ['provider_id' => $provider_id, 'service_options' => $service_options];
+        $data = [
+            'provider_id' => $provider_id,
+            'existingServiceTypes' => $existingServiceTypes
+        ];
         $this->view('service_add_service', $data);
     }
 
     // Edit Service
     public function editService()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'service_provider')) {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -123,12 +237,77 @@ class ServiceProviderProfile
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Collect all POST data as extras
             $extras = $_POST;
-            unset($extras['service_name'], $extras['rate_per_hour'], $extras['description']);
-            
+            unset($extras['service_name'], $extras['description']);
+
+            // Handle optional sample set designs upload for set design service edit
+            if (isset($_FILES['sample_set_designs']) && !empty($_FILES['sample_set_designs']['name'])) {
+                $tmp = $_FILES['sample_set_designs']['tmp_name'] ?? null;
+                $type = $_FILES['sample_set_designs']['type'] ?? '';
+                $size = $_FILES['sample_set_designs']['size'] ?? 0;
+                if ($tmp && is_uploaded_file($tmp)) {
+                    $targetDir = __DIR__ . '/../../public/uploads/set_designs/';
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0777, true);
+                    }
+                    $unique = uniqid('set_');
+                    $targetFile = $targetDir . $unique . '_' . basename($_FILES['sample_set_designs']['name']);
+                    $allowed = ['image/jpeg','image/png','image/jpg','application/pdf'];
+                    $maxSize = 10 * 1024 * 1024;
+                    if ($size <= $maxSize && in_array($type, $allowed)) {
+                        if (move_uploaded_file($tmp, $targetFile)) {
+                            $extras['sample_set_designs'] = 'uploads/set_designs/' . $unique . '_' . basename($_FILES['sample_set_designs']['name']);
+                        }
+                    }
+                }
+            }
+
+            // Handle optional sample makeup photos upload for makeup service edit
+            if (isset($_FILES['sample_makeup_photos']) && !empty($_FILES['sample_makeup_photos']['name'])) {
+                $tmp = $_FILES['sample_makeup_photos']['tmp_name'] ?? null;
+                $type = $_FILES['sample_makeup_photos']['type'] ?? '';
+                $size = $_FILES['sample_makeup_photos']['size'] ?? 0;
+                if ($tmp && is_uploaded_file($tmp)) {
+                    $targetDir = __DIR__ . '/../../public/uploads/makeup_photos/';
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0777, true);
+                    }
+                    $unique = uniqid('makeup_');
+                    $targetFile = $targetDir . $unique . '_' . basename($_FILES['sample_makeup_photos']['name']);
+                    $allowed = ['image/jpeg','image/png','image/jpg'];
+                    $maxSize = 10 * 1024 * 1024;
+                    if ($size <= $maxSize && in_array($type, $allowed)) {
+                        if (move_uploaded_file($tmp, $targetFile)) {
+                            $extras['sample_makeup_photos'] = 'uploads/makeup_photos/' . $unique . '_' . basename($_FILES['sample_makeup_photos']['name']);
+                        }
+                    }
+                }
+            }
+
+            // Handle optional sample videos upload for video production service edit
+            if (isset($_FILES['sample_videos']) && !empty($_FILES['sample_videos']['name'])) {
+                $tmp = $_FILES['sample_videos']['tmp_name'] ?? null;
+                $type = $_FILES['sample_videos']['type'] ?? '';
+                $size = $_FILES['sample_videos']['size'] ?? 0;
+                if ($tmp && is_uploaded_file($tmp)) {
+                    $targetDir = __DIR__ . '/../../public/uploads/sample_videos/';
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0777, true);
+                    }
+                    $unique = uniqid('video_');
+                    $targetFile = $targetDir . $unique . '_' . basename($_FILES['sample_videos']['name']);
+                    $allowed = ['image/jpeg','image/png','image/jpg','video/mp4','video/quicktime','application/x-mov'];
+                    $maxSize = 500 * 1024 * 1024; // 500MB for videos
+                    if ($size <= $maxSize && in_array($type, $allowed)) {
+                        if (move_uploaded_file($tmp, $targetFile)) {
+                            $extras['sample_videos'] = 'uploads/sample_videos/' . $unique . '_' . basename($_FILES['sample_videos']['name']);
+                        }
+                    }
+                }
+            }
+
             $result = $model->updateService(
                 $service_id, 
-                $_POST['service_name'], 
-                $_POST['rate_per_hour'], 
+                $_POST['service_name'],
                 $_POST['description'] ?? '', 
                 $extras
             );
@@ -151,7 +330,7 @@ class ServiceProviderProfile
         }
 
         // Fetch service-specific details
-        $details = $model->getServiceDetails($service_id, $service->service_name);
+        $details = $model->getServiceDetails($service_id, $service->service_type ?? '');
 
         $data = [
             'service' => $service,
@@ -163,7 +342,7 @@ class ServiceProviderProfile
     // Delete Service
     public function deleteService()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'service_provider')) {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -199,7 +378,7 @@ class ServiceProviderProfile
     // Add Project
     public function addProject()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'service_provider')) {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -233,7 +412,7 @@ class ServiceProviderProfile
     // Edit Project
     public function editProject()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'service_provider')) {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -280,7 +459,7 @@ class ServiceProviderProfile
     // Delete Project
     public function deleteProject()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'service_provider')) {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -316,7 +495,7 @@ class ServiceProviderProfile
     // Edit Basic Info
     public function editBasicInfo()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'service_provider')) {
             header("Location: " . ROOT . "/Login");
             exit;
         }
@@ -430,7 +609,7 @@ class ServiceProviderProfile
         if ($result) {
             $_SESSION['success'] = "Profile deleted successfully!";
             unset($_SESSION['user_id']);
-            unset($_SESSION['user_role']);
+            unset($_SESSION['role']);
             session_destroy();
             header("Location: " . ROOT . "/Home");
             exit;
@@ -444,7 +623,7 @@ class ServiceProviderProfile
     // Upload Profile Image (SEPARATE from business certificate)
     public function uploadProfileImage()
     {
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'service_provider') {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'service_provider')) {
             header("Location: " . ROOT . "/Login");
             exit;
         }

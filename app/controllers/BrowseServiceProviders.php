@@ -55,7 +55,11 @@ class BrowseServiceProviders
         // Fetch service details for each service
         if (!empty($services)) {
             foreach ($services as $service) {
-                $service->details = $model->getServiceDetails($service->id, $service->service_name);
+                $detail = $model->getServiceDetails($service->id, $service->service_type ?? '');
+                if ($detail && empty($service->service_type) && !empty($detail->service_type)) {
+                    $service->service_type = $detail->service_type; // backfill for legacy rows
+                }
+                $service->details = $detail;
             }
         }
         

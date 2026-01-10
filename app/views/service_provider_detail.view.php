@@ -133,18 +133,18 @@
                                 <?php foreach ($data['services'] as $service): ?>
                                     <?php 
                                     $details = $service->details ?? null;
-                                    $serviceName = strtolower(trim($service->service_name));
+                                    $serviceName = strtolower(trim($service->service_type ?? ''));
                                     ?>
                                     <div class="service-item">
                                         <div class="service-header">
-                                            <h3><?= htmlspecialchars($service->service_name) ?></h3>
-                                            <button class="btn-primary" onclick="openRequestModal('<?= htmlspecialchars($service->service_name) ?>', '<?= number_format($service->rate_per_hour) ?>')">
+                                            <h3><?= htmlspecialchars($service->service_type ?? '') ?></h3>
+                                            <button class="btn-primary" onclick="openRequestModal('<?= htmlspecialchars($service->service_type ?? '') ?>', '<?= number_format($service->rate_per_hour ?? 0) ?>')">
                                                 <i class="fas fa-paper-plane"></i> Request
                                             </button>
                                         </div>
                                         <div class="detail-item" style="margin-bottom: 12px;">
                                             <label>Rate per hour:</label>
-                                            <span>Rs <?= number_format($service->rate_per_hour) ?>/hr</span>
+                                            <span>Rs <?= number_format($service->rate_per_hour ?? 0) ?>/hr</span>
                                         </div>
                                         <?php if (!empty($service->description)): ?>
                                             <p class="service-description"><?= nl2br(htmlspecialchars($service->description)) ?></p>
@@ -154,36 +154,50 @@
                                         <?php if ($serviceName === 'theater production' && $details): ?>
                                             <div class="service-details-grid">
                                                 <div class="detail-item">
-                                                    <label>Actors:</label>
-                                                    <span><?= htmlspecialchars($details->num_actors ?? '-') ?></span>
+                                                    <label>Theatre Name:</label>
+                                                    <span><?= htmlspecialchars($details->theatre_name ?? '-') ?></span>
                                                 </div>
                                                 <div class="detail-item">
-                                                    <label>Expected Audience:</label>
-                                                    <span><?= htmlspecialchars($details->expected_audience ?? '-') ?></span>
+                                                    <label>Seating Capacity:</label>
+                                                    <span><?= htmlspecialchars($details->seating_capacity ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Stage Dimensions:</label>
+                                                    <span><?= htmlspecialchars($details->stage_dimensions ?? '-') ?></span>
                                                 </div>
                                                 <div class="detail-item">
                                                     <label>Stage Type:</label>
+                                                    <span><?= htmlspecialchars($details->stage_type ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Available Facilities:</label>
                                                     <span>
                                                         <?php 
-                                                        $stages = [];
-                                                        if ($details->stage_proscenium) $stages[] = 'Proscenium';
-                                                        if ($details->stage_black_box) $stages[] = 'Black Box';
-                                                        if ($details->stage_open_floor) $stages[] = 'Open Floor';
-                                                        echo htmlspecialchars(implode(', ', $stages) ?: '-');
+                                                        $afArr = !empty($details->available_facilities) ? json_decode($details->available_facilities, true) : [];
+                                                        echo htmlspecialchars(!empty($afArr) ? implode(', ', $afArr) : '-');
                                                         ?>
                                                     </span>
                                                 </div>
                                                 <div class="detail-item">
-                                                    <label>Seating:</label>
-                                                    <span><?= htmlspecialchars($details->seating_requirement ?? '-') ?></span>
+                                                    <label>Technical Facilities:</label>
+                                                    <span>
+                                                        <?php 
+                                                        $tfArr = !empty($details->technical_facilities) ? json_decode($details->technical_facilities, true) : [];
+                                                        echo htmlspecialchars(!empty($tfArr) ? implode(', ', $tfArr) : '-');
+                                                        ?>
+                                                    </span>
                                                 </div>
                                                 <div class="detail-item">
-                                                    <label>Parking:</label>
-                                                    <span><?= htmlspecialchars($details->parking_requirement ?? '-') ?></span>
+                                                    <label>Equipment for Rent:</label>
+                                                    <span><?= htmlspecialchars($details->equipment_rent ?? '-') ?></span>
                                                 </div>
                                                 <div class="detail-item">
-                                                    <label>Special Tech:</label>
-                                                    <span><?= htmlspecialchars($details->special_tech ?? '-') ?></span>
+                                                    <label>Stage Crew Available:</label>
+                                                    <span><?= htmlspecialchars($details->stage_crew_available ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item" style="grid-column: 1 / -1;">
+                                                    <label>Location / Address:</label>
+                                                    <span><?= htmlspecialchars($details->location_address ?? '-') ?></span>
                                                 </div>
                                             </div>
                                         <?php endif; ?>
@@ -191,125 +205,104 @@
                                         <!-- Lighting Design Details -->
                                         <?php if ($serviceName === 'lighting design' && $details): ?>
                                             <div class="service-details-grid">
-                                                <div class="detail-item">
-                                                    <label>Services:</label>
-                                                    <span>
-                                                        <?php 
-                                                        $services_list = [];
-                                                        if ($details->stage_lighting) $services_list[] = 'Stage Lighting';
-                                                        if ($details->spotlights) $services_list[] = 'Spotlights';
-                                                        if ($details->custom_programming) $services_list[] = 'Custom Programming';
-                                                        if ($details->moving_heads) $services_list[] = 'Moving Heads';
-                                                        echo htmlspecialchars(implode(', ', $services_list) ?: '-');
-                                                        ?>
-                                                    </span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Number of Lights:</label>
-                                                    <span><?= htmlspecialchars($details->num_lights ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Effects:</label>
-                                                    <span><?= htmlspecialchars($details->effects ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Technician Needed:</label>
-                                                    <span><?= htmlspecialchars($details->technician_needed ?? '-') ?></span>
-                                                </div>
-                                                <?php if ($details->notes): ?>
                                                 <div class="detail-item full-width">
-                                                    <label>Notes:</label>
-                                                    <span><?= nl2br(htmlspecialchars($details->notes)) ?></span>
+                                                    <label>Lighting Equipment Provided:</label>
+                                                    <span><?= nl2br(htmlspecialchars($details->lighting_equipment_provided ?? '-')) ?></span>
                                                 </div>
-                                                <?php endif; ?>
+                                                <div class="detail-item">
+                                                    <label>Maximum Stage Size Supported:</label>
+                                                    <span><?= htmlspecialchars($details->max_stage_size ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Lighting Design Service:</label>
+                                                    <span><?= htmlspecialchars($details->lighting_design_service ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Lighting Crew Available:</label>
+                                                    <span><?= htmlspecialchars($details->lighting_crew_available ?? '-') ?></span>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                         
                                         <!-- Sound Systems Details -->
                                         <?php if ($serviceName === 'sound systems' && $details): ?>
                                             <div class="service-details-grid">
-                                                <div class="detail-item">
-                                                    <label>Services:</label>
-                                                    <span>
-                                                        <?php 
-                                                        $services_list = [];
-                                                        if ($details->pa_system) $services_list[] = 'PA System';
-                                                        if ($details->microphones) $services_list[] = 'Microphones';
-                                                        if ($details->sound_mixing) $services_list[] = 'Sound Mixing';
-                                                        if ($details->background_music) $services_list[] = 'Background Music';
-                                                        if ($details->special_effects) $services_list[] = 'Special Effects';
-                                                        echo htmlspecialchars(implode(', ', $services_list) ?: '-');
-                                                        ?>
-                                                    </span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Number of Mics:</label>
-                                                    <span><?= htmlspecialchars($details->num_mics ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Stage Monitor:</label>
-                                                    <span><?= htmlspecialchars($details->stage_monitor ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Sound Engineer:</label>
-                                                    <span><?= htmlspecialchars($details->sound_engineer ?? '-') ?></span>
-                                                </div>
-                                                <?php if ($details->notes): ?>
                                                 <div class="detail-item full-width">
-                                                    <label>Notes:</label>
-                                                    <span><?= nl2br(htmlspecialchars($details->notes)) ?></span>
+                                                    <label>Sound Equipment Provided:</label>
+                                                    <span><?= nl2br(htmlspecialchars($details->sound_equipment_provided ?? '-')) ?></span>
                                                 </div>
-                                                <?php endif; ?>
+                                                <div class="detail-item">
+                                                    <label>Max Audience Size:</label>
+                                                    <span><?= htmlspecialchars($details->max_audience_size ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Equipment Brands:</label>
+                                                    <span><?= htmlspecialchars($details->equipment_brands ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Sound Effects Handling:</label>
+                                                    <span><?= htmlspecialchars($details->sound_effects_handling ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Sound Engineer Included:</label>
+                                                    <span><?= htmlspecialchars($details->sound_engineer_included ?? '-') ?></span>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                         
                                         <!-- Video Production Details -->
                                         <?php if ($serviceName === 'video production' && $details): ?>
                                             <div class="service-details-grid">
-                                                <div class="detail-item">
-                                                    <label>Video Type:</label>
-                                                    <span>
-                                                        <?php 
-                                                        $video_types = [];
-                                                        if ($details->full_event) $video_types[] = 'Full Event';
-                                                        if ($details->highlight_reel) $video_types[] = 'Highlight Reel';
-                                                        if ($details->short_promo) $video_types[] = 'Short Promo';
-                                                        echo htmlspecialchars(implode(', ', $video_types) ?: '-');
-                                                        ?>
-                                                    </span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Cameras:</label>
-                                                    <span><?= htmlspecialchars($details->num_cameras ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Drone Coverage:</label>
-                                                    <span><?= htmlspecialchars($details->drone_needed ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Gimbals/Steadicams:</label>
-                                                    <span><?= htmlspecialchars($details->gimbals ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Editing:</label>
-                                                    <span><?= htmlspecialchars($details->editing ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Delivery Format:</label>
-                                                    <span>
-                                                        <?php 
-                                                        $formats = [];
-                                                        if ($details->delivery_mp4) $formats[] = 'MP4';
-                                                        if ($details->delivery_raw) $formats[] = 'RAW';
-                                                        if ($details->delivery_social) $formats[] = 'Social Media';
-                                                        echo htmlspecialchars(implode(', ', $formats) ?: '-');
-                                                        ?>
-                                                    </span>
-                                                </div>
-                                                <?php if ($details->notes): ?>
                                                 <div class="detail-item full-width">
-                                                    <label>Notes:</label>
-                                                    <span><?= nl2br(htmlspecialchars($details->notes)) ?></span>
+                                                    <label>Services Offered:</label>
+                                                    <span><?= nl2br(htmlspecialchars($details->services_offered ?? '-')) ?></span>
+                                                </div>
+                                                <div class="detail-item full-width">
+                                                    <label>Equipment Used:</label>
+                                                    <span><?= nl2br(htmlspecialchars($details->equipment_used ?? '-')) ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Number of Crew Members:</label>
+                                                    <span><?= htmlspecialchars($details->num_crew_members ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Editing Software Used:</label>
+                                                    <span><?= htmlspecialchars($details->editing_software ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Drone Service Available:</label>
+                                                    <span><?= htmlspecialchars($details->drone_service_available ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Maximum Video Resolution:</label>
+                                                    <span><?= htmlspecialchars($details->max_video_resolution ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Photo Editing Included:</label>
+                                                    <span><?= htmlspecialchars($details->photo_editing_included ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Delivery Time for Final Output:</label>
+                                                    <span><?= htmlspecialchars($details->delivery_time ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Raw Footage/Photos Provided:</label>
+                                                    <span><?= htmlspecialchars($details->raw_footage_provided ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item full-width">
+                                                    <label>Portfolio / Sample Links:</label>
+                                                    <span>
+                                                        <?php if (!empty($details->portfolio_links)): ?>
+                                                            <a href="<?= htmlspecialchars($details->portfolio_links) ?>" target="_blank" style="color: #3b82f6;">View Portfolio</a>
+                                                        <?php else: ?>
+                                                            -
+                                                        <?php endif; ?>
+                                                    </span>
+                                                </div>
+                                                <?php if (!empty($details->sample_videos)): ?>
+                                                <div class="detail-item full-width">
+                                                    <label>Sample Photos/Videos:</label>
+                                                    <span><a href="<?= ROOT . '/' . htmlspecialchars($details->sample_videos) ?>" target="_blank" style="color: #3b82f6;">View Sample</a></span>
                                                 </div>
                                                 <?php endif; ?>
                                             </div>
@@ -318,38 +311,32 @@
                                         <!-- Set Design Details -->
                                         <?php if ($serviceName === 'set design' && $details): ?>
                                             <div class="service-details-grid">
-                                                <div class="detail-item">
-                                                    <label>Service Type:</label>
-                                                    <span>
-                                                        <?php 
-                                                        $set_types = [];
-                                                        if ($details->set_design) $set_types[] = 'Design';
-                                                        if ($details->set_construction) $set_types[] = 'Construction';
-                                                        if ($details->set_rental) $set_types[] = 'Rental';
-                                                        echo htmlspecialchars(implode(', ', $set_types) ?: '-');
-                                                        ?>
-                                                    </span>
+                                                <div class="detail-item full-width">
+                                                    <label>Types of Sets Designed:</label>
+                                                    <span><?= nl2br(htmlspecialchars($details->types_of_sets_designed ?? '-')) ?></span>
                                                 </div>
                                                 <div class="detail-item">
-                                                    <label>Production Stage:</label>
-                                                    <span><?= htmlspecialchars($details->production_stage ?? '-') ?></span>
+                                                    <label>Set Construction Provided:</label>
+                                                    <span><?= htmlspecialchars($details->set_construction_provided ?? '-') ?></span>
                                                 </div>
                                                 <div class="detail-item">
-                                                    <label>Materials:</label>
-                                                    <span><?= htmlspecialchars($details->materials ?? '-') ?></span>
+                                                    <label>Stage Installation Support:</label>
+                                                    <span><?= htmlspecialchars($details->stage_installation_support ?? '-') ?></span>
                                                 </div>
                                                 <div class="detail-item">
-                                                    <label>Dimensions:</label>
-                                                    <span><?= htmlspecialchars($details->dimensions ?? '-') ?></span>
+                                                    <label>Maximum Stage Size Supported:</label>
+                                                    <span><?= htmlspecialchars($details->max_stage_size_supported ?? '-') ?></span>
                                                 </div>
-                                                <div class="detail-item">
-                                                    <label>Budget Range:</label>
-                                                    <span><?= htmlspecialchars($details->budget_range ?? '-') ?></span>
+                                                <div class="detail-item full-width">
+                                                    <label>Materials Used:</label>
+                                                    <span><?= nl2br(htmlspecialchars($details->materials_used ?? '-')) ?></span>
                                                 </div>
-                                                <div class="detail-item">
-                                                    <label>Deadline:</label>
-                                                    <span><?= htmlspecialchars($details->deadline ?? '-') ?></span>
+                                                <?php if (!empty($details->sample_set_designs)): ?>
+                                                <div class="detail-item full-width">
+                                                    <label>Sample Set Designs:</label>
+                                                    <span><a href="<?= ROOT . '/' . htmlspecialchars($details->sample_set_designs) ?>" target="_blank">View sample</a></span>
                                                 </div>
+                                                <?php endif; ?>
                                                 <?php if ($details->notes): ?>
                                                 <div class="detail-item full-width">
                                                     <label>Notes:</label>
@@ -362,46 +349,72 @@
                                         <!-- Costume Design Details -->
                                         <?php if ($serviceName === 'costume design' && $details): ?>
                                             <div class="service-details-grid">
-                                                <div class="detail-item">
-                                                    <label>Service Type:</label>
-                                                    <span>
-                                                        <?php 
-                                                        $costume_types = [];
-                                                        if ($details->costume_design) $costume_types[] = 'Design';
-                                                        if ($details->costume_creation) $costume_types[] = 'Creation';
-                                                        if ($details->costume_rental) $costume_types[] = 'Rental';
-                                                        echo htmlspecialchars(implode(', ', $costume_types) ?: '-');
-                                                        ?>
-                                                    </span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Characters:</label>
-                                                    <span><?= htmlspecialchars($details->num_characters ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Costumes:</label>
-                                                    <span><?= htmlspecialchars($details->num_costumes ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Measurements Required:</label>
-                                                    <span><?= htmlspecialchars($details->measurements_required ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Fitting Dates:</label>
-                                                    <span><?= htmlspecialchars($details->fitting_dates ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Budget Range:</label>
-                                                    <span><?= htmlspecialchars($details->budget_range ?? '-') ?></span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <label>Deadline:</label>
-                                                    <span><?= htmlspecialchars($details->deadline ?? '-') ?></span>
-                                                </div>
-                                                <?php if ($details->notes): ?>
                                                 <div class="detail-item full-width">
-                                                    <label>Notes:</label>
-                                                    <span><?= nl2br(htmlspecialchars($details->notes)) ?></span>
+                                                    <label>Types of Costumes Provided:</label>
+                                                    <span><?= nl2br(htmlspecialchars($details->types_of_costumes_provided ?? '-')) ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Custom Costume Design Available:</label>
+                                                    <span><?= htmlspecialchars($details->custom_costume_design_available ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Available Sizes:</label>
+                                                    <span><?= htmlspecialchars($details->available_sizes ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Alterations Provided:</label>
+                                                    <span><?= htmlspecialchars($details->alterations_provided ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Number of Costumes Available:</label>
+                                                    <span><?= htmlspecialchars($details->number_of_costumes_available ?? '-') ?></span>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <!-- Makeup & Hair Details -->
+                                        <?php if ($serviceName === 'makeup & hair' && $details): ?>
+                                            <div class="service-details-grid">
+                                                <div class="detail-item full-width">
+                                                    <label>Type of Make-up Services:</label>
+                                                    <span><?= nl2br(htmlspecialchars($details->type_of_makeup_services ?? '-')) ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Experience in Stage Make-up (years):</label>
+                                                    <span><?= htmlspecialchars($details->experience_stage_makeup_years ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Maximum Actors Per Show:</label>
+                                                    <span><?= htmlspecialchars($details->maximum_actors_per_show ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Character-based Make-up Available:</label>
+                                                    <span><?= htmlspecialchars($details->character_based_makeup_available ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Can Handle Full Cast:</label>
+                                                    <span><?= htmlspecialchars($details->can_handle_full_cast ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Bring Own Make-up Kit:</label>
+                                                    <span><?= htmlspecialchars($details->bring_own_makeup_kit ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>On-site Service Available:</label>
+                                                    <span><?= htmlspecialchars($details->onsite_service_available ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <label>Touch-up Service During Show:</label>
+                                                    <span><?= htmlspecialchars($details->touchup_service_during_show ?? '-') ?></span>
+                                                </div>
+                                                <div class="detail-item full-width">
+                                                    <label>Traditional/Cultural Make-up Expertise:</label>
+                                                    <span><?= nl2br(htmlspecialchars($details->traditional_cultural_makeup_expertise ?? '-')) ?></span>
+                                                </div>
+                                                <?php if (!empty($details->sample_makeup_photos)): ?>
+                                                <div class="detail-item full-width">
+                                                    <label>Sample Make-up Photos:</label>
+                                                    <span><a href="<?= ROOT . '/' . htmlspecialchars($details->sample_makeup_photos) ?>" target="_blank" style="color: #3b82f6;">View Photos</a></span>
                                                 </div>
                                                 <?php endif; ?>
                                             </div>
@@ -494,8 +507,8 @@
                     <select id="serviceSelect" name="service_required" required class="form-input" onchange="updateServiceFields()">
                         <option value="">Select a service</option>
                         <?php foreach ($data['services'] as $service): ?>
-                            <option value="<?= htmlspecialchars($service->service_name) ?>">
-                                <?= htmlspecialchars($service->service_name) ?>
+                            <option value="<?= htmlspecialchars($service->service_type ?? '') ?>">
+                                <?= htmlspecialchars($service->service_type ?? '') ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
