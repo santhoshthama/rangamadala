@@ -320,6 +320,8 @@ class ServiceProviderRegister
                 'onsite_service_available' => $svc['onsite_service_available'] ?? null,
                 'touchup_service_during_show' => $svc['touchup_service_during_show'] ?? null,
                 'traditional_cultural_makeup_expertise' => $svc['traditional_cultural_makeup_expertise'] ?? null,
+                // Other service type field
+                'service_type' => $svc['service_type'] ?? null,
             ];
 
             // Handle theatre photos file upload if present for this index

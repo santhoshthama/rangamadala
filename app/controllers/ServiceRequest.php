@@ -14,6 +14,7 @@ class ServiceRequest
         // Collect form data
         $request = [
             'provider_id' => (int)($_POST['provider_id'] ?? 0),
+            'requested_by' => $_SESSION['user_id'] ?? null,
             'requester_name' => trim($_POST['requester_name'] ?? ''),
             'requester_email' => trim($_POST['requester_email'] ?? ''),
             'requester_phone' => trim($_POST['requester_phone'] ?? ''),

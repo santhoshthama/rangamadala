@@ -12,14 +12,15 @@ class M_service_request
     public function createRequest($data)
     {
         $this->db->query("INSERT INTO service_requests (
-            provider_id, requester_name, requester_email, requester_phone,
+            provider_id, requested_by, requester_name, requester_email, requester_phone,
             drama_name, service_required, start_date, end_date, notes, status, created_at
         ) VALUES (
-            :provider_id, :requester_name, :requester_email, :requester_phone,
+            :provider_id, :requested_by, :requester_name, :requester_email, :requester_phone,
             :drama_name, :service_required, :start_date, :end_date, :notes, :status, :created_at
         )");
 
         $this->db->bind(':provider_id', $data['provider_id']);
+        $this->db->bind(':requested_by', $data['requested_by'] ?? null);
         $this->db->bind(':requester_name', $data['requester_name']);
         $this->db->bind(':requester_email', $data['requester_email']);
         $this->db->bind(':requester_phone', $data['requester_phone']);

@@ -63,7 +63,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Social Media Link</label>
-                                <input type="url" name="website" class="form-input" 
+                                <input type="url" name="social_media_link" class="form-input" 
                                     value="<?php echo htmlspecialchars($data['provider']->social_media_link ?? ''); ?>">
                             </div>
                         </div>

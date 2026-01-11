@@ -620,6 +620,12 @@ body {
     font-weight: 700;
 }
 
+.modal-header h2 span {
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
 .close-modal {
     background: none;
     border: none;
@@ -678,6 +684,10 @@ body {
     transition: all 0.2s ease;
     color: #34495e;
     background: #ffffff;
+}
+
+.form-input option {
+    color: #000000;
 }
 
 .form-input:focus {

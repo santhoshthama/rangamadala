@@ -88,7 +88,7 @@
 
                     <div class="form-group">
                         <label class="form-label">Available Facilities</label>
-                        <?php $afArr = !empty($details->available_facilities) ? json_decode($details->available_facilities, true) : []; ?>
+                        <?php $afArr = !empty($details->available_facilities) ? (json_decode($details->available_facilities, true) ?? []) : []; ?>
                         <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
                             <label><input type="checkbox" name="available_facilities[]" value="Dressing rooms" <?php echo in_array('Dressing rooms', $afArr) ? 'checked' : ''; ?>> Dressing rooms</label>
                             <label><input type="checkbox" name="available_facilities[]" value="AC" <?php echo in_array('AC', $afArr) ? 'checked' : ''; ?>> AC</label>
@@ -100,7 +100,7 @@
 
                     <div class="form-group">
                         <label class="form-label">Technical Facilities</label>
-                        <?php $tfArr = !empty($details->technical_facilities) ? json_decode($details->technical_facilities, true) : []; ?>
+                        <?php $tfArr = !empty($details->technical_facilities) ? (json_decode($details->technical_facilities, true) ?? []) : []; ?>
                         <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
                             <label><input type="checkbox" name="technical_facilities[]" value="Lighting system" <?php echo in_array('Lighting system', $tfArr) ? 'checked' : ''; ?>> Lighting system</label>
                             <label><input type="checkbox" name="technical_facilities[]" value="Sound system" <?php echo in_array('Sound system', $tfArr) ? 'checked' : ''; ?>> Sound system</label>

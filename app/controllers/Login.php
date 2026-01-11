@@ -26,6 +26,9 @@ class Login
                 // set session and redirect to dashboard or home page
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['user_name'] = $user->full_name;
+                $_SESSION['full_name'] = $user->full_name;
+                $_SESSION['email'] = $user->email;
+                $_SESSION['phone'] = $user->phone;
                 $_SESSION['role'] = $user->role;
 
                 // Redirect based on user role
@@ -33,7 +36,9 @@ class Login
                     header("Location: " . ROOT . "/Admindashboard");
                     exit;
                 } elseif ($user->role === 'artist') {
-                    header("Location: " . ROOT . "/ArtistDashboard");
+                    // header("Location: " . ROOT . "/ArtistDashboard");
+                    // Temporary redirect for testing
+                    header("Location: " . ROOT . "/BrowseServiceProviders");
                     exit;
                 } elseif ($user->role === 'service_provider') {
                     header("Location: " . ROOT . "/ServiceProviderDashboard");

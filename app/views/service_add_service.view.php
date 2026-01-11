@@ -667,6 +667,14 @@
                                 <label class="form-label">Description </label>
                                 <textarea name="services[7][description]" class="form-input textarea" placeholder="Add a description about this service..."><?= isset($svc7['description']) ? htmlspecialchars($svc7['description']) : '' ?></textarea>
                             </div>
+                            
+                            <!-- Other Service Specific Fields -->
+                            <div class="service-details" id="service8Details" style="<?= !empty($svc7['selected']) ? '' : 'display:none;' ?>">
+                                <div class="form-group">
+                                    <label class="form-label">Service Type <span class="required">*</span></label>
+                                    <input type="text" name="services[7][service_type]" class="form-input" placeholder="e.g., Photography, Catering, Transportation, etc." value="<?= isset($svc7['service_type']) ? htmlspecialchars($svc7['service_type']) : '' ?>">
+                                </div>
+                            </div>
                         </div>
                     </div>
 

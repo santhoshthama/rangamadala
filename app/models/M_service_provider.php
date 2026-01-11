@@ -203,6 +203,7 @@ class M_service_provider extends M_signup {
             'set design'         => 'service_set_details',
             'costume design'     => 'service_costume_details',
             'makeup & hair'      => 'service_makeup_details',
+            'other'              => 'service_other_details',
         ];
 
         $key = strtolower(trim($service_type));
@@ -214,7 +215,11 @@ class M_service_provider extends M_signup {
             $this->db->bind(':service_id', $service_id);
             $detail = $this->db->single();
             if ($detail) {
-                $detail->service_type = $service_type ?: ucfirst($key);
+                // For 'other' service type, preserve the user-entered service_type from database
+                // For other types, set the category name
+                if ($key !== 'other') {
+                    $detail->service_type = $service_type ?: ucfirst($key);
+                }
                 return $detail;
             }
         }
@@ -225,7 +230,11 @@ class M_service_provider extends M_signup {
             $this->db->bind(':service_id', $service_id);
             $detail = $this->db->single();
             if ($detail) {
-                $detail->service_type = $label;
+                // For 'other' service type, preserve the user-entered service_type from database
+                // For other types, set the category name
+                if ($label !== 'other') {
+                    $detail->service_type = $label;
+                }
                 return $detail;
             }
         }
@@ -398,6 +407,17 @@ class M_service_provider extends M_signup {
                     ],
                 ];
 
+            case 'other':
+                return [
+                    'table' => 'service_other_details',
+                    'data' => [
+                        'rate_per_hour' => isset($svc['rate']) ? (float)$svc['rate'] : null,
+                        'rate_type' => $svc['rate_type'] ?? 'hourly',
+                        'description' => $svc['description'] ?? null,
+                        'service_type' => $svc['service_type'] ?? null,
+                    ],
+                ];
+
             default:
                 return null;
         }
@@ -499,7 +519,7 @@ class M_service_provider extends M_signup {
                          email = :email, 
                          phone = :phone, 
                          location = :location, 
-                         website = :website, 
+                         social_media_link = :social_media_link, 
                          years_experience = :years_experience,
                          professional_summary = :professional_summary,
                          availability = :availability,
@@ -510,7 +530,7 @@ class M_service_provider extends M_signup {
         $this->db->bind(':email', $email);
         $this->db->bind(':phone', $phone);
         $this->db->bind(':location', $location);
-        $this->db->bind(':website', $website);
+        $this->db->bind(':social_media_link', $website);
         $this->db->bind(':years_experience', $years_experience);
         $this->db->bind(':professional_summary', $professional_summary);
         $this->db->bind(':availability', $availability);

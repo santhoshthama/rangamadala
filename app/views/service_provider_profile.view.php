@@ -211,7 +211,15 @@
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; margin-bottom: 15px;">
                             <div style="display: flex; align-items: center;">
                                 <input type="checkbox" class="checkbox" checked disabled style="margin-right: 10px;">
-                                <span style="font-size: 24px; font-weight: 600; color: #333;"><?php echo htmlspecialchars($resolvedType ?: 'Unknown Service'); ?></span>
+                                <span style="font-size: 24px; font-weight: 600; color: #333;">
+                                    <?php 
+                                    if ($serviceName === 'other' && isset($details->service_type)) {
+                                        echo 'Other (' . htmlspecialchars($details->service_type) . ')';
+                                    } else {
+                                        echo htmlspecialchars($resolvedType ?: 'Unknown Service');
+                                    }
+                                    ?>
+                                </span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/editService?id=<?php echo $service->id; ?>" class="btn btn-secondary" style="text-decoration: none; padding: 5px 10px; font-size: 14px;">
@@ -608,6 +616,18 @@
                                 </div>
                             </div>
                             <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ($serviceName === 'other' && $details): ?>
+                        <div class="service-details" style="width: 100%; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #333;">Other Service Details</h4>
+                            <div class="form-group">
+                                <label class="form-label">Service Type</label>
+                                <div class="form-input" style="background: #fff; cursor: default;">
+                                    <?php echo htmlspecialchars($details->service_type ?? ''); ?>
+                                </div>
+                            </div>
                         </div>
                         <?php endif; ?>
                     </div>

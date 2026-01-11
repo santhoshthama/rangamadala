@@ -560,7 +560,7 @@ class ServiceProviderProfile
                 $_POST['email'],
                 $_POST['phone'],
                 $_POST['location'],
-                $_POST['website'] ?? '',
+                $_POST['social_media_link'] ?? '',
                 $_POST['years_experience'],
                 $_POST['professional_summary'] ?? '',
                 $_POST['availability'] ?? 0,
