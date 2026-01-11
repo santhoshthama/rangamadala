@@ -8,10 +8,12 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: white;
+    background-color: #f5f5f5;
     color: #333;
-    padding: 20px;
     line-height: 1.5;
+    padding: 0;
+    display: flex;
+    min-height: 100vh;
 }
 
 .main--content .container {

@@ -5,7 +5,7 @@
             <h2>Request Service<span id="serviceTypeName"></span></h2>
             <button class="close-modal" onclick="closeRequestModal()">&times;</button>
         </div>
-        <form id="requestForm" method="POST" action="<?= ROOT ?>/ServiceRequest/submit">
+        <form id="requestForm" method="POST" action="<?= ROOT ?>/ServiceProviderRequest/submit">
             <input type="hidden" name="provider_id" value="<?= $data['provider']->user_id ?>">
             <input type="hidden" name="requested_by" value="<?= $_SESSION['user_id'] ?? '' ?>">
             
@@ -31,7 +31,7 @@
             </div>
 
             <!-- Hidden field to store the service type -->
-            <input type="hidden" id="serviceSelect" name="service_required">
+            <input type="hidden" id="serviceType" name="service_type">
 
             <div class="form-row">
                 <div class="form-group">
@@ -409,12 +409,13 @@
     function openRequestModal(serviceName = '', rate = '') {
         // Pre-fill the service name if provided
         if (serviceName) {
-            const serviceInput = document.getElementById('serviceSelect');
+            const serviceTypeInput = document.getElementById('serviceType');
             const serviceTypeDisplay = document.getElementById('serviceTypeName');
-            if (serviceInput) {
-                serviceInput.value = serviceName;
-                updateServiceFields();
+            if (serviceTypeInput) {
+                serviceTypeInput.value = serviceName;
             }
+            // Show service-specific fields based on the service type
+            updateServiceFields(serviceName);
             if (serviceTypeDisplay) {
                 serviceTypeDisplay.textContent = ' - ' + serviceName;
             }
@@ -435,9 +436,13 @@
         document.body.style.overflow = 'auto';
     }
 
-    function updateServiceFields() {
-        const serviceInput = document.getElementById('serviceSelect');
-        const selectedService = serviceInput.value.toLowerCase();
+    function updateServiceFields(serviceName = '') {
+        // Use the passed serviceName or get from the input field
+        if (!serviceName) {
+            const serviceInput = document.getElementById('serviceType');
+            serviceName = serviceInput ? serviceInput.value : '';
+        }
+        const selectedService = serviceName.toLowerCase();
         
         // Hide all service-specific fields
         document.getElementById('theaterFields').style.display = 'none';

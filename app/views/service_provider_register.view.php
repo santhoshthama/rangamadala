@@ -996,7 +996,7 @@
                     <!-- Recent Projects -->
                     <div class="section">
                         <h3 class="section-title">
-                            Recent Projects
+                            Past Engagements
                             <button type="button" class="add-btn" onclick="addProject()">+ Add Project</button>
                         </h3>
                         <div id="projectList">

@@ -7,24 +7,32 @@
     font-family: sans-serif;
 }
 
+:root {
+    --sp-sidebar-width: 240px;
+}
+
 body {
     display: flex;
+    min-height: 100vh;
+    padding: 0;
+    background: #f5f5f5;
 }
 
 .sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: 240px;
+    width: var(--sp-sidebar-width);
     height: 100vh;
     padding: 0 1.7rem;
     color: #fff;
     overflow-y: auto;
     background: rgba(186,142,35);
+    flex-shrink: 0;
 }
 
 .sidebar:hover{
-    width: 240px;
+    width: var(--sp-sidebar-width);
 }
 
 .logo {
@@ -83,7 +91,7 @@ body {
     background: #ebe9e9;
     width:100%;
     padding:1rem;
-    margin-left: 240px;
+    margin-left: var(--sp-sidebar-width);
 }
 .header--wrapper img{
     width: 50px;
@@ -269,14 +277,7 @@ body {
         display: none;
     }
 
-    /* Tab labels */
-    body {
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: #f4f6f8;
-    padding: 30px;
-}
-
-/* Tabs container */
+    /* Tabs container */
 .tabs {
     max-width: 100%;
     margin: auto;
