@@ -8,8 +8,8 @@ class M_service_provider extends M_signup {
         $this->db = new Database();
     }
 
-    public function register($full_name, $email, $password, $phone, $nic_photo = null) {
-        return $this->registerUser($full_name, $email, $password, $phone, 'service_provider', $nic_photo);
+    public function register($full_name, $email, $password, $phone, $nic_photo_front = null, $nic_photo_back = null) {
+        return $this->registerUser($full_name, $email, $password, $phone, 'service_provider', $nic_photo_front, $nic_photo_back);
     }
 
     public function emailExists($email) {
@@ -47,7 +47,10 @@ class M_service_provider extends M_signup {
     }
 
     public function getServicesByProviderId($user_id) {
-        $this->db->query("SELECT * FROM services WHERE provider_id = :user_id");
+        $this->db->query("SELECT s.*, st.service_type 
+                          FROM services s 
+                          LEFT JOIN service_types st ON s.service_type_id = st.service_type_id 
+                          WHERE s.provider_id = :user_id");
         $this->db->bind(':user_id', $user_id);
         return $this->db->resultSet();
     }
@@ -66,13 +69,13 @@ class M_service_provider extends M_signup {
             $this->db->beginTransaction();
 
             $this->db->query("INSERT INTO serviceprovider (
-                user_id, full_name, professional_title, email, phone, location,
-                website, years_experience, professional_summary,
-                availability, availability_notes, business_cert_photo
+                user_id, full_name, professional_title, email, phone, location, nic_number,
+                social_media_link, years_experience, professional_summary,
+                availability, availability_notes, nic_photo_front, nic_photo_back
             ) VALUES (
-                :user_id, :full_name, :professional_title, :email, :phone, :location,
-                :website, :years_experience, :professional_summary,
-                :availability, :availability_notes, :business_cert_photo
+                :user_id, :full_name, :professional_title, :email, :phone, :location, :nic_number,
+                :social_media_link, :years_experience, :professional_summary,
+                :availability, :availability_notes, :nic_photo_front, :nic_photo_back
             )
             ON DUPLICATE KEY UPDATE
                 full_name = VALUES(full_name),
@@ -80,12 +83,14 @@ class M_service_provider extends M_signup {
                 email = VALUES(email),
                 phone = VALUES(phone),
                 location = VALUES(location),
-                website = VALUES(website),
+                nic_number = VALUES(nic_number),
+                social_media_link = VALUES(social_media_link),
                 years_experience = VALUES(years_experience),
                 professional_summary = VALUES(professional_summary),
                 availability = VALUES(availability),
                 availability_notes = VALUES(availability_notes),
-                business_cert_photo = VALUES(business_cert_photo)");
+                nic_photo_front = VALUES(nic_photo_front),
+                nic_photo_back = VALUES(nic_photo_back)");
 
             $this->db->bind(':user_id', $providerId);
             $this->db->bind(':full_name', $provider['full_name'] ?? null);
@@ -93,12 +98,14 @@ class M_service_provider extends M_signup {
             $this->db->bind(':email', $provider['email'] ?? null);
             $this->db->bind(':phone', $provider['phone'] ?? null);
             $this->db->bind(':location', $provider['location'] ?? null);
-            $this->db->bind(':website', $provider['website'] ?? null);
+            $this->db->bind(':nic_number', $provider['nic_number'] ?? null);
+            $this->db->bind(':social_media_link', $provider['website'] ?? null);
             $this->db->bind(':years_experience', isset($provider['years_experience']) && $provider['years_experience'] !== '' ? (int)$provider['years_experience'] : null);
             $this->db->bind(':professional_summary', $provider['professional_summary'] ?? null);
             $this->db->bind(':availability', isset($provider['availability']) ? (int)$provider['availability'] : 1);
             $this->db->bind(':availability_notes', $provider['availability_notes'] ?? null);
-            $this->db->bind(':business_cert_photo', $provider['business_cert_photo'] ?? null);
+            $this->db->bind(':nic_photo_front', $provider['nic_photo_front'] ?? null);
+            $this->db->bind(':nic_photo_back', $provider['nic_photo_back'] ?? null);
 
             $this->db->execute();
             $this->db->commit();
@@ -115,18 +122,16 @@ class M_service_provider extends M_signup {
             if (!empty($services) && is_array($services)) {
                 foreach ($services as $svc) {
                     if (!empty($svc['selected']) && !empty($svc['name'])) {
-                        $base = $this->extractBaseService($providerId, $svc);
+                        $typeId = $this->getServiceTypeIdByName($svc['name']);
 
-                        $this->db->query("INSERT INTO services (provider_id, service_name, rate_per_hour, description)
-                                          VALUES (:provider_id, :service_name, :rate_per_hour, :description)");
-                        $this->db->bind(':provider_id', $base['provider_id']);
-                        $this->db->bind(':service_name', $base['service_name']);
-                        $this->db->bind(':rate_per_hour', $base['rate_per_hour']);
-                        $this->db->bind(':description', $base['description']);
+                        $this->db->query("INSERT INTO services (provider_id, service_type_id)
+                                          VALUES (:provider_id, :service_type_id)");
+                        $this->db->bind(':provider_id', $providerId);
+                        $this->db->bind(':service_type_id', $typeId);
                         $this->db->execute();
 
                         $serviceId = $this->db->lastInsertId();
-                        $detail = $this->buildDetailPayload($base['service_name'], $svc);
+                        $detail = $this->buildDetailPayload($svc['name'], $svc);
                         if ($serviceId && $detail) {
                             $this->insertServiceDetail($serviceId, $detail);
                         }
@@ -161,23 +166,18 @@ class M_service_provider extends M_signup {
     }
 
     // Service CRUD Methods
-    public function insertService($provider_id, $service_name, $rate_per_hour, $description = '', $extras = []) {
-        $base = $this->extractBaseService((int)$provider_id, [
-            'name' => $service_name,
-            'rate' => $rate_per_hour,
-            'description' => $description,
-        ] + $extras + ['selected' => true]);
+    public function insertService($provider_id, $service_type_name, $description = '', $extras = []) {
+        $providerId = (int)$provider_id;
+        $typeId = $this->getServiceTypeIdByName($service_type_name);
 
-        $this->db->query("INSERT INTO services (provider_id, service_name, rate_per_hour, description)
-                          VALUES (:provider_id, :service_name, :rate_per_hour, :description)");
-        $this->db->bind(':provider_id', $base['provider_id']);
-        $this->db->bind(':service_name', $base['service_name']);
-        $this->db->bind(':rate_per_hour', $base['rate_per_hour']);
-        $this->db->bind(':description', $base['description']);
+        $this->db->query("INSERT INTO services (provider_id, service_type_id)
+                          VALUES (:provider_id, :service_type_id)");
+        $this->db->bind(':provider_id', $providerId);
+        $this->db->bind(':service_type_id', $typeId);
         $this->db->execute();
 
         $serviceId = $this->db->lastInsertId();
-        $detail = $this->buildDetailPayload($base['service_name'], $extras);
+        $detail = $this->buildDetailPayload($service_type_name, $extras + ['description' => $description]);
         if ($serviceId && $detail) {
             $this->insertServiceDetail((int)$serviceId, $detail);
         }
@@ -186,64 +186,74 @@ class M_service_provider extends M_signup {
     }
 
     public function getServiceById($service_id) {
-        $this->db->query("SELECT * FROM services WHERE id = :id");
+        $this->db->query("SELECT s.*, st.service_type 
+                          FROM services s 
+                          LEFT JOIN service_types st ON s.service_type_id = st.service_type_id 
+                          WHERE s.id = :id");
         $this->db->bind(':id', $service_id);
         return $this->db->single();
     }
 
-    public function getServiceDetails($service_id, $service_name) {
-        $key = strtolower(trim($service_name));
-        $table = null;
+    public function getServiceDetails($service_id, $service_type = '') {
+        $map = [
+            'theater production' => 'service_theater_details',
+            'lighting design'    => 'service_lighting_details',
+            'sound systems'      => 'service_sound_details',
+            'video production'   => 'service_video_details',
+            'set design'         => 'service_set_details',
+            'costume design'     => 'service_costume_details',
+            'makeup & hair'      => 'service_makeup_details',
+            'other'              => 'service_other_details',
+        ];
 
-        switch ($key) {
-            case 'theater production':
-                $table = 'service_theater_details';
-                break;
-            case 'lighting design':
-                $table = 'service_lighting_details';
-                break;
-            case 'sound systems':
-                $table = 'service_sound_details';
-                break;
-            case 'video production':
-                $table = 'service_video_details';
-                break;
-            case 'set design':
-                $table = 'service_set_details';
-                break;
-            case 'costume design':
-                $table = 'service_costume_details';
-                break;
-            default:
-                return null;
-        }
+        $key = strtolower(trim($service_type));
 
-        if ($table) {
+        // Prefer the declared service_type if present
+        if (isset($map[$key])) {
+            $table = $map[$key];
             $this->db->query("SELECT * FROM {$table} WHERE service_id = :service_id");
             $this->db->bind(':service_id', $service_id);
-            return $this->db->single();
+            $detail = $this->db->single();
+            if ($detail) {
+                // For 'other' service type, preserve the user-entered service_type from database
+                // For other types, set the category name
+                if ($key !== 'other') {
+                    $detail->service_type = $service_type ?: ucfirst($key);
+                }
+                return $detail;
+            }
+        }
+
+        // Fallback: detect by scanning all detail tables (handles older rows without service_type)
+        foreach ($map as $label => $table) {
+            $this->db->query("SELECT * FROM {$table} WHERE service_id = :service_id");
+            $this->db->bind(':service_id', $service_id);
+            $detail = $this->db->single();
+            if ($detail) {
+                // For 'other' service type, preserve the user-entered service_type from database
+                // For other types, set the category name
+                if ($label !== 'other') {
+                    $detail->service_type = $label;
+                }
+                return $detail;
+            }
         }
 
         return null;
     }
 
-    public function updateService($service_id, $service_name, $rate_per_hour, $description = '', $extras = []) {
-        $rate = ($rate_per_hour === '' || $rate_per_hour === null) ? null : (float)$rate_per_hour;
-        $desc = ($description === '') ? null : $description;
+    public function updateService($service_id, $service_type_name, $description = '', $extras = []) {
+        $typeId = $this->getServiceTypeIdByName($service_type_name);
 
         $this->db->query("UPDATE services SET 
-            service_name = :service_name,
-            rate_per_hour = :rate_per_hour,
-            description = :description
+            service_type_id = :service_type_id
             WHERE id = :id");
 
-        $this->db->bind(':service_name', $service_name);
-        $this->db->bind(':rate_per_hour', $rate);
-        $this->db->bind(':description', $desc);
+        $this->db->bind(':service_type_id', $typeId);
         $this->db->bind(':id', $service_id);
         $baseUpdated = $this->db->execute();
 
-        $detail = $this->buildDetailPayload($service_name, $extras + ['rate' => $rate_per_hour, 'description' => $description]);
+        $detail = $this->buildDetailPayload($service_type_name, $extras + ['description' => $description]);
         if ($detail) {
             $this->upsertServiceDetail((int)$service_id, $detail);
         }
@@ -251,123 +261,160 @@ class M_service_provider extends M_signup {
         return $baseUpdated;
     }
 
-    private function extractBaseService(int $providerId, array $svc) {
-        $name = trim($svc['name'] ?? '');
-        $rate = isset($svc['rate']) && $svc['rate'] !== '' ? (float)$svc['rate'] : null;
-        $desc = isset($svc['description']) && $svc['description'] !== '' ? trim($svc['description']) : null;
+    private function getServiceTypeIdByName(string $serviceTypeName): ?int {
+        $name = trim($serviceTypeName);
+        if ($name === '') {
+            return null;
+        }
 
-        return [
-            'provider_id' => $providerId,
-            'service_name' => $name,
-            'rate_per_hour' => $rate,
-            'description' => $desc,
-        ];
+        $this->db->query("SELECT service_type_id FROM service_types WHERE LOWER(service_type) = LOWER(:name) LIMIT 1");
+        $this->db->bind(':name', $name);
+        $row = $this->db->single();
+        if (!empty($row->service_type_id)) {
+            return (int)$row->service_type_id;
+        }
+
+        // Create service type if it doesn't exist yet
+        $this->db->query("INSERT INTO service_types (service_type) VALUES (:name)");
+        $this->db->bind(':name', $name);
+        $this->db->execute();
+        return (int)$this->db->lastInsertId();
     }
 
     private function buildDetailPayload(string $serviceName, array $svc): ?array {
         $key = strtolower(trim($serviceName));
         switch ($key) {
             case 'theater production':
-                $stageReq = (array)($svc['stage_req'] ?? []);
+                $af = (array)($svc['available_facilities'] ?? []);
+                $tf = (array)($svc['technical_facilities'] ?? []);
                 return [
                     'table' => 'service_theater_details',
                     'data' => [
-                        'num_actors' => $svc['num_actors'] ?? null,
-                        'expected_audience' => $svc['expected_audience'] ?? null,
-                        'stage_proscenium' => in_array('Proscenium', $stageReq) ? 1 : 0,
-                        'stage_black_box' => in_array('Black box', $stageReq) ? 1 : 0,
-                        'stage_open_floor' => in_array('Open floor', $stageReq) ? 1 : 0,
-                        'seating_requirement' => $svc['seating'] ?? null,
-                        'parking_requirement' => $svc['parking'] ?? null,
-                        'special_tech' => $svc['special_tech'] ?? null,
+                        'rate_per_hour' => isset($svc['rate']) ? (float)$svc['rate'] : null,
+                        'rate_type' => $svc['rate_type'] ?? 'hourly',
+                        'description' => $svc['description'] ?? null,
+                        'theatre_name' => $svc['theatre_name'] ?? null,
+                        'seating_capacity' => $svc['seating_capacity'] ?? null,
+                        'stage_dimensions' => $svc['stage_dimensions'] ?? null,
+                        'stage_type' => $svc['stage_type'] ?? null,
+                        'available_facilities' => !empty($af) ? implode(', ', $af) : null,
+                        'technical_facilities' => !empty($tf) ? implode(', ', $tf) : null,
+                        'equipment_rent' => $svc['equipment_rent'] ?? null,
+                        'stage_crew_available' => $svc['stage_crew_available'] ?? null,
+                        'location_address' => $svc['location_address'] ?? null,
+                        'theatre_photos' => $svc['theatre_photos'] ?? null,
                     ],
                 ];
 
             case 'lighting design':
-                $lighting = (array)($svc['lighting_services'] ?? []);
                 return [
                     'table' => 'service_lighting_details',
                     'data' => [
-                        'stage_lighting' => in_array('Stage Lighting', $lighting) ? 1 : 0,
-                        'spotlights' => in_array('Spotlights', $lighting) ? 1 : 0,
-                        'custom_programming' => in_array('Custom Lighting Programming', $lighting) ? 1 : 0,
-                        'moving_heads' => in_array('Moving Heads', $lighting) ? 1 : 0,
-                        'num_lights' => $svc['num_lights'] ?? null,
-                        'effects' => $svc['lighting_effects'] ?? null,
-                        'technician_needed' => $svc['technician_needed'] ?? null,
-                        'notes' => $svc['additional_notes'] ?? null,
+                        'rate_per_hour' => isset($svc['rate']) ? (float)$svc['rate'] : null,
+                        'rate_type' => $svc['rate_type'] ?? 'hourly',
+                        'description' => $svc['description'] ?? null,
+                        'lighting_equipment_provided' => $svc['lighting_equipment_provided'] ?? null,
+                        'max_stage_size' => $svc['max_stage_size'] ?? null,
+                        'lighting_design_service' => $svc['lighting_design_service'] ?? null,
+                        'lighting_crew_available' => $svc['lighting_crew_available'] ?? null,
                     ],
                 ];
 
             case 'sound systems':
-                $sound = (array)($svc['sound_services'] ?? []);
                 return [
                     'table' => 'service_sound_details',
                     'data' => [
-                        'pa_system' => in_array('PA system', $sound) ? 1 : 0,
-                        'microphones' => in_array('Microphones', $sound) ? 1 : 0,
-                        'sound_mixing' => in_array('Sound Mixing', $sound) ? 1 : 0,
-                        'background_music' => in_array('Background Music', $sound) ? 1 : 0,
-                        'special_effects' => in_array('Special Effects', $sound) ? 1 : 0,
-                        'num_mics' => $svc['num_mics'] ?? null,
-                        'stage_monitor' => $svc['stage_monitor'] ?? null,
-                        'sound_engineer' => $svc['sound_engineer'] ?? null,
-                        'notes' => $svc['additional_notes'] ?? null,
+                        'rate_per_hour' => isset($svc['rate']) ? (float)$svc['rate'] : null,
+                        'rate_type' => $svc['rate_type'] ?? 'hourly',
+                        'description' => $svc['description'] ?? null,
+                        'sound_equipment_provided' => $svc['sound_equipment_provided'] ?? null,
+                        'max_audience_size' => $svc['max_audience_size'] ?? null,
+                        'sound_effects_handling' => $svc['sound_effects_handling'] ?? null,
+                        'sound_engineer_included' => $svc['sound_engineer_included'] ?? null,
+                        'equipment_brands' => $svc['equipment_brands'] ?? null,
                     ],
                 ];
 
             case 'video production':
-                $purpose = (array)($svc['video_purpose'] ?? []);
-                $delivery = (array)($svc['delivery_format'] ?? []);
                 return [
                     'table' => 'service_video_details',
                     'data' => [
-                        'full_event' => in_array('Full Event Recording', $purpose) ? 1 : 0,
-                        'highlight_reel' => in_array('Highlight Reel', $purpose) ? 1 : 0,
-                        'short_promo' => in_array('Short Promo', $purpose) ? 1 : 0,
-                        'num_cameras' => $svc['num_cameras'] ?? null,
-                        'drone_needed' => $svc['drone_needed'] ?? null,
-                        'gimbals' => $svc['gimbals'] ?? null,
-                        'editing' => $svc['editing'] ?? null,
-                        'delivery_mp4' => in_array('MP4', $delivery) ? 1 : 0,
-                        'delivery_raw' => in_array('RAW files', $delivery) ? 1 : 0,
-                        'delivery_social' => in_array('Social Media Format', $delivery) ? 1 : 0,
-                        'notes' => $svc['additional_notes'] ?? null,
+                        'rate_per_hour' => isset($svc['rate']) ? (float)$svc['rate'] : null,
+                        'rate_type' => $svc['rate_type'] ?? 'hourly',
+                        'description' => $svc['description'] ?? null,
+                        'services_offered' => $svc['services_offered'] ?? null,
+                        'equipment_used' => $svc['equipment_used'] ?? null,
+                        'num_crew_members' => $svc['num_crew_members'] ?? null,
+                        'editing_software' => $svc['editing_software'] ?? null,
+                        'drone_service_available' => $svc['drone_service_available'] ?? null,
+                        'max_video_resolution' => $svc['max_video_resolution'] ?? null,
+                        'photo_editing_included' => $svc['photo_editing_included'] ?? null,
+                        'delivery_time' => $svc['delivery_time'] ?? null,
+                        'raw_footage_provided' => $svc['raw_footage_provided'] ?? null,
+                        'portfolio_links' => $svc['portfolio_links'] ?? null,
+                        'sample_videos' => $svc['sample_videos'] ?? null,
                     ],
                 ];
 
             case 'set design':
-                $set = (array)($svc['set_service'] ?? []);
                 return [
                     'table' => 'service_set_details',
                     'data' => [
-                        'set_design' => in_array('Set Design', $set) ? 1 : 0,
-                        'set_construction' => in_array('Set Construction', $set) ? 1 : 0,
-                        'set_rental' => in_array('Set Rental', $set) ? 1 : 0,
-                        'production_stage' => $svc['production_stage'] ?? null,
-                        'materials' => $svc['materials'] ?? null,
-                        'dimensions' => $svc['dimensions'] ?? null,
-                        'budget_range' => $svc['budget'] ?? null,
-                        'deadline' => $svc['deadline'] ?? null,
-                        'notes' => $svc['additional_notes'] ?? null,
+                        'rate_per_hour' => isset($svc['rate']) ? (float)$svc['rate'] : null,
+                        'rate_type' => $svc['rate_type'] ?? 'hourly',
+                        'description' => $svc['description'] ?? null,
+                        'types_of_sets_designed' => $svc['types_of_sets_designed'] ?? null,
+                        'set_construction_provided' => $svc['set_construction_provided'] ?? null,
+                        'stage_installation_support' => $svc['stage_installation_support'] ?? null,
+                        'max_stage_size_supported' => $svc['max_stage_size_supported'] ?? null,
+                        'materials_used' => $svc['materials_used'] ?? null,
+                        'sample_set_designs' => $svc['sample_set_designs'] ?? null,
                     ],
                 ];
 
             case 'costume design':
-                $costume = (array)($svc['costume_service'] ?? []);
                 return [
                     'table' => 'service_costume_details',
                     'data' => [
-                        'costume_design' => in_array('Costume Design', $costume) ? 1 : 0,
-                        'costume_creation' => in_array('Costume Creation', $costume) ? 1 : 0,
-                        'costume_rental' => in_array('Costume Rental', $costume) ? 1 : 0,
-                        'num_characters' => $svc['num_characters'] ?? null,
-                        'num_costumes' => $svc['num_costumes'] ?? null,
-                        'measurements_required' => $svc['measurements'] ?? null,
-                        'fitting_dates' => $svc['fitting_dates'] ?? null,
-                        'budget_range' => $svc['budget'] ?? null,
-                        'deadline' => $svc['deadline'] ?? null,
-                        'notes' => $svc['additional_notes'] ?? null,
+                        'rate_per_hour' => isset($svc['rate']) ? (float)$svc['rate'] : null,
+                        'rate_type' => $svc['rate_type'] ?? 'hourly',
+                        'description' => $svc['description'] ?? null,
+                        'types_of_costumes_provided' => $svc['types_of_costumes_provided'] ?? null,
+                        'custom_costume_design_available' => $svc['custom_costume_design_available'] ?? null,
+                        'available_sizes' => $svc['available_sizes'] ?? null,
+                        'alterations_provided' => $svc['alterations_provided'] ?? null,
+                        'number_of_costumes_available' => $svc['number_of_costumes_available'] ?? null,
+                    ],
+                ];
+
+            case 'makeup & hair':
+                return [
+                    'table' => 'service_makeup_details',
+                    'data' => [
+                        'rate_per_hour' => isset($svc['rate']) ? (float)$svc['rate'] : null,
+                        'rate_type' => $svc['rate_type'] ?? 'hourly',
+                        'description' => $svc['description'] ?? null,
+                        'type_of_makeup_services' => $svc['type_of_makeup_services'] ?? null,
+                        'experience_stage_makeup_years' => $svc['experience_stage_makeup_years'] ?? null,
+                        'character_based_makeup_available' => $svc['character_based_makeup_available'] ?? null,
+                        'can_handle_full_cast' => $svc['can_handle_full_cast'] ?? null,
+                        'maximum_actors_per_show' => $svc['maximum_actors_per_show'] ?? null,
+                        'bring_own_makeup_kit' => $svc['bring_own_makeup_kit'] ?? null,
+                        'onsite_service_available' => $svc['onsite_service_available'] ?? null,
+                        'touchup_service_during_show' => $svc['touchup_service_during_show'] ?? null,
+                        'traditional_cultural_makeup_expertise' => $svc['traditional_cultural_makeup_expertise'] ?? null,
+                        'sample_makeup_photos' => $svc['sample_makeup_photos'] ?? null,
+                    ],
+                ];
+
+            case 'other':
+                return [
+                    'table' => 'service_other_details',
+                    'data' => [
+                        'rate_per_hour' => isset($svc['rate']) ? (float)$svc['rate'] : null,
+                        'rate_type' => $svc['rate_type'] ?? 'hourly',
+                        'description' => $svc['description'] ?? null,
+                        'service_type' => $svc['service_type'] ?? null,
                     ],
                 ];
 
@@ -472,7 +519,7 @@ class M_service_provider extends M_signup {
                          email = :email, 
                          phone = :phone, 
                          location = :location, 
-                         website = :website, 
+                         social_media_link = :social_media_link, 
                          years_experience = :years_experience,
                          professional_summary = :professional_summary,
                          availability = :availability,
@@ -483,7 +530,7 @@ class M_service_provider extends M_signup {
         $this->db->bind(':email', $email);
         $this->db->bind(':phone', $phone);
         $this->db->bind(':location', $location);
-        $this->db->bind(':website', $website);
+        $this->db->bind(':social_media_link', $website);
         $this->db->bind(':years_experience', $years_experience);
         $this->db->bind(':professional_summary', $professional_summary);
         $this->db->bind(':availability', $availability);
@@ -556,15 +603,17 @@ class M_service_provider extends M_signup {
     // Browse/Search Methods for Production Managers
     public function getAllProvidersWithServices($filters = []) {
         $sql = "SELECT DISTINCT sp.*, 
-                GROUP_CONCAT(DISTINCT s.service_name SEPARATOR ', ') as services,
-                GROUP_CONCAT(DISTINCT s.rate_per_hour ORDER BY s.rate_per_hour SEPARATOR ', ') as rates
+                GROUP_CONCAT(DISTINCT st.service_type SEPARATOR ', ') as services,
+                GROUP_CONCAT(DISTINCT CONCAT(std.rate_per_hour, '|', std.rate_type) ORDER BY std.rate_per_hour SEPARATOR ', ') as rates
                 FROM serviceprovider sp
                 LEFT JOIN services s ON sp.user_id = s.provider_id
+                LEFT JOIN service_types st ON s.service_type_id = st.service_type_id
+                LEFT JOIN service_theater_details std ON s.id = std.service_id AND st.service_type = 'Theater Production'
                 WHERE 1=1";
 
         // Apply filters
         if (!empty($filters['service_type'])) {
-            $sql .= " AND s.service_name LIKE :service_type";
+            $sql .= " AND st.service_type LIKE :service_type";
         }
         if (!empty($filters['location'])) {
             $sql .= " AND sp.location LIKE :location";
@@ -573,12 +622,12 @@ class M_service_provider extends M_signup {
             $sql .= " AND sp.availability = :availability";
         }
         if (!empty($filters['min_rate']) || !empty($filters['max_rate'])) {
-            $sql .= " AND s.rate_per_hour IS NOT NULL";
+            $sql .= " AND std.rate_per_hour IS NOT NULL";
             if (!empty($filters['min_rate'])) {
-                $sql .= " AND s.rate_per_hour >= :min_rate";
+                $sql .= " AND std.rate_per_hour >= :min_rate";
             }
             if (!empty($filters['max_rate'])) {
-                $sql .= " AND s.rate_per_hour <= :max_rate";
+                $sql .= " AND std.rate_per_hour <= :max_rate";
             }
         }
 
@@ -611,7 +660,11 @@ class M_service_provider extends M_signup {
     }
 
     public function getProviderServices($provider_id) {
-        $this->db->query("SELECT * FROM services WHERE provider_id = :provider_id ORDER BY service_name ASC");
+        $this->db->query("SELECT s.*, st.service_type 
+                          FROM services s 
+                          LEFT JOIN service_types st ON s.service_type_id = st.service_type_id 
+                          WHERE s.provider_id = :provider_id 
+                          ORDER BY st.service_type ASC");
         $this->db->bind(':provider_id', $provider_id);
         return $this->db->resultSet();
     }

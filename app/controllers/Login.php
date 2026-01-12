@@ -34,17 +34,19 @@ class Login
                 // set session and redirect to dashboard or home page
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['user_name'] = $user->full_name;
-                $_SESSION['user_role'] = $user->role;
-                
-                // error_log("USER FOUND"); // Debugging line
-                
+                $_SESSION['full_name'] = $user->full_name;
+                $_SESSION['email'] = $user->email;
+                $_SESSION['phone'] = $user->phone;
+                $_SESSION['role'] = $user->role;
+
                 // Redirect based on user role
                 if ($user->role === 'admin') {
                     header("Location: " . ROOT . "/Admindashboard");
                     exit;
                 } elseif ($user->role === 'artist') {
-                    // error_log("USER TYPE MATCHED ARTIST"); // Debugging line
-                    header("Location: " . ROOT . "/Artistdashboard");
+                    // header("Location: " . ROOT . "/ArtistDashboard");
+                    // Temporary redirect for testing
+                    header("Location: " . ROOT . "/BrowseServiceProviders");
                     exit;
                 } elseif ($user->role === 'service_provider') {
                     header("Location: " . ROOT . "/ServiceProviderDashboard");

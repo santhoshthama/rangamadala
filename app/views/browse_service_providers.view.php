@@ -35,6 +35,7 @@
                                 <option value="Video Production" <?= ($data['filters']['service_type'] ?? '') === 'Video Production' ? 'selected' : '' ?>>Video Production</option>
                                 <option value="Set Design" <?= ($data['filters']['service_type'] ?? '') === 'Set Design' ? 'selected' : '' ?>>Set Design</option>
                                 <option value="Costume Design" <?= ($data['filters']['service_type'] ?? '') === 'Costume Design' ? 'selected' : '' ?>>Costume Design</option>
+                                <option value="Makeup &amp; Hair" <?= ($data['filters']['service_type'] ?? '') === 'Makeup &amp; Hair' ? 'selected' : '' ?>>Makeup &amp; Hair</option>
                                 <option value="Other" <?= ($data['filters']['service_type'] ?? '') === 'Other' ? 'selected' : '' ?>>Other</option>
                             </select>
                         </div>
@@ -103,7 +104,9 @@
                                     'Sound Systems' => 'sound-systems.png',
                                     'Video Production' => 'video-production.png',
                                     'Set Design' => 'set-design.png',
-                                    'Costume Design' => 'costume-design.png'
+                                    'Costume Design' => 'costume-design.png',
+                                    'Makeup' => 'makeup.png',
+                                    'Makeup & Hair' => 'makeup.png'
                                 ];
                                 
                                 // Use multi-service image if provider offers more than one service
@@ -121,9 +124,9 @@
                                 ?>
                                 
                                 <div class="provider-service-banner">
-                                    <img src="<?= ROOT ?>/assets/images/services/<?= $serviceImage ?>" 
+                                     <img src="<?= ROOT ?>/assets/images/services/<?= $serviceImage ?>" 
                                          alt="<?= htmlspecialchars($serviceLabel) ?>" 
-                                         onerror="this.src='<?= ROOT ?>/assets/images/default-service.png'">
+                                         onerror="this.src='<?= ROOT ?>/assets/images/services/default-avatar.png'">
                                     
                                     <?php if ($provider->availability == 1): ?>
                                         <span class="badge-available">Available</span>

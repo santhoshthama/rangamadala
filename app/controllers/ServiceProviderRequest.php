@@ -1,6 +1,6 @@
 <?php
 
-class ServiceRequest
+class ServiceProviderRequest
 {
     use Controller;
 
@@ -19,7 +19,7 @@ class ServiceRequest
             'requester_email' => trim($_POST['requester_email'] ?? ''),
             'requester_phone' => trim($_POST['requester_phone'] ?? ''),
             'drama_name' => trim($_POST['drama_name'] ?? ''),
-            'service_required' => trim($_POST['service_required'] ?? ''),
+            'service_type' => trim($_POST['service_type'] ?? ''),
             'start_date' => trim($_POST['start_date'] ?? ''),
             'end_date' => trim($_POST['end_date'] ?? ''),
             'notes' => trim($_POST['notes'] ?? ''),
@@ -36,7 +36,7 @@ class ServiceRequest
         }
         if (empty($request['requester_phone'])) $errors[] = 'Phone number is required.';
         if (empty($request['drama_name'])) $errors[] = 'Drama/production name is required.';
-        if (empty($request['service_required'])) $errors[] = 'Service selection is required.';
+        if (empty($request['service_type'])) $errors[] = 'Service selection is required.';
         if (empty($request['start_date'])) $errors[] = 'Start date is required.';
         if (empty($request['end_date'])) $errors[] = 'End date is required.';
 

@@ -62,9 +62,9 @@
                                     value="<?php echo htmlspecialchars($data['provider']->location); ?>" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Website</label>
-                                <input type="url" name="website" class="form-input" 
-                                    value="<?php echo htmlspecialchars($data['provider']->website ?? ''); ?>">
+                                <label class="form-label">Social Media Link</label>
+                                <input type="url" name="social_media_link" class="form-input" 
+                                    value="<?php echo htmlspecialchars($data['provider']->social_media_link ?? ''); ?>">
                             </div>
                         </div>
 
