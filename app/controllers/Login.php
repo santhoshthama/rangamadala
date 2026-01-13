@@ -44,9 +44,9 @@ class Login
                     header("Location: " . ROOT . "/Admindashboard");
                     exit;
                 } elseif ($user->role === 'artist') {
-                    // header("Location: " . ROOT . "/ArtistDashboard");
+                    header("Location: " . ROOT . "/ArtistDashboard");
                     // Temporary redirect for testing
-                    header("Location: " . ROOT . "/BrowseServiceProviders");
+                    // header("Location: " . ROOT . "/BrowseServiceProviders");
                     exit;
                 } elseif ($user->role === 'service_provider') {
                     header("Location: " . ROOT . "/ServiceProviderDashboard");
