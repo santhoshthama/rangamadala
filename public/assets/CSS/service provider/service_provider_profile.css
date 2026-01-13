@@ -1,0 +1,618 @@
+/* Common Styles for Service Provider Profile System */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.5;
+    padding: 0;
+    display: flex;
+    min-height: 100vh;
+}
+
+.main--content .container {
+    max-width: 100%;
+    margin: 0;
+    background: white;
+    border: none;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border: 2px solid #daa520;
+    border-radius: 10px;
+    padding: 30px;
+}
+
+/* Alert Messages */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+/* Back Button */
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    transition: background-color 0.3s;
+}
+
+.back-button:hover {
+    background: #5a6268;
+}
+
+.back-button span:first-child {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Header Styles */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #daa520;
+    padding-bottom: 20px;
+}
+
+.avatar {
+    width: 100px;
+    height: 100px;
+    background: #daa520;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: white;
+    font-weight: bold;
+    margin: 0 auto 15px;
+    position: relative;
+}
+
+.change-photo {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #b8860b;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.page-title {
+    font-size: 24px;
+    color: #b8860b;
+    margin-bottom: 10px;
+}
+
+.name {
+    font-size: 28px;
+    color: #b8860b;
+    margin-bottom: 5px;
+}
+
+.title {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.rating {
+    color: #daa520;
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+.last-updated {
+    color: #666;
+    font-size: 14px;
+}
+
+.contact-info {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.contact-item {
+    color: #555;
+    font-size: 14px;
+}
+
+/* Status and Navigation */
+.status {
+    background: #daa520;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 15px;
+    font-size: 14px;
+    display: inline-block;
+}
+
+.status.unavailable {
+    background: #dc3545;
+}
+
+.navigation {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #fffbf0;
+    border-radius: 10px;
+}
+
+.nav-link {
+    display: inline-block;
+    background: #b8860b;
+    color: white;
+    text-decoration: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    margin: 0 10px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.nav-link:hover {
+    background: #9a7209;
+}
+
+.nav-link.current {
+    background: #daa520;
+    cursor: default;
+}
+
+/* Section Styles */
+.section {
+    margin-bottom: 30px;
+}
+
+.section-title, .section h3 {
+    font-size: 18px;
+    color: #b8860b;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #daa520;
+    padding-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section h3 {
+    font-size: 20px;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    background: #fffbf0;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #daa520;
+    background: white;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+/* Checkbox and Service Styles */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #daa520;
+}
+
+.service-item {
+    background: #fffbf0;
+    border: 1px solid #daa520;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.service-name {
+    font-weight: bold;
+    color: #b8860b;
+}
+
+.service-rate {
+    width: 100px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    text-align: center;
+}
+
+/* Services List (Public View) */
+.services-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.service {
+    background: #fffbf0;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #daa520;
+}
+
+/* Experience Styles */
+.experience-item {
+    background: #fffbf0;
+    border: 1px solid #daa520;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+/* Remove button for experience and project items */
+.experience-item .remove-btn,
+.project-item .remove-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+
+.exp-year {
+    color: #b8860b;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.exp-title {
+    font-weight: bold;
+    margin: 3px 0;
+}
+
+.exp-company {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Projects Styles */
+.project-item {
+    position: relative; 
+    background: #fffbf0;
+    border: 1px solid #daa520;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.project-item .exp-year {
+    font-weight: bold;
+    color: #b8860b;  /* golden like experience years */
+    font-size: 14px;
+}
+
+.project-item .exp-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.project-item .exp-services {
+    color: #444;
+    font-size: 14px;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.project-item .exp-description {
+    color: #666;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+
+/* Button Styles */
+.btn {
+    background: #b8860b;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    margin-right: 10px;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background: #9a7209;
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.add-btn {
+    background: #28a745;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.add-btn:hover {
+    background: #218838;
+}
+
+/* Toggle Styles */
+.availability-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.toggle {
+    width: 50px;
+    height: 25px;
+    background: #ccc;
+    border-radius: 25px;
+    position: relative;
+    cursor: pointer;
+}
+
+.toggle.active {
+    background: #28a745;
+}
+
+.toggle::after {
+    content: '';
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2.5px;
+    left: 2.5px;
+    transition: 0.3s;
+}
+
+.toggle.active::after {
+    left: 27.5px;
+}
+
+
+
+/* Stats Styles */
+.stat-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 24px;
+    background: #fffbf0;
+    text-align: center;
+}
+
+.stat-input:focus {
+    outline: none;
+    border-color: #daa520;
+    background: white;
+}
+
+.stats-grid, .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    text-align: center;
+}
+
+.stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stat-box, .stat {
+    background: #fffbf0;
+    border: 1px solid #daa520;
+    border-radius: 5px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 20px;
+    font-weight: bold;
+    color: #b8860b;
+}
+
+.stat .stat-number {
+    font-size: 24px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Portfolio Styles */
+.portfolio-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.portfolio-item {
+    background: #daa520;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.portfolio-item:hover {
+    background: #b8860b;
+    transform: scale(1.05);
+}
+
+/* Utility Styles */
+.save-status {
+    color: #28a745;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+
+.buttons-section {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.buttons {
+    margin-top: 15px;
+}
+
+
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        margin: 0;
+        padding: 15px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid, .stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .services-list, .portfolio-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .contact-info {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .nav-link {
+        display: block;
+        margin: 5px 0;
+    }
+}

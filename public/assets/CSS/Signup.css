@@ -1,0 +1,151 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+/* Background */
+body{
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+background: url(../images/lightingSetup.png) no-repeat;
+background-position: center;
+background-size: cover;
+
+}
+
+/* Back Button */
+.back-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.back-link {
+    text-decoration: none;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: transparent;
+    color: #d4af37;
+    padding: 8px 14px;
+    border: 2px solid #d4af37;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.back-btn:hover {
+    background-color: #d4af37;
+    color: #1a1410;
+}
+
+.back-btn i {
+    font-size: 14px;
+}
+
+/* Page Layout */
+.main-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Header */
+.header-section h1 {
+    font-size: 36px;
+    color: #d4af37;
+    margin-bottom: 10px;
+}
+
+.header-section p {
+    font-size: 16px;
+    color: #c9b896;
+}
+
+/* Role Selection Cards */
+.role-selection-container {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 50px;
+}
+
+.role-card {
+    width: 300px;
+    background: rgba(26, 20, 16, 0.85);
+    border: 2px solid rgba(212, 175, 55, 0.3);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+    color: #f5f0e8;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.role-card:hover {
+    border-color: rgba(212, 175, 55, 0.6);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(212, 175, 55, 0.2);
+}
+
+.role-card i {
+    font-size: 48px;
+    color: #d4af37;
+    margin-bottom: 20px;
+}
+
+.role-card h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #d4af37;
+}
+
+.role-card p {
+    font-size: 14px;
+    color: #c9b896;
+    line-height: 1.5;
+}
+
+.wrapper .register-link{
+    font-size: 14.5px;
+    text-align: center;
+    margin: 20px 0 15px;
+}
+.register-link p a{
+    color: #d4af37;
+    text-decoration: none;
+    font-weight: 600;
+}
+.register-link p a:hover{
+    text-decoration: underline;
+}
+.wrapper form .btn{
+    background: linear-gradient(135deg, #d4af37, #aa8c2c);
+    color: #1a1410;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: 0.3s ease;
+}
+.wrapper form .btn:hover {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+    transform: translateY(-2px);
+}
+
