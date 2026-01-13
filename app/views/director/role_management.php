@@ -15,81 +15,49 @@
         </div>
         <ul class="menu">
             <li>
-<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/dashboard">
-=======
-                <a href="dashboard.php">
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/manage_dramas">
-=======
-                <a href="manage_dramas.php">
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-film"></i>
                     <span>My Dramas</span>
                 </a>
             </li>
             <li>
-<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/create_drama">
-=======
-                <a href="create_drama.php">
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-plus-circle"></i>
                     <span>Create Drama</span>
                 </a>
             </li>
             <li>
-<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/search_artists">
-=======
-                <a href="search_artists.php">
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-search"></i>
                     <span>Search Artists</span>
                 </a>
             </li>
             <li class="active">
-<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/role_management">
-=======
-                <a href="role_management.php">
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-users"></i>
                     <span>Role Management</span>
                 </a>
             </li>
             <li>
-<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/schedule_management">
-=======
-                <a href="schedule_management.php">
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
-<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/assign_managers">
-=======
-                <a href="assign_managers.php">
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-user-tie"></i>
                     <span>Assign Managers</span>
                 </a>
             </li>
             <li>
-<<<<<<< HEAD
                 <a href="<?= ROOT ?>/logout">
-=======
-                <a href="../../public/index.php">
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -99,11 +67,7 @@
 
     <!-- Main Content -->
     <main class="main--content">
-<<<<<<< HEAD
         <a href="<?= ROOT ?>/director/dashboard" class="back-button">
-=======
-        <a href="dashboard.php" class="back-button">
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>
