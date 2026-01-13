@@ -10,7 +10,7 @@ class Admindashboard {
         }
 
         // Check if user has admin role
-        if ($_SESSION['user_role'] !== 'admin') {
+        if ($_SESSION['role'] !== 'admin') {
             header("Location: " . ROOT . "/Home");
             exit;
         }
