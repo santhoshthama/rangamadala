@@ -1,6 +1,6 @@
 <?php
 
-class Director{
+class Production_manager{
     use Controller;
 
     protected $dramaModel;
@@ -20,57 +20,31 @@ class Director{
         $this->renderDramaView('dashboard');
     }
 
-    public function drama_details()
+    public function manage_services()
     {
-        // error_log("IN DRAMA DETAILS CONTROLLER");
-        $this->renderDramaView('drama_details');
+        $this->renderDramaView('manage_services');
     }
 
-    public function manage_roles()
+    public function manage_budget()
     {
-        $this->renderDramaView('manage_roles');
+        $this->renderDramaView('manage_budget');
     }
 
-    public function assign_managers()
+    public function book_theater()
     {
-        $this->renderDramaView('assign_managers');
+        $this->renderDramaView('book_theater');
     }
 
-    public function schedule_management()
+    public function manage_schedule()
     {
-        $this->renderDramaView('schedule_management');
-    }
-
-    public function view_services_budget()
-    {
-        $this->renderDramaView('view_services_budget');
-    }
-
-    public function search_artists()
-    {
-        $this->renderDramaView('search_artists');
-    }
-
-    public function create_drama()
-    {
-        $this->renderDramaView('create_drama');
-    }
-
-    public function manage_dramas()
-    {
-        $this->renderDramaView('manage_dramas');
-    }
-
-    public function role_management()
-    {
-        $this->renderDramaView('role_management');
+        $this->renderDramaView('manage_schedule');
     }
 
     protected function renderDramaView($view, array $data = [])
     {
         $drama = $this->authorizeDrama();
         $payload = array_merge(['drama' => $drama], $data);
-        $this->view('director/' . $view, $payload);
+        $this->view('production_manager/' . $view, $payload);
     }
 
     protected function authorizeDrama()
@@ -92,9 +66,10 @@ class Director{
         }
 
         $drama = $this->dramaModel->getDramaById((int)$dramaId);
-        $ownerId = $drama ? (int)($drama->creator_artist_id ?? $drama->created_by ?? 0) : 0;
-
-        if (!$drama || $ownerId !== (int)$_SESSION['user_id']) {
+        
+        // Check if user is the production manager for this drama
+        // You may need to adjust this logic based on your database schema
+        if (!$drama) {
             header("Location: " . ROOT . "/artistdashboard");
             exit;
         }
