@@ -15,43 +15,43 @@
         </div>
         <ul class="menu">
             <li class="active">
-                <a href="dashboard.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="drama_details.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
-                <a href="manage_roles.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
-                <a href="assign_managers.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
-                <a href="schedule_management.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
-                <a href="view_services_budget.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
-                <a href="../../public/index.php">
+                <a href="<?= ROOT ?>/logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -61,7 +61,7 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="../artist/profile.php" class="back-button">
+        <a href="<?= ROOT ?>/artistdashboard" class="back-button">
             <i class="fas fa-arrow-left"></i>
             Back to Profile
         </a>
@@ -106,22 +106,22 @@
 
         <!-- Navigation Tab Bar -->
         <div class="nav-tabs-bar">
-            <a href="dashboard.php?drama_id=1" class="nav-tab-btn active">
+            <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn active">
                 <i class="fas fa-home"></i> Dashboard
             </a>
-            <a href="drama_details.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
                 <i class="fas fa-film"></i>  Edit Drama Details
             </a>
-            <a href="manage_roles.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
                 <i class="fas fa-users"></i> Artist Roles
             </a>
-            <a href="assign_managers.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
                 <i class="fas fa-user-tie"></i> Production Manager
             </a>
-            <a href="schedule_management.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
                 <i class="fas fa-calendar-alt"></i> Schedule
             </a>
-            <a href="view_services_budget.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
                 <i class="fas fa-dollar-sign"></i> Services & Budget
             </a>
         </div>
@@ -134,7 +134,7 @@
                     <div class="card-section">
                         <h3>
                             <span>Drama Overview</span>
-                            <a href="drama_details.php?drama_id=1" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
                                 <i class="fas fa-edit"></i>
                                 Edit Details
                             </a>
@@ -167,7 +167,7 @@
                     <div class="card-section">
                         <h3>
                             <span>Pending Role Applications</span>
-                            <a href="manage_roles.php?drama_id=1&tab=applications" class="btn btn-warning" style="font-size: 12px; padding: 8px 16px;">Review All</a>
+                            <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>&tab=applications" class="btn btn-warning" style="font-size: 12px; padding: 8px 16px;">Review All</a>
                         </h3>
                         <ul id="pendingApplicationsList">
                             <li>
@@ -205,7 +205,7 @@
                     <div class="card-section">
                         <h3>
                             <span>Artist Roles Summary</span>
-                            <a href="manage_roles.php?drama_id=1" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                            <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
                                 <i class="fas fa-users"></i>
                                 Manage All Roles
                             </a>
@@ -246,7 +246,7 @@
                     <div class="card-section">
                         <h3>
                             <span>Production Manager</span>
-                            <a href="assign_managers.php?drama_id=1" class="btn btn-success" style="font-size: 12px; padding: 8px 16px;">
+                            <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-success" style="font-size: 12px; padding: 8px 16px;">
                                 <i class="fas fa-user-plus"></i>
                                 Change Manager
                             </a>
@@ -272,7 +272,7 @@
                     <div class="card-section">
                         <h3>
                             <span>Upcoming Schedule</span>
-                            <a href="schedule_management.php?drama_id=1" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">Manage Schedule</a>
+                            <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">Manage Schedule</a>
                         </h3>
                         <ul id="upcomingScheduleList">
                             <li>
@@ -303,7 +303,7 @@
                     <div class="card-section">
                         <h3>
                             <span>Services & Budget Overview</span>
-                            <a href="view_services_budget.php?drama_id=1" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">View Details</a>
+                            <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">View Details</a>
                         </h3>
                         <div class="drama-info">
                             <div class="service-info-item">
@@ -333,19 +333,19 @@
                     <div class="card-section">
                         <h3>Quick Actions</h3>
                         <div class="permission-controls">
-                            <a href="manage_roles.php?drama_id=1" class="btn btn-primary">
+                            <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary">
                                 <i class="fas fa-users"></i>
                                 Manage Roles
                             </a>
-                            <a href="search_artists.php?drama_id=1" class="btn btn-success">
+                            <a href="<?= ROOT ?>/director/search_artists?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-success">
                                 <i class="fas fa-search"></i>
                                 Search Artists
                             </a>
-                            <a href="schedule_management.php?drama_id=1" class="btn btn-warning">
+                            <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-warning">
                                 <i class="fas fa-calendar-plus"></i>
                                 Add Schedule
                             </a>
-                            <a href="assign_managers.php?drama_id=1" class="btn btn-secondary">
+                            <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-secondary">
                                 <i class="fas fa-user-plus"></i>
                                 Assign Manager
                             </a>
