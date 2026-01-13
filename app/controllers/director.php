@@ -51,7 +51,6 @@ class Director{
         $this->renderDramaView('search_artists');
     }
 
-<<<<<<< HEAD
     public function create_drama()
     {
         $this->renderDramaView('create_drama');
@@ -67,8 +66,6 @@ class Director{
         $this->renderDramaView('role_management');
     }
 
-=======
->>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
     protected function renderDramaView($view, array $data = [])
     {
         $drama = $this->authorizeDrama();
