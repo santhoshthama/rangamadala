@@ -47,6 +47,7 @@ class Artistdashboard
         $this->view('artistdashboard', $data);
     }
     
+
     public function respond_to_request()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
