@@ -15,37 +15,37 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+                <a href="dashboard.php?drama_id=1">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+                <a href="manage_services.php?drama_id=1">
                     <i class="fas fa-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li class="active">
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+                <a href="manage_budget.php?drama_id=1">
                     <i class="fas fa-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+                <a href="book_theater.php?drama_id=1">
                     <i class="fas fa-theater-masks"></i>
                     <span>Theater Bookings</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/artistdashboard">
+                <a href="../artist/profile.php">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/logout">
+                <a href="../../public/index.php">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -55,7 +55,7 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="back-button">
+        <a href="dashboard.php?drama_id=1" class="back-button">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>
