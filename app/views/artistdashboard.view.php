@@ -3,6 +3,18 @@
 if(isset($data) && is_array($data)) {
     extract($data);
 }
+
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if (isset($user->profile_image) && !empty($user->profile_image)) {
+    $storedValue = str_replace('\\', '/', $user->profile_image);
+    if (strpos($storedValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($storedValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($storedValue);
+    }
+} elseif (isset($user->nic_photo) && !empty($user->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -533,7 +545,7 @@ if(isset($data) && is_array($data)) {
                         <i class="fas fa-star"></i> Artist
                     </small>
                 </div>
-                <img src="<?= (isset($user->profile_image) && !empty($user->profile_image)) ? ROOT.'/app/uploads/profile_images/'.esc($user->profile_image) : ROOT.'/assets/images/default-avatar.jpg' ?>" alt="Profile">
+                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
             </div>
         </div>
 
