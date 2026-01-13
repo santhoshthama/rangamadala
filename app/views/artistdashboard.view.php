@@ -625,25 +625,29 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                             <?php foreach ($dramas_as_director as $drama): ?>
                                 <div class="artist-card">
                                     <div class="artist-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">
-                                        <h3 class="artist-name"><?= esc($drama->title) ?></h3>
-                                        <p class="artist-experience"><?= esc($drama->genre ?? 'Drama') ?></p>
+                                        <h3 class="artist-name"><?= esc($drama->drama_name ?? 'Registered Drama') ?></h3>
+                                        <p class="artist-experience">Certificate <?= esc($drama->certificate_number ?? 'N/A') ?></p>
                                     </div>
                                     <div class="artist-body">
                                         <div class="info-row">
-                                            <span class="info-label">Language:</span>
-                                            <span class="info-value"><?= esc($drama->language ?? 'Sinhala') ?></span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">Status:</span>
-                                            <span class="info-value">
-                                                <span class="status-badge <?= $drama->status === 'active' ? 'assigned' : 'pending' ?>">
-                                                    <?= esc(ucfirst($drama->status)) ?>
-                                                </span>
-                                            </span>
+                                            <span class="info-label">Owner:</span>
+                                            <span class="info-value"><?= esc($drama->owner_name ?? 'Not recorded') ?></span>
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Created:</span>
-                                            <span class="info-value"><?= date('M d, Y', strtotime($drama->created_at)) ?></span>
+                                            <span class="info-value"><?= isset($drama->created_at) ? date('M d, Y', strtotime($drama->created_at)) : 'N/A' ?></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Certificate Image:</span>
+                                            <span class="info-value">
+                                                <?php if (!empty($drama->certificate_image)): ?>
+                                                    <a href="<?= ROOT ?>/uploads/certificates/<?= esc(rawurlencode($drama->certificate_image)) ?>" target="_blank" style="color: var(--brand); font-weight: 600;">
+                                                        View
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="status-badge pending">Pending</span>
+                                                <?php endif; ?>
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="artist-footer">
