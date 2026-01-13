@@ -15,49 +15,81 @@
         </div>
         <ul class="menu">
             <li>
+<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+=======
+                <a href="dashboard.php?drama_id=1">
+>>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
+<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+=======
+                <a href="drama_details.php?drama_id=1">
+>>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
+<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+=======
+                <a href="manage_roles.php?drama_id=1">
+>>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
+<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+=======
+                <a href="assign_managers.php?drama_id=1">
+>>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li class="active">
+<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+=======
+                <a href="schedule_management.php?drama_id=1">
+>>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
+<<<<<<< HEAD
                 <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
+=======
+                <a href="view_services_budget.php?drama_id=1">
+>>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
+<<<<<<< HEAD
                 <a href="<?= ROOT ?>/artistdashboard">
+=======
+                <a href="../artist/profile.php">
+>>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
+<<<<<<< HEAD
                 <a href="<?= ROOT ?>/logout">
+=======
+                <a href="../../public/index.php">
+>>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -67,7 +99,11 @@
 
     <!-- Main Content -->
     <main class="main--content">
+<<<<<<< HEAD
         <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="back-button">
+=======
+        <a href="dashboard.php?drama_id=1" class="back-button">
+>>>>>>> 4a7cd2f6e0c168dac5fa3f8773e569dc3f8aba4b
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>
