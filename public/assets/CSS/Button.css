@@ -1,0 +1,32 @@
+.back-container {
+  text-align: center;  /* center horizontally */
+  margin-top: 20px;    /* space from top */
+}
+
+.back-link {
+  text-decoration: none; /* remove underline */
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: transparent;
+  color: #d4af37;
+  padding: 8px 14px;
+  border: 2px solid #d4af37;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.back-btn:hover {
+  background-color: #d4af37;
+  color: #1a1410;
+}
+
+.back-btn i {
+  font-size: 14px;
+}
