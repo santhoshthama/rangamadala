@@ -51,21 +51,6 @@ class Director{
         $this->renderDramaView('search_artists');
     }
 
-    public function create_drama()
-    {
-        $this->renderDramaView('create_drama');
-    }
-
-    public function manage_dramas()
-    {
-        $this->renderDramaView('manage_dramas');
-    }
-
-    public function role_management()
-    {
-        $this->renderDramaView('role_management');
-    }
-
     protected function renderDramaView($view, array $data = [])
     {
         $drama = $this->authorizeDrama();
