@@ -23,6 +23,43 @@ class M_artist extends M_signup {
         }
     }
 
+    public function update_artist_profile($user_id, array $fields) {
+        if (empty($fields)) {
+            return false;
+        }
+
+        $allowed = ['full_name', 'phone', 'profile_image', 'years_experience'];
+        $setParts = [];
+        $bindValues = [];
+
+        foreach ($fields as $column => $value) {
+            if (!in_array($column, $allowed, true)) {
+                continue;
+            }
+            $setParts[] = "$column = :$column";
+            $bindValues[":$column"] = $value;
+        }
+
+        if (empty($setParts)) {
+            return false;
+        }
+
+        try {
+            $sql = 'UPDATE users SET ' . implode(', ', $setParts) . " WHERE id = :user_id AND role = 'artist'";
+            $this->db->query($sql);
+
+            foreach ($bindValues as $param => $value) {
+                $this->db->bind($param, $value);
+            }
+            $this->db->bind(':user_id', $user_id);
+
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log('Error in update_artist_profile: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function get_pending_role_requests($user_id) {
         try {
             $this->db->query("SELECT ra.*, r.role_name, r.role_description, r.salary,

@@ -264,8 +264,8 @@ if(isset($data) && is_array($data)) {
         </a>
 
         <div class="header">
-            <h1><i class="fas fa-theater-masks"></i> Create New Drama</h1>
-            <p>Fill in the details below to create your new drama production</p>
+            <h1><i class="fas fa-certificate"></i> Register Drama with Certificate</h1>
+            <p>Register your drama production using the Public Performance Board Certificate</p>
         </div>
 
         <?php if (isset($_SESSION['message'])): ?>
@@ -280,145 +280,73 @@ if(isset($data) && is_array($data)) {
             <form action="<?=ROOT?>/createDrama" method="POST" enctype="multipart/form-data">
                 
                 <div class="section-title">
-                    <i class="fas fa-info-circle"></i> Basic Information
+                    <i class="fas fa-file-certificate"></i> Public Performance Board Certificate Details
                 </div>
 
                 <div class="form-group">
-                    <label for="title">Drama Title <span class="required">*</span></label>
+                    <label for="drama_name">Drama Name (as in certificate) <span class="required">*</span></label>
                     <input 
                         type="text" 
-                        id="title" 
-                        name="title" 
+                        id="drama_name" 
+                        name="drama_name" 
                         class="form-control" 
-                        placeholder="Enter drama title"
-                        value="<?= isset($form_data['title']) ? esc($form_data['title']) : '' ?>"
+                        placeholder="Enter drama name exactly as shown in certificate"
+                        value="<?= isset($form_data['drama_name']) ? esc($form_data['drama_name']) : '' ?>"
                         required
                     >
+                    <div class="form-hint">Enter the exact drama name from your Public Performance Board Certificate</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="description">Description <span class="required">*</span></label>
-                    <textarea 
-                        id="description" 
-                        name="description" 
+                    <label for="certificate_number">Public Performance Certificate Number <span class="required">*</span></label>
+                    <input 
+                        type="text" 
+                        id="certificate_number" 
+                        name="certificate_number" 
                         class="form-control" 
-                        placeholder="Describe your drama production"
+                        placeholder="e.g., PPB/2026/0123"
+                        value="<?= isset($form_data['certificate_number']) ? esc($form_data['certificate_number']) : '' ?>"
                         required
-                    ><?= isset($form_data['description']) ? esc($form_data['description']) : '' ?></textarea>
-                    <div class="form-hint">Provide a brief overview of the drama's story and themes</div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="category_id">Category <span class="required">*</span></label>
-                        <select id="category_id" name="category_id" class="form-control" required>
-                            <option value="">Select category</option>
-                            <?php if (isset($categories) && !empty($categories)): ?>
-                                <?php foreach ($categories as $category): ?>
-                                    <option value="<?= $category->id ?>" 
-                                        <?= (isset($form_data['category_id']) && $form_data['category_id'] == $category->id) ? 'selected' : '' ?>>
-                                        <?= esc($category->name) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="venue">Venue <span class="required">*</span></label>
-                        <input 
-                            type="text" 
-                            id="venue" 
-                            name="venue" 
-                            class="form-control" 
-                            placeholder="e.g., Lionel Wendt Theatre, Colombo"
-                            value="<?= isset($form_data['venue']) ? esc($form_data['venue']) : '' ?>"
-                            required
-                        >
-                    </div>
-                </div>
-
-                <div class="section-title" style="margin-top: 32px;">
-                    <i class="fas fa-calendar-alt"></i> Event Details
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="event_date">Event Date <span class="required">*</span></label>
-                        <input 
-                            type="date" 
-                            id="event_date" 
-                            name="event_date" 
-                            class="form-control"
-                            value="<?= isset($form_data['event_date']) ? esc($form_data['event_date']) : '' ?>"
-                            required
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label for="event_time">Event Time <span class="required">*</span></label>
-                        <input 
-                            type="time" 
-                            id="event_time" 
-                            name="event_time" 
-                            class="form-control"
-                            value="<?= isset($form_data['event_time']) ? esc($form_data['event_time']) : '' ?>"
-                            required
-                        >
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="duration">Duration (minutes)</label>
-                        <input 
-                            type="number" 
-                            id="duration" 
-                            name="duration" 
-                            class="form-control" 
-                            placeholder="e.g., 120"
-                            value="<?= isset($form_data['duration']) ? esc($form_data['duration']) : '' ?>"
-                            min="1"
-                        >
-                        <div class="form-hint">Estimated duration of the performance</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="ticket_price">Ticket Price (LKR)</label>
-                        <input 
-                            type="number" 
-                            id="ticket_price" 
-                            name="ticket_price" 
-                            class="form-control" 
-                            placeholder="e.g., 1500.00"
-                            value="<?= isset($form_data['ticket_price']) ? esc($form_data['ticket_price']) : '' ?>"
-                            min="0"
-                            step="0.01"
-                        >
-                    </div>
-                </div>
-
-                <div class="section-title" style="margin-top: 32px;">
-                    <i class="fas fa-image"></i> Drama Poster
+                    >
+                    <div class="form-hint">Enter the unique certificate number issued by the Public Performance Board</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="image">Upload Drama Poster/Image</label>
+                    <label for="owner_name">Owner's Name <span class="required">*</span></label>
+                    <input 
+                        type="text" 
+                        id="owner_name" 
+                        name="owner_name" 
+                        class="form-control" 
+                        placeholder="Enter the owner's full name"
+                        value="<?= isset($form_data['owner_name']) ? esc($form_data['owner_name']) : '' ?>"
+                        required
+                    >
+                    <div class="form-hint">Enter the name of the drama production owner</div>
+                </div>
+
+                <div class="section-title" style="margin-top: 32px;">
+                    <i class="fas fa-image"></i> Certificate Image
+                </div>
+
+                <div class="form-group">
+                    <label for="certificate_image">Upload Certificate Image <span class="required">*</span></label>
                     <div class="file-upload">
                         <input 
                             type="file" 
-                            id="image" 
-                            name="image" 
+                            id="certificate_image" 
+                            name="certificate_image" 
                             accept="image/*"
                             onchange="displayFileName(this)"
+                            required
                         >
-                        <label for="image" class="file-upload-label">
+                        <label for="certificate_image" class="file-upload-label">
                             <i class="fas fa-cloud-upload-alt"></i>
-                            <span>Click to upload image</span>
+                            <span>Click to upload certificate image</span>
                         </label>
                         <div class="file-name" id="file-name"></div>
                     </div>
-                    <div class="form-hint">Recommended: 1200x800px, Max size: 5MB (JPG, PNG, GIF)</div>
+                    <div class="form-hint">Upload a clear image/photo of your Public Performance Board Certificate. Max size: 5MB (JPG, PNG, PDF)</div>
                 </div>
 
                 <div class="btn-group">
@@ -426,7 +354,7 @@ if(isset($data) && is_array($data)) {
                         <i class="fas fa-times"></i> Cancel
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-check"></i> Create Drama
+                        <i class="fas fa-check-circle"></i> Register Drama
                     </button>
                 </div>
             </form>
