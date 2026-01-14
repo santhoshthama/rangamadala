@@ -37,7 +37,7 @@ class Login
                 $_SESSION['full_name'] = $user->full_name;
                 $_SESSION['email'] = $user->email;
                 $_SESSION['phone'] = $user->phone;
-                $_SESSION['role'] = $user->role;
+                $_SESSION['user_role'] = $user->role;
 
                 // Redirect based on user role
                 if ($user->role === 'admin') {
