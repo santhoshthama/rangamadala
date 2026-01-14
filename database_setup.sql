@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS `dramas` (
   `drama_name` varchar(255) NOT NULL COMMENT 'Drama name as in public performance board certificate',
   `certificate_number` varchar(100) NOT NULL COMMENT 'Public performance certificate number',
   `owner_name` varchar(255) NOT NULL COMMENT 'Owner name',
+  `description` text DEFAULT NULL COMMENT 'Artist provided synopsis for the drama',
   `certificate_image` varchar(255) DEFAULT NULL COMMENT 'Image of public performance board certificate',
   `created_by` int(11) DEFAULT NULL,
   `creator_artist_id` int(11) DEFAULT NULL COMMENT 'The artist who is the director',
@@ -59,9 +60,9 @@ INSERT INTO `categories` (`name`) VALUES
 ON DUPLICATE KEY UPDATE name=name;
 
 -- Insert sample dramas (optional - remove if not needed)
-INSERT INTO `dramas` (`drama_name`, `certificate_number`, `owner_name`, `certificate_image`, `created_by`, `creator_artist_id`) VALUES
-('Maname', 'PPB-2025-001', 'Chandrasena Perera', NULL, NULL, NULL),
-('Sinhabahu', 'PPB-2025-002', 'Ediriweera Sarachchandra', NULL, NULL, NULL)
+INSERT INTO `dramas` (`drama_name`, `certificate_number`, `owner_name`, `description`, `certificate_image`, `created_by`, `creator_artist_id`) VALUES
+('Maname', 'PPB-2025-001', 'Chandrasena Perera', 'Iconic Sinhala stage drama Maname.', NULL, NULL, NULL),
+('Sinhabahu', 'PPB-2025-002', 'Ediriweera Sarachchandra', 'Legendary drama about King Sinhabahu and Princess Suppadevi.', NULL, NULL, NULL)
 ON DUPLICATE KEY UPDATE drama_name=VALUES(drama_name);
 
 -- Create serviceprovider table

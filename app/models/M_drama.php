@@ -67,13 +67,14 @@ class M_drama {
     public function createDrama($data) {
         try {
             $this->db->query("INSERT INTO dramas 
-                (drama_name, certificate_number, owner_name, certificate_image, created_by, creator_artist_id) 
+                (drama_name, certificate_number, owner_name, description, certificate_image, created_by, creator_artist_id) 
                 VALUES 
-                (:drama_name, :certificate_number, :owner_name, :certificate_image, :created_by, :creator_artist_id)");
+                (:drama_name, :certificate_number, :owner_name, :description, :certificate_image, :created_by, :creator_artist_id)");
 
             $this->db->bind(':drama_name', $data['drama_name']);
             $this->db->bind(':certificate_number', $data['certificate_number']);
             $this->db->bind(':owner_name', $data['owner_name']);
+            $this->db->bind(':description', $data['description']);
             $this->db->bind(':certificate_image', $data['certificate_image']);
             $this->db->bind(':created_by', $data['created_by']);
             $this->db->bind(':creator_artist_id', $data['created_by']); // Artist becomes director
@@ -84,6 +85,46 @@ class M_drama {
             return false;
         } catch (Exception $e) {
             error_log("Error in createDrama: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updateDrama($drama_id, $data) {
+        try {
+            $fields = [
+                'drama_name' => ':drama_name',
+                'certificate_number' => ':certificate_number',
+                'owner_name' => ':owner_name',
+                'description' => ':description',
+            ];
+
+            if (array_key_exists('certificate_image', $data)) {
+                $fields['certificate_image'] = ':certificate_image';
+            }
+
+            $setParts = [];
+            foreach ($fields as $column => $placeholder) {
+                $setParts[] = "{$column} = {$placeholder}";
+            }
+            $setParts[] = "updated_at = NOW()";
+
+            $sql = "UPDATE dramas SET " . implode(', ', $setParts) . " WHERE id = :id";
+            $this->db->query($sql);
+
+            $this->db->bind(':drama_name', $data['drama_name']);
+            $this->db->bind(':certificate_number', $data['certificate_number']);
+            $this->db->bind(':owner_name', $data['owner_name']);
+            $this->db->bind(':description', $data['description']);
+
+            if (array_key_exists('certificate_image', $data)) {
+                $this->db->bind(':certificate_image', $data['certificate_image']);
+            }
+
+            $this->db->bind(':id', $drama_id);
+
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log("Error in updateDrama: " . $e->getMessage());
             return false;
         }
     }

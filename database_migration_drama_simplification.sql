@@ -29,6 +29,7 @@ ALTER TABLE `dramas`
 ADD COLUMN IF NOT EXISTS `drama_name` VARCHAR(255) NOT NULL COMMENT 'Drama name as in public performance board certificate' AFTER `id`,
 ADD COLUMN IF NOT EXISTS `certificate_number` VARCHAR(100) NOT NULL COMMENT 'Public performance certificate number' AFTER `drama_name`,
 ADD COLUMN IF NOT EXISTS `owner_name` VARCHAR(255) NOT NULL COMMENT 'Owner name' AFTER `certificate_number`,
+ADD COLUMN IF NOT EXISTS `description` TEXT DEFAULT NULL COMMENT 'Artist provided synopsis for the drama' AFTER `owner_name`,
 ADD COLUMN IF NOT EXISTS `certificate_image` VARCHAR(255) DEFAULT NULL COMMENT 'Image of public performance board certificate' AFTER `owner_name`;
 
 -- Step 5: Add unique constraint on certificate_number

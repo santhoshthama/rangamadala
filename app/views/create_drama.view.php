@@ -325,6 +325,17 @@ if(isset($data) && is_array($data)) {
                     <div class="form-hint">Enter the name of the drama production owner</div>
                 </div>
 
+                <div class="form-group">
+                    <label for="description">Drama Description <span class="required">*</span></label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        class="form-control"
+                        placeholder="Provide a short synopsis for your drama"
+                        required><?= isset($form_data['description']) ? esc($form_data['description']) : '' ?></textarea>
+                    <div class="form-hint">Share the storyline, themes, or highlights that describe your production.</div>
+                </div>
+
                 <div class="section-title" style="margin-top: 32px;">
                     <i class="fas fa-image"></i> Certificate Image
                 </div>

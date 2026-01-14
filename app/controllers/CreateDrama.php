@@ -25,7 +25,8 @@ class CreateDrama
         $data['form_data'] = [
             'drama_name' => '',
             'certificate_number' => '',
-            'owner_name' => ''
+            'owner_name' => '',
+            'description' => ''
         ];
         
         $this->view('create_drama', $data);
@@ -48,6 +49,10 @@ class CreateDrama
         
         if (empty($_POST['owner_name'])) {
             $errors[] = "Owner name is required";
+        }
+
+        if (empty($_POST['description'])) {
+            $errors[] = "Drama description is required";
         }
         
         if (!isset($_FILES['certificate_image']) || $_FILES['certificate_image']['error'] === UPLOAD_ERR_NO_FILE) {
@@ -82,6 +87,7 @@ class CreateDrama
             'drama_name' => trim($_POST['drama_name']),
             'certificate_number' => trim($_POST['certificate_number']),
             'owner_name' => trim($_POST['owner_name']),
+            'description' => trim($_POST['description']),
             'certificate_image' => $image_name,
             'created_by' => $_SESSION['user_id']
         ];

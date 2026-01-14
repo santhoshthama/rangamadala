@@ -1,9 +1,18 @@
+<?php
+if (isset($data) && is_array($data)) {
+    extract($data);
+}
+
+if (!isset($drama) && isset($data['drama'])) {
+    $drama = $data['drama'];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Director Dashboard - Sinhabahu - Rangamadala</title>
+    <title>Director Dashboard - <?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?> - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -70,9 +79,9 @@
         <div class="header--wrapper">
             <div class="header--title">
                 <span>Director Dashboard</span>
-                <h2>Sinhabahu</h2>
+                <h2><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></h2>
                 <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">
-                    Historical Drama | Sinhala | Status: <span class="status-badge assigned">Active</span>
+                    <?= !empty($drama->description) ? esc($drama->description) : 'No description provided yet.' ?>
                 </p>
             </div>
             <div class="user--info">
@@ -110,7 +119,7 @@
                 <i class="fas fa-home"></i> Dashboard
             </a>
             <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
-                <i class="fas fa-film"></i>  Edit Drama Details
+                <i class="fas fa-film"></i>  Drama Details
             </a>
             <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
                 <i class="fas fa-users"></i> Artist Roles
@@ -135,30 +144,40 @@
                         <h3>
                             <span>Drama Overview</span>
                             <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="fas fa-edit"></i>
-                                Edit Details
+                                <i class="fas fa-eye"></i>
+                                View Details
                             </a>
                         </h3>
                         <div class="drama-info">
                             <div class="service-info-item">
-                                <span class="service-info-label">Created</span>
-                                <span class="service-info-value">2024-11-20</span>
+                                <span class="service-info-label">Owner</span>
+                                <span class="service-info-value"><?= isset($drama->owner_name) ? esc($drama->owner_name) : 'N/A' ?></span>
                             </div>
                             <div class="service-info-item">
-                                <span class="service-info-label">Genre</span>
-                                <span class="service-info-value">Historical</span>
+                                <span class="service-info-label">Certificate Number</span>
+                                <span class="service-info-value"><?= isset($drama->certificate_number) ? esc($drama->certificate_number) : 'N/A' ?></span>
                             </div>
                             <div class="service-info-item">
-                                <span class="service-info-label">Language</span>
-                                <span class="service-info-value">Sinhala</span>
+                                <span class="service-info-label">Certificate Document</span>
+                                <span class="service-info-value">
+                                    <?php if (!empty($drama->certificate_image)): ?>
+                                        <a href="<?= ROOT ?>/uploads/certificates/<?= esc($drama->certificate_image) ?>" target="_blank" rel="noopener">View certificate</a>
+                                    <?php else: ?>
+                                        No certificate uploaded
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                            <div class="service-info-item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                                <span class="service-info-label">Description</span>
+                                <span class="service-info-value" style="white-space: pre-wrap;"><?= !empty($drama->description) ? esc($drama->description) : 'No description provided yet.' ?></span>
                             </div>
                             <div class="service-info-item">
-                                <span class="service-info-label">Expected Budget</span>
-                                <span class="service-info-value">LKR 800,000</span>
+                                <span class="service-info-label">Created On</span>
+                                <span class="service-info-value"><?= isset($drama->created_at) ? esc(date('Y-m-d H:i', strtotime($drama->created_at))) : 'N/A' ?></span>
                             </div>
                             <div class="service-info-item">
-                                <span class="service-info-label">Certificate Status</span>
-                                <span class="service-info-value"><span class="status-badge assigned">Verified</span></span>
+                                <span class="service-info-label">Last Updated</span>
+                                <span class="service-info-value"><?= isset($drama->updated_at) ? esc(date('Y-m-d H:i', strtotime($drama->updated_at))) : 'N/A' ?></span>
                             </div>
                         </div>
                     </div>
