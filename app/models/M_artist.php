@@ -62,17 +62,17 @@ class M_artist extends M_signup {
 
     public function get_pending_role_requests($user_id) {
         try {
-            $this->db->query("SELECT ra.*, r.role_name, r.role_description, r.salary,
-                             d.title as drama_title, d.id as drama_id,
-                             u.name as director_name
-                             FROM role_assignments ra
-                             INNER JOIN roles r ON ra.role_id = r.id
+            $this->db->query("SELECT rr.*, r.role_name, r.role_description, r.role_type, r.salary,
+                             r.drama_id, r.requirements, r.is_published,
+                             d.drama_name, d.description as drama_description,
+                             u.full_name as director_name, u.email as director_email, u.phone as director_phone
+                             FROM role_requests rr
+                             INNER JOIN drama_roles r ON rr.role_id = r.id
                              INNER JOIN dramas d ON r.drama_id = d.id
-                             INNER JOIN users u ON d.creator_artist_id = u.id
-                             WHERE ra.artist_id = :user_id 
-                             AND ra.status = 'requested'
-                             AND ra.requested_by = 'director'
-                             ORDER BY ra.request_date DESC");
+                             INNER JOIN users u ON rr.director_id = u.id
+                             WHERE rr.artist_id = :user_id 
+                               AND rr.status IN ('pending','interview')
+                             ORDER BY rr.requested_at DESC");
             $this->db->bind(':user_id', $user_id);
             return $this->db->resultSet();
         } catch (Exception $e) {
@@ -81,20 +81,117 @@ class M_artist extends M_signup {
         }
     }
 
-    public function respond_to_role_request($request_id, $response) {
+    public function respond_to_role_request($request_id, $artist_id, $response) {
         try {
-            $status = ($response === 'accept') ? 'accepted' : 'rejected';
-            
-            $this->db->query("UPDATE role_assignments 
-                             SET status = :status, response_date = NOW() 
-                             WHERE id = :request_id");
-            $this->db->bind(':status', $status);
+            $response = strtolower($response);
+            if (!in_array($response, ['accept','reject'], true)) {
+                return false;
+            }
+
+            $this->db->beginTransaction();
+
+            $this->db->query("SELECT rr.*, r.positions_available, r.positions_filled
+                              FROM role_requests rr
+                              INNER JOIN drama_roles r ON rr.role_id = r.id
+                              WHERE rr.id = :request_id AND rr.artist_id = :artist_id FOR UPDATE");
             $this->db->bind(':request_id', $request_id);
-            
-            return $this->db->execute();
+            $this->db->bind(':artist_id', $artist_id);
+            $request = $this->db->single();
+
+            if (!$request || !in_array($request->status, ['pending','interview'], true)) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            if ($response === 'reject') {
+                $this->db->query("UPDATE role_requests 
+                                  SET status = 'rejected', responded_at = NOW()
+                                  WHERE id = :request_id");
+                $this->db->bind(':request_id', $request_id);
+                $this->db->execute();
+                $this->db->commit();
+                return true;
+            }
+
+            if ((int)$request->positions_filled >= (int)$request->positions_available) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $this->db->query("INSERT INTO role_assignments (role_id, artist_id, assigned_by)
+                              VALUES (:role_id, :artist_id, :assigned_by)");
+            $this->db->bind(':role_id', $request->role_id);
+            $this->db->bind(':artist_id', $artist_id);
+            $this->db->bind(':assigned_by', $request->director_id);
+            $this->db->execute();
+
+            $this->db->query("UPDATE drama_roles 
+                              SET positions_filled = positions_filled + 1,
+                                  status = CASE WHEN positions_filled + 1 >= positions_available THEN 'filled' ELSE status END
+                              WHERE id = :role_id");
+            $this->db->bind(':role_id', $request->role_id);
+            $this->db->execute();
+
+            $this->db->query("UPDATE role_requests 
+                              SET status = 'accepted', responded_at = NOW()
+                              WHERE id = :request_id");
+            $this->db->bind(':request_id', $request_id);
+            $this->db->execute();
+
+            $this->db->commit();
+            return true;
         } catch (Exception $e) {
+            $this->db->rollBack();
             error_log("Error in respond_to_role_request: " . $e->getMessage());
             return false;
+        }
+    }
+
+    public function get_artists_for_role($role_id, array $filters = []) {
+        try {
+            $baseQuery = "SELECT u.id, u.full_name, u.email, u.phone, u.profile_image, u.years_experience,
+                                 rr.status as request_status, rr.id as request_id,
+                                 ra.status as assignment_status
+                          FROM users u
+                          LEFT JOIN role_requests rr 
+                            ON rr.artist_id = u.id AND rr.role_id = :role_id AND rr.status IN ('pending','interview')
+                          LEFT JOIN role_assignments ra
+                            ON ra.artist_id = u.id AND ra.role_id = :role_id AND ra.status = 'active'
+                          WHERE u.role = 'artist'";
+
+            $conditions = [];
+            $bindings = [':role_id' => $role_id];
+
+            if (!empty($filters['search'])) {
+                $conditions[] = "u.full_name LIKE :search";
+                $bindings[':search'] = '%' . $filters['search'] . '%';
+            }
+
+            if (!empty($filters['min_experience'])) {
+                $conditions[] = "(u.years_experience IS NULL OR u.years_experience >= :min_exp)";
+                $bindings[':min_exp'] = (int)$filters['min_experience'];
+            }
+
+            if (!empty($filters['max_experience'])) {
+                $conditions[] = "(u.years_experience IS NULL OR u.years_experience <= :max_exp)";
+                $bindings[':max_exp'] = (int)$filters['max_experience'];
+            }
+
+            if (!empty($conditions)) {
+                $baseQuery .= ' AND ' . implode(' AND ', $conditions);
+            }
+
+            $baseQuery .= ' ORDER BY u.full_name ASC';
+
+            $this->db->query($baseQuery);
+            foreach ($bindings as $param => $value) {
+                $this->db->bind($param, $value);
+            }
+
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log('Error in get_artists_for_role: ' . $e->getMessage());
+            return [];
         }
     }
 }

@@ -56,7 +56,8 @@ class Artistdashboard
             
             if ($request_id && $response) {
                 $artist_model = $this->getModel('M_artist');
-                $result = $artist_model->respond_to_role_request($request_id, $response);
+                $user_id = $_SESSION['user_id'];
+                $result = $artist_model->respond_to_role_request($request_id, $user_id, $response);
                 
                 if ($result) {
                     $_SESSION['message'] = $response === 'accept' ? 'Role request accepted successfully!' : 'Role request declined.';
