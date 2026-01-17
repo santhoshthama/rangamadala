@@ -22,14 +22,6 @@ class Login
 
             // pass the data to the model for authentication
             $user = $this->model->authenticate($email, $password);
-            
-            
-            
-            // error_log(print_r($user, true)); // Debugging line
-            
-            
-            
-            
             if ($user) {
                 // set session and redirect to dashboard or home page
                 $_SESSION['user_id'] = $user->id;
@@ -65,7 +57,6 @@ class Login
             }
         }
 
-        // error_log("RENDERING LOGIN VIEW"); // Debugging line
         $this->view("login", $data);
     }
 }

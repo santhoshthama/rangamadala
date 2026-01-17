@@ -3,17 +3,13 @@ trait Controller
 {
     public function view($name,$data=[])
     {
-        $base = "../app/views/" . ltrim($name, '/');
-        $candidates = [$base . ".view.php", $base . ".php"];
-
-        foreach ($candidates as $filename) {
-            if (file_exists($filename)) {
-                require $filename;
-                return;
-            }
+        $filename = "../app/views/" . $name . ".view.php";
+        if (file_exists($filename)) {
+               extract($data);
+               require $filename;
+        } else {
+            require "../app/views/_404.view.php";
         }
-
-        require "../app/views/_404.view.php";
     }
     public function getModel($name)
     {
