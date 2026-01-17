@@ -4,10 +4,12 @@ class Director{
     use Controller;
 
     protected $dramaModel;
+    protected $roleModel;
 
     public function __construct()
     {
         $this->dramaModel = $this->getModel('M_drama');
+        $this->roleModel = $this->getModel('M_role');
     }
 
     public function index()
@@ -28,7 +30,226 @@ class Director{
 
     public function manage_roles()
     {
-        $this->renderDramaView('manage_roles');
+        $this->renderDramaView('manage_roles', [], function ($drama) {
+            $roles = $this->roleModel ? $this->roleModel->getRolesByDrama((int)$drama->id) : [];
+            $stats = $this->roleModel ? $this->roleModel->getRoleStats((int)$drama->id) : null;
+
+            $formData = $_SESSION['role_form_data'] ?? null;
+            $formErrors = $_SESSION['role_form_errors'] ?? [];
+            $formMode = $_SESSION['role_form_mode'] ?? 'create';
+            $formRoleId = $_SESSION['role_form_role_id'] ?? null;
+
+            unset($_SESSION['role_form_data'], $_SESSION['role_form_errors'], $_SESSION['role_form_mode'], $_SESSION['role_form_role_id']);
+
+            $requestedRoleId = $this->getQueryParam('role_id');
+            if ($requestedRoleId !== null) {
+                $requestedRoleId = (int)$requestedRoleId;
+            }
+
+            if ($formMode === 'update' && $formRoleId) {
+                $formRoleId = (int)$formRoleId;
+                if (!$requestedRoleId) {
+                    $requestedRoleId = $formRoleId;
+                }
+            }
+
+            $editingRole = null;
+            if ($requestedRoleId) {
+                $editingRole = $this->findRoleForDrama($requestedRoleId, (int)$drama->id);
+            }
+
+            return [
+                'roles' => $roles,
+                'roleStats' => $stats,
+                'editing_role' => $editingRole,
+                'role_form_data' => $formData,
+                'role_form_errors' => $formErrors,
+                'role_form_mode' => $formMode,
+                'role_form_role_id' => $formRoleId,
+            ];
+        });
+    }
+
+    public function create_role()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $_SESSION['message'] = 'Role management is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        $formData = [
+            'role_name' => trim($_POST['role_name'] ?? ''),
+            'role_description' => trim($_POST['role_description'] ?? ''),
+            'role_type' => trim($_POST['role_type'] ?? 'supporting'),
+            'salary' => trim($_POST['salary'] ?? ''),
+            'positions_available' => trim($_POST['positions_available'] ?? '1'),
+            'requirements' => trim($_POST['requirements'] ?? ''),
+        ];
+
+        [$errors, $normalized] = $this->validateRoleInput($formData, 'create');
+
+        if (!empty($errors)) {
+            $_SESSION['role_form_data'] = $formData;
+            $_SESSION['role_form_errors'] = $errors;
+            $_SESSION['role_form_mode'] = 'create';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        $createData = [
+            'drama_id' => (int)$drama->id,
+            'role_name' => $normalized['role_name'],
+            'role_description' => $normalized['role_description'],
+            'role_type' => $normalized['role_type'],
+            'salary' => $normalized['salary'],
+            'positions_available' => $normalized['positions_available'],
+            'requirements' => $normalized['requirements'],
+            'created_by' => (int)$_SESSION['user_id'],
+        ];
+
+        $roleId = $this->roleModel->createRole($createData);
+
+        if ($roleId) {
+            $_SESSION['message'] = 'Role created successfully.';
+            $_SESSION['message_type'] = 'success';
+            $this->redirectToManageRoles((int)$drama->id, ['role_id' => $roleId]);
+        }
+
+        $_SESSION['message'] = 'Failed to create role. Please try again.';
+        $_SESSION['message_type'] = 'error';
+        $this->redirectToManageRoles((int)$drama->id);
+    }
+
+    public function update_role()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $_SESSION['message'] = 'Role management is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        $roleId = $this->getQueryParam('role_id');
+        $roleId = $roleId !== null ? (int)$roleId : (int)($_POST['role_id'] ?? 0);
+
+        $role = $this->findRoleForDrama($roleId, (int)$drama->id);
+        if (!$role) {
+            $_SESSION['message'] = 'Role not found or inaccessible.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        $formData = [
+            'role_name' => trim($_POST['role_name'] ?? ''),
+            'role_description' => trim($_POST['role_description'] ?? ''),
+            'role_type' => trim($_POST['role_type'] ?? 'supporting'),
+            'salary' => trim($_POST['salary'] ?? ''),
+            'positions_available' => trim($_POST['positions_available'] ?? '1'),
+            'requirements' => trim($_POST['requirements'] ?? ''),
+            'status' => trim($_POST['status'] ?? 'open'),
+        ];
+
+        [$errors, $normalized] = $this->validateRoleInput($formData, 'update');
+
+        if (!empty($errors)) {
+            $_SESSION['role_form_data'] = $formData;
+            $_SESSION['role_form_errors'] = $errors;
+            $_SESSION['role_form_mode'] = 'update';
+            $_SESSION['role_form_role_id'] = $role->id;
+            $this->redirectToManageRoles((int)$drama->id, ['role_id' => $role->id]);
+        }
+
+        $updateData = [
+            'role_name' => $normalized['role_name'],
+            'role_description' => $normalized['role_description'],
+            'role_type' => $normalized['role_type'],
+            'salary' => $normalized['salary'],
+            'positions_available' => $normalized['positions_available'],
+            'requirements' => $normalized['requirements'],
+            'status' => $normalized['status'],
+        ];
+
+        $updated = $this->roleModel->updateRole((int)$role->id, $updateData);
+
+        if ($updated) {
+            $_SESSION['message'] = 'Role updated successfully.';
+            $_SESSION['message_type'] = 'success';
+            $this->redirectToManageRoles((int)$drama->id, ['role_id' => $role->id]);
+        }
+
+        $_SESSION['message'] = 'Failed to update role. Please try again.';
+        $_SESSION['message_type'] = 'error';
+        $this->redirectToManageRoles((int)$drama->id, ['role_id' => $role->id]);
+    }
+
+    public function delete_role()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $_SESSION['message'] = 'Role management is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        $roleId = $this->getQueryParam('role_id');
+        $roleId = $roleId !== null ? (int)$roleId : (int)($_POST['role_id'] ?? 0);
+
+        $role = $this->findRoleForDrama($roleId, (int)$drama->id);
+        if (!$role) {
+            $_SESSION['message'] = 'Role not found or inaccessible.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        $hadAssignments = isset($role->positions_filled) && (int)$role->positions_filled > 0;
+
+        $deleted = $this->roleModel->deleteRole((int)$role->id);
+
+        if ($deleted) {
+            if ($hadAssignments) {
+                $_SESSION['message'] = 'Role has active assignments and was marked as closed.';
+                $_SESSION['message_type'] = 'info';
+            } else {
+                $_SESSION['message'] = 'Role deleted successfully.';
+                $_SESSION['message_type'] = 'success';
+            }
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        $_SESSION['message'] = 'Failed to delete role. Please try again.';
+        $_SESSION['message_type'] = 'error';
+        $this->redirectToManageRoles((int)$drama->id, ['role_id' => $role->id]);
     }
 
     public function assign_managers()
@@ -151,11 +372,109 @@ class Director{
         exit;
     }
 
-    protected function renderDramaView($view, array $data = [])
+    protected function renderDramaView($view, array $data = [], ?callable $dataBuilder = null)
     {
         $drama = $this->authorizeDrama();
+        if ($dataBuilder) {
+            $additional = $dataBuilder($drama);
+            if (is_array($additional)) {
+                $data = array_merge($data, $additional);
+            }
+        }
+
         $payload = array_merge(['drama' => $drama], $data);
         $this->view('director/' . $view, $payload);
+    }
+
+    protected function redirectToManageRoles(int $dramaId, array $params = [])
+    {
+        $query = array_merge(['drama_id' => $dramaId], $params);
+        $url = ROOT . '/director/manage_roles';
+        if (!empty($query)) {
+            $url .= '?' . http_build_query($query);
+        }
+        header('Location: ' . $url);
+        exit;
+    }
+
+    protected function validateRoleInput(array $data, string $mode = 'create'): array
+    {
+        $errors = [];
+        $allowedTypes = ['lead', 'supporting', 'ensemble', 'dancer', 'musician', 'other'];
+        $allowedStatuses = ['open', 'filled', 'closed'];
+
+        $roleName = trim($data['role_name'] ?? '');
+        if ($roleName === '') {
+            $errors['role_name'] = 'Role name is required.';
+        }
+
+        $roleDescription = trim($data['role_description'] ?? '');
+        if ($roleDescription === '') {
+            $errors['role_description'] = 'Role description is required.';
+        }
+
+        $roleType = strtolower(trim($data['role_type'] ?? 'supporting'));
+        if (!in_array($roleType, $allowedTypes, true)) {
+            $errors['role_type'] = 'Select a valid role type.';
+        }
+
+        $salaryRaw = trim($data['salary'] ?? '');
+        $salaryValue = null;
+        if ($salaryRaw !== '') {
+            $salaryNumeric = filter_var($salaryRaw, FILTER_VALIDATE_FLOAT);
+            if ($salaryNumeric === false || $salaryNumeric < 0) {
+                $errors['salary'] = 'Salary must be a non-negative number.';
+            } else {
+                $salaryValue = number_format($salaryNumeric, 2, '.', '');
+            }
+        }
+
+        $positionsRaw = trim((string)($data['positions_available'] ?? ''));
+        $positionsValue = filter_var($positionsRaw, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($positionsValue === false) {
+            $errors['positions_available'] = 'Positions must be a positive integer.';
+        }
+
+        $requirements = trim($data['requirements'] ?? '');
+
+        $status = strtolower(trim($data['status'] ?? 'open'));
+        if ($mode === 'update') {
+            if (!in_array($status, $allowedStatuses, true)) {
+                $errors['status'] = 'Select a valid status.';
+            }
+        } else {
+            $status = 'open';
+        }
+
+        $normalized = [
+            'role_name' => $roleName,
+            'role_description' => $roleDescription,
+            'role_type' => $roleType,
+            'salary' => $salaryValue,
+            'positions_available' => $positionsValue !== false ? $positionsValue : null,
+            'requirements' => $requirements !== '' ? $requirements : null,
+            'status' => $status,
+        ];
+
+        return [$errors, $normalized];
+    }
+
+    protected function findRoleForDrama($roleId, int $dramaId)
+    {
+        if (!$this->roleModel || !$roleId) {
+            return null;
+        }
+
+        $role = $this->roleModel->getRoleById((int)$roleId);
+        if (!$role) {
+            return null;
+        }
+
+        if ((int)$role->drama_id !== (int)$dramaId) {
+            return null;
+        }
+
+        return $role;
     }
 
     protected function authorizeDrama()
