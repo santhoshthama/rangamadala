@@ -13,7 +13,7 @@ class ServicePayment
         }
 
         // Check if user has service_provider role
-        if (($_SESSION['role'] ?? '') !== 'service_provider') {
+        if (($_SESSION['user_role'] ?? '') !== 'service_provider') {
             header("Location: " . ROOT . "/Home");
             exit;
         }

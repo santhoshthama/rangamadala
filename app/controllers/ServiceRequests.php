@@ -13,7 +13,7 @@ class ServiceRequests
 		}
 
 		// Check if user has service_provider role
-		if (($_SESSION['role'] ?? '') !== 'service_provider') {
+		if (($_SESSION['user_role'] ?? '') !== 'service_provider') {
 			header("Location: " . ROOT . "/Home");
 			exit;
 		}
@@ -38,7 +38,7 @@ class ServiceRequests
 	public function updateStatus()
 	{
 		// Must be logged in as service provider
-		if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'service_provider') {
+		if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
 			http_response_code(403);
 			echo json_encode(['success' => false, 'error' => 'Unauthorized']);
 			return;
@@ -66,7 +66,7 @@ class ServiceRequests
 
 	public function updatePayment()
 	{
-		if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'service_provider') {
+		if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
 			http_response_code(403);
 			echo json_encode(['success' => false, 'error' => 'Unauthorized']);
 			return;
