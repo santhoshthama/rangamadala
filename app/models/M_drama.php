@@ -79,10 +79,7 @@ class M_drama {
             $this->db->bind(':created_by', $data['created_by']);
             $this->db->bind(':creator_artist_id', $data['created_by']); // Artist becomes director
 
-            if ($this->db->execute()) {
-                return $this->db->lastInsertId();
-            }
-            return false;
+            return $this->db->execute();
         } catch (Exception $e) {
             error_log("Error in createDrama: " . $e->getMessage());
             return false;

@@ -19,13 +19,6 @@
         <?php include 'includes/service_provider/header.php'; ?>
 
         <div class="container">
-        <div class="header">
-            <div class="title-section">
-                <h1>Availability Calendar</h1>
-                <p>Manage your service availability</p>
-            </div>
-        </div>
-
         <!-- Legend for calendar status -->
         <div class="legend-container">
             <div class="legend-item">

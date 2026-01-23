@@ -22,29 +22,23 @@ class Login
 
             // pass the data to the model for authentication
             $user = $this->model->authenticate($email, $password);
-            
-            
-            
-            // error_log(print_r($user, true)); // Debugging line
-            
-            
-            
-            
             if ($user) {
                 // set session and redirect to dashboard or home page
                 $_SESSION['user_id'] = $user->id;
                 $_SESSION['user_name'] = $user->full_name;
+                $_SESSION['full_name'] = $user->full_name;
+                $_SESSION['email'] = $user->email;
+                $_SESSION['phone'] = $user->phone;
                 $_SESSION['user_role'] = $user->role;
-                
-                // error_log("USER FOUND"); // Debugging line
-                
+
                 // Redirect based on user role
                 if ($user->role === 'admin') {
                     header("Location: " . ROOT . "/Admindashboard");
                     exit;
                 } elseif ($user->role === 'artist') {
-                    // error_log("USER TYPE MATCHED ARTIST"); // Debugging line
-                    header("Location: " . ROOT . "/Artistdashboard");
+                    // header("Location: " . ROOT . "/ArtistDashboard");
+                    // Temporary redirect for testing
+                    header("Location: " . ROOT . "/BrowseServiceProviders");
                     exit;
                 } elseif ($user->role === 'service_provider') {
                     header("Location: " . ROOT . "/ServiceProviderDashboard");
@@ -63,7 +57,6 @@ class Login
             }
         }
 
-        // error_log("RENDERING LOGIN VIEW"); // Debugging line
         $this->view("login", $data);
     }
 }

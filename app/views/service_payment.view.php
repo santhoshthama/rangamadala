@@ -19,13 +19,6 @@
         <?php include 'includes/service_provider/header.php'; ?>
 
         <div class="container">
-        <div class="header">
-            <div class="title-section">
-                <h1>Payment Management</h1>
-                <p>Track your earnings and payment status</p>
-            </div>
-        </div>
-
         <div class="payment-summary">
             <button class="summary-item pending active" onclick="filterPayments('pending')" id="pendingBtn">
                 <span class="summary-amount">$2,450</span>

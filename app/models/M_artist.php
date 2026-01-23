@@ -1,13 +1,6 @@
 <?php
 
 class M_artist extends M_signup {
-    private $db;
-
-    public function __construct() {
-        parent::__construct();
-        $this->db = new Database();
-    }
-
     public function register($full_name, $email, $password, $phone, $nic_photo = null) {
         return $this->registerUser($full_name, $email, $password, $phone, 'artist', $nic_photo);
     }
@@ -188,4 +181,3 @@ class M_artist extends M_signup {
         }
     }
 }
-

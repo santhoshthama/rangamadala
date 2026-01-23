@@ -134,6 +134,12 @@
     border: 1px solid rgba(139, 69, 19, 0.3);
 }
 
+.status-rejected {
+    background: rgba(220, 20, 60, 0.15);
+    color: #DC143C;
+    border: 1px solid rgba(220, 20, 60, 0.3);
+}
+
 .price {
     font-size: 20px;
     font-weight: 700;
