@@ -5,7 +5,7 @@ if (isset($data) && is_array($data)) {
 
 $role = $role ?? null;
 $artists = isset($artists) && is_array($artists) ? $artists : [];
-$filters = isset($filters) && is_array($filters) ? $filters : [];
+$searchTerm = isset($searchTerm) ? (string)$searchTerm : '';
 
 $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 $roleId = isset($role->id) ? (int)$role->id : (int)($_GET['role_id'] ?? 0);
@@ -32,6 +32,17 @@ $roleName = $role->role_name ?? 'Role';
         .badge-requested { background: rgba(255,193,7,.18); color: #7a4f02; }
         .badge-assigned { background: rgba(0,123,255,.15); color: #0b5394; }
         .empty-state { padding: 40px; text-align: center; border: 1px dashed var(--border); border-radius: 16px; color: var(--muted); background: rgba(248,249,252,.6); }
+        .search-card { background: #fff; border-radius: 16px; border: 1px solid var(--border); padding: 18px 24px; margin-bottom: 24px; box-shadow: var(--shadow-xs, 0 2px 10px rgba(15,23,42,.05)); }
+        .search-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .search-input-wrapper { flex: 1; min-width: 240px; position: relative; }
+        .search-input-wrapper i { position: absolute; top: 50%; left: 14px; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
+        .search-input { width: 100%; padding: 12px 14px 12px 42px; border-radius: 999px; border: 1px solid var(--border); font-size: 14px; transition: border-color .2s ease; }
+        .search-input:focus { outline: none; border-color: var(--brand, #6c63ff); box-shadow: 0 0 0 3px rgba(108,99,255,.12); }
+        .search-button { padding: 12px 20px; border-radius: 999px; border: none; background: var(--brand, #6c63ff); color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; transition: background .2s ease; }
+        .search-button:hover { background: var(--brand-dark, #574bff); }
+        .search-clear { padding: 11px 18px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--muted-strong, #3f4860); font-weight: 600; font-size: 14px; text-decoration: none; transition: border-color .2s ease, color .2s ease, background .2s ease; }
+        .search-clear:hover { border-color: var(--brand, #6c63ff); color: var(--brand, #6c63ff); background: rgba(108,99,255,.08); }
+        .results-hint { margin: -8px 0 18px; color: var(--muted); font-size: 13px; }
     </style>
 </head>
 <body>
@@ -57,34 +68,34 @@ $roleName = $role->role_name ?? 'Role';
             </div>
         </div>
 
-        <section class="filters-card">
-            <form class="filters-grid" method="GET" action="<?= ROOT ?>/director/search_artists">
+        <section class="search-card">
+            <form class="search-form" method="get" action="<?= ROOT ?>/director/search_artists">
                 <input type="hidden" name="drama_id" value="<?= esc($dramaId) ?>">
                 <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
-                <div class="form-group">
-                    <label for="filter_search">Name or keyword</label>
-                    <input type="text" id="filter_search" name="q" class="form-control" placeholder="Eg: Kasun" value="<?= esc($filters['search'] ?? '') ?>">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="search" value="<?= esc($searchTerm) ?>" class="search-input" placeholder="Search artists by name">
                 </div>
-                <div class="form-group">
-                    <label for="filter_min_exp">Min experience (years)</label>
-                    <input type="number" min="0" id="filter_min_exp" name="min_exp" class="form-control" value="<?= esc($filters['min_experience'] ?? '') ?>">
-                </div>
-                <div class="form-group">
-                    <label for="filter_max_exp">Max experience (years)</label>
-                    <input type="number" min="0" id="filter_max_exp" name="max_exp" class="form-control" value="<?= esc($filters['max_experience'] ?? '') ?>">
-                </div>
-                <div class="form-group" style="align-self: flex-end;">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i>Search</button>
-                </div>
+                <button type="submit" class="search-button"><i class="fas fa-search" style="margin-right:6px;"></i>Search</button>
+                <?php if ($searchTerm !== ''): ?>
+                    <a href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>" class="search-clear">Clear</a>
+                <?php endif; ?>
             </form>
         </section>
 
         <?php if (empty($artists)): ?>
             <div class="empty-state">
                 <i class="fas fa-users" style="font-size: 28px; display: block; margin-bottom: 12px;"></i>
-                No artists matched your filters. Try broadening your search or invite artists directly by sharing the vacancy.
+                <?php if ($searchTerm === ''): ?>
+                    No artists are currently available. Invite performers to join or publish a vacancy to attract talent.
+                <?php else: ?>
+                    No artists matched "<?= esc($searchTerm) ?>". Try a different name or clear the search to view everyone.
+                <?php endif; ?>
             </div>
         <?php else: ?>
+            <p class="results-hint">
+                Showing <?= count($artists) ?> artist<?= count($artists) === 1 ? '' : 's' ?><?php if ($searchTerm !== ''): ?> for "<?= esc($searchTerm) ?>"<?php endif; ?>.
+            </p>
             <section class="artist-grid">
                 <?php foreach ($artists as $artist): ?>
                     <?php

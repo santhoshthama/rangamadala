@@ -21,6 +21,8 @@ Run `database_roles_table.sql` to create:
 - **positions_filled**: Filled positions
 - **status**: open, closed, filled
 - **requirements**: Role requirements
+- **is_published**: Vacancy visibility toggle
+- **published_at / published_message / published_by**: Publication metadata
 - **created_by**: Director who created
 - **created_at, updated_at**: Timestamps
 
@@ -40,6 +42,15 @@ Run `database_roles_table.sql` to create:
 - **assigned_by**: Director
 - **assigned_at**: Timestamp
 - **status**: active, completed, terminated
+
+#### `role_requests` - Direct invitations
+- **id**: Primary key
+- **role_id**: Foreign key to drama_roles
+- **artist_id**: Invited artist
+- **director_id**: Director sending invite
+- **status**: pending, interview, accepted, rejected, cancelled
+- **note / interview_at**: Optional scheduling context
+- **requested_at / responded_at**: Audit timestamps
 
 ---
 
@@ -80,6 +91,11 @@ getPendingApplications($drama_id)
 - Gets all pending applications for drama roles
 - Returns: Array of applications with artist info
 
+```php
+getRoleRequestsByDrama($drama_id, $status = null)
+```
+- Fetches invitations sent to artists for a drama (optional status filter)
+
 #### UPDATE
 ```php
 updateRole($role_id, $data)
@@ -109,202 +125,128 @@ rejectApplication($application_id, $reviewed_by)
 ```
 - Marks application as rejected
 
+```php
+createRoleRequest($role_id, $artist_id, $director_id, ?string $note = null, ?string $interviewAt = null)
+```
+- Sends or refreshes a direct invite for an artist
+
+```php
+assignArtistFromRequest($request_id, $director_id)
+```
+- Accepts an invitation and creates an assignment
+
+```php
+publishVacancy($role_id, ?string $message, int $director_id)
+```
+- Marks a role as publicly advertised with an optional message
+
+```php
+unpublishVacancy($role_id)
+```
+- Removes a vacancy from public listings
+
+### Artist Search Helpers (`app/models/M_artist.php`)
+
+```php
+get_artists_for_role($role_id, array $filters = [])
+```
+- Returns artists matching optional name/experience filters
+- Includes current request/assignment status to prevent duplicates
+
+```php
+respond_to_role_request($request_id, $artist_id, $response)
+```
+- Allows artists to accept or reject invitations, updating assignments automatically
+
 ---
 
 ## 3. Controller Layer (`app/controllers/director.php`)
 
 ### Routes & Methods:
 
-#### View Roles
+#### Manage Roles Overview
 ```
 GET /director/manage_roles?drama_id={id}
 ```
 - Method: `manage_roles()`
-- Loads roles, stats, and pending applications
-- Renders manage_roles view
+- Loads stats, pending applications/requests, published roles
+- Renders `manage_roles_overview.view.php`
 
-#### Create Role
+#### Create Role (Form + Submit)
 ```
-POST /director/create_role
+GET  /director/create_role?drama_id={id}
+POST /director/create_role?drama_id={id}
 ```
 - Method: `create_role()`
-- Validates drama ownership
-- Creates role via model
-- Returns JSON response
+- GET serves creation view; POST persists and redirects/returns JSON
 
-#### Get Role (for editing)
+#### Role Detail Console
 ```
-GET /director/get_role?role_id={id}
+GET /director/view_role?drama_id={id}&role_id={role}
 ```
-- Method: `get_role()`
-- Returns role data as JSON
+- Method: `view_role()`
+- Renders `role_details.view.php` with applications, requests, assignments
 
-#### Update Role
+#### Update / Delete Role
 ```
-POST /director/update_role
+POST /director/update_role?drama_id={id}&role_id={role}
+POST /director/delete_role?drama_id={id}&role_id={role}
 ```
-- Method: `update_role()`
-- Validates drama ownership
-- Updates role via model
-- Returns JSON response
+- Methods: `update_role()`, `delete_role()`
+- Maintain role integrity, flash status messages, redirect appropriately
 
-#### Delete Role
+#### Publish or Unpublish Vacancy
 ```
-POST /director/delete_role
+POST /director/publish_vacancy
+POST /director/unpublish_vacancy
 ```
-- Method: `delete_role()`
-- Validates drama ownership
-- Deletes role via model
-- Returns JSON response
+- Methods: `publish_vacancy()`, `unpublish_vacancy()`
+- Toggle vacancy visibility and announcement text
 
-#### Accept Application
+#### Search & Invite Artists
+```
+GET  /director/search_artists?drama_id={id}&role_id={role}
+POST /director/send_role_request?drama_id={id}
+```
+- Methods: `search_artists()`, `send_role_request()`
+- Provide filterable artist list and invitation handling
+
+#### Application Decisions
 ```
 POST /director/accept_application
-```
-- Method: `accept_application()`
-- Assigns artist to role
-- Returns JSON response
-
-#### Reject Application
-```
 POST /director/reject_application
 ```
-- Method: `reject_application()`
-- Rejects artist application
-- Returns JSON response
+- Methods: `accept_application()`, `reject_application()`
+- Update assignments and application status via model helpers
 
 ---
 
-## 4. View Layer (`app/views/director/manage_roles.php`)
+## 4. View Layer (Updated Templates)
 
-### Current View Features:
-- Tabbed interface: All Roles | Applications | Assigned Artists
-- "Create Role" button
-- Role cards display
-- Application management
+| View | Purpose |
+|------|---------|
+| `manage_roles_overview.view.php` | Dashboard summarising applications, published vacancies, and pending requests |
+| `create_role.view.php` | Dedicated creation form with validation feedback |
+| `role_details.view.php` | Role-level console for editing, publishing, and assigning artists |
+| `search_artists.view.php` | Filterable artist directory with invitation forms and status badges |
 
-### JavaScript Integration Required:
+### JavaScript Integration
 
-Create `public/assets/JS/manage-roles.js` with:
+`public/assets/JS/manage-roles.js` now:
 
-```javascript
-// CREATE ROLE
-function openCreateRoleModal() {
-    // Show modal with form
-}
+- Automatically applies confirmation prompts for forms using `data-confirm`
+- Disables submit buttons during processing and shows a spinner
+- Restores button states when navigating back via browser history
+- Fades out flash messages after a short delay
 
-function submitCreateRole() {
-    const formData = new FormData(document.getElementById('createRoleForm'));
-    
-    fetch(ROOT + '/director/create_role?drama_id=' + dramaId, {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    });
-}
+Tab and filter behaviours are handled with small inline scripts in each view, keeping logic close to the UI elements that rely on it.
 
-// EDIT ROLE
-function editRole(roleId) {
-    fetch(ROOT + '/director/get_role?role_id=' + roleId + '&drama_id=' + dramaId)
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            // Populate edit form with data.role
-            showEditModal(data.role);
-        }
-    });
-}
+### Director Assignment Flow
 
-function submitUpdateRole() {
-    const formData = new FormData(document.getElementById('editRoleForm'));
-    
-    fetch(ROOT + '/director/update_role?drama_id=' + dramaId, {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    });
-}
-
-// DELETE ROLE
-function deleteRole(roleId) {
-    if (!confirm('Are you sure you want to delete this role?')) return;
-    
-    const formData = new FormData();
-    formData.append('role_id', roleId);
-    
-    fetch(ROOT + '/director/delete_role?drama_id=' + dramaId, {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    });
-}
-
-// ACCEPT APPLICATION
-function acceptApplication(applicationId) {
-    const formData = new FormData();
-    formData.append('application_id', applicationId);
-    
-    fetch(ROOT + '/director/accept_application?drama_id=' + dramaId, {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    });
-}
-
-// REJECT APPLICATION
-function rejectApplication(applicationId) {
-    if (!confirm('Reject this application?')) return;
-    
-    const formData = new FormData();
-    formData.append('application_id', applicationId);
-    
-    fetch(ROOT + '/director/reject_application?drama_id=' + dramaId, {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert(data.message);
-        }
-    });
-}
-```
+1. **Review applications** in `role_details.view.php`; accepting creates assignments and updates `positions_filled` immediately.
+2. **Invite artists directly** from `search_artists.view.php`; invitations surface under "Pending Requests" and in the overview dashboard.
+3. **Publish vacancies** to attract new applications, then unpublish when positions are filled.
+4. **Finalize assignments** by accepting applications yourself or by approving pending invitations once the artist confirms from their dashboard.
 
 ---
 
@@ -342,6 +284,26 @@ FormData:
 - role_id: "5"
 ```
 
+### Publish a Vacancy:
+```php
+POST /director/publish_vacancy?drama_id=1
+
+FormData:
+- role_id: "5"
+- message: "Auditions open until Feb 15."
+```
+
+### Invite an Artist:
+```php
+POST /director/send_role_request?drama_id=1
+
+FormData:
+- role_id: "5"
+- artist_id: "42"
+- note: "We loved your last performance—join us for callbacks?"
+- interview_at: "2026-02-03 15:00"
+```
+
 ---
 
 ## 6. Security Features
@@ -362,6 +324,8 @@ FormData:
 4. **Add JavaScript**: Implement AJAX calls
 5. **Test CRUD**: Create, read, update, delete roles
 6. **Test Applications**: Accept/reject workflow
+7. **Test Invitations**: Send requests, confirm assignments, validate status updates
+8. **Check Publication**: Publish/unpublish vacancies and ensure visibility updates
 
 ---
 
@@ -369,21 +333,25 @@ FormData:
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/director/manage_roles?drama_id={id}` | View all roles |
-| POST | `/director/create_role` | Create new role |
-| GET | `/director/get_role?role_id={id}` | Get role data |
+| GET | `/director/manage_roles?drama_id={id}` | Roles overview dashboard |
+| GET/POST | `/director/create_role` | Display form / create role |
+| GET | `/director/view_role?drama_id={id}&role_id={role}` | Role detail console |
 | POST | `/director/update_role` | Update role |
-| POST | `/director/delete_role` | Delete role |
-| POST | `/director/accept_application` | Accept artist |
-| POST | `/director/reject_application` | Reject artist |
+| POST | `/director/delete_role` | Delete or close role |
+| POST | `/director/publish_vacancy` | Publish vacancy |
+| POST | `/director/unpublish_vacancy` | Unpublish vacancy |
+| GET | `/director/search_artists?drama_id={id}&role_id={role}` | Find artists for invitation |
+| POST | `/director/send_role_request` | Send invitation to artist |
+| POST | `/director/accept_application` | Accept artist application |
+| POST | `/director/reject_application` | Reject artist application |
 
 ---
 
 ## Complete! 🎭
 
 The CRUD system is now fully implemented following MVC architecture:
-- **Model**: M_role.php (data layer)
-- **View**: manage_roles.php (presentation)
-- **Controller**: director.php (business logic)
+- **Model**: `M_role.php`, `M_artist.php` (data layer)
+- **Views**: `manage_roles_overview.view.php`, `role_details.view.php`, `create_role.view.php`, `search_artists.view.php`
+- **Controller**: `director.php` (business logic)
 
 All operations are secure, transactional, and follow best practices.

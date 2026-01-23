@@ -316,13 +316,9 @@ class Director{
             return;
         }
 
-        $filters = [
-            'search' => trim((string)$this->getQueryParam('q', '')),
-            'min_experience' => $this->sanitizeInt($this->getQueryParam('min_exp')),
-            'max_experience' => $this->sanitizeInt($this->getQueryParam('max_exp')),
-        ];
+        $searchTerm = trim((string)$this->getQueryParam('search', ''));
 
-        $this->renderDramaView('search_artists', [], function ($drama) use ($roleId, $filters) {
+        $this->renderDramaView('search_artists', [], function ($drama) use ($roleId, $searchTerm) {
             $role = $this->findRoleForDrama((int)$roleId, (int)$drama->id);
             if (!$role) {
                 $_SESSION['message'] = 'Role not found or inaccessible.';
@@ -330,16 +326,17 @@ class Director{
                 $this->redirectToManageRoles((int)$drama->id);
             }
 
-            $activeFilters = array_filter($filters, function ($value) {
-                return $value !== null && $value !== '';
-            });
+            $filters = [];
+            if ($searchTerm !== '') {
+                $filters['search'] = $searchTerm;
+            }
 
-            $artists = $this->artistModel ? $this->artistModel->get_artists_for_role((int)$role->id, $activeFilters) : [];
+            $artists = $this->artistModel ? $this->artistModel->get_artists_for_role((int)$role->id, $filters) : [];
 
             return [
                 'role' => $role,
                 'artists' => $artists,
-                'filters' => $filters,
+                'searchTerm' => $searchTerm,
             ];
         });
     }

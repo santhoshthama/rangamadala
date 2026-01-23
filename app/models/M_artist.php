@@ -148,47 +148,40 @@ class M_artist extends M_signup {
     }
 
     public function get_artists_for_role($role_id, array $filters = []) {
+        $searchTerm = '';
+        if (isset($filters['search']) && is_string($filters['search'])) {
+            $searchTerm = trim($filters['search']);
+        } elseif (isset($filters['name']) && is_string($filters['name'])) {
+            $searchTerm = trim($filters['name']);
+        }
+
+        $query = "SELECT u.id, u.full_name, u.email, u.phone,
+                             u.nic_photo AS profile_image,
+                             NULL AS years_experience,
+                             NULL AS request_status, NULL AS request_id, NULL AS assignment_status
+                      FROM users u
+                      WHERE u.role IS NOT NULL AND LOWER(TRIM(u.role)) = 'artist'";
+
+        if ($searchTerm !== '') {
+            $query .= " AND LOWER(u.full_name) LIKE :search_name";
+        }
+
+        $query .= " ORDER BY u.full_name ASC";
+
         try {
-            $baseQuery = "SELECT u.id, u.full_name, u.email, u.phone, u.profile_image, u.years_experience,
-                                 rr.status as request_status, rr.id as request_id,
-                                 ra.status as assignment_status
-                          FROM users u
-                          LEFT JOIN role_requests rr 
-                            ON rr.artist_id = u.id AND rr.role_id = :role_id AND rr.status IN ('pending','interview')
-                          LEFT JOIN role_assignments ra
-                            ON ra.artist_id = u.id AND ra.role_id = :role_id AND ra.status = 'active'
-                          WHERE u.role = 'artist'";
+            $this->db->query($query);
 
-            $conditions = [];
-            $bindings = [':role_id' => $role_id];
-
-            if (!empty($filters['search'])) {
-                $conditions[] = "u.full_name LIKE :search";
-                $bindings[':search'] = '%' . $filters['search'] . '%';
+            if ($searchTerm !== '') {
+                $this->db->bind(':search_name', '%' . strtolower($searchTerm) . '%');
             }
 
-            if (!empty($filters['min_experience'])) {
-                $conditions[] = "(u.years_experience IS NULL OR u.years_experience >= :min_exp)";
-                $bindings[':min_exp'] = (int)$filters['min_experience'];
+            $artists = $this->db->resultSet();
+            $logMessage = 'M_artist::get_artists_for_role fetched ' . count($artists) . ' rows';
+            if ($searchTerm !== '') {
+                $logMessage .= " for search '" . $searchTerm . "'";
             }
-
-            if (!empty($filters['max_experience'])) {
-                $conditions[] = "(u.years_experience IS NULL OR u.years_experience <= :max_exp)";
-                $bindings[':max_exp'] = (int)$filters['max_experience'];
-            }
-
-            if (!empty($conditions)) {
-                $baseQuery .= ' AND ' . implode(' AND ', $conditions);
-            }
-
-            $baseQuery .= ' ORDER BY u.full_name ASC';
-
-            $this->db->query($baseQuery);
-            foreach ($bindings as $param => $value) {
-                $this->db->bind($param, $value);
-            }
-
-            return $this->db->resultSet();
+            error_log($logMessage);
+            return $artists;
         } catch (Exception $e) {
             error_log('Error in get_artists_for_role: ' . $e->getMessage());
             return [];
