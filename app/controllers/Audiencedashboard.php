@@ -16,6 +16,7 @@ class Audiencedashboard {
         }
 
         // Check if user has audience role
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'audience') {
             header("Location: " . ROOT . "/Home");
             exit;
         }

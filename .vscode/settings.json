@@ -1,0 +1,8 @@
+{
+    "php.validate.enable": true,
+    "php.validate.run": "onSave",
+    "intelephense.diagnostics.enable": true,
+    "intelephense.diagnostics.run": "onSave",
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000
+}
