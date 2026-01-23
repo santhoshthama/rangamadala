@@ -63,7 +63,7 @@
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
-                <span>Sinhabahu</span>
+                <span><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></span>
                 <h2>Theater Bookings</h2>
             </div>
             <div class="header-controls">
@@ -77,19 +77,19 @@
         <!-- Theater Stats -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>4</h3>
+                <h3><?= isset($totalBookings) ? $totalBookings : '0' ?></h3>
                 <p>Total Bookings</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--success), #1f9b3b);">
-                <h3>3</h3>
+                <h3><?= isset($confirmedCount) ? $confirmedCount : '0' ?></h3>
                 <p>Confirmed</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--warning), #e0a800);">
-                <h3>1</h3>
+                <h3><?= isset($pendingCount) ? $pendingCount : '0' ?></h3>
                 <p>Pending</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--info), #138496);">
-                <h3>LKR 1,200,000</h3>
+                <h3>LKR <?= isset($totalCost) ? number_format($totalCost) : '0' ?></h3>
                 <p>Total Theater Cost</p>
             </div>
         </div>
@@ -98,173 +98,84 @@
         <div class="content" style="padding: 28px;">
             <h3 style="margin-bottom: 16px;">Your Theater Bookings</h3>
             
-            <!-- Booking Item 1 -->
-            <div class="card-section" style="margin-bottom: 20px; background: #f0f7f4; border-left-color: var(--success);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h3 style="color: var(--ink); margin-bottom: 4px;">
-                            <i class="fas fa-theater-masks" style="color: var(--success);"></i>
-                            Elphinstone Theatre
-                        </h3>
-                        <p style="font-size: 12px; color: var(--muted);">Premium venue with 500+ capacity</p>
-                    </div>
-                    <span class="status-badge assigned">Confirmed</span>
-                </div>
+            <?php if (isset($theaterBookings) && is_array($theaterBookings) && !empty($theaterBookings)): ?>
+                <?php foreach ($theaterBookings as $booking): ?>
+                    <?php 
+                        $statusClass = 'pending';
+                        $statusText = 'Pending Confirmation';
+                        $bgColor = '#fffbf0';
+                        $borderColor = 'var(--warning)';
+                        
+                        if (isset($booking->status)) {
+                            if ($booking->status === 'confirmed') {
+                                $statusClass = 'assigned';
+                                $statusText = 'Confirmed';
+                                $bgColor = '#f0f7f4';
+                                $borderColor = 'var(--success)';
+                            } elseif ($booking->status === 'cancelled') {
+                                $statusClass = 'rejected';
+                                $statusText = 'Cancelled';
+                                $bgColor = '#fef0f0';
+                                $borderColor = 'var(--danger)';
+                            }
+                        }
+                    ?>
+                    <div class="card-section" style="margin-bottom: 20px; background: <?= $bgColor ?>; border-left-color: <?= $borderColor ?>;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div>
+                                <h3 style="color: var(--ink); margin-bottom: 4px;">
+                                    <i class="fas fa-theater-masks" style="color: <?= $borderColor ?>>;"></i>
+                                    <?= isset($booking->theater_name) ? esc($booking->theater_name) : 'Theater' ?>
+                                </h3>
+                                <p style="font-size: 12px; color: var(--muted);"><?= isset($booking->venue) ? esc($booking->venue) : 'Venue TBD' ?></p>
+                            </div>
+                            <span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span>
+                        </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Location</p>
-                        <p style="color: var(--ink); font-weight: 600;">🏢 Colombo, Sri Lanka</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Booking Date</p>
-                        <p style="color: var(--ink); font-weight: 600;">📅 January 15, 2025</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Time</p>
-                        <p style="color: var(--ink); font-weight: 600;">🕐 7:00 PM - 10:00 PM</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Capacity</p>
-                        <p style="color: var(--ink); font-weight: 600;">👥 500 Seats</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Booking Cost</p>
-                        <p style="color: var(--brand); font-weight: 700;">LKR 300,000</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Facilities</p>
-                        <p style="color: var(--ink); font-weight: 600;">✓ Full A/C, Sound, Lighting</p>
-                    </div>
-                </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                            <div>
+                                <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Booking Date</p>
+                                <p style="color: var(--ink); font-weight: 600;">📅 <?= isset($booking->booking_date) ? date('F d, Y', strtotime($booking->booking_date)) : 'TBD' ?></p>
+                            </div>
+                            <div>
+                                <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Time</p>
+                                <p style="color: var(--ink); font-weight: 600;">🕐 <?= isset($booking->start_time) && isset($booking->end_time) ? date('g:i A', strtotime($booking->start_time)) . ' - ' . date('g:i A', strtotime($booking->end_time)) : 'TBD' ?></p>
+                            </div>
+                            <div>
+                                <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Capacity</p>
+                                <p style="color: var(--ink); font-weight: 600;">👥 <?= isset($booking->capacity) ? number_format($booking->capacity) : 'N/A' ?> Seats</p>
+                            </div>
+                            <div>
+                                <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Rental Cost</p>
+                                <p style="color: var(--brand); font-weight: 700;">LKR <?= isset($booking->rental_cost) ? number_format($booking->rental_cost) : '0' ?></p>
+                            </div>
+                        </div>
 
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="viewBookingDetails(1)">
-                        <i class="fas fa-eye"></i>
-                        View Details
-                    </button>
-                    <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="editBooking(1)">
-                        <i class="fas fa-pencil-alt"></i>
-                        Edit
-                    </button>
-                    <button class="btn btn-danger" style="padding: 8px 14px; font-size: 12px;" onclick="cancelBooking(1)">
-                        <i class="fas fa-trash"></i>
-                        Cancel
-                    </button>
-                </div>
-            </div>
-
-            <!-- Booking Item 2 -->
-            <div class="card-section" style="margin-bottom: 20px; background: #f0f7f4; border-left-color: var(--success);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h3 style="color: var(--ink); margin-bottom: 4px;">
-                            <i class="fas fa-theater-masks" style="color: var(--success);"></i>
-                            Colombo Auditorium
-                        </h3>
-                        <p style="font-size: 12px; color: var(--muted);">State-of-the-art auditorium with modern amenities</p>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="viewBookingDetails(<?= isset($booking->id) ? $booking->id : 'null' ?>)">
+                                <i class="fas fa-eye"></i>
+                                View Details
+                            </button>
+                            <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="editBooking(<?= isset($booking->id) ? $booking->id : 'null' ?>)">
+                                <i class="fas fa-pencil-alt"></i>
+                                Edit
+                            </button>
+                            <button class="btn btn-danger" style="padding: 8px 14px; font-size: 12px;" onclick="cancelBooking(<?= isset($booking->id) ? $booking->id : 'null' ?>)">
+                                <i class="fas fa-trash"></i>
+                                Cancel
+                            </button>
+                        </div>
                     </div>
-                    <span class="status-badge assigned">Confirmed</span>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Location</p>
-                        <p style="color: var(--ink); font-weight: 600;">🏢 Colombo City Center</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Booking Date</p>
-                        <p style="color: var(--ink); font-weight: 600;">📅 January 22, 2025</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Time</p>
-                        <p style="color: var(--ink); font-weight: 600;">🕐 6:30 PM - 9:30 PM</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Capacity</p>
-                        <p style="color: var(--ink); font-weight: 600;">👥 1000 Seats</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Booking Cost</p>
-                        <p style="color: var(--brand); font-weight: 700;">LKR 400,000</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Facilities</p>
-                        <p style="color: var(--ink); font-weight: 600;">✓ Premium amenities included</p>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="viewBookingDetails(2)">
-                        <i class="fas fa-eye"></i>
-                        View Details
-                    </button>
-                    <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="editBooking(2)">
-                        <i class="fas fa-pencil-alt"></i>
-                        Edit
-                    </button>
-                    <button class="btn btn-danger" style="padding: 8px 14px; font-size: 12px;" onclick="cancelBooking(2)">
-                        <i class="fas fa-trash"></i>
-                        Cancel
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div style="text-align: center; padding: 60px 30px; color: var(--muted);">
+                    <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                    <p>No theater bookings yet. Book a theater to start planning your event.</p>
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="openBookTheaterModal()">
+                        <i class="fas fa-plus"></i> Book Theater
                     </button>
                 </div>
-            </div>
-
-            <!-- Booking Item 3 - Pending -->
-            <div class="card-section" style="background: #fffbf0; border-left-color: var(--warning);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h3 style="color: var(--ink); margin-bottom: 4px;">
-                            <i class="fas fa-theater-masks" style="color: var(--warning);"></i>
-                            Galle Face Hotel Theatre
-                        </h3>
-                        <p style="font-size: 12px; color: var(--muted);">Historic heritage venue with iconic charm</p>
-                    </div>
-                    <span class="status-badge pending">Pending Confirmation</span>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Location</p>
-                        <p style="color: var(--ink); font-weight: 600;">🏢 Colombo, Beachfront</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Booking Date</p>
-                        <p style="color: var(--ink); font-weight: 600;">📅 February 1, 2025</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Time</p>
-                        <p style="color: var(--ink); font-weight: 600;">🕐 7:30 PM - 10:30 PM</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Capacity</p>
-                        <p style="color: var(--ink); font-weight: 600;">👥 300 Seats</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Requested Cost</p>
-                        <p style="color: var(--brand); font-weight: 700;">LKR 500,000</p>
-                    </div>
-                    <div>
-                        <p style="font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Request Sent</p>
-                        <p style="color: var(--ink); font-weight: 600;">⏱️ Jan 12, 2025</p>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="viewBookingDetails(3)">
-                        <i class="fas fa-eye"></i>
-                        View Details
-                    </button>
-                    <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="editBooking(3)">
-                        <i class="fas fa-pencil-alt"></i>
-                        Edit
-                    </button>
-                    <button class="btn btn-danger" style="padding: 8px 14px; font-size: 12px;" onclick="cancelBooking(3)">
-                        <i class="fas fa-trash"></i>
-                        Cancel
-                    </button>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
     </main>
 

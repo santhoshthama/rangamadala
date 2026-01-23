@@ -6,8 +6,6 @@ class Artistdashboard
 
     public function index()
     {
-        // error_log("AWA AWA BADU AWA");
-        error_log(print_r($_SESSION, true));    
         // Check if user is logged in and is an artist
         if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
             header("Location: " . ROOT . "/login");

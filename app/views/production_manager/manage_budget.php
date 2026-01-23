@@ -63,7 +63,7 @@
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
-                <span>Sinhabahu</span>
+                <span><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></span>
                 <h2>Budget Management</h2>
             </div>
             <div class="header-controls">
@@ -81,19 +81,19 @@
         <!-- Budget Summary Cards -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>LKR 800,000</h3>
+                <h3>LKR <?= isset($totalBudget) ? number_format($totalBudget) : '0' ?></h3>
                 <p>Total Allocated</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--success), #1f9b3b);">
-                <h3>LKR 336,000</h3>
-                <p>Total Spent (42%)</p>
+                <h3>LKR <?= isset($totalSpent) ? number_format($totalSpent) : '0' ?> (<?= isset($percentSpent) ? $percentSpent : '0' ?>%)</h3>
+                <p>Total Spent</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--warning), #e0a800);">
-                <h3>LKR 464,000</h3>
+                <h3>LKR <?= isset($remainingBudget) ? number_format($remainingBudget) : '0' ?></h3>
                 <p>Remaining Balance</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--info), #138496);">
-                <h3>24</h3>
+                <h3><?= isset($budgetItems) && is_array($budgetItems) ? count($budgetItems) : '0' ?></h3>
                 <p>Total Budget Items</p>
             </div>
         </div>
@@ -111,24 +111,34 @@
                 <!-- Category Breakdown -->
                 <div>
                     <div style="background: #f8f9fa; border-radius: 12px; padding: 16px;">
-                        <ul style="list-style: none; padding: 0;">
-                            <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
-                                <span><strong>Venue Rental</strong><br><small style="color: var(--muted);">40%</small></span>
-                                <span style="font-weight: 700; color: var(--brand);">LKR 320,000</span>
-                            </li>
-                            <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
-                                <span><strong>Technical Services</strong><br><small style="color: var(--muted);">25%</small></span>
-                                <span style="font-weight: 700; color: var(--brand);">LKR 200,000</span>
-                            </li>
-                            <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
-                                <span><strong>Costumes & Makeup</strong><br><small style="color: var(--muted);">20%</small></span>
-                                <span style="font-weight: 700; color: var(--brand);">LKR 160,000</span>
-                            </li>
-                            <li style="padding: 10px 0; display: flex; justify-content: space-between;">
-                                <span><strong>Other Expenses</strong><br><small style="color: var(--muted);">15%</small></span>
-                                <span style="font-weight: 700; color: var(--brand);">LKR 120,000</span>
-                            </li>
-                        </ul>
+                        <?php if (isset($categorySummary) && is_array($categorySummary) && !empty($categorySummary)): ?>
+                            <ul style="list-style: none; padding: 0;">
+                                <?php 
+                                $categoryCount = 0;
+                                foreach ($categorySummary as $catData): 
+                                    $categoryCount++;
+                                    $isLast = $categoryCount === count($categorySummary);
+                                    $categoryName = isset($catData->category) ? ucfirst($catData->category) : 'Unknown';
+                                    $categoryTotal = isset($catData->total_allocated) ? floatval($catData->total_allocated) : 0;
+                                    $percentage = 0;
+                                    if ($totalBudget > 0) {
+                                        $percentage = round(($categoryTotal / $totalBudget) * 100);
+                                    }
+                                ?>
+                                    <li style="padding: 10px 0; <?= $isLast ? '' : 'border-bottom: 1px solid #eee;' ?> display: flex; justify-content: space-between;">
+                                        <span>
+                                            <strong><?= esc($categoryName) ?></strong><br>
+                                            <small style="color: var(--muted);"><?= $percentage ?>%</small>
+                                        </span>
+                                        <span style="font-weight: 700; color: var(--brand);">LKR <?= number_format($categoryTotal) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php else: ?>
+                            <p style="text-align: center; color: var(--muted); padding: 20px;">
+                                No budget categories yet
+                            </p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -143,61 +153,55 @@
                         <tr style="background: #f8f9fa; border-bottom: 2px solid var(--border-strong);">
                             <th style="padding: 14px; text-align: left; font-weight: 700;">Item Name</th>
                             <th style="padding: 14px; text-align: left; font-weight: 700;">Category</th>
-                            <th style="padding: 14px; text-align: right; font-weight: 700;">Amount</th>
+                            <th style="padding: 14px; text-align: right; font-weight: 700;">Allocated</th>
+                            <th style="padding: 14px; text-align: right; font-weight: 700;">Spent</th>
                             <th style="padding: 14px; text-align: left; font-weight: 700;">Status</th>
                             <th style="padding: 14px; text-align: center; font-weight: 700;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="budgetItemsTable">
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <td style="padding: 14px;">Elphinstone Theatre Rental</td>
-                            <td style="padding: 14px;">Venue Rental</td>
-                            <td style="padding: 14px; text-align: right; font-weight: 700;">LKR 250,000</td>
-                            <td style="padding: 14px;"><span class="status-badge assigned">Paid</span></td>
-                            <td style="padding: 14px; text-align: center;">
-                                <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="editBudgetItem(1)">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                                <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(1)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <td style="padding: 14px;">Sound System Setup</td>
-                            <td style="padding: 14px;">Technical Services</td>
-                            <td style="padding: 14px; text-align: right; font-weight: 700;">LKR 120,000</td>
-                            <td style="padding: 14px;"><span class="status-badge pending">Pending Payment</span></td>
-                            <td style="padding: 14px; text-align: center;">
-                                <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="editBudgetItem(2)">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                                <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(2)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <td style="padding: 14px;">Professional Lighting</td>
-                            <td style="padding: 14px;">Technical Services</td>
-                            <td style="padding: 14px; text-align: right; font-weight: 700;">LKR 80,000</td>
-                            <td style="padding: 14px;"><span class="status-badge assigned">Paid</span></td>
-                            <td style="padding: 14px; text-align: center;">
-                                <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="editBudgetItem(3)">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                                <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(3)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <td style="padding: 14px;">Costume & Makeup</td>
-                            <td style="padding: 14px;">Costumes & Makeup</td>
-                            <td style="padding: 14px; text-align: right; font-weight: 700;">LKR 160,000</td>
-                            <td style="padding: 14px;"><span class="status-badge pending">Pending Payment</span></td>
-                            <td style="padding: 14px; text-align: center;">
-                                <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="editBudgetItem(4)">
+                        <?php if (isset($budgetItems) && is_array($budgetItems) && !empty($budgetItems)): ?>
+                            <?php foreach ($budgetItems as $item): ?>
+                                <?php 
+                                    $statusClass = 'pending';
+                                    $statusText = ucfirst($item->status ?? 'pending');
+                                    
+                                    if (isset($item->status)) {
+                                        if ($item->status === 'paid') {
+                                            $statusClass = 'assigned';
+                                        } elseif ($item->status === 'approved') {
+                                            $statusClass = 'assigned';
+                                        }
+                                    }
+                                ?>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 14px;"><?= isset($item->item_name) ? esc($item->item_name) : 'N/A' ?></td>
+                                    <td style="padding: 14px;"><?= isset($item->category) ? ucfirst($item->category) : 'N/A' ?></td>
+                                    <td style="padding: 14px; text-align: right; font-weight: 700;">LKR <?= isset($item->allocated_amount) ? number_format($item->allocated_amount) : '0' ?></td>
+                                    <td style="padding: 14px; text-align: right; font-weight: 700;">LKR <?= isset($item->spent_amount) ? number_format($item->spent_amount) : '0' ?></td>
+                                    <td style="padding: 14px;"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
+                                    <td style="padding: 14px; text-align: center;">
+                                        <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="editBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td colspan="6" style="padding: 30px; text-align: center; color: var(--muted);">
+                                    <i class="fas fa-file-invoice-dollar" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
+                                    <p>No budget items yet. Add your first budget item to get started.</p>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>>
                                     <i class="fas fa-pencil-alt"></i>
                                 </button>
                                 <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(4)">

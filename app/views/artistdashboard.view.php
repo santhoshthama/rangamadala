@@ -700,7 +700,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                         </div>
                                     </div>
                                     <div class="artist-footer">
-                                        <button class="btn btn-success" style="flex: 1;" onclick="window.location.href='<?=ROOT?>/productionmanager/dashboard?drama_id=<?=$drama->id?>'">
+                                        <button class="btn btn-success" style="flex: 1;" onclick="window.location.href='<?=ROOT?>/production_manager/dashboard?drama_id=<?=$drama->id?>'">
                                             <i class="fas fa-tasks"></i> Manage
                                         </button>
                                     </div>
