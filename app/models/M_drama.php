@@ -191,9 +191,22 @@ class M_drama {
     }
 
     public function get_dramas_by_manager($user_id) {
-        // TODO: Implement drama_managers table and functionality
-        // For now, return empty array as this feature is not yet implemented
-        return [];
+        try {
+            // Get dramas where user is assigned as Production Manager
+            $this->db->query("SELECT d.*, dma.assigned_at, 'active' as status,
+                             creator.full_name as creator_name
+                             FROM drama_manager_assignments dma
+                             INNER JOIN dramas d ON dma.drama_id = d.id
+                             LEFT JOIN users creator ON d.creator_artist_id = creator.id
+                             WHERE dma.manager_artist_id = :user_id 
+                             AND dma.status = 'active'
+                             ORDER BY dma.assigned_at DESC");
+            $this->db->bind(':user_id', $user_id);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in get_dramas_by_manager: " . $e->getMessage());
+            return [];
+        }
     }
 
     public function get_dramas_by_actor($user_id) {

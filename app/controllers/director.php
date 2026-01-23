@@ -6,12 +6,14 @@ class Director{
     protected $dramaModel;
     protected $roleModel;
     protected $artistModel;
+    protected $pmModel;
 
     public function __construct()
     {
         $this->dramaModel = $this->getModel('M_drama');
         $this->roleModel = $this->getModel('M_role');
         $this->artistModel = $this->getModel('M_artist');
+        $this->pmModel = $this->getModel('M_production_manager');
     }
 
     public function index()
@@ -291,7 +293,122 @@ class Director{
 
     public function assign_managers()
     {
-        $this->renderDramaView('assign_managers');
+        $this->renderDramaView('assign_managers', [], function ($drama) {
+            // Fetch current manager and pending requests for this drama
+            $currentManager = $this->pmModel ? $this->pmModel->getAssignedManager((int)$drama->id) : null;
+            $pendingRequests = $this->pmModel ? $this->pmModel->getRequestsByDrama((int)$drama->id, 'pending') : [];
+
+            return [
+                'currentManager' => $currentManager,
+                'pendingRequests' => $pendingRequests,
+            ];
+        });
+    }
+
+    public function search_managers()
+    {
+        $this->renderDramaView('search_managers', [], function ($drama) {
+            $search = trim($_GET['search'] ?? '');
+            $director_id = $_SESSION['user_id'];
+
+            // Block searching/requests if a manager is already assigned
+            $currentManager = $this->pmModel ? $this->pmModel->getAssignedManager((int)$drama->id) : null;
+            if ($currentManager) {
+                $_SESSION['message'] = 'Remove the current Production Manager before sending new requests.';
+                $_SESSION['message_type'] = 'error';
+                header("Location: " . ROOT . "/director/assign_managers?drama_id=" . $drama->id);
+                exit;
+            }
+            
+            // Search for available managers (excluding drama director and current PM)
+            // This always fetches from database - with or without search term
+            $availableManagers = $this->pmModel ? 
+                $this->pmModel->searchAvailableManagers((int)$drama->id, (int)$director_id, $search) : [];
+            
+            return [
+                'availableManagers' => $availableManagers,
+                'searchTerm' => $search,
+            ];
+        });
+    }
+
+    public function send_manager_request()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+        
+        if (!$this->pmModel) {
+            $_SESSION['message'] = 'Production Manager system is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/director/assign_managers?drama_id=" . $drama->id);
+            exit;
+        }
+
+        $artist_id = isset($_POST['artist_id']) ? (int)$_POST['artist_id'] : 0;
+        $message = $_POST['message'] ?? null;
+        $director_id = $_SESSION['user_id'];
+
+        if (!$artist_id) {
+            $_SESSION['message'] = 'Invalid artist selection.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/director/search_managers?drama_id=" . $drama->id);
+            exit;
+        }
+
+        // Ensure director is not inviting themselves
+        if ($artist_id === $director_id) {
+            $_SESSION['message'] = 'You cannot invite yourself as Production Manager.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/director/search_managers?drama_id=" . $drama->id);
+            exit;
+        }
+
+        // Prevent new requests if a PM is already assigned
+        $currentManager = $this->pmModel ? $this->pmModel->getAssignedManager((int)$drama->id) : null;
+        if ($currentManager) {
+            $_SESSION['message'] = 'A Production Manager is already assigned. Remove them before sending a new request.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/director/assign_managers?drama_id=" . $drama->id);
+            exit;
+        }
+
+        $result = $this->pmModel->createRequest((int)$drama->id, $artist_id, $director_id, $message);
+
+        $_SESSION['message'] = $result['message'];
+        $_SESSION['message_type'] = $result['success'] ? 'success' : 'error';
+        
+        header("Location: " . ROOT . "/director/assign_managers?drama_id=" . $drama->id);
+        exit;
+    }
+
+    public function remove_manager()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+        
+        if (!$this->pmModel) {
+            $_SESSION['message'] = 'Production Manager system is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/director/assign_managers?drama_id=" . $drama->id);
+            exit;
+        }
+
+        $director_id = $_SESSION['user_id'];
+        $result = $this->pmModel->removeManager((int)$drama->id, $director_id);
+
+        $_SESSION['message'] = $result['message'];
+        $_SESSION['message_type'] = $result['success'] ? 'success' : 'error';
+        
+        header("Location: " . ROOT . "/director/assign_managers?drama_id=" . $drama->id);
+        exit;
     }
 
     public function schedule_management()
