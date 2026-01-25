@@ -870,7 +870,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
                                         <div>
                                             <h3 style="color: var(--ink); margin-bottom: 8px;">
-                                                <i class="fas fa-theater-masks"></i> <?= esc($request->drama_title) ?>
+                                                <i class="fas fa-theater-masks"></i> <?= esc($request->drama_name) ?>
                                             </h3>
                                             <p style="color: var(--muted); font-size: 13px;">
                                                 <strong>Director:</strong> <?= esc($request->director_name) ?>
@@ -908,7 +908,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                         <span class="role-info-label">
                                             <i class="fas fa-calendar"></i> Requested:
                                         </span>
-                                        <span class="role-info-value"><?= date('M d, Y', strtotime($request->request_date)) ?></span>
+                                        <span class="role-info-value"><?= isset($request->requested_at) && $request->requested_at ? date('M d, Y', strtotime($request->requested_at)) : 'N/A' ?></span>
                                     </div>
                                     
                                     <div style="display: flex; gap: 10px; margin-top: 16px;">

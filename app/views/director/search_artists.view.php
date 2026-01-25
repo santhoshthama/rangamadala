@@ -50,15 +50,23 @@ $roleName = $role->role_name ?? 'Role';
         <div class="logo"><h2>🎭</h2></div>
         <ul class="menu">
             <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-users"></i><span>Artist Roles</span></a></li>
-            <li class="active"><a href="#"><i class="fas fa-user-search"></i><span>Find Artists</span></a></li>
+<li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-users"></i><span>Artist Roles</span></a></li>
+            <li><a href="#"><i class="fas fa-user-search"></i><span>Find Artists</span></a></li>
             <li><a href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>"><i class="fas fa-mask"></i><span><?= esc($roleName) ?></span></a></li>
             <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
         </ul>
     </aside>
 
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>" class="back-button"><i class="fas fa-arrow-left"></i>Back to Role</a>
+        <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="fas fa-arrow-left"></i>Back to Manage Roles</a>
+
+        <?php if (isset($_SESSION['message'])): ?>
+            <div class="message <?= $_SESSION['message_type'] ?? 'info' ?>" style="padding: 16px; border-radius: 12px; margin-bottom: 20px; background: <?= ($_SESSION['message_type'] ?? '') === 'success' ? '#d4edda' : (($_SESSION['message_type'] ?? '') === 'error' ? '#f8d7da' : '#d1ecf1') ?>; color: <?= ($_SESSION['message_type'] ?? '') === 'success' ? '#155724' : (($_SESSION['message_type'] ?? '') === 'error' ? '#721c24' : '#0c5460') ?>; border: 1px solid <?= ($_SESSION['message_type'] ?? '') === 'success' ? '#c3e6cb' : (($_SESSION['message_type'] ?? '') === 'error' ? '#f5c6cb' : '#bee5eb') ?>;">
+                <i class="fas fa-<?= ($_SESSION['message_type'] ?? '') === 'success' ? 'check-circle' : (($_SESSION['message_type'] ?? '') === 'error' ? 'exclamation-circle' : 'info-circle') ?>"></i>
+                <?= esc($_SESSION['message']) ?>
+            </div>
+            <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+        <?php endif; ?>
 
         <div class="header--wrapper">
             <div class="header--title">
@@ -67,6 +75,18 @@ $roleName = $role->role_name ?? 'Role';
                 <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">Browse artists, review experience, and send collaboration requests.</p>
             </div>
         </div>
+
+        <?php 
+        $isRoleFull = isset($role->positions_filled, $role->positions_available) && 
+                      (int)$role->positions_filled >= (int)$role->positions_available;
+        ?>
+        <?php if ($isRoleFull): ?>
+            <div style="padding: 16px 20px; margin-bottom: 20px; background: rgba(244,67,54,0.1); border-left: 4px solid #f44336; border-radius: 8px; color: #721c24;">
+                <i class="fas fa-exclamation-triangle" style="color: #d32f2f; margin-right: 10px;"></i>
+                <strong>All positions filled for this role.</strong> You cannot send new requests until you remove a currently assigned artist. 
+                <a href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>" style="color: #d32f2f; text-decoration: underline; margin-left: 8px;">View assigned artists</a>
+            </div>
+        <?php endif; ?>
 
         <section class="search-card">
             <form class="search-form" method="get" action="<?= ROOT ?>/director/search_artists">
@@ -137,6 +157,8 @@ $roleName = $role->role_name ?? 'Role';
                                 <button type="button" class="btn btn-secondary" disabled><i class="fas fa-lock"></i>Assigned</button>
                             <?php elseif ($hasPendingRequest): ?>
                                 <button type="button" class="btn btn-secondary" disabled><i class="fas fa-hourglass-half"></i>Awaiting reply</button>
+                            <?php elseif ($isRoleFull): ?>
+                                <button type="button" class="btn btn-secondary" disabled title="All positions filled"><i class="fas fa-ban"></i>Role Full</button>
                             <?php else: ?>
                                 <form class="js-role-action" data-action="request" action="<?= ROOT ?>/director/send_role_request?drama_id=<?= esc($dramaId) ?>" method="POST" style="margin: 0;">
                                     <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">

@@ -38,14 +38,26 @@ class Director{
             $roles = $this->roleModel ? $this->roleModel->getRolesByDrama((int)$drama->id) : [];
             $stats = $this->roleModel ? $this->roleModel->getRoleStats((int)$drama->id) : null;
             $pendingApplications = $this->roleModel ? $this->roleModel->getApplicationsByDrama((int)$drama->id, 'pending') : [];
-            $pendingRequests = $this->roleModel ? $this->roleModel->getRoleRequestsByDrama((int)$drama->id, 'pending') : [];
+            
+            // Get all requests without status filter to see everything
+            $allRequests = $this->roleModel ? $this->roleModel->getRoleRequestsByDrama((int)$drama->id) : [];
+            error_log("Director manage_roles - Total requests for drama {$drama->id}: " . count($allRequests));
+            
+            // Filter to pending and interview status
+            $pendingRequests = array_filter($allRequests, function($req) {
+                $status = strtolower($req->status ?? '');
+                error_log("Request ID {$req->id} - Status: {$status}, Artist: {$req->artist_name}, Role: {$req->role_name}");
+                return in_array($status, ['pending', 'interview']);
+            });
+            error_log("Filtered pending requests: " . count($pendingRequests));
+            
             $publishedRoles = $this->roleModel ? $this->roleModel->getPublishedRolesByDrama((int)$drama->id) : [];
 
             return [
                 'roles' => $roles,
                 'roleStats' => $stats,
                 'pendingApplications' => $pendingApplications,
-                'pendingRequests' => $pendingRequests,
+                'pendingRequests' => array_values($pendingRequests), // Re-index array
                 'publishedRoles' => $publishedRoles,
             ];
         });

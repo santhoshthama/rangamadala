@@ -120,7 +120,12 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                     </div>
                 </div>
                 <div class="actions-inline">
-                    <a class="btn btn-secondary" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>"><i class="fas fa-user-search"></i>Find Artists</a>
+                    <?php $isRoleFull = (int)($role->positions_filled ?? 0) >= (int)($role->positions_available ?? 0); ?>
+                    <?php if ($isRoleFull): ?>
+                        <button class="btn btn-secondary" disabled title="All positions filled"><i class="fas fa-user-slash"></i>Role Full</button>
+                    <?php else: ?>
+                        <a class="btn btn-secondary" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>"><i class="fas fa-user-search"></i>Find Artists</a>
+                    <?php endif; ?>
                     <?php if ((int)($role->is_published ?? 0) === 1): ?>
                         <form class="js-role-action" data-action="unpublish" action="<?= ROOT ?>/director/unpublish_vacancy?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Unpublish this vacancy?">
                             <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
@@ -142,6 +147,12 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                 <div style="margin-top: 16px;">
                     <strong>Requirements:</strong>
                     <div style="margin-top: 6px; white-space: pre-wrap;"><?= nl2br(esc($role->requirements)) ?></div>
+                </div>
+            <?php endif; ?>
+            <?php if ($isRoleFull): ?>
+                <div style="margin-top: 16px; padding: 12px 16px; background: rgba(255,193,7,0.1); border-left: 4px solid #ffc107; border-radius: 8px; font-size: 14px;">
+                    <i class="fas fa-info-circle" style="color: #f57c00; margin-right: 8px;"></i>
+                    <strong>All positions filled.</strong> To assign a new artist, you must first remove a currently assigned artist from this role.
                 </div>
             <?php endif; ?>
         </section>
@@ -169,8 +180,8 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                     <?php if (isset($updateErrors['role_description'])): ?><div class="form-error"><?= esc($updateErrors['role_description']) ?></div><?php endif; ?>
                 </div>
                 <div class="form-group">
-                    <label for="edit_salary">Salary (LKR)</label>
-                    <input type="number" step="0.01" min="0" id="edit_salary" name="salary" class="form-control" value="<?= esc($updateValues['salary']) ?>">
+                    <label for="edit_salary">Salary (LKR)<?php if ($isRoleFull): ?> <span style="color: var(--muted); font-weight: normal; font-size: 12px;">(Locked - role filled)</span><?php endif; ?></label>
+                    <input type="number" step="0.01" min="0" id="edit_salary" name="salary" class="form-control" value="<?= esc($updateValues['salary']) ?>" <?= $isRoleFull ? 'disabled' : '' ?>>
                     <?php if (isset($updateErrors['salary'])): ?><div class="form-error"><?= esc($updateErrors['salary']) ?></div><?php endif; ?>
                 </div>
                 <div class="form-group">
@@ -183,13 +194,16 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                     <textarea id="edit_requirements" name="requirements" class="form-control" rows="3"><?= esc($updateValues['requirements']) ?></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="edit_status">Status</label>
-                    <select id="edit_status" name="status" class="form-control" required>
+                    <label for="edit_status">Status<?php if ($isRoleFull): ?> <span style="color: var(--muted); font-weight: normal; font-size: 12px;">(Locked - role filled)</span><?php endif; ?></label>
+                    <select id="edit_status" name="status" class="form-control" required <?= $isRoleFull ? 'disabled' : '' ?>>
                         <?php foreach ($roleStatuses as $statusKey => $statusLabel): ?>
                             <option value="<?= esc($statusKey) ?>" <?= $updateValues['status'] === $statusKey ? 'selected' : '' ?>><?= esc($statusLabel) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <?php if (isset($updateErrors['status'])): ?><div class="form-error"><?= esc($updateErrors['status']) ?></div><?php endif; ?>
+                    <?php if ($isRoleFull): ?>
+                        <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Status cannot be changed while artists are assigned to this role.</div>
+                    <?php endif; ?>
                 </div>
                 <div style="grid-column: 1 / -1;">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>Save Changes</button>
@@ -199,17 +213,38 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
 
         <section class="card">
             <h3 style="margin-top: 0;">Assigned Artists (<?= count($assignments) ?>)</h3>
+            <?php if ($isRoleFull): ?>
+                <div style="padding: 10px 14px; margin-bottom: 16px; background: rgba(76,175,80,0.1); border-left: 4px solid #4caf50; border-radius: 6px; font-size: 13px; color: #256029;">
+                    <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+                    <strong>All positions filled.</strong> To assign different artists, remove one of the current assignments first.
+                </div>
+            <?php endif; ?>
             <?php if (empty($assignments)): ?>
-                <div class="list-item" style="text-align: center; color: var(--muted);">No artists assigned yet.</div>
+                <div class="list-item" style="text-align: center; color: var(--muted);">No artists assigned yet. Use "Find Artists" to send requests.</div>
             <?php else: ?>
                 <?php foreach ($assignments as $assignment): ?>
                     <div class="list-item">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong><?= esc($assignment->artist_name ?? 'Artist') ?></strong>
-                            <span class="badge badge-open">Active</span>
-                        </div>
-                        <div style="font-size: 13px; color: var(--muted); margin-top: 6px;">
-                            Assigned on <?= esc(date('Y-m-d', strtotime($assignment->assigned_at ?? 'now'))) ?>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <strong style="font-size: 16px;"><?= esc($assignment->artist_name ?? 'Artist') ?></strong>
+                                    <span class="badge badge-open">Active</span>
+                                </div>
+                                <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+                                    <?php if (!empty($assignment->artist_email)): ?>
+                                        <div><i class="fas fa-envelope" style="width: 16px; margin-right: 6px;"></i><?= esc($assignment->artist_email) ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($assignment->artist_phone)): ?>
+                                        <div><i class="fas fa-phone" style="width: 16px; margin-right: 6px;"></i><?= esc($assignment->artist_phone) ?></div>
+                                    <?php endif; ?>
+                                    <div><i class="fas fa-calendar" style="width: 16px; margin-right: 6px;"></i>Assigned on <?= esc(date('M d, Y', strtotime($assignment->assigned_at ?? 'now'))) ?></div>
+                                </div>
+                            </div>
+                            <form action="<?= ROOT ?>/director/remove_assignment?drama_id=<?= esc($dramaId) ?>" method="POST" class="js-role-action" data-action="remove" data-confirm="Remove <?= esc($assignment->artist_name ?? 'this artist') ?> from this role?">
+                                <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
+                                <input type="hidden" name="artist_id" value="<?= esc($assignment->artist_id ?? 0) ?>">
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-user-times"></i>Remove</button>
+                            </form>
                         </div>
                     </div>
                 <?php endforeach; ?>

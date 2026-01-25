@@ -159,9 +159,7 @@ class M_role {
         try {
             $this->db->query("SELECT a.*, 
                              u.full_name as artist_name,
-                             u.email as artist_email,
-                             u.profile_image as artist_image,
-                             u.years_experience
+                             u.email as artist_email
                              FROM role_applications a
                              INNER JOIN users u ON a.artist_id = u.id
                              WHERE a.role_id = :role_id
@@ -194,8 +192,7 @@ class M_role {
             $this->db->query("SELECT a.*, 
                              r.role_name,
                              u.full_name as artist_name,
-                             u.email as artist_email,
-                             u.profile_image as artist_image
+                             u.email as artist_email
                              FROM role_applications a
                              INNER JOIN drama_roles r ON a.role_id = r.id
                              INNER JOIN users u ON a.artist_id = u.id
@@ -215,7 +212,7 @@ class M_role {
             $this->db->query("SELECT a.*, 
                              u.full_name as artist_name,
                              u.email as artist_email,
-                             u.profile_image as artist_image
+                             u.phone as artist_phone
                              FROM role_assignments a
                              INNER JOIN users u ON a.artist_id = u.id
                              WHERE a.role_id = :role_id AND a.status = 'active'
@@ -382,6 +379,7 @@ class M_role {
 
     public function createRoleRequest($role_id, $artist_id, $director_id, ?string $note = null, ?string $interviewAt = null) {
         try {
+            error_log("M_role::createRoleRequest - role_id: $role_id, artist_id: $artist_id, director_id: $director_id");
             $this->db->beginTransaction();
 
             $this->db->query("SELECT id, status FROM role_requests 
@@ -391,6 +389,7 @@ class M_role {
             $existing = $this->db->single();
 
             if ($existing) {
+                error_log("M_role::createRoleRequest - Updating existing request ID: {$existing->id}");
                 $this->db->query("UPDATE role_requests SET 
                     status = 'pending',
                     note = :note,
@@ -405,9 +404,11 @@ class M_role {
                 $this->db->execute();
 
                 $this->db->commit();
+                error_log("M_role::createRoleRequest - Successfully updated request ID: {$existing->id}");
                 return $existing->id;
             }
 
+            error_log("M_role::createRoleRequest - Creating new request");
             $this->db->query("INSERT INTO role_requests 
                 (role_id, artist_id, director_id, status, note, interview_at)
                 VALUES (:role_id, :artist_id, :director_id, 'pending', :note, :interview_at)");
@@ -421,6 +422,7 @@ class M_role {
 
             $requestId = $this->db->lastInsertId();
             $this->db->commit();
+            error_log("M_role::createRoleRequest - Successfully created request ID: $requestId");
             return $requestId;
         } catch (Exception $e) {
             $this->db->rollBack();
@@ -431,9 +433,10 @@ class M_role {
 
     public function getRoleRequestsByDrama($drama_id, ?string $status = null) {
         try {
+            error_log("M_role::getRoleRequestsByDrama - drama_id: $drama_id, status filter: " . ($status ?? 'none'));
+            
             $query = "SELECT rr.*, r.role_name, r.role_type, r.status as role_status,
                              u.full_name as artist_name, u.email as artist_email, u.phone as artist_phone,
-                             u.profile_image as artist_image, u.years_experience,
                              du.full_name as director_name
                       FROM role_requests rr
                       INNER JOIN drama_roles r ON rr.role_id = r.id
@@ -453,7 +456,16 @@ class M_role {
                 $this->db->bind(':status', $status);
             }
 
-            return $this->db->resultSet();
+            $results = $this->db->resultSet();
+            error_log("M_role::getRoleRequestsByDrama - Found " . count($results) . " requests");
+            
+            if (!empty($results)) {
+                foreach ($results as $req) {
+                    error_log("  Request ID: {$req->id}, Status: {$req->status}, Artist: {$req->artist_name}, Role: {$req->role_name}");
+                }
+            }
+            
+            return $results;
         } catch (Exception $e) {
             error_log("Error in getRoleRequestsByDrama: " . $e->getMessage());
             return [];
@@ -463,9 +475,10 @@ class M_role {
     public function getRoleRequestsByRole($role_id, ?string $status = null) {
         try {
             $query = "SELECT rr.*, u.full_name as artist_name, u.email as artist_email, u.phone as artist_phone,
-                             u.profile_image as artist_image, u.years_experience
+                             du.full_name as director_name
                       FROM role_requests rr
                       INNER JOIN users u ON rr.artist_id = u.id
+                      INNER JOIN users du ON rr.director_id = du.id
                       WHERE rr.role_id = :role_id";
 
             if ($status !== null) {
