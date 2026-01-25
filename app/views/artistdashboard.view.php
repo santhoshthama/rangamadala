@@ -652,7 +652,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                         </div>
                                     </div>
                                     <div class="artist-footer">
-                                        <button class="btn btn-primary" style="flex: 1;" onclick="window.location.href='<?=ROOT?>/director/dashboard?drama_id=<?=$drama->id?>'">
+                                        <button class="btn btn-primary" style="flex: 1;" onclick="handleDirectorManage(<?=$drama->id?>)">
                                             <i class="fas fa-tachometer-alt"></i> Manage
                                         </button>
                                     </div>
@@ -700,7 +700,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                         </div>
                                     </div>
                                     <div class="artist-footer">
-                                        <button class="btn btn-success" style="flex: 1;" onclick="window.location.href='<?=ROOT?>/production_manager/dashboard?drama_id=<?=$drama->id?>'">
+                                        <button class="btn btn-success" style="flex: 1;" onclick="handlePMManage(<?=$drama->id?>)">
                                             <i class="fas fa-tasks"></i> Manage
                                         </button>
                                     </div>
@@ -953,6 +953,18 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
             // Show the selected tab and mark button as active
             document.getElementById(tabName).classList.add('active');
             evt.currentTarget.classList.add('active');
+        }
+
+        function handleDirectorManage(dramaId) {
+            const url = '<?=ROOT?>/director/dashboard?drama_id=' + dramaId;
+            console.log('Director manage - Navigating to:', url);
+            window.location.href = url;
+        }
+
+        function handlePMManage(dramaId) {
+            const url = '<?=ROOT?>/Production_manager/dashboard?drama_id=' + dramaId;
+            console.log('PM manage - Navigating to:', url);
+            window.location.href = url;
         }
     </script>
 </body>
