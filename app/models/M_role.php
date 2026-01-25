@@ -230,12 +230,21 @@ class M_role {
         try {
             $this->db->beginTransaction();
 
-            // Get application details
-            $this->db->query("SELECT * FROM role_applications WHERE id = :id");
+            // Get application details with role info
+            $this->db->query("SELECT a.*, r.positions_available, r.positions_filled 
+                              FROM role_applications a
+                              INNER JOIN drama_roles r ON a.role_id = r.id
+                              WHERE a.id = :id FOR UPDATE");
             $this->db->bind(':id', $application_id);
             $app = $this->db->single();
 
             if (!$app) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            // Check if role is full
+            if ((int)$app->positions_filled >= (int)$app->positions_available) {
                 $this->db->rollBack();
                 return false;
             }
@@ -264,12 +273,43 @@ class M_role {
             $this->db->bind(':role_id', $app->role_id);
             $this->db->execute();
 
-            // Check if role is now filled
+            // Check if role is now filled and update status
             $this->db->query("UPDATE drama_roles 
                 SET status = 'filled' 
                 WHERE id = :role_id AND positions_filled >= positions_available");
             $this->db->bind(':role_id', $app->role_id);
             $this->db->execute();
+
+            // Auto-cancel pending requests if role is now full
+            $newPositionsFilled = (int)$app->positions_filled + 1;
+            $positionsAvailable = (int)$app->positions_available;
+            
+            if ($newPositionsFilled >= $positionsAvailable) {
+                error_log("Role {$app->role_id} is now full from application acceptance. Auto-cancelling pending requests.");
+                
+                // Cancel pending role requests
+                $this->db->query("UPDATE role_requests 
+                                  SET status = 'cancelled', responded_at = NOW()
+                                  WHERE role_id = :role_id 
+                                  AND status IN ('pending', 'interview')");
+                $this->db->bind(':role_id', $app->role_id);
+                $requestsAffected = $this->db->execute();
+                
+                // Reject other pending applications
+                $this->db->query("UPDATE role_applications 
+                                  SET status = 'rejected', reviewed_at = NOW(), reviewed_by = :reviewed_by
+                                  WHERE role_id = :role_id 
+                                  AND status = 'pending'
+                                  AND id != :current_app_id");
+                $this->db->bind(':role_id', $app->role_id);
+                $this->db->bind(':reviewed_by', $reviewed_by);
+                $this->db->bind(':current_app_id', $application_id);
+                $appsAffected = $this->db->execute();
+                
+                if ($requestsAffected || $appsAffected) {
+                    error_log("Auto-cancelled {$requestsAffected} request(s) and rejected {$appsAffected} application(s) for filled role {$app->role_id}");
+                }
+            }
 
             $this->db->commit();
             return true;
@@ -559,6 +599,7 @@ class M_role {
                 return false;
             }
 
+            // Create assignment
             $this->db->query("INSERT INTO role_assignments (role_id, artist_id, assigned_by)
                               VALUES (:role_id, :artist_id, :assigned_by)");
             $this->db->bind(':role_id', $request->role_id);
@@ -566,6 +607,7 @@ class M_role {
             $this->db->bind(':assigned_by', $director_id);
             $this->db->execute();
 
+            // Update role positions
             $this->db->query("UPDATE drama_roles 
                               SET positions_filled = positions_filled + 1,
                                   status = CASE WHEN positions_filled + 1 >= positions_available THEN 'filled' ELSE status END
@@ -573,11 +615,33 @@ class M_role {
             $this->db->bind(':role_id', $request->role_id);
             $this->db->execute();
 
+            // Accept this request
             $this->db->query("UPDATE role_requests 
                               SET status = 'accepted', responded_at = NOW()
                               WHERE id = :request_id");
             $this->db->bind(':request_id', $request_id);
             $this->db->execute();
+
+            // Auto-reject other pending requests if role is now full
+            $newPositionsFilled = (int)$request->positions_filled + 1;
+            $positionsAvailable = (int)$request->positions_available;
+            
+            if ($newPositionsFilled >= $positionsAvailable) {
+                error_log("Role {$request->role_id} is now full. Auto-rejecting other pending requests.");
+                
+                $this->db->query("UPDATE role_requests 
+                                  SET status = 'cancelled', responded_at = NOW()
+                                  WHERE role_id = :role_id 
+                                  AND status IN ('pending', 'interview')
+                                  AND id != :current_request_id");
+                $this->db->bind(':role_id', $request->role_id);
+                $this->db->bind(':current_request_id', $request_id);
+                $affectedRows = $this->db->execute();
+                
+                if ($affectedRows) {
+                    error_log("Auto-cancelled {$affectedRows} pending request(s) for filled role {$request->role_id}");
+                }
+            }
 
             $this->db->commit();
             return true;

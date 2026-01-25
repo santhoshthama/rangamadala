@@ -23,7 +23,34 @@ class Director{
 
     public function dashboard()
     {
-        $this->renderDramaView('dashboard');
+        $this->renderDramaView('dashboard', [], function ($drama) {
+            // Get production manager
+            $productionManager = $this->pmModel ? $this->pmModel->getAssignedManager((int)$drama->id) : null;
+            
+            // Get all roles for this drama
+            $roles = $this->roleModel ? $this->roleModel->getRolesByDrama((int)$drama->id) : [];
+            
+            // Get assigned artists for each role
+            $assignedArtists = [];
+            if ($this->roleModel && !empty($roles)) {
+                foreach ($roles as $role) {
+                    $assignments = $this->roleModel->getAssignmentsByRole((int)$role->id);
+                    foreach ($assignments as $assignment) {
+                        $assignedArtists[] = (object)[
+                            'artist_name' => $assignment->artist_name ?? 'Unknown',
+                            'role_name' => $role->role_name ?? 'Unknown Role',
+                            'role_type' => $role->role_type ?? 'supporting',
+                            'assigned_at' => $assignment->assigned_at ?? null,
+                        ];
+                    }
+                }
+            }
+            
+            return [
+                'productionManager' => $productionManager,
+                'assignedArtists' => $assignedArtists,
+            ];
+        });
     }
 
     public function drama_details()

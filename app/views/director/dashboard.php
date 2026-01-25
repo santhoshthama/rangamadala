@@ -180,143 +180,43 @@ if (!isset($drama) && isset($data['drama'])) {
                                 <span class="service-info-value"><?= isset($drama->updated_at) ? esc(date('Y-m-d H:i', strtotime($drama->updated_at))) : 'N/A' ?></span>
                             </div>
                         </div>
+                            <?php if (isset($productionManager) && $productionManager): ?>
+                                <div class="service-info-item">
+                                    <span class="service-info-label">Production Manager</span>
+                                    <span class="service-info-value"><?= esc($productionManager->manager_name ?? 'N/A') ?></span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
-                    <!-- Pending Role Applications -->
-                    <div class="card-section">
-                        <h3>
-                            <span>Pending Role Applications</span>
-                            <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>&tab=applications" class="btn btn-warning" style="font-size: 12px; padding: 8px 16px;">Review All</a>
-                        </h3>
-                        <ul id="pendingApplicationsList">
-                            <li>
-                                <div>
-                                    <strong>Kasun Perera</strong>
-                                    <div class="request-info">Applied for: Dancer Troupe Leader | Applied: 2024-12-18</div>
-                                </div>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewApplication(1)">
-                                        <i class="fas fa-eye"></i>
-                                        View
-                                    </button>
-                                    <button class="btn btn-success" style="font-size: 11px; padding: 6px 12px;" onclick="acceptApplication(1)">Accept</button>
-                                    <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="rejectApplication(1)">Reject</button>
-                                </div>
-                            </li>
-                            <li>
-                                <div>
-                                    <strong>Nimal Silva</strong>
-                                    <div class="request-info">Applied for: Supporting Actor | Applied: 2024-12-17</div>
-                                </div>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewApplication(2)">
-                                        <i class="fas fa-eye"></i>
-                                        View
-                                    </button>
-                                    <button class="btn btn-success" style="font-size: 11px; padding: 6px 12px;" onclick="acceptApplication(2)">Accept</button>
-                                    <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="rejectApplication(2)">Reject</button>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Artist Roles Summary -->
-                    <div class="card-section">
-                        <h3>
-                            <span>Artist Roles Summary</span>
-                            <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="fas fa-users"></i>
-                                Manage All Roles
-                            </a>
-                        </h3>
-                        <ul>
-                            <li>
-                                <div>
-                                    <strong>King Sinhabahu</strong>
-                                    <div class="request-info">Salary: LKR 80,000</div>
-                                </div>
-                                <span class="status-badge assigned">Tharaka Rathnayake</span>
-                            </li>
-                            <li>
-                                <div>
-                                    <strong>Princess Suppadevi</strong>
-                                    <div class="request-info">Salary: LKR 70,000</div>
-                                </div>
-                                <span class="status-badge assigned">Dilini Wickramasinghe</span>
-                            </li>
-                            <li>
-                                <div>
-                                    <strong>Dancer Troupe Leader</strong>
-                                    <div class="request-info">Salary: LKR 50,000</div>
-                                </div>
-                                <span class="status-badge requested">Request Sent</span>
-                            </li>
-                            <li>
-                                <div>
-                                    <strong>Supporting Actor (3 positions)</strong>
-                                    <div class="request-info">Salary: LKR 35,000 each</div>
-                                </div>
-                                <span class="status-badge unassigned">Vacant (5 Applications)</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Production Manager -->
-                    <div class="card-section">
-                        <h3>
-                            <span>Production Manager</span>
-                            <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-success" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="fas fa-user-plus"></i>
-                                Change Manager
-                            </a>
-                        </h3>
-                        <ul>
-                            <li>
-                                <div>
-                                    <strong>Priyantha Silva</strong>
-                                    <div class="request-info">Manages services, budget & theater bookings | Assigned: 2024-11-20</div>
-                                </div>
-                                <div style="display: flex; gap: 8px; align-items: center;">
-                                    <span class="status-badge assigned">Active</span>
-                                    <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewManagerDetails()">
-                                        <i class="fas fa-eye"></i>
-                                        View Profile
-                                    </button>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Upcoming Schedule -->
-                    <div class="card-section">
-                        <h3>
-                            <span>Upcoming Schedule</span>
-                            <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">Manage Schedule</a>
-                        </h3>
-                        <ul id="upcomingScheduleList">
-                            <li>
-                                <div>
-                                    <strong>Interview - Role: Dancer Troupe Leader</strong>
-                                    <div class="request-info">Date: 2024-12-23 | Time: 2:00 PM | Venue: Online (Zoom)</div>
-                                </div>
-                                <span class="status-badge assigned">Confirmed</span>
-                            </li>
-                            <li>
-                                <div>
-                                    <strong>Rehearsal - Act 1 Scene 3</strong>
-                                    <div class="request-info">Date: 2024-12-25 | Time: 3:00 PM | Venue: Tower Hall Theatre</div>
-                                </div>
-                                <span class="status-badge pending">Pending</span>
-                            </li>
-                            <li>
-                                <div>
-                                    <strong>Production Meeting</strong>
-                                    <div class="request-info">Date: 2024-12-28 | Time: 9:00 AM | Venue: Office</div>
-                                </div>
-                                <span class="status-badge assigned">Confirmed</span>
-                            </li>
-                        </ul>
-                    </div>
+                    <!-- Assigned Artists -->
+                    <?php if (isset($assignedArtists) && !empty($assignedArtists)): ?>
+                        <div class="card-section">
+                            <h3>
+                                <span>Assigned Artists (<?= count($assignedArtists) ?>)</span>
+                                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                                    <i class="fas fa-users"></i>
+                                    Manage Roles
+                                </a>
+                            </h3>
+                            <ul>
+                                <?php foreach ($assignedArtists as $artist): ?>
+                                    <li>
+                                        <div>
+                                            <strong><?= esc($artist->artist_name) ?></strong>
+                                            <div class="request-info">
+                                                Role: <?= esc($artist->role_name) ?> (<?= esc(ucfirst($artist->role_type)) ?>)
+                                                <?php if ($artist->assigned_at): ?>
+                                                    | Assigned: <?= esc(date('M d, Y', strtotime($artist->assigned_at))) ?>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                        <span class="status-badge assigned">Active</span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
 
                     <!-- Services & Budget Overview -->
                     <div class="card-section">
@@ -324,50 +224,9 @@ if (!isset($drama) && isset($data['drama'])) {
                             <span>Services & Budget Overview</span>
                             <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">View Details</a>
                         </h3>
-                        <div class="drama-info">
-                            <div class="service-info-item">
-                                <span class="service-info-label">Total Budget</span>
-                                <span class="service-info-value">LKR 800,000</span>
-                            </div>
-                            <div class="service-info-item">
-                                <span class="service-info-label">Budget Used</span>
-                                <span class="service-info-value">LKR 336,000 (42%)</span>
-                            </div>
-                            <div class="service-info-item">
-                                <span class="service-info-label">Services Booked</span>
-                                <span class="service-info-value">7 services</span>
-                            </div>
-                            <div class="service-info-item">
-                                <span class="service-info-label">Pending Payments</span>
-                                <span class="service-info-value">LKR 125,000</span>
-                            </div>
-                        </div>
                         <div class="view-only-notice" style="margin-top: 15px;">
                             <i class="fas fa-info-circle"></i>
                             Budget is managed by Production Managers. You have view-only access.
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="card-section">
-                        <h3>Quick Actions</h3>
-                        <div class="permission-controls">
-                            <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary">
-                                <i class="fas fa-users"></i>
-                                Manage Roles
-                            </a>
-                            <a href="<?= ROOT ?>/director/search_artists?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-success">
-                                <i class="fas fa-search"></i>
-                                Search Artists
-                            </a>
-                            <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-warning">
-                                <i class="fas fa-calendar-plus"></i>
-                                Add Schedule
-                            </a>
-                            <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-secondary">
-                                <i class="fas fa-user-plus"></i>
-                                Assign Manager
-                            </a>
                         </div>
                     </div>
                 </div>

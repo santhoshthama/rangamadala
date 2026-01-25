@@ -14,8 +14,8 @@ class M_production_manager {
         try {
             error_log("[getAssignedManager] Fetching PM for drama_id: $drama_id");
             
-            $this->db->query("SELECT dma.*, u.full_name, u.email, u.phone, u.nic_photo AS profile_image,
-                             NULL AS years_experience, d.drama_name
+            $this->db->query("SELECT dma.*, u.full_name as manager_name, u.email, u.phone,
+                             d.drama_name
                              FROM drama_manager_assignments dma
                              INNER JOIN users u ON dma.manager_artist_id = u.id
                              INNER JOIN dramas d ON dma.drama_id = d.id
@@ -27,7 +27,7 @@ class M_production_manager {
             $result = $this->db->single();
             
             if ($result) {
-                error_log("[getAssignedManager] Found: " . $result->full_name . " (ID: " . $result->manager_artist_id . ")");
+                error_log("[getAssignedManager] Found: " . $result->manager_name . " (ID: " . $result->manager_artist_id . ")");
             } else {
                 error_log("[getAssignedManager] No active manager found for drama_id: $drama_id");
             }
