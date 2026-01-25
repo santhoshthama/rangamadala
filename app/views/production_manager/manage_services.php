@@ -100,6 +100,7 @@
             
             <?php if (isset($services) && is_array($services) && !empty($services)): ?>
                 <?php foreach ($services as $service): ?>
+                    <?php if (!is_object($service)) continue; ?>
                     <?php 
                         $statusClass = 'pending';
                         $statusText = 'Pending';
