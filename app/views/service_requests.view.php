@@ -73,7 +73,7 @@
                     <div class="request-actions">
                         <span class="status-badge status-<?= htmlspecialchars($status) ?>"><?= htmlspecialchars($status) ?></span>
                         <?php if ($budget !== null): ?><span class="price">Rs <?= $budget ?></span><?php endif; ?>
-                        <button class="btn btn-details" onclick="openDetails(event, <?= htmlspecialchars(json_encode($req)) ?>)">View Details</button>
+                        <button class="btn btn-details" onclick="openDetails(event, <?= htmlspecialchars(json_encode((array)$req)) ?>)">View Details</button>
                         <?php if ($status === 'pending'): ?>
                             <button class="btn btn-reject" onclick="rejectRequest(this)" data-id="<?= (int)$req->id ?>">Reject</button>
                             <button class="btn btn-accept" onclick="acceptRequest(this)" data-id="<?= (int)$req->id ?>">Accept</button>
@@ -269,6 +269,96 @@
         function openDetails(event, req) {
             event.stopPropagation();
             const modal = document.getElementById('detailsModal');
+            
+            // Build service-specific fields HTML
+            let serviceSpecificHTML = '';
+            
+            if (req.service_type === 'Theater Production') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Theater Production Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Venue Type:</strong> ${req.theater_venue_type || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Stage Type:</strong> ${[req.theater_stage_proscenium && 'Proscenium', req.theater_stage_black_box && 'Black Box', req.theater_stage_open_floor && 'Open Floor'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Stage Size:</strong> ${req.theater_stage_size || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Days:</strong> ${req.theater_num_days || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Time:</strong> ${req.theater_time || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${req.theater_budget_range || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (req.service_type === 'Lighting Design') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Lighting Design Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Lighting Services:</strong> ${[req.lighting_stage_lighting && 'Stage Lighting', req.lighting_spotlights && 'Spotlights', req.lighting_custom_programming && 'Custom Programming', req.lighting_moving_heads && 'Moving Heads'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Lights:</strong> ${req.lighting_num_lights || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Effects:</strong> ${req.lighting_effects || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Technician Needed:</strong> ${req.lighting_technician_needed || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${req.lighting_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${req.lighting_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (req.service_type === 'Sound Systems') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Sound Systems Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Sound Services:</strong> ${[req.sound_pa_system && 'PA System', req.sound_microphones && 'Microphones', req.sound_sound_mixing && 'Sound Mixing', req.sound_background_music && 'Background Music', req.sound_special_effects && 'Special Effects'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Mics:</strong> ${req.sound_num_mics || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Stage Monitor:</strong> ${req.sound_stage_monitor || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Sound Engineer:</strong> ${req.sound_sound_engineer || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${req.sound_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Services:</strong> ${req.sound_additional_services || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (req.service_type === 'Video Production') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Video Production Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Video Type:</strong> ${[req.video_full_event && 'Full Event', req.video_highlight_reel && 'Highlight Reel', req.video_short_promo && 'Short Promo'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Cameras:</strong> ${req.video_num_cameras || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Drone Coverage:</strong> ${req.video_drone_coverage || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Editors:</strong> ${req.video_editors || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${req.video_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${req.video_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (req.service_type === 'Makeup Services') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Makeup Services Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Makeup Type:</strong> ${[req.makeup_stage_makeup && 'Stage Makeup', req.makeup_character_makeup && 'Character Makeup', req.makeup_special_effects && 'Special Effects'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Artists:</strong> ${req.makeup_num_artists || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Actors:</strong> ${req.makeup_num_actors || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Special Requirements:</strong> ${req.makeup_special_requirements || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${req.makeup_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Details:</strong> ${req.makeup_additional_details || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (req.service_type === 'Costume Design') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Costume Design Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Costume Style:</strong> ${[req.costume_period && 'Period', req.costume_contemporary && 'Contemporary', req.costume_fantasy && 'Fantasy'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Costumes:</strong> ${req.costume_num_costumes || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Actors:</strong> ${req.costume_num_actors || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Alterations Needed:</strong> ${req.costume_alterations_needed || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${req.costume_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${req.costume_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
             document.getElementById('detailsContent').innerHTML = `
                 <div style="padding: 20px; background: #fff; border-radius: 8px; max-height: 70vh; overflow-y: auto;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -295,15 +385,6 @@
                     </div>
 
                     <div style="margin-bottom: 20px;">
-                        <strong>Service Details:</strong>
-                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
-                            <p style="margin: 5px 0;"><strong>Service Type:</strong> ${req.service_type}</p>
-                            <p style="margin: 5px 0;"><strong>Service Required:</strong> ${req.service_required || 'N/A'}</p>
-                            ${req.budget ? `<p style="margin: 5px 0;"><strong>Budget:</strong> Rs ${parseFloat(req.budget).toFixed(2)}</p>` : ''}
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 20px;">
                         <strong>Schedule:</strong>
                         <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
                             ${req.service_date ? `<p style="margin: 5px 0;"><strong>Service Date:</strong> ${req.service_date}</p>` : ''}
@@ -311,6 +392,8 @@
                             <p style="margin: 5px 0;"><strong>End Date:</strong> ${req.end_date}</p>
                         </div>
                     </div>
+
+                    ${serviceSpecificHTML}
 
                     <div style="margin-bottom: 20px;">
                         <strong>Description:</strong>
@@ -323,6 +406,21 @@
                         <strong>Notes from Requester:</strong>
                         <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
                             ${req.notes || 'No notes provided'}
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <strong>Uploaded References:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            ${req.uploaded_files && Object.keys(req.uploaded_files).length > 0 ? Object.entries(req.uploaded_files).map(([fieldName, fileInfo]) => {
+                                return `
+                                    <p style="margin: 6px 0; font-size: 12px;">
+                                        <a href="${'<?= ROOT ?>'}/${fileInfo.relative_path}" target="_blank" style="color: #007bff; text-decoration: none;">
+                                            <i class="fas fa-link"></i> View reference (${fieldName}${fileInfo.original_name ? ' - ' + fileInfo.original_name : ''})
+                                        </a>
+                                    </p>
+                                `;
+                            }).join('') : '<p style="margin: 5px 0; font-size: 12px; color: #666;">No files uploaded</p>'}
                         </div>
                     </div>
 

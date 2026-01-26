@@ -77,40 +77,6 @@
             background: #D3D3D3;
         }
 
-        .update-btn {
-            display: flex;
-            align-items: center;
-            background: #CD853F;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 30px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(205, 133, 63, 0.3);
-        }
-
-        .update-btn:hover {
-            background: #B8860B;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(184, 134, 11, 0.4);
-        }
-
-        .update-btn .btn-icon {
-            margin-right: 8px;
-            font-size: 16px;
-            transition: transform 0.3s ease;
-        }
-
-        .update-btn:hover .btn-icon {
-            transform: rotate(180deg);
-        }
-
         .calendar-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -228,7 +194,7 @@
             box-shadow: 0 4px 12px rgba(184, 134, 11, 0.2);
         }
 
-        .calendar-day.selected {
+        .calendar-day.available {
             background: #B8860B !important;
             color: white;
             font-weight: 700;
@@ -236,12 +202,12 @@
             box-shadow: 0 4px 12px rgba(184, 134, 11, 0.4);
         }
 
-        .calendar-day.selected:hover {
+        .calendar-day.available:hover {
             background: #CD853F !important;
         }
 
         .calendar-day.booked {
-            background: #DC143C !important;
+            background: #CD853F !important;
             color: white;
             font-weight: 700;
             border-color: #B22222;
@@ -309,7 +275,6 @@
 
         .date-item:hover {
             border-color: #B8860B;
-            transform: translateX(4px);
             box-shadow: 0 4px 15px rgba(184, 134, 11, 0.3);
         }
 
@@ -484,6 +449,8 @@
             padding: 30px;
             width: 90%;
             max-width: 500px;
+                        max-height: 90vh;
+                        overflow-y: auto;
             position: relative;
             box-shadow: 0 10px 40px rgba(139, 69, 19, 0.3);
             animation: slideUp 0.3s ease;
@@ -725,17 +692,9 @@
             }
         }
 
-        .calendar-day.selected::after {
+        .calendar-day.available::after {
             content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 6px;
-            height: 6px;
-            background: white;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            animation: pulse 2s infinite;
+            display: none;
         }
 
         /* Responsive Design */

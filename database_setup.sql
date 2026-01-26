@@ -296,6 +296,7 @@ CREATE TABLE IF NOT EXISTS `service_requests` (
   `end_date` date NOT NULL,
   `budget` decimal(10,2) DEFAULT NULL,
   `description` text DEFAULT NULL,
+  `service_details_json` longtext DEFAULT NULL COMMENT 'JSON object containing service-specific details',
   `notes` text DEFAULT NULL,
   `provider_notes` text DEFAULT NULL,
   `rejection_reason` text DEFAULT NULL,
@@ -305,4 +306,26 @@ CREATE TABLE IF NOT EXISTS `service_requests` (
   `completed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Add provider_availability table to store booked dates
+CREATE TABLE IF NOT EXISTS `provider_availability` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `provider_id` int NOT NULL,
+  `available_date` date NOT NULL,
+  `status` enum('available','booked') NOT NULL DEFAULT 'available',
+  `description` text,
+  `booked_for` varchar(255) DEFAULT NULL,
+  `booking_details` text,
+  `service_request_id` int DEFAULT NULL,
+  `added_on` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `booked_on` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `provider_date` (`provider_id`, `available_date`),
+  KEY `provider_id` (`provider_id`),
+  KEY `available_date` (`available_date`),
+  CONSTRAINT `availability_ibfk_provider` FOREIGN KEY (`provider_id`) REFERENCES `serviceprovider` (`user_id`) ON DELETE CASCADE,
+  CONSTRAINT `availability_ibfk_request` FOREIGN KEY (`service_request_id`) REFERENCES `service_requests` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

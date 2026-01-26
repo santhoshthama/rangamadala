@@ -54,13 +54,19 @@ class ServiceRequests
 			return;
 		}
 
-		$reqModel = new M_service_request();
-		$ok = $reqModel->updateStatusDetailed((int)$id, (string)$status, $reason, (int)$_SESSION['user_id']);
-		if ($ok) {
-			echo json_encode(['success' => true, 'status' => $status]);
-		} else {
+		try {
+			$reqModel = new M_service_request();
+			$ok = $reqModel->updateStatusDetailed((int)$id, (string)$status, $reason, (int)$_SESSION['user_id']);
+			if ($ok) {
+				echo json_encode(['success' => true, 'status' => $status]);
+			} else {
+				http_response_code(500);
+				echo json_encode(['success' => false, 'error' => 'Failed to update status']);
+			}
+		} catch (Exception $e) {
+			error_log("Error in updateStatus: " . $e->getMessage());
 			http_response_code(500);
-			echo json_encode(['success' => false, 'error' => 'Failed to update status']);
+			echo json_encode(['success' => false, 'error' => 'Server error: ' . $e->getMessage()]);
 		}
 	}
 
