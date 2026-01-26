@@ -9,7 +9,10 @@ class M_service_request
         $this->db = new Database();
     }
 
-    public function createRequest($data)
+    /**
+     * Get all service requests for a specific drama
+     */
+    public function getServicesByDrama($drama_id)
     {
         // Prepare service details JSON
         $serviceDetailsJson = null;
@@ -42,7 +45,17 @@ class M_service_request
         $this->db->bind(':status', $data['status']);
         $this->db->bind(':created_at', $data['created_at']);
 
-        return $this->db->execute();
+    /**
+     * Count services by status
+     */
+    public function countServicesByStatus($drama_id, $status)
+    {
+        $this->db->query("SELECT COUNT(*) as count FROM service_requests 
+                         WHERE drama_id = :drama_id AND status = :status");
+        $this->db->bind(':drama_id', $drama_id);
+        $this->db->bind(':status', $status);
+        $result = $this->db->single();
+        return $result ? intval($result->count) : 0;
     }
 
     /**
@@ -88,7 +101,13 @@ class M_service_request
 
     public function getRequestsByProvider($provider_id)
     {
-        $this->db->query("SELECT * FROM service_requests WHERE provider_id = :provider_id ORDER BY created_at DESC");
+        $this->db->query("SELECT sr.*, d.drama_name, d.image_url,
+                         u.name as requester_name, u.email as requester_email 
+                         FROM service_requests sr
+                         JOIN dramas d ON sr.drama_id = d.id
+                         JOIN users u ON sr.created_by = u.id
+                         WHERE sr.service_provider_id = :provider_id 
+                         ORDER BY sr.created_at DESC");
         $this->db->bind(':provider_id', $provider_id);
         $results = $this->db->resultSet();
         
@@ -113,30 +132,29 @@ class M_service_request
         return $results;
     }
 
+    /**
+     * Update service request status
+     */
     public function updateRequestStatus($request_id, $status)
     {
-        $this->db->query("UPDATE service_requests SET status = :status WHERE id = :id");
+        $this->db->query("UPDATE service_requests 
+                         SET status = :status, updated_at = CURRENT_TIMESTAMP 
+                         WHERE id = :id");
         $this->db->bind(':status', $status);
         $this->db->bind(':id', $request_id);
         return $this->db->execute();
     }
 
-    public function updateStatusDetailed($request_id, $status, $reason = null, $provider_id = null)
+    /**
+     * Get a single service request by ID
+     */
+    public function getRequestById($request_id)
     {
-        // Restrict updates to this provider if provided
-        $whereProvider = $provider_id ? " AND provider_id = :provider_id" : "";
-
-        if ($status === 'accepted') {
-            $sql = "UPDATE service_requests SET status = 'accepted', accepted_at = NOW(), rejection_reason = NULL WHERE id = :id" . $whereProvider;
-        } elseif ($status === 'completed') {
-            $sql = "UPDATE service_requests SET status = 'completed', completed_at = NOW() WHERE id = :id" . $whereProvider;
-        } elseif ($status === 'rejected') {
-            $sql = "UPDATE service_requests SET status = 'rejected', rejection_reason = :reason WHERE id = :id" . $whereProvider;
-        } else {
-            $sql = "UPDATE service_requests SET status = :status WHERE id = :id" . $whereProvider;
-        }
-
-        $this->db->query($sql);
+        $this->db->query("SELECT sr.*, d.drama_name, u.name as requester_name 
+                         FROM service_requests sr
+                         JOIN dramas d ON sr.drama_id = d.id
+                         JOIN users u ON sr.created_by = u.id
+                         WHERE sr.id = :id");
         $this->db->bind(':id', $request_id);
         if ($provider_id) {
             $this->db->bind(':provider_id', $provider_id);
@@ -264,15 +282,25 @@ class M_service_request
         }
     }
 
-    public function updatePaymentStatus($request_id, $payment_status, $provider_id = null)
+    /**
+     * Delete a service request
+     */
+    public function deleteRequest($request_id)
     {
-        $whereProvider = $provider_id ? " AND provider_id = :provider_id" : "";
-        $this->db->query("UPDATE service_requests SET payment_status = :payment_status WHERE id = :id" . $whereProvider);
-        $this->db->bind(':payment_status', $payment_status);
+        $this->db->query("DELETE FROM service_requests WHERE id = :id");
         $this->db->bind(':id', $request_id);
-        if ($provider_id) {
-            $this->db->bind(':provider_id', $provider_id);
-        }
         return $this->db->execute();
+    }
+
+    /**
+     * Get total count of service requests for a drama
+     */
+    public function getTotalCount($drama_id)
+    {
+        $this->db->query("SELECT COUNT(*) as count FROM service_requests 
+                         WHERE drama_id = :drama_id");
+        $this->db->bind(':drama_id', $drama_id);
+        $result = $this->db->single();
+        return $result ? intval($result->count) : 0;
     }
 }

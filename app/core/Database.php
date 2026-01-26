@@ -60,13 +60,19 @@
             return $this->stmt->execute();
         }
 
-        // Get multiple records as the result
+        /**
+         * Get multiple records as the result
+         * @return array
+         */
         public function resultSet(){
             $this->execute();
             return $this->stmt->fetchAll(PDO::FETCH_OBJ);
         }
 
-        // Get a single record as the result
+        /**
+         * Get a single record as the result
+         * @return object|false
+         */
         public function single(){
             $this->execute();
             return $this->stmt->fetch(PDO::FETCH_OBJ);

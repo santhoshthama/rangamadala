@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `phone` varchar(20) DEFAULT NULL,
   `role` enum('admin','artist','audience','service_provider') NOT NULL DEFAULT 'audience',
   `nic_photo` varchar(255) DEFAULT NULL,
+  `profile_image` varchar(255) DEFAULT NULL,
+  `years_experience` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -28,24 +30,19 @@ CREATE TABLE IF NOT EXISTS `categories` (
 -- Create dramas table
 CREATE TABLE IF NOT EXISTS `dramas` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) NOT NULL,
-  `description` text,
-  `category_id` int(11) DEFAULT NULL,
-  `venue` varchar(255) DEFAULT NULL,
-  `event_date` date DEFAULT NULL,
-  `event_time` time DEFAULT NULL,
-  `duration` int(11) DEFAULT NULL COMMENT 'Duration in minutes',
-  `ticket_price` decimal(10,2) DEFAULT NULL,
-  `image` varchar(255) DEFAULT NULL,
+  `drama_name` varchar(255) NOT NULL COMMENT 'Drama name as in public performance board certificate',
+  `certificate_number` varchar(100) NOT NULL COMMENT 'Public performance certificate number',
+  `owner_name` varchar(255) NOT NULL COMMENT 'Owner name',
+  `description` text DEFAULT NULL COMMENT 'Artist provided synopsis for the drama',
+  `certificate_image` varchar(255) DEFAULT NULL COMMENT 'Image of public performance board certificate',
   `created_by` int(11) DEFAULT NULL,
   `creator_artist_id` int(11) DEFAULT NULL COMMENT 'The artist who is the director',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `category_id` (`category_id`),
+  UNIQUE KEY `certificate_number` (`certificate_number`),
   KEY `created_by` (`created_by`),
   KEY `creator_artist_id` (`creator_artist_id`),
-  CONSTRAINT `dramas_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
   CONSTRAINT `dramas_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `dramas_ibfk_3` FOREIGN KEY (`creator_artist_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -63,13 +60,10 @@ INSERT INTO `categories` (`name`) VALUES
 ON DUPLICATE KEY UPDATE name=name;
 
 -- Insert sample dramas (optional - remove if not needed)
-INSERT INTO `dramas` (`title`, `description`, `category_id`, `venue`, `event_date`, `event_time`, `duration`, `ticket_price`, `created_by`) VALUES
-('Maname', 'A classical Sinhala drama exploring family relationships and societal values', 1, 'Lionel Wendt Theatre, Colombo', '2025-01-15', '19:00:00', 120, 1500.00, NULL),
-('Sinhabahu', 'Epic tale of the legendary king Sinhabahu and his journey', 1, 'Nelum Pokuna Theatre, Colombo', '2025-01-20', '18:30:00', 150, 2000.00, NULL),
-('Kolamba Kathawa', 'A comedy drama depicting urban life in Colombo', 3, 'Elphinstone Theatre, Maradana', '2025-02-05', '19:30:00', 90, 1000.00, NULL),
-('Nari Bena', 'Traditional folk drama with dance and music', 7, 'BMICH, Colombo', '2025-02-10', '18:00:00', 105, 1200.00, NULL),
-('Vijayaba Kollaya', 'Historical drama about ancient Sri Lankan warriors', 1, 'Regal Theatre, Colombo', '2025-02-15', '19:00:00', 135, 1800.00, NULL)
-ON DUPLICATE KEY UPDATE title=title;
+INSERT INTO `dramas` (`drama_name`, `certificate_number`, `owner_name`, `description`, `certificate_image`, `created_by`, `creator_artist_id`) VALUES
+('Maname', 'PPB-2025-001', 'Chandrasena Perera', 'Iconic Sinhala stage drama Maname.', NULL, NULL, NULL),
+('Sinhabahu', 'PPB-2025-002', 'Ediriweera Sarachchandra', 'Legendary drama about King Sinhabahu and Princess Suppadevi.', NULL, NULL, NULL)
+ON DUPLICATE KEY UPDATE drama_name=VALUES(drama_name);
 
 
 --Service Provider and Services Tables
