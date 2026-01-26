@@ -45,6 +45,9 @@ class M_service_request
         $this->db->bind(':status', $data['status']);
         $this->db->bind(':created_at', $data['created_at']);
 
+        return $this->db->execute();
+    }
+
     /**
      * Count services by status
      */
