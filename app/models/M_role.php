@@ -337,9 +337,8 @@ class M_role {
 
     public function getApplicationsByDrama($drama_id, ?string $status = null) {
         try {
-            $query = "SELECT a.*, r.role_name, r.role_type, r.status as role_status,
-                             u.full_name as artist_name, u.email as artist_email, u.phone as artist_phone,
-                             u.profile_image as artist_image, u.years_experience
+            $query = "SELECT a.*, r.role_name, r.role_type, r.status as role_status, r.drama_id,
+                             u.full_name as artist_name, u.email as artist_email, u.phone as artist_phone
                       FROM role_applications a
                       INNER JOIN drama_roles r ON a.role_id = r.id
                       INNER JOIN users u ON a.artist_id = u.id
@@ -651,6 +650,173 @@ class M_role {
             return false;
         }
     }
+
+    /**
+     * Count all published vacancies across all dramas
+     */
+    public function countPublishedVacancies() {
+        try {
+            $this->db->query("SELECT COUNT(*) as count 
+                             FROM drama_roles 
+                             WHERE is_published = 1 
+                             AND status != 'filled'");
+            $result = $this->db->single();
+            return $result ? (int)$result->count : 0;
+        } catch (Exception $e) {
+            error_log("Error in countPublishedVacancies: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Get all published vacancies with optional filters
+     */
+    public function getAllPublishedVacancies($filters = []) {
+        try {
+            $query = "SELECT r.*, d.drama_name, d.description as drama_description,
+                             u.full_name as director_name,
+                             (r.positions_available - r.positions_filled) as positions_remaining
+                      FROM drama_roles r
+                      INNER JOIN dramas d ON r.drama_id = d.id
+                      INNER JOIN users u ON d.creator_artist_id = u.id
+                      WHERE r.is_published = 1 AND r.status != 'filled'";
+
+            // Exclude roles where the artist is already assigned
+            if (!empty($filters['artist_id'])) {
+                $query .= " AND r.id NOT IN (
+                                SELECT role_id FROM role_assignments WHERE artist_id = :artist_id
+                            )";
+            }
+
+            if (!empty($filters['role_type'])) {
+                $query .= " AND r.role_type = :role_type";
+            }
+
+            if (!empty($filters['search'])) {
+                $query .= " AND (r.role_name LIKE :search OR r.role_description LIKE :search OR d.drama_name LIKE :search)";
+            }
+
+            // Sorting
+            $sort = $filters['sort'] ?? 'latest';
+            switch ($sort) {
+                case 'latest':
+                    $query .= " ORDER BY r.published_at DESC";
+                    break;
+                case 'oldest':
+                    $query .= " ORDER BY r.published_at ASC";
+                    break;
+                case 'salary_high':
+                    $query .= " ORDER BY r.salary DESC";
+                    break;
+                case 'salary_low':
+                    $query .= " ORDER BY r.salary ASC";
+                    break;
+                default:
+                    $query .= " ORDER BY r.published_at DESC";
+            }
+
+            $this->db->query($query);
+
+            if (!empty($filters['artist_id'])) {
+                $this->db->bind(':artist_id', $filters['artist_id']);
+            }
+
+            if (!empty($filters['role_type'])) {
+                $this->db->bind(':role_type', $filters['role_type']);
+            }
+
+            if (!empty($filters['search'])) {
+                $this->db->bind(':search', '%' . $filters['search'] . '%');
+            }
+
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in getAllPublishedVacancies: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Apply for a role (artist submits application)
+     */
+    public function applyForRole($role_id, $artist_id, $cover_letter = '') {
+        try {
+            // Check if role exists and is published
+            $this->db->query("SELECT * FROM drama_roles WHERE id = :role_id AND is_published = 1");
+            $this->db->bind(':role_id', $role_id);
+            $role = $this->db->single();
+
+            if (!$role) {
+                return ['success' => false, 'message' => 'This vacancy is no longer available'];
+            }
+
+            // Check if role is filled
+            if ((int)$role->positions_filled >= (int)$role->positions_available) {
+                return ['success' => false, 'message' => 'This role is already filled'];
+            }
+
+            // Check if artist already applied
+            $this->db->query("SELECT id FROM role_applications 
+                             WHERE role_id = :role_id AND artist_id = :artist_id");
+            $this->db->bind(':role_id', $role_id);
+            $this->db->bind(':artist_id', $artist_id);
+            $existing = $this->db->single();
+
+            if ($existing) {
+                return ['success' => false, 'message' => 'You have already applied for this role'];
+            }
+
+            // Check if artist is already assigned to this role
+            $this->db->query("SELECT id FROM role_assignments 
+                             WHERE role_id = :role_id AND artist_id = :artist_id");
+            $this->db->bind(':role_id', $role_id);
+            $this->db->bind(':artist_id', $artist_id);
+            $assigned = $this->db->single();
+
+            if ($assigned) {
+                return ['success' => false, 'message' => 'You are already assigned to this role'];
+            }
+
+            // Create application
+            $this->db->query("INSERT INTO role_applications 
+                             (role_id, artist_id, application_message, status, applied_at)
+                             VALUES (:role_id, :artist_id, :application_message, 'pending', NOW())");
+            $this->db->bind(':role_id', $role_id);
+            $this->db->bind(':artist_id', $artist_id);
+            $this->db->bind(':application_message', $cover_letter);
+
+            if ($this->db->execute()) {
+                return ['success' => true, 'message' => 'Application submitted successfully!'];
+            } else {
+                return ['success' => false, 'message' => 'Failed to submit application'];
+            }
+        } catch (Exception $e) {
+            error_log("Error in applyForRole: " . $e->getMessage());
+            return ['success' => false, 'message' => 'An error occurred while submitting your application'];
+        }
+    }
+
+    /**
+     * Get all applications submitted by an artist
+     */
+    public function getArtistApplications($artist_id) {
+        try {
+            $this->db->query("SELECT a.*, r.role_name, r.role_type, r.salary, r.status as role_status,
+                             d.drama_name, u.full_name as director_name
+                             FROM role_applications a
+                             INNER JOIN drama_roles r ON a.role_id = r.id
+                             INNER JOIN dramas d ON r.drama_id = d.id
+                             INNER JOIN users u ON d.creator_artist_id = u.id
+                             WHERE a.artist_id = :artist_id
+                             ORDER BY a.applied_at DESC");
+            $this->db->bind(':artist_id', $artist_id);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in getArtistApplications: " . $e->getMessage());
+            return [];
+        }
+    }
 }
 
 ?>
+

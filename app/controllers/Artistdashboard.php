@@ -16,6 +16,7 @@ class Artistdashboard
         $artist_model = $this->getModel('M_artist');
         $drama_model = $this->getModel('M_drama');
         $pm_model = $this->getModel('M_production_manager');
+        $role_model = $this->getModel('M_role');
         
         $user_id = $_SESSION['user_id'];
         
@@ -37,6 +38,9 @@ class Artistdashboard
         // Get pending PM requests for this artist
         $data['pm_requests'] = $pm_model ? $pm_model->getPendingRequestsForArtist($user_id) : [];
         
+        // Get total published vacancies count
+        $data['total_published_vacancies'] = $role_model ? $role_model->countPublishedVacancies() : 0;
+        
         // Count statistics
         $data['stats'] = [
             'total_dramas' => count($data['dramas_as_director']) + count($data['dramas_as_manager']) + count($data['dramas_as_actor']),
@@ -48,6 +52,105 @@ class Artistdashboard
         ];
         
         $this->view('artistdashboard', $data);
+    }
+
+    public function browse_vacancies()
+    {
+        // Check if user is logged in and is an artist
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $role_model = $this->getModel('M_role');
+        $user_id = $_SESSION['user_id'];
+
+        // Get filter parameters
+        $filters = [
+            'role_type' => $_GET['role_type'] ?? '',
+            'search' => $_GET['search'] ?? '',
+            'sort' => $_GET['sort'] ?? 'latest',
+            'artist_id' => $user_id  // Exclude roles where artist is already assigned
+        ];
+
+        // Get all published vacancies with filters
+        $data['vacancies'] = $role_model ? $role_model->getAllPublishedVacancies($filters) : [];
+        
+        // Get artist's existing applications to check which roles they've applied to
+        $data['my_applications'] = $role_model ? $role_model->getArtistApplications($user_id) : [];
+        
+        // Create a map of role IDs the artist has applied to
+        $data['applied_role_ids'] = [];
+        foreach ($data['my_applications'] as $app) {
+            $data['applied_role_ids'][] = $app->role_id;
+        }
+        
+        $data['filters'] = $filters;
+        $data['total_vacancies'] = count($data['vacancies']);
+        
+        $this->view('artist/browse_vacancies', $data);
+    }
+
+    public function apply_for_role()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+
+        if (!isset($_SESSION['user_id'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'User not logged in']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $role_id = isset($input['role_id']) ? (int)$input['role_id'] : 0;
+        $cover_letter = $input['cover_letter'] ?? '';
+
+        if (!$role_id) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Role ID is required']);
+            exit;
+        }
+
+        $role_model = $this->getModel('M_role');
+        $result = $role_model->applyForRole($role_id, $_SESSION['user_id'], $cover_letter);
+
+        header('Content-Type: application/json');
+        echo json_encode($result);
+        exit;
+    }
+
+    public function my_applications()
+    {
+        // Check if user is logged in and is an artist
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $role_model = $this->getModel('M_role');
+        $user_id = $_SESSION['user_id'];
+
+        // Get all applications by this artist
+        $data['applications'] = $role_model ? $role_model->getArtistApplications($user_id) : [];
+        
+        // Group by status
+        $data['pending'] = array_filter($data['applications'], function($app) {
+            return $app->status === 'pending';
+        });
+        
+        $data['accepted'] = array_filter($data['applications'], function($app) {
+            return $app->status === 'accepted';
+        });
+        
+        $data['rejected'] = array_filter($data['applications'], function($app) {
+            return $app->status === 'rejected';
+        });
+        
+        $this->view('artist/my_applications', $data);
     }
     
 

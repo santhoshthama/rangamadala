@@ -178,7 +178,10 @@ class M_artist extends M_signup {
                              NULL AS years_experience,
                              NULL AS request_status, NULL AS request_id, NULL AS assignment_status
                       FROM users u
-                      WHERE u.role IS NOT NULL AND LOWER(TRIM(u.role)) = 'artist'";
+                      WHERE u.role IS NOT NULL AND LOWER(TRIM(u.role)) = 'artist'
+                      AND u.id NOT IN (
+                          SELECT artist_id FROM role_assignments WHERE role_id = :role_id
+                      )";
 
         if ($searchTerm !== '') {
             $query .= " AND LOWER(u.full_name) LIKE :search_name";
@@ -188,6 +191,7 @@ class M_artist extends M_signup {
 
         try {
             $this->db->query($query);
+            $this->db->bind(':role_id', $role_id);
 
             if ($searchTerm !== '') {
                 $this->db->bind(':search_name', '%' . strtolower($searchTerm) . '%');

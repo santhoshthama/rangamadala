@@ -68,7 +68,6 @@ class Director{
             
             // Get all requests without status filter to see everything
             $allRequests = $this->roleModel ? $this->roleModel->getRoleRequestsByDrama((int)$drama->id) : [];
-            error_log("Director manage_roles - Total requests for drama {$drama->id}: " . count($allRequests));
             
             // Filter to pending and interview status
             $pendingRequests = array_filter($allRequests, function($req) {

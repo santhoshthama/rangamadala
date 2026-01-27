@@ -125,7 +125,7 @@ $drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
                             <?php if ($currentManager): ?>
                                 <li>
                                     <div>
-                                        <strong><?= esc($currentManager->full_name) ?></strong>
+                                        <strong><?= esc($currentManager->manager_name) ?></strong>
                                         <div class="request-info">
                                             Email: <?= esc($currentManager->email) ?> | Phone: <?= esc($currentManager->phone ?? 'N/A') ?>
                                         </div>
