@@ -158,7 +158,7 @@
                                 </div>
 
                                 <div class="provider-footer">
-                                    <a href="<?= ROOT ?>/BrowseServiceProviders/viewProfile/<?= $provider->user_id ?>" class="btn-view-profile">
+                                    <a href="<?= ROOT ?>/BrowseServiceProviders/viewProfile/<?= $provider->user_id ?><?= !empty($data['drama_id']) ? '?drama_id=' . (int)$data['drama_id'] : '' ?>" class="btn-view-profile">
                                         View Profile <i class="fas fa-arrow-right"></i>
                                     </a>
                                 </div>

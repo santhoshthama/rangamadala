@@ -128,6 +128,12 @@
                         <h2>Services Offered</h2>
                     </div>
                     <div class="card-body">
+                        <div id="serviceWarning" style="display:none; margin-bottom:12px; padding:12px 14px; border-radius:6px; background:#fff5e6; color:#8a5500; border:1px solid #f4d7a6;">
+                            <strong>Service should be add before request.</strong>
+                            <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                                <a id="addServiceLink" class="btn btn-primary" style="padding:10px 14px; text-decoration:none;" href="#">Add Service</a>
+                            </div>
+                        </div>
                         <?php if (!empty($data['services'])): ?>
                             <div class="services-list">
                                 <?php foreach ($data['services'] as $service): ?>
@@ -146,7 +152,7 @@
                                                 }
                                                 ?>
                                             </h3>
-                                            <button class="btn-primary" onclick="openRequestModal('<?= htmlspecialchars($service->service_type ?? '') ?>', '<?= number_format($service->rate_per_hour ?? 0) ?>')">
+                                            <button class="btn-primary" onclick="attemptRequest('<?= htmlspecialchars($service->service_type ?? '') ?>', '<?= number_format($service->rate_per_hour ?? 0) ?>')">
                                                 <i class="fas fa-paper-plane"></i> Request
                                             </button>
                                         </div>
@@ -486,6 +492,48 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Allow requests only if the service is already added for this drama
+        const dramaId = <?= json_encode($data['drama_id'] ?? null) ?>;
+        const dramaServiceTypes = <?= json_encode(array_map(function($s){ return $s->service_type ?? ''; }, $data['dramaServices'] ?? [])) ?>;
+
+        function attemptRequest(serviceName = '', rate = '') {
+            // If not in production manager flow, let it pass
+            if (!dramaId) {
+                openRequestModal(serviceName, rate);
+                return;
+            }
+
+            const normalized = (serviceName || '').toLowerCase();
+            const exists = dramaServiceTypes.some(function(t){ return (t || '').toLowerCase() === normalized; });
+
+            if (exists) {
+                openRequestModal(serviceName, rate);
+                return;
+            }
+
+            // Show warning and surface add-service link
+            const warning = document.getElementById('serviceWarning');
+            const addLink = document.getElementById('addServiceLink');
+            if (warning) {
+                warning.style.display = 'block';
+            }
+            if (addLink) {
+                const encodedService = encodeURIComponent(serviceName || '');
+                const returnUrl = encodeURIComponent(window.location.href);
+                addLink.href = '<?= ROOT ?>/production_manager/manage_services?drama_id=' + encodeURIComponent(dramaId) + '&service_missing=1&prefill_service=' + encodedService + '&show_add_modal=1&return_url=' + returnUrl;
+            }
+
+            // Keep the user on this page with the message visible
+            if (warning) {
+                const rect = warning.getBoundingClientRect();
+                if (rect.top < 0 || rect.top > window.innerHeight) {
+                    window.scrollTo({ top: window.scrollY + rect.top - 20, behavior: 'smooth' });
+                }
+            }
+        }
+    </script>
 
     <!-- Include Service Request Form -->
     <?php include 'service_request_form.view.php'; ?>

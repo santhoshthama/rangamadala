@@ -23,8 +23,20 @@
         <?php
             // Prepare requests array
             $requests = isset($requests) && is_array($requests) ? $requests : [];
+            
+            // Status display map
+            $statusMap = [
+                'pending' => 'Pending',
+                'provider_responded' => 'Responded',
+                'confirmed' => 'Confirmed',
+                'accepted' => 'Accepted',
+                'completed' => 'Completed',
+                'rejected' => 'Rejected',
+                'cancelled' => 'Cancelled'
+            ];
+            
             // Count by status
-            $counts = ['all' => 0, 'pending' => 0, 'accepted' => 0, 'completed' => 0, 'rejected' => 0, 'cancelled' => 0];
+            $counts = ['all' => 0, 'pending' => 0, 'provider_responded' => 0, 'confirmed' => 0, 'accepted' => 0, 'completed' => 0, 'rejected' => 0, 'cancelled' => 0];
             foreach ($requests as $r) {
                 $st = isset($r->status) ? strtolower($r->status) : 'pending';
                 if (!isset($counts[$st])) { $counts[$st] = 0; }
@@ -37,6 +49,8 @@
         <div class="tabs">
             <button class="tab" id="allTab" onclick="switchTab('all')"><?=$counts['all']?> All</button>
             <button class="tab" id="pendingTab" onclick="switchTab('pending')"><?=$counts['pending']?> Pending</button>
+            <button class="tab" id="provider_respondedTab" onclick="switchTab('provider_responded')"><?=$counts['provider_responded']?> Responded </button>
+            <button class="tab" id="confirmedTab" onclick="switchTab('confirmed')"><?=$counts['confirmed']?> Confirmed</button>
             <button class="tab" id="acceptedTab" onclick="switchTab('accepted')"><?=$counts['accepted']?> Accepted</button>
             <button class="tab" id="completedTab" onclick="switchTab('completed')"><?=$counts['completed']?> Completed</button>
             <button class="tab" id="rejectedTab" onclick="switchTab('rejected')"><?=$counts['rejected']?> Rejected</button>
@@ -71,12 +85,20 @@
                         <?php if (!empty($req->service_required)): ?><div class="request-snippet"><?= htmlspecialchars($req->service_required) ?></div><?php endif; ?>
                     </div>
                     <div class="request-actions">
-                        <span class="status-badge status-<?= htmlspecialchars($status) ?>"><?= htmlspecialchars($status) ?></span>
+                        <span class="status-badge status-<?= htmlspecialchars($status) ?>"><?= htmlspecialchars($statusMap[$status] ?? ucfirst($status)) ?></span>
                         <?php if ($budget !== null): ?><span class="price">Rs <?= $budget ?></span><?php endif; ?>
                         <button class="btn btn-details" onclick="openDetails(event, <?= htmlspecialchars(json_encode((array)$req)) ?>)">View Details</button>
                         <?php if ($status === 'pending'): ?>
                             <button class="btn btn-reject" onclick="rejectRequest(this)" data-id="<?= (int)$req->id ?>">Reject</button>
-                            <button class="btn btn-accept" onclick="acceptRequest(this)" data-id="<?= (int)$req->id ?>">Accept</button>
+                            <button class="btn btn-accept" onclick="openRespondModal(<?= (int)$req->id ?>, <?= htmlspecialchars(json_encode((array)$req)) ?>)">Respond with Quote</button>
+                        <?php elseif ($status === 'provider_responded'): ?>
+                            <button class="btn btn-details" onclick="openViewResponseModal(<?= htmlspecialchars(json_encode($req->service_details_json ? json_decode($req->service_details_json, true)['provider_response'] ?? [] : []), ENT_QUOTES, 'UTF-8') ?>)">
+                                View Response
+                            </button>
+                            <span style="color: #f39c12; font-style: italic; font-size: 13px;"><i class="fas fa-clock"></i> Awaiting PM Confirmation</span>
+                        <?php elseif ($status === 'confirmed'): ?>
+                            <button class="btn btn-accept" onclick="acceptConfirmedRequest(this)" data-id="<?= (int)$req->id ?>">Accept Terms</button>
+                            <button class="btn btn-reject" onclick="rejectConfirmedRequest(this)" data-id="<?= (int)$req->id ?>">Reject Terms</button>
                         <?php elseif ($status === 'accepted'): ?>
                             <button class="btn btn-update" onclick="updatePayment(this)" data-id="<?= (int)$req->id ?>">Update Payment</button>
                             <button class="btn btn-complete" onclick="markCompleted(this)" data-id="<?= (int)$req->id ?>">Mark Complete</button>
@@ -93,6 +115,9 @@
         const ENDPOINTS = {
             updateStatus: '<?= ROOT ?>/ServiceRequests/updateStatus',
             updatePayment: '<?= ROOT ?>/ServiceRequests/updatePayment',
+            respond: '<?= ROOT ?>/ServiceProviderRequest/respond',
+            acceptConfirmed: '<?= ROOT ?>/ServiceProviderRequest/acceptConfirmed',
+            rejectConfirmed: '<?= ROOT ?>/ServiceProviderRequest/rejectConfirmed',
         };
 
         function switchTab(category) {
@@ -456,10 +481,97 @@
             document.getElementById('detailsModal').style.display = 'none';
         }
 
+        function openRespondModal(requestId, reqData) {
+            document.getElementById('respond_request_id').value = requestId;
+            document.getElementById('respondModal').style.display = 'flex';
+        }
+
+        function closeRespondModal() {
+            document.getElementById('respondModal').style.display = 'none';
+            document.getElementById('respondForm').reset();
+        }
+
+        async function acceptConfirmedRequest(button) {
+            const id = button.getAttribute('data-id');
+            if (!confirm('Accept these terms? Your calendar will be booked for the confirmed dates.')) return;
+            
+            try {
+                const res = await fetch(ENDPOINTS.acceptConfirmed, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ request_id: id }),
+                });
+                const json = await res.json();
+                if (json.success) {
+                    showMessage('Request accepted! Dates have been booked.', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showMessage(json.error || 'Failed to accept', 'error');
+                }
+            } catch (e) {
+                showMessage('Network error while accepting', 'error');
+            }
+        }
+
+        async function rejectConfirmedRequest(button) {
+            const id = button.getAttribute('data-id');
+            const reason = prompt('Enter reason for rejecting these terms:');
+            if (reason === null) return;
+            
+            try {
+                const res = await fetch(ENDPOINTS.rejectConfirmed, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ request_id: id, reason }),
+                });
+                const json = await res.json();
+                if (json.success) {
+                    showMessage('Request rejected', 'error');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showMessage(json.error || 'Failed to reject', 'error');
+                }
+            } catch (e) {
+                showMessage('Network error while rejecting', 'error');
+            }
+        }
+
+        // Handle respond form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const respondForm = document.getElementById('respondForm');
+            if (respondForm) {
+                respondForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+                    
+                    try {
+                        const res = await fetch(ENDPOINTS.respond, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const json = await res.json();
+                        if (json.success) {
+                            showMessage('Response submitted successfully!', 'success');
+                            closeRespondModal();
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showMessage(json.error || 'Failed to submit response', 'error');
+                        }
+                    } catch (e) {
+                        showMessage('Network error: ' + e.message, 'error');
+                    }
+                });
+            }
+        });
+
         window.onclick = function(event) {
-            const modal = document.getElementById('detailsModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            const detailsModal = document.getElementById('detailsModal');
+            const respondModal = document.getElementById('respondModal');
+            if (event.target === detailsModal) {
+                detailsModal.style.display = 'none';
+            }
+            if (event.target === respondModal) {
+                closeRespondModal();
             }
         };
     </script>
@@ -469,6 +581,87 @@
         <div style="background-color: #fefefe; padding: 0; border-radius: 8px; width: 90%; max-width: 700px; box-shadow: 0 4px 6px rgba(0,0,0,0.15);" id="detailsContent">
         </div>
     </div>
+
+    <!-- View Response Modal -->
+    <div id="viewResponseModal" style="display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center;">
+        <div style="background-color: #fefefe; padding: 0; border-radius: 8px; width: 90%; max-width: 550px; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">
+            <div style="padding: 20px; border-bottom: 1px solid #ddd; background: linear-gradient(135deg, #d4af37, #aa8c2c); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 18px; color: #1a1410;">Your Response</h3>
+                <button onclick="closeViewResponseModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #1a1410;">&times;</button>
+            </div>
+            <div style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <div style="margin-bottom: 18px; padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px;">Quotation Amount</label>
+                        <div style="font-size: 14px; font-weight: 500; color: #1f2937;">Rs <span id="view_quote_amount">0</span></div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px;">Advance Payment Required</label>
+                        <div style="font-size: 14px; font-weight: 500; color: #1f2937;"><span id="view_advance_required">No</span></div>
+                    </div>
+                </div>
+
+                <div id="viewAdvanceSection" style="display: none; padding: 12px; background: #fffdf7; border: 1px solid #f0e4c6; border-radius: 6px; margin-bottom: 18px;">
+                    <div style="font-size: 13px; font-weight: 600; color: #1f2937; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">Advance Payment Details</div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px;">Advance Amount</label>
+                        <div style="font-size: 14px; font-weight: 500; color: #1f2937;">Rs <span id="view_advance_amount">0</span></div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px;">Advance Due Date</label>
+                        <div style="font-size: 14px; font-weight: 500; color: #1f2937;"><span id="view_advance_due_date">-</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 18px; padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px;">Final Payment Due Date</label>
+                    <div style="font-size: 14px; font-weight: 500; color: #1f2937;"><span id="view_final_payment_due">-</span></div>
+                </div>
+
+                <div id="viewNotesSection" style="display: none; padding: 12px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 18px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px;">Your Notes</label>
+                    <div style="font-size: 13px; color: #374151; line-height: 1.5; font-style: italic;" id="view_notes"></div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid #e5e7eb; margin-top: 16px;">
+                    <button onclick="closeViewResponseModal()" style="padding: 10px 18px; font-size: 13px; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; background: #e5e7eb; color: #374151;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openViewResponseModal(providerResponse) {
+            document.getElementById('view_quote_amount').textContent = providerResponse.quote_amount || '0';
+
+            if (providerResponse.needs_advance) {
+                document.getElementById('view_advance_required').textContent = 'Yes';
+                document.getElementById('viewAdvanceSection').style.display = 'block';
+                document.getElementById('view_advance_amount').textContent = providerResponse.advance_amount || '0';
+                document.getElementById('view_advance_due_date').textContent = providerResponse.advance_due_date || '-';
+            } else {
+                document.getElementById('view_advance_required').textContent = 'No';
+                document.getElementById('viewAdvanceSection').style.display = 'none';
+            }
+
+            document.getElementById('view_final_payment_due').textContent = providerResponse.final_payment_due_date || '-';
+
+            if (providerResponse.note) {
+                document.getElementById('viewNotesSection').style.display = 'block';
+                document.getElementById('view_notes').textContent = providerResponse.note;
+            } else {
+                document.getElementById('viewNotesSection').style.display = 'none';
+            }
+
+            document.getElementById('viewResponseModal').style.display = 'flex';
+        }
+
+        function closeViewResponseModal() {
+            document.getElementById('viewResponseModal').style.display = 'none';
+        }
+    </script>
+
+    <?php include 'respond_form.view.php'; ?>
     </div>
 </body>
 </html>

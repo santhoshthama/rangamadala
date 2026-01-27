@@ -233,6 +233,21 @@ CREATE TABLE IF NOT EXISTS `drama_budgets` (
   CONSTRAINT `drama_budgets_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `drama_services` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `drama_id` int(11) NOT NULL COMMENT 'Reference to drama',
+  `service_type` varchar(100) NOT NULL COMMENT 'Type of service (Theater Production, Lighting Design, etc.)',
+  `budget` decimal(12,2) DEFAULT NULL COMMENT 'Expected budget for this service type',
+  `description` text DEFAULT NULL COMMENT 'Description or requirements for this service',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_drama_service` (`drama_id`, `service_type`),
+  KEY `idx_drama_id` (`drama_id`),
+  KEY `idx_service_type` (`service_type`),
+  CONSTRAINT `drama_services_ibfk_1` FOREIGN KEY (`drama_id`) REFERENCES `dramas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 
 
@@ -445,7 +460,7 @@ CREATE TABLE IF NOT EXISTS `projects` (
 
 -- Create service_requests table 
 CREATE TABLE IF NOT EXISTS `service_requests` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `drama_id` int(11) DEFAULT NULL,
   `provider_id` int(11) NOT NULL,
   `requested_by` int(11) DEFAULT NULL,
@@ -464,12 +479,17 @@ CREATE TABLE IF NOT EXISTS `service_requests` (
   `notes` text DEFAULT NULL,
   `provider_notes` text DEFAULT NULL,
   `rejection_reason` text DEFAULT NULL,
-  `status` enum('pending','accepted','rejected','completed','cancelled') NOT NULL DEFAULT 'pending',
+  `status` enum('pending','provider_responded','confirmed','accepted','rejected','completed','cancelled') NOT NULL DEFAULT 'pending',
   `payment_status` enum('unpaid','partially_paid','paid') DEFAULT 'unpaid',
   `accepted_at` timestamp NULL DEFAULT NULL,
   `completed_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_drama_id` (`drama_id`),
+  KEY `idx_provider_id` (`provider_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
