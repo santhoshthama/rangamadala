@@ -29,8 +29,8 @@ class Artistdashboard
         // Get dramas where user is a production manager
         $data['dramas_as_manager'] = $drama_model->get_dramas_by_manager($user_id);
         
-        // Get dramas where user is cast in roles (as actor)
-        $data['dramas_as_actor'] = $drama_model->get_dramas_by_actor($user_id);
+        // Get role assignments where user is cast as an actor (each role, not each drama)
+        $data['roles_as_actor'] = $role_model ? $role_model->getAssignmentsByArtist($user_id) : [];
         
         // Get pending role requests for this artist
         $data['role_requests'] = $artist_model->get_pending_role_requests($user_id);
@@ -43,10 +43,10 @@ class Artistdashboard
         
         // Count statistics
         $data['stats'] = [
-            'total_dramas' => count($data['dramas_as_director']) + count($data['dramas_as_manager']) + count($data['dramas_as_actor']),
+            'total_dramas' => count($data['dramas_as_director']) + count($data['dramas_as_manager']) + count($data['roles_as_actor']),
             'as_director' => count($data['dramas_as_director']),
             'as_manager' => count($data['dramas_as_manager']),
-            'as_actor' => count($data['dramas_as_actor']),
+            'as_actor' => count($data['roles_as_actor']),
             'pending_requests' => count($data['role_requests']),
             'pending_pm_requests' => count($data['pm_requests'])
         ];
@@ -206,5 +206,51 @@ class Artistdashboard
             header("Location: " . ROOT . "/artistdashboard");
             exit;
         }
+    }
+
+    /**
+     * View drama details as an actor (read-only view with drama info, roles, and schedule)
+     */
+    public function view_drama()
+    {
+        // Check if user is logged in and is an artist
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $drama_id = $_GET['drama_id'] ?? null;
+        if (!$drama_id) {
+            $_SESSION['message'] = 'Drama not found.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/artistdashboard");
+            exit;
+        }
+
+        $drama_model = $this->getModel('M_drama');
+        $role_model = $this->getModel('M_role');
+        $user_id = $_SESSION['user_id'];
+
+        // Get drama details
+        $data['drama'] = $drama_model->getDramaById($drama_id);
+        
+        if (!$data['drama']) {
+            $_SESSION['message'] = 'Drama not found.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/artistdashboard");
+            exit;
+        }
+
+        // Get all roles for this drama
+        $data['roles'] = $role_model ? $role_model->getRolesByDrama($drama_id) : [];
+        
+        // Get artist's role in this drama
+        $data['my_role'] = $role_model ? $role_model->getArtistRoleInDrama($user_id, $drama_id) : null;
+        
+        // Get schedule/rehearsal data (if available)
+        // TODO: Add schedule model when available
+        $data['schedules'] = [];
+
+        $this->view('artist_drama_view', $data);
     }
 }

@@ -280,52 +280,58 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                 <div id="actor-tab" class="tab-content">
                     <div class="card-section">
                         <h3>
-                            <span><i class="fas fa-user-tie"></i> Dramas You're Acting In</span>
+                            <span><i class="fas fa-user-tie"></i> Your Acting Roles</span>
                         </h3>
-                    <?php if (!isset($dramas_as_actor) || empty($dramas_as_actor)): ?>
+                    <?php if (!isset($roles_as_actor) || empty($roles_as_actor)): ?>
                         <div class="no-results">
                             <i class="fas fa-user-tie"></i>
                             <h3>No Acting Roles</h3>
-                            <p>You haven't been cast in any dramas yet. Browse available roles!</p>
-                            <button class="btn btn-primary" style="margin-top: 16px;" onclick="window.location.href='<?=ROOT?>/browseDramas'">
-                                <i class="fas fa-search"></i> Browse Roles
+                            <p>You haven't been cast in any roles yet. Browse available vacancies!</p>
+                            <button class="btn btn-primary" style="margin-top: 16px;" onclick="window.location.href='<?=ROOT?>/artistdashboard/browse_vacancies'">
+                                <i class="fas fa-search"></i> Browse Vacancies
                             </button>
                         </div>
                     <?php else: ?>
                         <div class="artists-grid">
-                            <?php foreach ($dramas_as_actor as $drama): ?>
+                            <?php foreach ($roles_as_actor as $role): ?>
                                 <div class="artist-card">
                                     <div class="artist-header" style="background: linear-gradient(135deg, #ffc107, #e0a800); color: #1f1f1f;">
-                                        <h3 class="artist-name" style="color: #1f1f1f;"><?= esc($drama->title) ?></h3>
-                                        <p class="artist-experience"><?= esc($drama->genre ?? 'Drama') ?></p>
+                                        <h3 class="artist-name" style="color: #1f1f1f;"><?= esc($role->role_name) ?></h3>
+                                        <p class="artist-experience"><?= esc(ucfirst($role->role_type)) ?> Role</p>
                                     </div>
                                     <div class="artist-body">
                                         <div class="info-row">
-                                            <span class="info-label">Your Role:</span>
-                                            <span class="info-value" style="color: var(--warning);">
-                                                <strong><?= esc($drama->role_name ?? 'Actor') ?></strong>
+                                            <span class="info-label">Drama:</span>
+                                            <span class="info-value" style="color: var(--brand);">
+                                                <strong><?= esc($role->drama_name) ?></strong>
                                             </span>
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Director:</span>
-                                            <span class="info-value"><?= esc($drama->director_name ?? 'Unknown') ?></span>
+                                            <span class="info-value"><?= esc($role->director_name ?? 'Unknown') ?></span>
                                         </div>
+                                        <?php if (!empty($role->salary)): ?>
                                         <div class="info-row">
-                                            <span class="info-label">Language:</span>
-                                            <span class="info-value"><?= esc($drama->language ?? 'Sinhala') ?></span>
+                                            <span class="info-label">Salary:</span>
+                                            <span class="info-value">LKR <?= number_format($role->salary) ?></span>
+                                        </div>
+                                        <?php endif; ?>
+                                        <div class="info-row">
+                                            <span class="info-label">Assigned:</span>
+                                            <span class="info-value"><?= date('M d, Y', strtotime($role->assigned_at)) ?></span>
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Status:</span>
                                             <span class="info-value">
-                                                <span class="status-badge <?= $drama->status === 'active' ? 'assigned' : 'pending' ?>">
-                                                    <?= esc(ucfirst($drama->status)) ?>
+                                                <span class="status-badge assigned">
+                                                    <i class="fas fa-check-circle"></i> Active
                                                 </span>
                                             </span>
                                         </div>
                                     </div>
                                     <div class="artist-footer">
-                                        <button class="btn btn-warning" style="flex: 1;" onclick="window.location.href='<?=ROOT?>/drama/details?drama_id=<?=$drama->id?>'">
-                                            <i class="fas fa-eye"></i> View Details
+                                        <button class="btn btn-warning" style="flex: 1;" onclick="window.location.href='<?=ROOT?>/artistdashboard/view_drama?drama_id=<?=$role->drama_id?>'">
+                                            <i class="fas fa-eye"></i> View Drama
                                         </button>
                                     </div>
                                 </div>

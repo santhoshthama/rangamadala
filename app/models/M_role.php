@@ -48,9 +48,13 @@ class M_role {
         try {
             $this->db->query("SELECT r.*, 
                              (r.positions_available - r.positions_filled) as available_positions,
-                             u.full_name as created_by_name
+                             u.full_name as created_by_name,
+                             CASE WHEN ra.id IS NOT NULL THEN 1 ELSE 0 END as is_filled,
+                             artist_user.full_name as assigned_artist_name
                              FROM drama_roles r
                              LEFT JOIN users u ON r.created_by = u.id
+                             LEFT JOIN role_assignments ra ON r.id = ra.role_id AND ra.status = 'active'
+                             LEFT JOIN users artist_user ON ra.artist_id = artist_user.id
                              WHERE r.drama_id = :drama_id
                              ORDER BY r.created_at DESC");
             $this->db->bind(':drama_id', $drama_id);
@@ -816,7 +820,90 @@ class M_role {
             return [];
         }
     }
+
+    /**
+     * Get all role assignments for an artist (roles they are currently cast in)
+     */
+    public function getAssignmentsByArtist($artist_id) {
+        try {
+            $this->db->query("SELECT ra.*, 
+                             r.role_name, r.role_type, r.role_description, r.salary,
+                             d.id as drama_id, d.drama_name, d.description as drama_description,
+                             u.full_name as director_name
+                             FROM role_assignments ra
+                             INNER JOIN drama_roles r ON ra.role_id = r.id
+                             INNER JOIN dramas d ON r.drama_id = d.id
+                             INNER JOIN users u ON d.creator_artist_id = u.id
+                             WHERE ra.artist_id = :artist_id AND ra.status = 'active'
+                             ORDER BY ra.assigned_at DESC");
+            $this->db->bind(':artist_id', $artist_id);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in getAssignmentsByArtist: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get artist's specific role in a drama
+     */
+    public function getArtistRoleInDrama($artist_id, $drama_id) {
+        try {
+            $this->db->query("SELECT ra.*, r.role_name, r.role_type, r.role_description, r.salary
+                             FROM role_assignments ra
+                             INNER JOIN drama_roles r ON ra.role_id = r.id
+                             WHERE ra.artist_id = :artist_id 
+                             AND r.drama_id = :drama_id 
+                             AND ra.status = 'active'
+                             LIMIT 1");
+            $this->db->bind(':artist_id', $artist_id);
+            $this->db->bind(':drama_id', $drama_id);
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log("Error in getArtistRoleInDrama: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Remove artist assignment from role
+     * @param int $assignment_id Assignment ID to remove
+     * @return bool Success status
+     */
+    public function removeAssignment($assignment_id) {
+        try {
+            $this->db->beginTransaction();
+            
+            // First, get the role_id before deleting
+            $this->db->query("SELECT role_id FROM role_assignments WHERE id = :id");
+            $this->db->bind(':id', $assignment_id);
+            $assignment = $this->db->single();
+            
+            if (!$assignment) {
+                $this->db->rollBack();
+                return false;
+            }
+            
+            // Delete the assignment
+            $this->db->query("DELETE FROM role_assignments WHERE id = :id");
+            $this->db->bind(':id', $assignment_id);
+            $this->db->execute();
+            
+            // Decrement positions_filled counter
+            $this->db->query("UPDATE drama_roles SET positions_filled = positions_filled - 1 
+                             WHERE id = :role_id AND positions_filled > 0");
+            $this->db->bind(':role_id', $assignment->role_id);
+            $this->db->execute();
+            
+            $this->db->commit();
+            return true;
+            
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in removeAssignment: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 
 ?>
-

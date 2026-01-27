@@ -1061,6 +1061,66 @@ class Director{
 
         return false;
     }
+
+    /**
+     * Remove an artist assignment from a role
+     */
+    public function remove_assignment()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $_SESSION['message'] = 'Role management is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        $assignmentId = (int)($_POST['assignment_id'] ?? 0);
+        $roleId = (int)($_POST['role_id'] ?? 0);
+
+        if (!$assignmentId || !$roleId) {
+            $_SESSION['message'] = 'Invalid request. Missing assignment or role information.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        // Verify the role belongs to this drama
+        $role = $this->findRoleForDrama($roleId, (int)$drama->id);
+        if (!$role) {
+            $_SESSION['message'] = 'Role not found or inaccessible.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        // Remove the assignment
+        $removed = $this->roleModel->removeAssignment($assignmentId);
+
+        if ($removed) {
+            $_SESSION['message'] = 'Artist removed from role successfully.';
+            $_SESSION['message_type'] = 'success';
+        } else {
+            $_SESSION['message'] = 'Failed to remove artist assignment. Please try again.';
+            $_SESSION['message_type'] = 'error';
+        }
+
+        // Redirect back to role details or manage roles
+        $returnTo = $_POST['return_to'] ?? 'manage_roles';
+        if ($returnTo === 'role_details') {
+            header("Location: " . ROOT . "/director/view_role?drama_id=" . $drama->id . "&role_id=" . $roleId);
+        } else {
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+        exit;
+    }
 }
 
 ?>
