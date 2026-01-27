@@ -4,7 +4,7 @@ if(isset($data) && is_array($data)) {
     extract($data);
 }
 
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+$profileImageSrc = ROOT . '/uploads/profile_images/default_user.jpg';
 if (isset($user->profile_image) && !empty($user->profile_image)) {
     $storedValue = str_replace('\\', '/', $user->profile_image);
     if (strpos($storedValue, '/') !== false) {
@@ -545,8 +545,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                         <i class="fas fa-star"></i> Artist
                     </small>
                 </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-            </div>
+<img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.jpg'">            </div>
         </div>
 
         <?php if (isset($_SESSION['message'])): ?>
