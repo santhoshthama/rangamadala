@@ -2,7 +2,7 @@
 
 class M_signup {
 
-    private $db;
+    protected $db;
 
     public function __construct() {
         $this->db = new Database();

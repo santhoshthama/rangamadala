@@ -15,37 +15,37 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="dashboard.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
-                <a href="manage_services.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li>
-                <a href="manage_budget.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
             <li>
-                <a href="book_theater.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
                     <i class="fas fa-theater-masks"></i>
                     <span>Theater Bookings</span>
                 </a>
             </li>
             <li>
-                <a href="../artist/profile.php">
+                <a href="<?= ROOT ?>/artistdashboard">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
-                <a href="../../public/index.php">
+                <a href="<?= ROOT ?>/logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -55,7 +55,7 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php?drama_id=1" class="back-button">
+        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="back-button">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>
@@ -63,7 +63,7 @@
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
-                <span>Sinhabahu</span>
+                <span><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></span>
                 <h2>Service Management</h2>
             </div>
             <div class="header-controls">
@@ -77,30 +77,20 @@
         <!-- Service Stats -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>12</h3>
+                <h3><?= isset($totalCount) ? $totalCount : '0' ?></h3>
                 <p>Total Services Requested</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--success), #1f9b3b);">
-                <h3>9</h3>
+                <h3><?= isset($confirmedCount) ? $confirmedCount : '0' ?></h3>
                 <p>Confirmed Services</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--warning), #e0a800);">
-                <h3>3</h3>
+                <h3><?= isset($pendingCount) ? $pendingCount : '0' ?></h3>
                 <p>Pending Responses</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--info), #138496);">
-                <h3>LKR 800,000</h3>
+                <h3>-</h3>
                 <p>Estimated Service Costs</p>
-            </div>
-        </div>
-
-        <!-- Filter Tabs -->
-        <div class="content" style="padding: 28px; margin-bottom: 26px;">
-            <div class="tabs">
-                <button class="tab-button active" onclick="filterServices('all')">All Services</button>
-                <button class="tab-button" onclick="filterServices('confirmed')">Confirmed</button>
-                <button class="tab-button" onclick="filterServices('pending')">Pending</button>
-                <button class="tab-button" onclick="filterServices('rejected')">Rejected</button>
             </div>
         </div>
 
@@ -108,120 +98,74 @@
         <div class="content" style="padding: 28px;">
             <h3 style="margin-bottom: 16px;">Service Requests</h3>
             
-            <!-- Service Item - Confirmed -->
-            <div class="card-section" style="margin-bottom: 16px; background: #f0f7f4; border-left-color: var(--success);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="flex: 1;">
-                        <h3 style="color: var(--ink); margin-bottom: 8px;">
-                            <i class="fas fa-microphone" style="color: var(--success);"></i>
-                            Sound System & Audio Setup
-                        </h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Service Provider</p>
-                                <p style="color: var(--ink); font-weight: 600;">Sri Lanka Sound Services</p>
+            <?php if (isset($services) && is_array($services) && !empty($services)): ?>
+                <?php foreach ($services as $service): ?>
+                    <?php if (!is_object($service)) continue; ?>
+                    <?php 
+                        $statusClass = 'pending';
+                        $statusText = 'Pending';
+                        $bgColor = '#fffbf0';
+                        $borderColor = 'var(--warning)';
+                        
+                        if (isset($service->status)) {
+                            if ($service->status === 'accepted') {
+                                $statusClass = 'assigned';
+                                $statusText = 'Confirmed';
+                                $bgColor = '#f0f7f4';
+                                $borderColor = 'var(--success)';
+                            } elseif ($service->status === 'rejected') {
+                                $statusClass = 'rejected';
+                                $statusText = 'Rejected';
+                                $bgColor = '#fef0f0';
+                                $borderColor = 'var(--danger)';
+                            }
+                        }
+                    ?>
+                    <div class="card-section" style="margin-bottom: 16px; background: <?= $bgColor ?>; border-left-color: <?= $borderColor ?>;"><div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <h3 style="color: var(--ink); margin-bottom: 8px;">
+                                    <i class="fas fa-briefcase" style="color: <?= $borderColor ?>; margin-right: 8px;"></i>
+                                    <?= isset($service->service_required) ? esc($service->service_required) : 'Service' ?>
+                                </h3>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+                                    <div>
+                                        <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Requester</p>
+                                        <p style="color: var(--ink); font-weight: 600;"><?= isset($service->requester_name) ? esc($service->requester_name) : 'N/A' ?></p>
+                                    </div>
+                                    <div>
+                                        <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Contact</p>
+                                        <p style="color: var(--ink); font-weight: 600;"><?= isset($service->requester_phone) ? esc($service->requester_phone) : 'N/A' ?></p>
+                                    </div>
+                                    <div>
+                                        <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Service Date</p>
+                                        <p style="color: var(--ink); font-weight: 600;"><?= isset($service->start_date) ? date('M d, Y', strtotime($service->start_date)) : 'N/A' ?></p>
+                                    </div>
+                                    <div>
+                                        <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Status</p>
+                                        <span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Estimated Cost</p>
-                                <p style="color: var(--brand); font-weight: 700;">LKR 120,000</p>
-                            </div>
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Service Date</p>
-                                <p style="color: var(--ink); font-weight: 600;">Jan 15, 2025</p>
-                            </div>
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Status</p>
-                                <span class="status-badge assigned">Confirmed</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-direction: column;">
-                        <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;" onclick="viewServiceDetails(1)">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-danger" style="padding: 8px 12px; font-size: 12px;" onclick="cancelService(1)">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Service Item - Pending -->
-            <div class="card-section" style="margin-bottom: 16px; background: #fffbf0; border-left-color: var(--warning);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="flex: 1;">
-                        <h3 style="color: var(--ink); margin-bottom: 8px;">
-                            <i class="fas fa-lightbulb" style="color: var(--warning);"></i>
-                            Professional Lighting & Effects
-                        </h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Service Provider</p>
-                                <p style="color: var(--ink); font-weight: 600;">Colombo Lighting Studio</p>
-                            </div>
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Estimated Cost</p>
-                                <p style="color: var(--brand); font-weight: 700;">LKR 150,000</p>
-                            </div>
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Service Date</p>
-                                <p style="color: var(--ink); font-weight: 600;">Jan 22, 2025</p>
-                            </div>
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Status</p>
-                                <span class="status-badge pending">Awaiting Response</span>
+                            <div style="display: flex; gap: 8px; flex-direction: column;">
+                                <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;" onclick="viewServiceDetails(<?= isset($service->id) ? $service->id : 'null' ?>)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-danger" style="padding: 8px 12px; font-size: 12px;" onclick="cancelService(<?= isset($service->id) ? $service->id : 'null' ?>)">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 8px; flex-direction: column;">
-                        <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;" onclick="viewServiceDetails(2)">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-danger" style="padding: 8px 12px; font-size: 12px;" onclick="cancelService(2)">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div style="text-align: center; padding: 60px 30px; color: var(--muted);">
+                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                    <p>No service requests yet. Start by requesting a service from available providers.</p>
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="openRequestServiceModal()">
+                        <i class="fas fa-plus"></i> Request Service
+                    </button>
                 </div>
-            </div>
-
-            <!-- Service Item - Confirmed -->
-            <div class="card-section" style="margin-bottom: 16px; background: #f0f7f4; border-left-color: var(--success);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="flex: 1;">
-                        <h3 style="color: var(--ink); margin-bottom: 8px;">
-                            <i class="fas fa-palette" style="color: var(--success);"></i>
-                            Makeup & Costume Design
-                        </h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Service Provider</p>
-                                <p style="color: var(--ink); font-weight: 600;">Elite Makeup Artistry</p>
-                            </div>
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Estimated Cost</p>
-                                <p style="color: var(--brand); font-weight: 700;">LKR 200,000</p>
-                            </div>
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Service Date</p>
-                                <p style="color: var(--ink); font-weight: 600;">Jan 15, 2025</p>
-                            </div>
-                            <div>
-                                <p style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Status</p>
-                                <span class="status-badge assigned">Confirmed</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-direction: column;">
-                        <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;" onclick="viewServiceDetails(3)">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-danger" style="padding: 8px 12px; font-size: 12px;" onclick="cancelService(3)">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <?php endif; ?>
     </main>
 
     <!-- Request Service Modal -->

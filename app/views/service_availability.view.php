@@ -22,10 +22,6 @@
         <!-- Legend for calendar status -->
         <div class="legend-container">
             <div class="legend-item">
-                <span class="legend-dot available"></span>
-                <span>Available</span>
-            </div>
-            <div class="legend-item">
                 <span class="legend-dot booked"></span>
                 <span>Booked</span>
             </div>
@@ -35,17 +31,12 @@
             </div>
         </div>
 
-        <button class="update-btn" onclick="updateAvailability()">
-            <span class="btn-icon">⟲</span>
-            Update Availability
-        </button>
-
         <div class="calendar-container">
             <!-- Left Panel - Calendar -->
             <div class="calendar-panel">
                 <div class="panel-header">
                     <h2>Calendar</h2>
-                    <p>Select your available dates</p>
+                    <p>Select dates to book</p>
                 </div>
                 
                 <div class="calendar">
@@ -69,15 +60,15 @@
                 </div>
             </div>
 
-            <!-- Right Panel - Available Dates -->
+            <!-- Right Panel - Booked Dates -->
             <div class="dates-panel">
                 <div class="panel-header">
-                    <h2>Available Dates</h2>
-                    <p>Your current availability</p>
+                    <h2>Booked Dates</h2>
+                    <p>Your booked dates</p>
                 </div>
                 
                 <div class="available-dates-list" id="availableDatesList">
-                    <!-- Available dates will be populated here -->
+                    <!-- Booked dates will be populated here -->
                 </div>
                 
                 <button class="add-date-btn" onclick="showAddDateForm()" id="addDateBtn" disabled>
@@ -92,10 +83,18 @@
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <span class="close-modal" onclick="closeModal()">&times;</span>
-            <h3>Add Available Date</h3>
+            <h3>Book a Date</h3>
             <div class="form-group">
                 <label for="selectedDateDisplay">Selected Date:</label>
                 <input type="text" id="selectedDateDisplay" readonly>
+            </div>
+            <div class="form-group">
+                <label for="dateTitle">Title:</label>
+                <input 
+                    type="text" 
+                    id="dateTitle" 
+                    placeholder="Enter a title for this booking"
+                >
             </div>
             <div class="form-group">
                 <label for="dateDescription">Description:</label>
@@ -130,9 +129,52 @@
                     <strong>Booked For:</strong>
                     <span id="bookedForText"></span>
                 </div>
-                <div class="detail-row">
+                <div class="detail-row" id="viewDescriptionRow" style="display: none;">
                     <strong>Description:</strong>
                     <p id="viewDescriptionText" class="description-content"></p>
+                </div>
+                
+                <!-- Request Details Section (only for booked dates with service request) -->
+                <div id="requestDetailsSection" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+                    <h4 style="margin-bottom: 15px; color: #333;">Request Details</h4>
+                    
+                    <div class="detail-row">
+                        <strong>Requester:</strong>
+                        <span id="requesterNameText"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Email:</strong>
+                        <span id="requesterEmailText"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Phone:</strong>
+                        <span id="requesterPhoneText"></span>
+                    </div>
+                    <div class="detail-row" id="dramaNameRow">
+                        <strong>Drama:</strong>
+                        <span id="dramaNameText"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Service Type:</strong>
+                        <span id="serviceTypeText"></span>
+                    </div>
+                    <div class="detail-row" id="serviceRequiredRow">
+                        <strong>Service Required:</strong>
+                        <span id="serviceRequiredText"></span>
+                    </div>
+                    <div class="detail-row" id="budgetRow">
+                        <strong>Budget:</strong>
+                        <span id="budgetText"></span>
+                    </div>
+                    <div class="detail-row" id="dateRangeRow">
+                        <strong>Date Range:</strong>
+                        <span id="dateRangeText"></span>
+                    </div>
+                    <div class="detail-row" id="requestNotesRow">
+                        <strong>Notes:</strong>
+                        <p id="requestNotesText" class="description-content"></p>
+                    </div>
+                    <div id="serviceSpecificDetails" style="margin-top: 10px;"></div>
                 </div>
             </div>
             <div class="modal-actions">
@@ -183,8 +225,8 @@
         let selectedDate = null;
         let currentViewingDate = null;
 
-        // Data storage
-        let availableDatesData = {};
+        // Data storage - Load from backend
+        let availableDatesData = <?= $availability_data ?? '{}' ?>;
 
         const months = [
             'January', 'February', 'March', 'April', 'May', 'June',
@@ -239,12 +281,12 @@
                     // Check if this date has availability data
                     if (availableDatesData[dateString]) {
                         const dateData = availableDatesData[dateString];
-                        if (dateData.status === 'booked') {
-                            dayElement.classList.add('booked');
-                            dayElement.title = `Booked for: ${dateData.bookedFor}`;
+                        // Display all dates as booked (both manual and automatic)
+                        dayElement.classList.add('booked');
+                        if (dateData.booked_for) {
+                            dayElement.title = `Booked for: ${dateData.booked_for}`;
                         } else {
-                            dayElement.classList.add('selected');
-                            dayElement.title = 'Available';
+                            dayElement.title = dateData.description || 'Booked';
                         }
                         // Add click event to view details
                         dayElement.addEventListener('click', () => viewDateDetails(dateString));
@@ -264,6 +306,16 @@
         }
 
         function selectDate(day, element, dateString) {
+            // Check if this date is already selected (toggle behavior)
+            if (element.classList.contains('highlight')) {
+                // Deselect the date
+                element.classList.remove('highlight');
+                selectedDate = null;
+                document.getElementById('addDateBtn').disabled = true;
+                showMessage(`Date deselected`, 'info');
+                return;
+            }
+            
             // Remove previous selection highlight
             document.querySelectorAll('.calendar-day.highlight').forEach(el => {
                 el.classList.remove('highlight');
@@ -311,11 +363,12 @@
             }
             
             if (availableDatesData[selectedDate]) {
-                showMessage('This date is already in your available dates', 'warning');
+                showMessage('This date is already booked', 'warning');
                 return;
             }
             
             document.getElementById('selectedDateDisplay').value = selectedDate;
+            document.getElementById('dateTitle').value = '';
             document.getElementById('dateDescription').value = '';
             document.getElementById('modalOverlay').classList.add('active');
         }
@@ -325,34 +378,62 @@
         }
 
         function addDateWithDescription() {
+            const title = document.getElementById('dateTitle').value.trim();
             const description = document.getElementById('dateDescription').value.trim();
             
-            if (!description) {
-                showMessage('Please enter a description for this date', 'error');
+            if (!title) {
+                showMessage('Please enter a title for this booking', 'error');
                 return;
             }
             
-            // Add the selected date with description
-            availableDatesData[selectedDate] = {
-                date: selectedDate,
-                description: description,
-                status: 'available',
-                bookedFor: null,
-                bookingDetails: null,
-                addedOn: new Date().toISOString()
-            };
+            if (!description) {
+                showMessage('Please enter a description for this booking', 'error');
+                return;
+            }
             
-            updateAvailableDatesList();
-            generateCalendarDays();
-            closeModal();
-            
-            showMessage(`Added ${selectedDate} to available dates`, 'success');
-            selectedDate = null;
-            document.getElementById('addDateBtn').disabled = true;
-            
-            // Remove highlight from calendar
-            document.querySelectorAll('.calendar-day.highlight').forEach(el => {
-                el.classList.remove('highlight');
+            // Send to backend via AJAX
+            const formData = new FormData();
+            formData.append('date', selectedDate);
+            formData.append('title', title);
+            formData.append('description', description);
+
+            fetch('<?= ROOT ?>/ServiceAvailability/addDate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add to local data
+                    availableDatesData[selectedDate] = {
+                        date: selectedDate,
+                        description: description,
+                        status: 'booked',
+                        booked_for: title,
+                        booking_details: description,
+                        service_request_id: null,
+                        added_on: new Date().toISOString()
+                    };
+                    
+                    updateAvailableDatesList();
+                    generateCalendarDays();
+                    closeModal();
+                    
+                    showMessage(`Booked ${selectedDate}`, 'success');
+                    selectedDate = null;
+                    document.getElementById('addDateBtn').disabled = true;
+                    
+                    // Remove highlight from calendar
+                    document.querySelectorAll('.calendar-day.highlight').forEach(el => {
+                        el.classList.remove('highlight');
+                    });
+                } else {
+                    showMessage(data.error || 'Failed to add date', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('An error occurred while adding the date', 'error');
             });
         }
 
@@ -364,7 +445,6 @@
             currentViewingDate = dateString;
             
             document.getElementById('viewDateText').textContent = dateString;
-            document.getElementById('viewDescriptionText').textContent = dateData.description;
             
             // Update status badge
             const statusBadge = document.getElementById('viewStatusBadge');
@@ -373,14 +453,116 @@
             
             // Show/hide booked info
             const bookedForRow = document.getElementById('bookedForRow');
+            const requestDetailsSection = document.getElementById('requestDetailsSection');
+            const descriptionRow = document.getElementById('viewDescriptionRow');
+            
             if (dateData.status === 'booked') {
                 bookedForRow.style.display = 'block';
-                document.getElementById('bookedForText').textContent = dateData.bookedFor;
+                document.getElementById('bookedForText').textContent = dateData.booked_for;
                 document.getElementById('viewModalTitle').textContent = 'Booking Details';
                 // Hide edit button for booked dates
                 document.getElementById('editBtn').style.display = 'none';
+                
+                // Show request details if available
+                if (dateData.service_request_id && dateData.requester_name) {
+                    requestDetailsSection.style.display = 'block';
+                    descriptionRow.style.display = 'none';
+                    
+                    // Populate requester info
+                    document.getElementById('requesterNameText').textContent = dateData.requester_name || 'N/A';
+                    document.getElementById('requesterEmailText').textContent = dateData.requester_email || 'N/A';
+                    document.getElementById('requesterPhoneText').textContent = dateData.requester_phone || 'N/A';
+                    
+                    // Drama name (may not always be present)
+                    const dramaNameRow = document.getElementById('dramaNameRow');
+                    if (dateData.drama_name) {
+                        dramaNameRow.style.display = 'block';
+                        document.getElementById('dramaNameText').textContent = dateData.drama_name;
+                    } else {
+                        dramaNameRow.style.display = 'none';
+                    }
+                    
+                    // Service details
+                    document.getElementById('serviceTypeText').textContent = dateData.service_type || 'N/A';
+                    
+                    const serviceRequiredRow = document.getElementById('serviceRequiredRow');
+                    if (dateData.service_required) {
+                        serviceRequiredRow.style.display = 'block';
+                        document.getElementById('serviceRequiredText').textContent = dateData.service_required;
+                    } else {
+                        serviceRequiredRow.style.display = 'none';
+                    }
+                    
+                    // Budget
+                    const budgetRow = document.getElementById('budgetRow');
+                    if (dateData.budget) {
+                        budgetRow.style.display = 'block';
+                        document.getElementById('budgetText').textContent = 'Rs ' + parseFloat(dateData.budget).toFixed(2);
+                    } else {
+                        budgetRow.style.display = 'none';
+                    }
+                    
+                    // Date range
+                    const dateRangeRow = document.getElementById('dateRangeRow');
+                    if (dateData.start_date && dateData.end_date) {
+                        dateRangeRow.style.display = 'block';
+                        document.getElementById('dateRangeText').textContent = 
+                            `${dateData.start_date} to ${dateData.end_date}`;
+                    } else {
+                        dateRangeRow.style.display = 'none';
+                    }
+                    
+                    // Request notes
+                    const requestNotesRow = document.getElementById('requestNotesRow');
+                    if (dateData.notes) {
+                        requestNotesRow.style.display = 'block';
+                        document.getElementById('requestNotesText').textContent = dateData.notes;
+                    } else {
+                        requestNotesRow.style.display = 'none';
+                    }
+                    
+                    // Service-specific details
+                    const serviceSpecificDiv = document.getElementById('serviceSpecificDetails');
+                    if (dateData.service_details && Object.keys(dateData.service_details).length > 0) {
+                        let detailsHTML = '<div style="margin-top: 15px;"><strong>Service-Specific Details:</strong><div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">';
+                        
+                        for (const [key, value] of Object.entries(dateData.service_details)) {
+                            // Skip internal fields
+                            if (key === 'uploaded_files' || !value) continue;
+                            
+                            // Format the key to be more readable
+                            const formattedKey = key.split('_').map(word => 
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                            ).join(' ');
+                            
+                            detailsHTML += `<p style="margin: 5px 0;"><strong>${formattedKey}:</strong> ${value}</p>`;
+                        }
+                        
+                        // Handle uploaded files if present
+                        if (dateData.service_details.uploaded_files && Array.isArray(dateData.service_details.uploaded_files) && dateData.service_details.uploaded_files.length > 0) {
+                            detailsHTML += '<p style="margin: 10px 0 5px 0;"><strong>Uploaded Files:</strong></p>';
+                            dateData.service_details.uploaded_files.forEach(file => {
+                                detailsHTML += `<p style="margin: 3px 0 3px 15px;">• <a href="<?= ROOT ?>/${file.relative_path}" target="_blank">View ${file.original_name}</a></p>`;
+                            });
+                        }
+                        
+                        detailsHTML += '</div></div>';
+                        serviceSpecificDiv.innerHTML = detailsHTML;
+                    } else {
+                        serviceSpecificDiv.innerHTML = '';
+                    }
+                } else {
+                    requestDetailsSection.style.display = 'none';
+                    // Manual booking without linked request: show description
+                    descriptionRow.style.display = 'block';
+                    document.getElementById('viewDescriptionText').textContent = dateData.description || 'No description';
+                }
             } else {
                 bookedForRow.style.display = 'none';
+                requestDetailsSection.style.display = 'none';
+                // Show description for manual available dates
+                descriptionRow.style.display = 'block';
+                document.getElementById('viewDescriptionText').textContent = dateData.description || 'No description';
                 document.getElementById('viewModalTitle').textContent = 'Date Details';
                 document.getElementById('editBtn').style.display = 'inline-block';
             }
@@ -408,11 +590,8 @@
             if (!currentViewingDate) return;
             
             if (confirm(`Are you sure you want to remove ${currentViewingDate}?`)) {
-                delete availableDatesData[currentViewingDate];
-                updateAvailableDatesList();
-                generateCalendarDays();
+                removeDate(currentViewingDate);
                 closeViewModal();
-                showMessage(`Removed ${currentViewingDate} from available dates`, 'success');
             }
         }
 
@@ -443,9 +622,9 @@
             
             // Update the date status to booked
             availableDatesData[currentViewingDate].status = 'booked';
-            availableDatesData[currentViewingDate].bookedFor = clientName;
-            availableDatesData[currentViewingDate].bookingDetails = bookingDetails;
-            availableDatesData[currentViewingDate].bookedOn = new Date().toISOString();
+            availableDatesData[currentViewingDate].booked_for = clientName;
+            availableDatesData[currentViewingDate].booking_details = bookingDetails;
+            availableDatesData[currentViewingDate].booked_on = new Date().toISOString();
             
             updateAvailableDatesList();
             generateCalendarDays();
@@ -473,11 +652,22 @@
                 dateItem.className = 'date-item';
                 
                 let bookedInfoHTML = '';
-                if (dateData.status === 'booked') {
+                const isAutoBooking = !!dateData.service_request_id;
+                
+                if (isAutoBooking) {
+                    // Automatically booked date (from service request)
                     bookedInfoHTML = `
                         <div class="booked-info">
                             <strong>Booked For:</strong>
-                            <span>${dateData.bookedFor}</span>
+                            <span>${dateData.booked_for}</span>
+                        </div>
+                    `;
+                } else {
+                    // Manually added date
+                    bookedInfoHTML = `
+                        <div class="booked-info">
+                            <strong>Booked For:</strong>
+                            <span>${dateData.booked_for || 'Manual Booking'}</span>
                         </div>
                     `;
                 }
@@ -487,7 +677,6 @@
                         <span class="date-text">${date}</span>
                         <span class="status-badge ${dateData.status}">${dateData.status}</span>
                     </div>
-                    <div class="date-description">${dateData.description}</div>
                     ${bookedInfoHTML}
                     <div class="date-actions">
                         ${dateData.status === 'available' 
@@ -504,30 +693,33 @@
 
         function removeDate(dateToRemove) {
             if (confirm(`Are you sure you want to remove ${dateToRemove}?`)) {
-                delete availableDatesData[dateToRemove];
-                updateAvailableDatesList();
-                generateCalendarDays();
-                showMessage(`Removed ${dateToRemove} from available dates`, 'success');
+                // Send to backend via AJAX
+                const formData = new FormData();
+                formData.append('date', dateToRemove);
+
+                fetch('<?= ROOT ?>/ServiceAvailability/removeDate', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        delete availableDatesData[dateToRemove];
+                        updateAvailableDatesList();
+                        generateCalendarDays();
+                        showMessage(`Removed ${dateToRemove} from available dates`, 'success');
+                    } else {
+                        showMessage(data.error || 'Failed to remove date', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('An error occurred while removing the date', 'error');
+                });
             }
         }
 
-        // Update availability (simulate saving to server)
-        function updateAvailability() {
-            showMessage('Availability updated successfully!', 'success');
-            
-            // Add loading effect
-            const btn = document.querySelector('.update-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="btn-icon">⟲</span> Updating...';
-            btn.disabled = true;
-            
-            // Simulate API call
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                showMessage('All changes saved!', 'success');
-            }, 1500);
-        }
+        // Update availability (save to server)
 
         // Show notification messages
         function showMessage(text, type) {

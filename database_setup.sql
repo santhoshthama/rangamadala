@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `phone` varchar(20) DEFAULT NULL,
   `role` enum('admin','artist','audience','service_provider') NOT NULL DEFAULT 'audience',
   `nic_photo` varchar(255) DEFAULT NULL,
+  `profile_image` varchar(255) DEFAULT NULL,
+  `years_experience` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -28,24 +30,19 @@ CREATE TABLE IF NOT EXISTS `categories` (
 -- Create dramas table
 CREATE TABLE IF NOT EXISTS `dramas` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) NOT NULL,
-  `description` text,
-  `category_id` int(11) DEFAULT NULL,
-  `venue` varchar(255) DEFAULT NULL,
-  `event_date` date DEFAULT NULL,
-  `event_time` time DEFAULT NULL,
-  `duration` int(11) DEFAULT NULL COMMENT 'Duration in minutes',
-  `ticket_price` decimal(10,2) DEFAULT NULL,
-  `image` varchar(255) DEFAULT NULL,
+  `drama_name` varchar(255) NOT NULL COMMENT 'Drama name as in public performance board certificate',
+  `certificate_number` varchar(100) NOT NULL COMMENT 'Public performance certificate number',
+  `owner_name` varchar(255) NOT NULL COMMENT 'Owner name',
+  `description` text DEFAULT NULL COMMENT 'Artist provided synopsis for the drama',
+  `certificate_image` varchar(255) DEFAULT NULL COMMENT 'Image of public performance board certificate',
   `created_by` int(11) DEFAULT NULL,
   `creator_artist_id` int(11) DEFAULT NULL COMMENT 'The artist who is the director',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `category_id` (`category_id`),
+  UNIQUE KEY `certificate_number` (`certificate_number`),
   KEY `created_by` (`created_by`),
   KEY `creator_artist_id` (`creator_artist_id`),
-  CONSTRAINT `dramas_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
   CONSTRAINT `dramas_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `dramas_ibfk_3` FOREIGN KEY (`creator_artist_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -63,13 +60,180 @@ INSERT INTO `categories` (`name`) VALUES
 ON DUPLICATE KEY UPDATE name=name;
 
 -- Insert sample dramas (optional - remove if not needed)
-INSERT INTO `dramas` (`title`, `description`, `category_id`, `venue`, `event_date`, `event_time`, `duration`, `ticket_price`, `created_by`) VALUES
-('Maname', 'A classical Sinhala drama exploring family relationships and societal values', 1, 'Lionel Wendt Theatre, Colombo', '2025-01-15', '19:00:00', 120, 1500.00, NULL),
-('Sinhabahu', 'Epic tale of the legendary king Sinhabahu and his journey', 1, 'Nelum Pokuna Theatre, Colombo', '2025-01-20', '18:30:00', 150, 2000.00, NULL),
-('Kolamba Kathawa', 'A comedy drama depicting urban life in Colombo', 3, 'Elphinstone Theatre, Maradana', '2025-02-05', '19:30:00', 90, 1000.00, NULL),
-('Nari Bena', 'Traditional folk drama with dance and music', 7, 'BMICH, Colombo', '2025-02-10', '18:00:00', 105, 1200.00, NULL),
-('Vijayaba Kollaya', 'Historical drama about ancient Sri Lankan warriors', 1, 'Regal Theatre, Colombo', '2025-02-15', '19:00:00', 135, 1800.00, NULL)
-ON DUPLICATE KEY UPDATE title=title;
+INSERT INTO `dramas` (`drama_name`, `certificate_number`, `owner_name`, `description`, `certificate_image`, `created_by`, `creator_artist_id`) VALUES
+('Maname', 'PPB-2025-001', 'Chandrasena Perera', 'Iconic Sinhala stage drama Maname.', NULL, NULL, NULL),
+('Sinhabahu', 'PPB-2025-002', 'Ediriweera Sarachchandra', 'Legendary drama about King Sinhabahu and Princess Suppadevi.', NULL, NULL, NULL)
+ON DUPLICATE KEY UPDATE drama_name=VALUES(drama_name);
+
+
+
+-- =====================================================================
+-- DRAMA MANAGEMENT TABLES
+-- =====================================================================
+
+-- Drama Roles (for casting/auditions)
+CREATE TABLE IF NOT EXISTS `drama_roles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `drama_id` int(11) NOT NULL COMMENT 'Reference to drama',
+  `role_name` varchar(100) NOT NULL COMMENT 'Role/Character name',
+  `role_description` text DEFAULT NULL COMMENT 'Role description and requirements',
+  `role_type` enum('lead','supporting','ensemble','dancer','musician','other') DEFAULT 'supporting' COMMENT 'Type of role',
+  `salary` decimal(10,2) DEFAULT NULL COMMENT 'Salary offered for this role',
+  `positions_available` int(11) NOT NULL DEFAULT 1,
+  `positions_filled` int(11) NOT NULL DEFAULT 0,
+  `status` enum('open','closed','filled') NOT NULL DEFAULT 'open',
+  `requirements` text DEFAULT NULL,
+  `is_published` tinyint(1) NOT NULL DEFAULT 0,
+  `published_at` datetime DEFAULT NULL,
+  `published_message` text DEFAULT NULL,
+  `published_by` int(11) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_drama_roles_drama_id` (`drama_id`),
+  KEY `idx_drama_roles_created_by` (`created_by`),
+  KEY `idx_drama_roles_status` (`status`),
+  KEY `idx_drama_roles_is_published` (`is_published`),
+  KEY `idx_drama_roles_published_by` (`published_by`),
+  CONSTRAINT `drama_roles_ibfk_1` FOREIGN KEY (`drama_id`) REFERENCES `dramas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `drama_roles_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `drama_roles_ibfk_3` FOREIGN KEY (`published_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Role Applications (artists applying into open vacancies)
+CREATE TABLE IF NOT EXISTS `role_applications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `role_id` int(11) NOT NULL,
+  `artist_id` int(11) NOT NULL,
+  `application_message` text DEFAULT NULL,
+  `status` enum('pending','accepted','rejected') NOT NULL DEFAULT 'pending',
+  `applied_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `reviewed_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_application` (`role_id`,`artist_id`),
+  KEY `idx_role_applications_role_id` (`role_id`),
+  KEY `idx_role_applications_artist_id` (`artist_id`),
+  KEY `idx_role_applications_reviewed_by` (`reviewed_by`),
+  CONSTRAINT `role_applications_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `drama_roles` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_applications_ibfk_2` FOREIGN KEY (`artist_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_applications_ibfk_3` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Role Assignments (artists formally assigned to roles)
+CREATE TABLE IF NOT EXISTS `role_assignments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `role_id` int(11) NOT NULL,
+  `artist_id` int(11) NOT NULL,
+  `assigned_by` int(11) DEFAULT NULL,
+  `assigned_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('active','completed','terminated') NOT NULL DEFAULT 'active',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_assignment` (`role_id`,`artist_id`),
+  KEY `idx_role_assignments_role_id` (`role_id`),
+  KEY `idx_role_assignments_artist_id` (`artist_id`),
+  KEY `idx_role_assignments_assigned_by` (`assigned_by`),
+  CONSTRAINT `role_assignments_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `drama_roles` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_assignments_ibfk_2` FOREIGN KEY (`artist_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_assignments_ibfk_3` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Role Requests (direct invites sent by directors to artists)
+CREATE TABLE IF NOT EXISTS `role_requests` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `role_id` int(11) NOT NULL,
+  `artist_id` int(11) NOT NULL,
+  `director_id` int(11) NOT NULL,
+  `status` enum('pending','interview','accepted','rejected','cancelled') NOT NULL DEFAULT 'pending',
+  `note` text DEFAULT NULL,
+  `interview_at` datetime DEFAULT NULL,
+  `requested_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `responded_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_role_artist_request` (`role_id`,`artist_id`),
+  KEY `idx_role_requests_role_id` (`role_id`),
+  KEY `idx_role_requests_artist_id` (`artist_id`),
+  KEY `idx_role_requests_director_id` (`director_id`),
+  KEY `idx_role_requests_status` (`status`),
+  CONSTRAINT `role_requests_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `drama_roles` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_requests_ibfk_2` FOREIGN KEY (`artist_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_requests_ibfk_3` FOREIGN KEY (`director_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table to track current Production Manager assignments
+CREATE TABLE IF NOT EXISTS `drama_manager_assignments` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `drama_id` INT(11) NOT NULL COMMENT 'Reference to drama',
+  `manager_artist_id` INT(11) NOT NULL COMMENT 'Artist assigned as Production Manager',
+  `assigned_by` INT(11) NOT NULL COMMENT 'Director who assigned the PM',
+  `assigned_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When the PM was assigned',
+  `status` ENUM('active','removed') NOT NULL DEFAULT 'active' COMMENT 'Assignment status',
+  `removed_at` DATETIME DEFAULT NULL COMMENT 'When the PM was removed (if applicable)',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_drama_active_manager` (`drama_id`, `status`),
+  KEY `idx_manager_artist` (`manager_artist_id`),
+  KEY `idx_assigned_by` (`assigned_by`),
+  CONSTRAINT `drama_manager_assignments_ibfk_1` FOREIGN KEY (`drama_id`) REFERENCES `dramas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `drama_manager_assignments_ibfk_2` FOREIGN KEY (`manager_artist_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `drama_manager_assignments_ibfk_3` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table to track PM requests (invitations)
+CREATE TABLE IF NOT EXISTS `drama_manager_requests` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `drama_id` INT(11) NOT NULL COMMENT 'Reference to drama',
+  `artist_id` INT(11) NOT NULL COMMENT 'Artist invited to be PM',
+  `director_id` INT(11) NOT NULL COMMENT 'Director who sent the request',
+  `status` ENUM('pending','accepted','rejected','cancelled') NOT NULL DEFAULT 'pending' COMMENT 'Request status',
+  `message` TEXT DEFAULT NULL COMMENT 'Optional message from director',
+  `requested_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When request was sent',
+  `responded_at` DATETIME DEFAULT NULL COMMENT 'When artist responded',
+  `response_note` TEXT DEFAULT NULL COMMENT 'Optional note from artist when responding',
+  PRIMARY KEY (`id`),
+  KEY `idx_drama_request` (`drama_id`),
+  KEY `idx_artist_request` (`artist_id`),
+  KEY `idx_director_request` (`director_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_pending_requests` (`artist_id`, `status`, `requested_at`),
+  CONSTRAINT `drama_manager_requests_ibfk_1` FOREIGN KEY (`drama_id`) REFERENCES `dramas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `drama_manager_requests_ibfk_2` FOREIGN KEY (`artist_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `drama_manager_requests_ibfk_3` FOREIGN KEY (`director_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- User Bios (for audience members)
+CREATE TABLE IF NOT EXISTS `user_bios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL UNIQUE,
+  `bio` text DEFAULT NULL,
+  `profile_image` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `user_bios_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Drama Budgets
+CREATE TABLE IF NOT EXISTS `drama_budgets` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `drama_id` int(11) NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `allocated_amount` decimal(10,2) NOT NULL,
+  `spent_amount` decimal(10,2) DEFAULT 0,
+  `status` enum('pending','approved','completed','cancelled') DEFAULT 'pending',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `drama_id` (`drama_id`),
+  KEY `created_by` (`created_by`),
+  CONSTRAINT `drama_budgets_ibfk_1` FOREIGN KEY (`drama_id`) REFERENCES `dramas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `drama_budgets_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 
 
 --Service Provider and Services Tables
@@ -296,6 +460,7 @@ CREATE TABLE IF NOT EXISTS `service_requests` (
   `end_date` date NOT NULL,
   `budget` decimal(10,2) DEFAULT NULL,
   `description` text DEFAULT NULL,
+  `service_details_json` longtext DEFAULT NULL COMMENT 'JSON object containing service-specific details',
   `notes` text DEFAULT NULL,
   `provider_notes` text DEFAULT NULL,
   `rejection_reason` text DEFAULT NULL,
@@ -305,4 +470,26 @@ CREATE TABLE IF NOT EXISTS `service_requests` (
   `completed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- Add provider_availability table to store booked dates
+CREATE TABLE IF NOT EXISTS `provider_availability` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `provider_id` int NOT NULL,
+  `available_date` date NOT NULL,
+  `status` enum('available','booked') NOT NULL DEFAULT 'available',
+  `description` text,
+  `booked_for` varchar(255) DEFAULT NULL,
+  `booking_details` text,
+  `service_request_id` int DEFAULT NULL,
+  `added_on` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `booked_on` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `provider_date` (`provider_id`, `available_date`),
+  KEY `provider_id` (`provider_id`),
+  KEY `available_date` (`available_date`),
+  CONSTRAINT `availability_ibfk_provider` FOREIGN KEY (`provider_id`) REFERENCES `serviceprovider` (`user_id`) ON DELETE CASCADE,
+  CONSTRAINT `availability_ibfk_request` FOREIGN KEY (`service_request_id`) REFERENCES `service_requests` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

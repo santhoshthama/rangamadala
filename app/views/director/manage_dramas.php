@@ -15,49 +15,49 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="dashboard.php">
+                <a href="<?= ROOT ?>/director/dashboard">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
-                <a href="manage_dramas.php">
+                <a href="<?= ROOT ?>/director/manage_dramas">
                     <i class="fas fa-film"></i>
                     <span>My Dramas</span>
                 </a>
             </li>
             <li>
-                <a href="create_drama.php">
+                <a href="<?= ROOT ?>/director/create_drama">
                     <i class="fas fa-plus-circle"></i>
                     <span>Create Drama</span>
                 </a>
             </li>
             <li>
-                <a href="search_artists.php">
+                <a href="<?= ROOT ?>/director/search_artists">
                     <i class="fas fa-search"></i>
                     <span>Search Artists</span>
                 </a>
             </li>
             <li>
-                <a href="role_management.php">
+                <a href="<?= ROOT ?>/director/role_management">
                     <i class="fas fa-users"></i>
                     <span>Role Management</span>
                 </a>
             </li>
             <li>
-                <a href="schedule_management.php">
+                <a href="<?= ROOT ?>/director/schedule_management">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
-                <a href="assign_managers.php">
+                <a href="<?= ROOT ?>/director/assign_managers">
                     <i class="fas fa-user-tie"></i>
                     <span>Assign Managers</span>
                 </a>
             </li>
             <li>
-                <a href="../../public/index.php">
+                <a href="<?= ROOT ?>/logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -67,7 +67,7 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php" class="back-button">
+        <a href="<?= ROOT ?>/director/dashboard" class="back-button">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>
@@ -79,7 +79,7 @@
                 <h2>My Dramas</h2>
             </div>
             <div class="header-controls">
-                <a href="create_drama.php" class="btn btn-primary">
+                <a href="<?= ROOT ?>/director/create_drama" class="btn btn-primary">
                     <i class="fas fa-plus-circle"></i>
                     Create New Drama
                 </a>

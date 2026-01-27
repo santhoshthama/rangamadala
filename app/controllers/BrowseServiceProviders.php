@@ -72,10 +72,28 @@ class BrowseServiceProviders
         // Get provider's projects
         $projects = $model->getProviderProjects($id);
 
+        // Get booked dates for this provider
+        $bookedDateList = [];
+        try {
+            $availabilityModel = new M_provider_availability();
+            $bookedDates = $availabilityModel->getAvailability($id);
+            
+            if ($bookedDates) {
+                foreach ($bookedDates as $date) {
+                    if ($date->status === 'booked') {
+                        $bookedDateList[] = $date->available_date;
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Error loading booked dates: " . $e->getMessage());
+        }
+
         $data = [
             'provider' => $provider,
             'services' => $services,
-            'projects' => $projects
+            'projects' => $projects,
+            'booked_dates' => $bookedDateList
         ];
 
         $this->view('service_provider_detail', $data);

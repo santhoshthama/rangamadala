@@ -3,6 +3,18 @@
 if(isset($data) && is_array($data)) {
     extract($data);
 }
+
+$profileImageSrc = ROOT . '/uploads/profile_images/default_user.jpg';
+if (isset($user->profile_image) && !empty($user->profile_image)) {
+    $storedValue = str_replace('\\', '/', $user->profile_image);
+    if (strpos($storedValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($storedValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($storedValue);
+    }
+} elseif (isset($user->nic_photo) && !empty($user->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -533,8 +545,7 @@ if(isset($data) && is_array($data)) {
                         <i class="fas fa-star"></i> Artist
                     </small>
                 </div>
-                <img src="<?= (isset($user->profile_image) && !empty($user->profile_image)) ? ROOT.'/app/uploads/profile_images/'.esc($user->profile_image) : ROOT.'/assets/images/default-avatar.jpg' ?>" alt="Profile">
-            </div>
+<img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.jpg'">            </div>
         </div>
 
         <?php if (isset($_SESSION['message'])): ?>
@@ -582,7 +593,8 @@ if(isset($data) && is_array($data)) {
                         <i class="fas fa-user-tie"></i> As Actor (<?= isset($stats['as_actor']) ? $stats['as_actor'] : 0 ?>)
                     </button>
                     <button class="tab-button" onclick="openTab(event, 'requests-tab')">
-                        <i class="fas fa-envelope"></i> Requests (<?= isset($stats['pending_requests']) ? $stats['pending_requests'] : 0 ?>)
+                        <i class="fas fa-envelope"></i> Requests 
+                        (<?= (isset($stats['pending_requests']) ? $stats['pending_requests'] : 0) + (isset($stats['pending_pm_requests']) ? $stats['pending_pm_requests'] : 0) ?>)
                     </button>
                 </div>
 
@@ -613,29 +625,33 @@ if(isset($data) && is_array($data)) {
                             <?php foreach ($dramas_as_director as $drama): ?>
                                 <div class="artist-card">
                                     <div class="artist-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">
-                                        <h3 class="artist-name"><?= esc($drama->title) ?></h3>
-                                        <p class="artist-experience"><?= esc($drama->genre ?? 'Drama') ?></p>
+                                        <h3 class="artist-name"><?= esc($drama->drama_name ?? 'Registered Drama') ?></h3>
+                                        <p class="artist-experience">Certificate <?= esc($drama->certificate_number ?? 'N/A') ?></p>
                                     </div>
                                     <div class="artist-body">
                                         <div class="info-row">
-                                            <span class="info-label">Language:</span>
-                                            <span class="info-value"><?= esc($drama->language ?? 'Sinhala') ?></span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">Status:</span>
-                                            <span class="info-value">
-                                                <span class="status-badge <?= $drama->status === 'active' ? 'assigned' : 'pending' ?>">
-                                                    <?= esc(ucfirst($drama->status)) ?>
-                                                </span>
-                                            </span>
+                                            <span class="info-label">Owner:</span>
+                                            <span class="info-value"><?= esc($drama->owner_name ?? 'Not recorded') ?></span>
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Created:</span>
-                                            <span class="info-value"><?= date('M d, Y', strtotime($drama->created_at)) ?></span>
+                                            <span class="info-value"><?= isset($drama->created_at) ? date('M d, Y', strtotime($drama->created_at)) : 'N/A' ?></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Certificate Image:</span>
+                                            <span class="info-value">
+                                                <?php if (!empty($drama->certificate_image)): ?>
+                                                    <a href="<?= ROOT ?>/uploads/certificates/<?= esc(rawurlencode($drama->certificate_image)) ?>" target="_blank" style="color: var(--brand); font-weight: 600;">
+                                                        View
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="status-badge pending">Pending</span>
+                                                <?php endif; ?>
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="artist-footer">
-                                        <button class="btn btn-primary" style="flex: 1;" onclick="window.location.href='<?=ROOT?>/director/dashboard?drama_id=<?=$drama->id?>'">
+                                        <button class="btn btn-primary" style="flex: 1;" onclick="handleDirectorManage(<?=$drama->id?>)">
                                             <i class="fas fa-tachometer-alt"></i> Manage
                                         </button>
                                     </div>
@@ -661,13 +677,13 @@ if(isset($data) && is_array($data)) {
                             <?php foreach ($dramas_as_manager as $drama): ?>
                                 <div class="artist-card">
                                     <div class="artist-header" style="background: linear-gradient(135deg, #28a745, #1f9b3b);">
-                                        <h3 class="artist-name"><?= esc($drama->title) ?></h3>
-                                        <p class="artist-experience"><?= esc($drama->genre ?? 'Drama') ?></p>
+                                        <h3 class="artist-name"><?= esc($drama->drama_name ?? 'Drama') ?></h3>
+                                        <p class="artist-experience"><?= esc($drama->description ?? 'Production Manager') ?></p>
                                     </div>
                                     <div class="artist-body">
                                         <div class="info-row">
                                             <span class="info-label">Director:</span>
-                                            <span class="info-value"><?= esc($drama->director_name ?? 'Unknown') ?></span>
+                                            <span class="info-value"><?= esc($drama->creator_name ?? 'Unknown') ?></span>
                                         </div>
                                         <div class="info-row">
                                             <span class="info-label">Language:</span>
@@ -683,7 +699,7 @@ if(isset($data) && is_array($data)) {
                                         </div>
                                     </div>
                                     <div class="artist-footer">
-                                        <button class="btn btn-success" style="flex: 1;" onclick="window.location.href='<?=ROOT?>/productionmanager/dashboard?drama_id=<?=$drama->id?>'">
+                                        <button class="btn btn-success" style="flex: 1;" onclick="handlePMManage(<?=$drama->id?>)">
                                             <i class="fas fa-tasks"></i> Manage
                                         </button>
                                     </div>
@@ -752,15 +768,100 @@ if(isset($data) && is_array($data)) {
 
                 <!-- Requests Tab -->
                 <div id="requests-tab" class="tab-content">
+                    
+                    <!-- Production Manager Requests -->
+                    <?php if (isset($pm_requests) && !empty($pm_requests)): ?>
+                        <h3 style="margin-bottom: 20px; color: var(--ink);">
+                            <i class="fas fa-user-tie"></i> Production Manager Requests
+                        </h3>
+                        <div style="display: grid; gap: 16px; margin-bottom: 40px;">
+                            <?php foreach ($pm_requests as $pm_request): ?>
+                                <div class="role-info-card">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                                        <div>
+                                            <h3 style="color: var(--brand); margin-bottom: 8px;">
+                                                <i class="fas fa-film"></i> <?= esc($pm_request->drama_name) ?>
+                                            </h3>
+                                            <p style="color: var(--muted); font-size: 13px;">
+                                                <strong>Director:</strong> <?= esc($pm_request->director_name) ?>
+                                            </p>
+                                            <p style="color: var(--muted); font-size: 13px;">
+                                                <strong>Certificate:</strong> <?= esc($pm_request->certificate_number) ?>
+                                            </p>
+                                        </div>
+                                        <span class="status-badge requested">
+                                            <i class="fas fa-clock"></i> Pending
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="role-info-item">
+                                        <span class="role-info-label">
+                                            <i class="fas fa-briefcase"></i> Position:
+                                        </span>
+                                        <span class="role-info-value">Production Manager</span>
+                                    </div>
+                                    
+                                    <?php if (!empty($pm_request->message)): ?>
+                                        <div style="margin: 12px 0; padding: 12px; background: rgba(186, 142, 35, 0.08); border-radius: 8px; border-left: 3px solid var(--brand);">
+                                            <strong style="color: var(--ink);"><i class="fas fa-comment"></i> Message from Director:</strong>
+                                            <p style="color: #555; margin-top: 6px; font-size: 14px;"><?= esc($pm_request->message) ?></p>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="role-info-item">
+                                        <span class="role-info-label">
+                                            <i class="fas fa-calendar"></i> Requested:
+                                        </span>
+                                        <span class="role-info-value"><?= date('M d, Y g:i A', strtotime($pm_request->requested_at)) ?></span>
+                                    </div>
+                                    
+                                    <div style="margin-top: 12px; padding: 10px; background: rgba(33, 150, 243, 0.08); border-radius: 6px;">
+                                        <p style="color: #1976d2; font-size: 13px; margin: 0;">
+                                            <i class="fas fa-info-circle"></i> <strong>About this role:</strong> 
+                                            As Production Manager, you'll oversee services, budget management, and theater bookings for this drama.
+                                        </p>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                                        <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" style="flex: 1;">
+                                            <input type="hidden" name="request_id" value="<?= $pm_request->id ?>">
+                                            <input type="hidden" name="response" value="accept">
+                                            <button type="submit" class="btn btn-success" style="width: 100%;">
+                                                <i class="fas fa-check"></i> Accept
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" style="flex: 1;">
+                                            <input type="hidden" name="request_id" value="<?= $pm_request->id ?>">
+                                            <input type="hidden" name="response" value="reject">
+                                            <button type="submit" class="btn btn-danger" style="width: 100%;" 
+                                                    onclick="return confirm('Are you sure you want to decline this Production Manager request?');">
+                                                <i class="fas fa-times"></i> Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Role Requests -->
                     <h3 style="margin-bottom: 20px; color: var(--ink);">
-                        <i class="fas fa-envelope"></i> Role Requests
+                        <i class="fas fa-theater-masks"></i> Role Requests
                     </h3>
                     <?php if (!isset($role_requests) || empty($role_requests)): ?>
-                        <div class="no-results">
-                            <i class="fas fa-inbox"></i>
-                            <h3>No Pending Requests</h3>
-                            <p>You don't have any role requests at the moment.</p>
-                        </div>
+                        <?php if (!isset($pm_requests) || empty($pm_requests)): ?>
+                            <div class="no-results">
+                                <i class="fas fa-inbox"></i>
+                                <h3>No Pending Requests</h3>
+                                <p>You don't have any requests at the moment.</p>
+                            </div>
+                        <?php else: ?>
+                            <div class="no-results">
+                                <i class="fas fa-inbox"></i>
+                                <h3>No Pending Role Requests</h3>
+                                <p>You don't have any role requests at the moment.</p>
+                            </div>
+                        <?php endif; ?>
                     <?php else: ?>
                         <div style="display: grid; gap: 16px;">
                             <?php foreach ($role_requests as $request): ?>
@@ -851,6 +952,18 @@ if(isset($data) && is_array($data)) {
             // Show the selected tab and mark button as active
             document.getElementById(tabName).classList.add('active');
             evt.currentTarget.classList.add('active');
+        }
+
+        function handleDirectorManage(dramaId) {
+            const url = '<?=ROOT?>/director/dashboard?drama_id=' + dramaId;
+            console.log('Director manage - Navigating to:', url);
+            window.location.href = url;
+        }
+
+        function handlePMManage(dramaId) {
+            const url = '<?=ROOT?>/Production_manager/dashboard?drama_id=' + dramaId;
+            console.log('PM manage - Navigating to:', url);
+            window.location.href = url;
         }
     </script>
 </body>

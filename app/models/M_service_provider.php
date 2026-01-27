@@ -1,15 +1,13 @@
 <?php
 
 class M_service_provider extends M_signup {
-    private $db;
 
     public function __construct() {
         parent::__construct();
-        $this->db = new Database();
     }
 
     public function register($full_name, $email, $password, $phone, $nic_photo_front = null, $nic_photo_back = null) {
-        return $this->registerUser($full_name, $email, $password, $phone, 'service_provider', $nic_photo_front, $nic_photo_back);
+        return $this->registerUser($full_name, $email, $password, $phone, 'service_provider', $nic_photo_front);
     }
 
     public function emailExists($email) {
