@@ -1,6 +1,18 @@
 <?php
-// Set session save path (fix for session warnings)
-session_save_path("C:/xampp/tmp"); // make sure this folder exists
+// Configure session settings BEFORE session_start()
+ini_set('session.cookie_lifetime', 0);  // Session ends when browser closes
+ini_set('session.gc_maxlifetime', 86400);  // 24 hours server-side
+ini_set('session.cookie_httponly', 1);  // Prevent JavaScript access
+ini_set('session.cookie_samesite', 'Lax');  // Prevent CSRF
+ini_set('session.use_strict_mode', 1);  // Prevent session fixation
+
+// Ensure session directory exists
+$sessionPath = "C:/xampp/tmp";
+if (!is_dir($sessionPath)) {
+    mkdir($sessionPath, 0777, true);
+}
+session_save_path($sessionPath);
+
 session_start();
 
 // Include initialization file
