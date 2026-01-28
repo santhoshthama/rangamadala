@@ -277,6 +277,7 @@ if(isset($data) && is_array($data)) {
             align-items: center;
             gap: 8px;
             transition: background 0.3s;
+            text-decoration: none;
         }
 
         .btn-apply:hover {
@@ -326,6 +327,50 @@ if(isset($data) && is_array($data)) {
             font-size: 16px;
         }
 
+        .alert {
+            padding: 15px 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert i {
+            font-size: 18px;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 28px;
@@ -346,6 +391,17 @@ if(isset($data) && is_array($data)) {
         <a href="<?=ROOT?>/artistdashboard" class="back-btn">
             <i class="fas fa-arrow-left"></i> Back to Dashboard
         </a>
+
+        <?php if (isset($_SESSION['message'])): ?>
+            <div class="alert alert-<?= $_SESSION['message_type'] ?? 'info' ?>">
+                <i class="fas fa-<?= ($_SESSION['message_type'] ?? 'info') === 'success' ? 'check-circle' : 'info-circle' ?>"></i>
+                <?= htmlspecialchars($_SESSION['message']) ?>
+            </div>
+            <?php 
+                unset($_SESSION['message']);
+                unset($_SESSION['message_type']);
+            ?>
+        <?php endif; ?>
 
         <div class="header">
             <h1><i class="fas fa-theater-masks"></i> Role Vacancies</h1>
@@ -444,9 +500,9 @@ if(isset($data) && is_array($data)) {
                                     <i class="fas fa-check-circle"></i> Already Applied
                                 </span>
                             <?php else: ?>
-                                <button class="btn-apply" onclick="applyForRole(<?= $vacancy->id ?>, '<?= htmlspecialchars(addslashes($vacancy->role_name)) ?>')">
+                                <a href="<?= ROOT ?>/artistdashboard/apply_for_role?role_id=<?= $vacancy->id ?>" class="btn-apply">
                                     <i class="fas fa-paper-plane"></i> Apply Now
-                                </button>
+                                </a>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -462,37 +518,7 @@ if(isset($data) && is_array($data)) {
     </div>
 
     <script>
-        function applyForRole(roleId, roleName) {
-            if (!confirm(`Are you sure you want to apply for the role: ${roleName}?\n\nYou can include a cover letter in the next step.`)) {
-                return;
-            }
-
-            const coverLetter = prompt('Optional: Add a cover letter to introduce yourself (leave blank to skip):') || '';
-
-            fetch('<?=ROOT?>/artistdashboard/apply_for_role', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    role_id: roleId,
-                    cover_letter: coverLetter
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while submitting your application. Please try again.');
-            });
-        }
+        // Application is now handled via form page - no JavaScript needed
     </script>
 </body>
 </html>

@@ -93,34 +93,98 @@ class Artistdashboard
 
     public function apply_for_role()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        // Check if user is logged in and is an artist
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
             exit;
         }
 
-        if (!isset($_SESSION['user_id'])) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'User not logged in']);
-            exit;
-        }
-
-        $input = json_decode(file_get_contents('php://input'), true);
-        $role_id = isset($input['role_id']) ? (int)$input['role_id'] : 0;
-        $cover_letter = $input['cover_letter'] ?? '';
+        // Get role ID from query parameter
+        $role_id = isset($_GET['role_id']) ? (int)$_GET['role_id'] : 0;
 
         if (!$role_id) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Role ID is required']);
+            $_SESSION['message'] = 'Invalid role ID';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/artistdashboard/browse_vacancies");
             exit;
         }
 
         $role_model = $this->getModel('M_role');
-        $result = $role_model->applyForRole($role_id, $_SESSION['user_id'], $cover_letter);
+        $artist_model = $this->getModel('M_artist');
 
-        header('Content-Type: application/json');
-        echo json_encode($result);
-        exit;
+        // Get role details
+        $data['role'] = $role_model->getRoleDetailsForApplication($role_id);
+        
+        if (!$data['role']) {
+            $_SESSION['message'] = 'Role not found';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/artistdashboard/browse_vacancies");
+            exit;
+        }
+
+        // Get artist details
+        $data['artist'] = $artist_model->get_artist_by_id($_SESSION['user_id']);
+
+        // Show the application form
+        $this->view('artist/apply_for_role_form', $data);
+    }
+
+    public function submit_application()
+    {
+        // Check if user is logged in and is an artist
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: " . ROOT . "/artistdashboard/browse_vacancies");
+            exit;
+        }
+
+        $role_id = isset($_POST['role_id']) ? (int)$_POST['role_id'] : 0;
+        $cover_letter = trim($_POST['cover_letter'] ?? '');
+        $media_links = trim($_POST['media_links'] ?? '');
+
+        $errors = [];
+
+        if (!$role_id) {
+            $errors[] = 'Role ID is required';
+        }
+
+        if (empty($cover_letter)) {
+            $errors[] = 'Cover letter is required';
+        }
+
+        if (!empty($errors)) {
+            $role_model = $this->getModel('M_role');
+            $artist_model = $this->getModel('M_artist');
+            
+            $data['role'] = $role_model->getRoleDetailsForApplication($role_id);
+            $data['artist'] = $artist_model->get_artist_by_id($_SESSION['user_id']);
+            $data['errors'] = $errors;
+            
+            $this->view('artist/apply_for_role_form', $data);
+            return;
+        }
+
+        $role_model = $this->getModel('M_role');
+        $result = $role_model->applyForRole($role_id, $_SESSION['user_id'], $cover_letter, $media_links);
+
+        if ($result['success']) {
+            $_SESSION['message'] = $result['message'];
+            $_SESSION['message_type'] = 'success';
+            header("Location: " . ROOT . "/artistdashboard/browse_vacancies");
+            exit;
+        } else {
+            $artist_model = $this->getModel('M_artist');
+            
+            $data['role'] = $role_model->getRoleDetailsForApplication($role_id);
+            $data['artist'] = $artist_model->get_artist_by_id($_SESSION['user_id']);
+            $data['errors'] = [$result['message']];
+            
+            $this->view('artist/apply_for_role_form', $data);
+        }
     }
 
     public function my_applications()

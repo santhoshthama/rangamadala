@@ -743,7 +743,7 @@ class M_role {
     /**
      * Apply for a role (artist submits application)
      */
-    public function applyForRole($role_id, $artist_id, $cover_letter = '') {
+    public function applyForRole($role_id, $artist_id, $cover_letter = '', $media_links = '') {
         try {
             // Check if role exists and is published
             $this->db->query("SELECT * FROM drama_roles WHERE id = :role_id AND is_published = 1");
@@ -783,11 +783,12 @@ class M_role {
 
             // Create application
             $this->db->query("INSERT INTO role_applications 
-                             (role_id, artist_id, application_message, status, applied_at)
-                             VALUES (:role_id, :artist_id, :application_message, 'pending', NOW())");
+                             (role_id, artist_id, application_message, media_links, status, applied_at)
+                             VALUES (:role_id, :artist_id, :application_message, :media_links, 'pending', NOW())");
             $this->db->bind(':role_id', $role_id);
             $this->db->bind(':artist_id', $artist_id);
             $this->db->bind(':application_message', $cover_letter);
+            $this->db->bind(':media_links', $media_links);
 
             if ($this->db->execute()) {
                 return ['success' => true, 'message' => 'Application submitted successfully!'];
@@ -797,6 +798,23 @@ class M_role {
         } catch (Exception $e) {
             error_log("Error in applyForRole: " . $e->getMessage());
             return ['success' => false, 'message' => 'An error occurred while submitting your application'];
+        }
+    }
+
+    /**
+     * Get role details for application form
+     */
+    public function getRoleDetailsForApplication($role_id) {
+        try {
+            $this->db->query("SELECT r.*, d.drama_name 
+                             FROM drama_roles r
+                             INNER JOIN dramas d ON r.drama_id = d.id
+                             WHERE r.id = :role_id AND r.is_published = 1");
+            $this->db->bind(':role_id', $role_id);
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log("Error in getRoleDetailsForApplication: " . $e->getMessage());
+            return null;
         }
     }
 
