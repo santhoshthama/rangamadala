@@ -241,8 +241,9 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                                 </div>
                             </div>
                             <form action="<?= ROOT ?>/director/remove_assignment?drama_id=<?= esc($dramaId) ?>" method="POST" class="js-role-action" data-action="remove" data-confirm="Remove <?= esc($assignment->artist_name ?? 'this artist') ?> from this role?">
+                                <input type="hidden" name="assignment_id" value="<?= esc($assignment->id ?? 0) ?>">
                                 <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
-                                <input type="hidden" name="artist_id" value="<?= esc($assignment->artist_id ?? 0) ?>">
+                                <input type="hidden" name="return_to" value="role_details">
                                 <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-user-times"></i>Remove</button>
                             </form>
                         </div>
