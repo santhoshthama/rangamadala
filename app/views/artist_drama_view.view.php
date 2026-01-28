@@ -3,6 +3,22 @@
 if(isset($data) && is_array($data)) {
     extract($data);
 }
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,7 +49,7 @@ if(isset($data) && is_array($data)) {
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/artistprofile">
+                <a href="<?=ROOT?>/profile">
                     <i class="fas fa-user"></i>
                     <span>Profile</span>
                 </a>
@@ -67,7 +83,7 @@ if(isset($data) && is_array($data)) {
                 <div class="role-badge">
                     <i class="fas fa-user-tie"></i> Actor
                 </div>
-                <img src="<?=ROOT?>/assets/images/default-avatar.jpg" alt="Artist Avatar">
+                <img src="<?= esc($profileImageSrc) ?>" alt="Artist Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
             </div>
         </div>
 

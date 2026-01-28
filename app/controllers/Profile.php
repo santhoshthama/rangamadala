@@ -1,33 +1,40 @@
 <?php
 
-class Artistprofile
+class Profile
 {
     use Controller;
 
     public function index()
     {
-        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+        // Universal profile - works for all roles
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
             header("Location: " . ROOT . "/login");
             exit;
         }
 
-        $artist_model = $this->getModel('M_artist');
         $user_id = $_SESSION['user_id'];
-
+        $user_role = $_SESSION['user_role'];
+        
+        // Get user model based on role
+        $user_model = $this->getUserModel($user_role);
+        
         $data = [
-            'user' => $artist_model->get_artist_by_id($user_id),
+            'user' => $user_model->getUserById($user_id),
             'errors' => [],
             'success' => '',
             'form' => [
                 'full_name' => '',
                 'phone' => '',
-                'years_experience' => ''
+                'years_experience' => '',
+                'bio' => '',
+                'location' => '',
+                'website' => ''
             ]
         ];
 
         if (!$data['user']) {
-            $data['errors'][] = 'Unable to load artist profile.';
-            $this->view('artistprofile', $data);
+            $data['errors'][] = 'Unable to load profile.';
+            $this->view('profile', $data);
             return;
         }
 
@@ -105,7 +112,7 @@ class Artistprofile
                     if (!in_array($extension, $allowedExtensions, true)) {
                         $errors[] = 'Only JPG, JPEG, PNG, GIF, or WEBP images are allowed.';
                     } else {
-                        $profileImageName = 'artist_' . $user_id . '_' . time() . '.' . $extension;
+                        $profileImageName = $user_role . '_' . $user_id . '_' . time() . '.' . $extension;
                         $uploadedFilePath = $uploadDir . $profileImageName;
 
                         if (!move_uploaded_file($file['tmp_name'], $uploadedFilePath)) {
@@ -133,7 +140,6 @@ class Artistprofile
                     'years_experience' => $years_input === '' ? null : $yearsValue
                 ];
 
-                // Only add optional fields if columns exist
                 if ($bio !== '') {
                     $updateFields['bio'] = $bio;
                 }
@@ -148,7 +154,7 @@ class Artistprofile
                     $updateFields['profile_image'] = $profileImageName;
                 }
 
-                $updated = $artist_model->update_artist_profile($user_id, $updateFields);
+                $updated = $user_model->updateProfile($user_id, $updateFields);
 
                 if ($updated) {
                     if ($profileImageName !== null && $oldImageName && $oldImageName !== $profileImageName) {
@@ -160,7 +166,7 @@ class Artistprofile
 
                     $_SESSION['user_name'] = $full_name;
                     $data['success'] = 'Profile updated successfully.';
-                    $data['user'] = $artist_model->get_artist_by_id($user_id);
+                    $data['user'] = $user_model->getUserById($user_id);
                     $data['form'] = [
                         'full_name' => $data['user']->full_name ?? '',
                         'phone' => $data['user']->phone ?? '',
@@ -182,6 +188,12 @@ class Artistprofile
             $data['errors'] = $errors;
         }
 
-        $this->view('artistprofile', $data);
+        $this->view('profile', $data);
+    }
+
+    private function getUserModel($role)
+    {
+        // All roles use the same universal profile model
+        return new M_universal_profile();
     }
 }

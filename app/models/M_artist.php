@@ -21,7 +21,7 @@ class M_artist extends M_signup {
             return false;
         }
 
-        $allowed = ['full_name', 'phone', 'profile_image', 'years_experience'];
+        $allowed = ['full_name', 'phone', 'profile_image', 'years_experience', 'bio', 'location', 'website'];
         $setParts = [];
         $bindValues = [];
 
@@ -39,6 +39,7 @@ class M_artist extends M_signup {
 
         try {
             $sql = 'UPDATE users SET ' . implode(', ', $setParts) . " WHERE id = :user_id AND role = 'artist'";
+            
             $this->db->query($sql);
 
             foreach ($bindValues as $param => $value) {

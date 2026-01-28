@@ -1,3 +1,20 @@
+<?php
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,6 +62,12 @@
                 </a>
             </li>
             <li>
+                <a href="<?= ROOT ?>/profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span>My Profile</span>
+                </a>
+            </li>
+            <li>
                 <a href="<?= ROOT ?>/logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
@@ -74,7 +97,7 @@
                     <i class="fas fa-user-tie"></i>
                     Production Manager
                 </div>
-                <img src="<?= ROOT ?>/assets/images/default-avatar.jpg" alt="Avatar">
+                <img src="<?= esc($profileImageSrc) ?>" alt="PM Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
             </div>
         </div>
 

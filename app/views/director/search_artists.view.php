@@ -26,6 +26,8 @@ $roleName = $role->role_name ?? 'Role';
         label { font-weight: 600; margin-bottom: 6px; }
         .artist-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
         .artist-card { background: #fff; border-radius: 16px; border: 1px solid var(--border); padding: 20px; box-shadow: var(--shadow-xs, 0 2px 10px rgba(15,23,42,.05)); display: flex; flex-direction: column; gap: 12px; }
+        .artist-card-header { display: flex; align-items: center; gap: 14px; }
+        .artist-avatar { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 2px solid var(--border); }
         .artist-status { font-size: 12px; color: var(--muted); }
         .badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
         .badge-available { background: rgba(76,175,80,.15); color: #256029; }
@@ -123,16 +125,32 @@ $roleName = $role->role_name ?? 'Role';
                         $assignmentStatus = strtolower($artist->assignment_status ?? '');
                         $isAssigned = $assignmentStatus === 'active';
                         $hasPendingRequest = in_array($requestStatus, ['pending','interview'], true);
+                        
+                        // Get artist profile image
+                        $artistImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+                        if (!empty($artist->profile_image)) {
+                            $imageValue = str_replace('\\', '/', $artist->profile_image);
+                            if (strpos($imageValue, '/') !== false) {
+                                $artistImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+                            } else {
+                                $artistImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+                            }
+                        } elseif (!empty($artist->nic_photo)) {
+                            $artistImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $artist->nic_photo), '/');
+                        }
                     ?>
                     <article class="artist-card">
-                        <div>
-                            <h3 style="margin: 0 0 6px; font-size: 20px;"><?= esc($artist->full_name ?? 'Artist') ?></h3>
-                            <div class="artist-status">
-                                <?php if (!empty($artist->years_experience)): ?>
-                                    Experience: <?= esc($artist->years_experience) ?> years
-                                <?php else: ?>
-                                    Experience: Not specified
-                                <?php endif; ?>
+                        <div class="artist-card-header">
+                            <img src="<?= esc($artistImageSrc) ?>" alt="<?= esc($artist->full_name ?? 'Artist') ?>" class="artist-avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 6px; font-size: 20px;"><?= esc($artist->full_name ?? 'Artist') ?></h3>
+                                <div class="artist-status">
+                                    <?php if (!empty($artist->years_experience)): ?>
+                                        Experience: <?= esc($artist->years_experience) ?> years
+                                    <?php else: ?>
+                                        Experience: Not specified
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
 

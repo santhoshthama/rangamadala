@@ -40,7 +40,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/artistprofile">
+                <a href="<?=ROOT?>/profile">
                     <i class="fas fa-user"></i>
                     <span>Profile</span>
                 </a>

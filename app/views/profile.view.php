@@ -8,6 +8,27 @@ $form = $form ?? ['full_name' => '', 'phone' => '', 'years_experience' => '', 'b
 $errors = $errors ?? [];
 $success = $success ?? '';
 
+// Get dashboard link based on role
+$role = $_SESSION['user_role'] ?? 'artist';
+$dashboardLinks = [
+    'artist' => ROOT . '/artistdashboard',
+    'director' => ROOT . '/director',
+    'admin' => ROOT . '/admindashboard',
+    'audience' => ROOT . '/audiencedashboard',
+    'service_provider' => ROOT . '/serviceproviderdashboard',
+];
+$dashboardLink = $dashboardLinks[$role] ?? ROOT . '/artistdashboard';
+
+// Get page title based on role
+$roleTitles = [
+    'artist' => 'Artist Profile',
+    'director' => 'Director Profile',
+    'admin' => 'Admin Profile',
+    'audience' => 'Audience Profile',
+    'service_provider' => 'Service Provider Profile',
+];
+$pageTitle = $roleTitles[$role] ?? 'Profile';
+
 $profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
 if ($user && !empty($user->profile_image)) {
     $imageValue = str_replace('\\', '/', $user->profile_image);
@@ -33,7 +54,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artist Profile</title>
+    <title><?= esc($pageTitle) ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
@@ -239,6 +260,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
         input[type="text"],
         input[type="email"],
         input[type="tel"],
+        input[type="url"],
         input[type="number"] {
             padding: 14px 16px;
             border-radius: 12px;
@@ -350,17 +372,17 @@ $currentImageLabel = $user && !empty($user->profile_image)
 </head>
 <body>
     <div class="page-wrapper">
-        <a class="back-link" href="<?= ROOT ?>/artistdashboard">
+        <a class="back-link" href="<?= esc($dashboardLink) ?>">
             <i class="fas fa-arrow-left"></i>
             <span>Back to Dashboard</span>
         </a>
 
         <div class="profile-card">
             <aside class="profile-summary">
-                <img src="<?= esc($profileImageSrc) ?>" alt="Artist profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
 
                 <div>
-                    <h2><?= $user ? esc($user->full_name ?? 'Artist') : 'Artist' ?></h2>
+                    <h2><?= $user ? esc($user->full_name ?? 'User') : 'User' ?></h2>
                     <p><i class="fas fa-envelope"></i> <?= $user ? esc($user->email ?? 'N/A') : 'N/A' ?></p>
                     <p><i class="fas fa-phone"></i> <?= $user ? esc($user->phone ?? 'N/A') : 'N/A' ?></p>
                     <?php if ($user && !empty($user->location)): ?>
@@ -385,7 +407,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
 
             <section class="profile-form">
                 <h1>Profile Details</h1>
-                <p class="subtitle">Keep your information up to date so directors can find you easily.</p>
+                <p class="subtitle">Keep your information up to date.</p>
 
                 <?php if (!empty($success)): ?>
                     <div class="alerts">
