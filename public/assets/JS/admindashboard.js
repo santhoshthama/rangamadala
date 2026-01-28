@@ -12,9 +12,11 @@ const searchContainer = document.getElementById("searchContainer");
 const searchInput = document.getElementById("searchInput");
 const searchClose = document.getElementById("searchClose");
 const mobileSearchBtn = document.getElementById("mobileSearchBtn");
+
 // State
 let sidebarCollapsed = false;
 let currentView = "overview";
+let pendingRegistrations = [];
 // ===================================
 // INITIALIZATION
 // ===================================
@@ -26,6 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initNavigation();
   initSearch();
   initCharts();
+  initRegistrationsView();
 });
 // ===================================
 // SIDEBAR FUNCTIONALITY

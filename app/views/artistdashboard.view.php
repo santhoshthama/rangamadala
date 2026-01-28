@@ -10,7 +10,7 @@ if(isset($data) && is_array($data)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artist Dashboard - Rangamadala</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
         :root {
             --brand: #ba8e23;
@@ -131,10 +131,18 @@ if(isset($data) && is_array($data)) {
             transition: var(--transition);
         }
 
-        .menu a i {
-            font-size: 1.2rem;
-            min-width: 20px;
+        .menu a .material-symbols-rounded {
+            font-size: 1.4rem;
+            min-width: 24px;
             text-align: center;
+            transition: all 0.3s ease;
+            font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+        }
+
+        .menu li:hover .material-symbols-rounded,
+        .menu li.active .material-symbols-rounded {
+            font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 200, "opsz" 24;
+            transform: scale(1.1);
         }
 
         .menu a span {
@@ -481,37 +489,37 @@ if(isset($data) && is_array($data)) {
         <ul class="menu">
             <li class="active">
                 <a href="<?=ROOT?>/artistdashboard">
-                    <i class="fas fa-home"></i>
+                    <span class="material-symbols-rounded">dashboard</span>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="<?=ROOT?>/artistprofile">
-                    <i class="fas fa-user"></i>
+                    <span class="material-symbols-rounded">account_circle</span>
                     <span>Profile</span>
                 </a>
             </li>
             <li>
                 <a href="<?=ROOT?>/browseDramas">
-                    <i class="fas fa-theater-masks"></i>
+                    <span class="material-symbols-rounded">theater_comedy</span>
                     <span>Browse Dramas</span>
                 </a>
             </li>
             <li>
                 <a href="<?=ROOT?>/classes">
-                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span class="material-symbols-rounded">school</span>
                     <span>Classes</span>
                 </a>
             </li>
             <li>
                 <a href="<?=ROOT?>/portfolio">
-                    <i class="fas fa-briefcase"></i>
+                    <span class="material-symbols-rounded">portfolio</span>
                     <span>Portfolio</span>
                 </a>
             </li>
             <li>
                 <a href="<?=ROOT?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="material-symbols-rounded">logout</span>
                     <span>Logout</span>
                 </a>
             </li>

@@ -33,21 +33,21 @@
               <span class="nav-icon material-symbols-rounded">dashboard</span>
               <span class="nav-label">Overview</span>
             </a>
-            <a href="#" class="dashboard-nav-item" data-view="projects">
-              <span class="nav-icon material-symbols-rounded">folder</span>
-              <span class="nav-label">Projects</span>
+            <a href="#" class="dashboard-nav-item" data-view="users">
+              <span class="nav-icon material-symbols-rounded">people</span>
+              <span class="nav-label">User Management</span>
             </a>
-            <a href="#" class="dashboard-nav-item" data-view="tasks">
-              <span class="nav-icon material-symbols-rounded">checklist</span>
-              <span class="nav-label">Tasks</span>
+            <a href="#" class="dashboard-nav-item" data-view="registrations">
+              <span class="nav-icon material-symbols-rounded">app_registration</span>
+              <span class="nav-label">Registrations</span>
             </a>
-            <a href="#" class="dashboard-nav-item" data-view="reports">
-              <span class="nav-icon material-symbols-rounded">bar_chart</span>
-              <span class="nav-label">Reports</span>
+            <a href="#" class="dashboard-nav-item" data-view="permissions">
+              <span class="nav-icon material-symbols-rounded">security</span>
+              <span class="nav-label">Permissions</span>
             </a>
-            <a href="#" class="dashboard-nav-item" data-view="settings">
-              <span class="nav-icon material-symbols-rounded">settings</span>
-              <span class="nav-label">Settings</span>
+            <a href="#" class="dashboard-nav-item" data-view="content">
+              <span class="nav-icon material-symbols-rounded">article</span>
+              <span class="nav-label">Content</span>
             </a>
           </div>
         </nav>
@@ -126,54 +126,54 @@
             <div class="stats-grid">
               <div class="stat-card">
                 <div class="stat-card-header">
-                  <div class="stat-card-title">Total Projects</div>
+                  <div class="stat-card-title">Total Users</div>
                   <div class="stat-card-icon primary">
-                    <span class="material-symbols-rounded">folder</span>
+                    <span class="material-symbols-rounded">people</span>
                   </div>
                 </div>
-                <div class="stat-card-value">12</div>
+                <div class="stat-card-value">156</div>
                 <div class="stat-card-change positive">
                   <span class="material-symbols-rounded">trending_up</span>
-                  <span>+2 this week</span>
+                  <span>+12 this month</span>
                 </div>
               </div>
               <div class="stat-card">
                 <div class="stat-card-header">
-                  <div class="stat-card-title">Completed Tasks</div>
+                  <div class="stat-card-title">Active Dramas</div>
                   <div class="stat-card-icon success">
-                    <span class="material-symbols-rounded">check_circle</span>
+                    <span class="material-symbols-rounded">theater_comedy</span>
                   </div>
                 </div>
-                <div class="stat-card-value">48</div>
+                <div class="stat-card-value">24</div>
                 <div class="stat-card-change positive">
                   <span class="material-symbols-rounded">trending_up</span>
-                  <span>+15% from last week</span>
+                  <span>+3 this week</span>
                 </div>
               </div>
               <div class="stat-card">
                 <div class="stat-card-header">
-                  <div class="stat-card-title">Pending Tasks</div>
+                  <div class="stat-card-title">Pending Registrations</div>
                   <div class="stat-card-icon warning">
-                    <span class="material-symbols-rounded">schedule</span>
-                  </div>
-                </div>
-                <div class="stat-card-value">23</div>
-                <div class="stat-card-change negative">
-                  <span class="material-symbols-rounded">trending_down</span>
-                  <span>-3 from last week</span>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-card-header">
-                  <div class="stat-card-title">Team Members</div>
-                  <div class="stat-card-icon info">
-                    <span class="material-symbols-rounded">group</span>
+                    <span class="material-symbols-rounded">pending_actions</span>
                   </div>
                 </div>
                 <div class="stat-card-value">8</div>
+                <div class="stat-card-change negative">
+                  <span class="material-symbols-rounded">schedule</span>
+                  <span>Awaiting approval</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <div class="stat-card-title">Active Roles</div>
+                  <div class="stat-card-icon info">
+                    <span class="material-symbols-rounded">assignment</span>
+                  </div>
+                </div>
+                <div class="stat-card-value">5</div>
                 <div class="stat-card-change positive">
-                  <span class="material-symbols-rounded">trending_up</span>
-                  <span>+1 new member</span>
+                  <span class="material-symbols-rounded">check_circle</span>
+                  <span>Configured</span>
                 </div>
               </div>
             </div>
@@ -181,36 +181,36 @@
             <div class="chart-grid">
               <div class="chart-card">
                 <div class="chart-card-header">
-                  <h3 class="chart-card-title">Project Progress</h3>
-                  <p class="chart-card-subtitle">Completion rate over time</p>
+                  <h3 class="chart-card-title">User Registration Trend</h3>
+                  <p class="chart-card-subtitle">New users over time</p>
                 </div>
                 <div class="chart-container">
-                  <canvas id="progressChart"></canvas>
+                  <canvas id="userTrendChart"></canvas>
                 </div>
               </div>
               <div class="chart-card">
                 <div class="chart-card-header">
-                  <h3 class="chart-card-title">Task Distribution</h3>
-                  <p class="chart-card-subtitle">Tasks by category</p>
+                  <h3 class="chart-card-title">User Distribution by Role</h3>
+                  <p class="chart-card-subtitle">Distribution across roles</p>
                 </div>
                 <div class="chart-container">
-                  <canvas id="categoryChart"></canvas>
+                  <canvas id="roleDistributionChart"></canvas>
                 </div>
               </div>
             </div>
             <!-- Recent Activity -->
             <div class="dashboard-table-container">
               <div class="dashboard-table-header">
-                <h3 class="dashboard-table-title">Recent Projects</h3>
-                <a href="#" class="btn btn-secondary">View All</a>
+                <h3 class="dashboard-table-title">Recent User Activity</h3>
+                <a href="#" class="btn btn-primary">Manage Users</a>
               </div>
               <table class="dashboard-table">
                 <thead>
                   <tr>
-                    <th>Project</th>
-                    <th>Progress</th>
+                    <th>User</th>
+                    <th>Role</th>
                     <th>Status</th>
-                    <th>Due Date</th>
+                    <th>Joined Date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -218,92 +218,136 @@
                     <td>
                       <div class="project-title-cell">
                         <div class="project-icon">
-                          <span class="material-symbols-rounded">web</span>
+                          <span class="material-symbols-rounded">person</span>
                         </div>
                         <div class="project-info">
-                          <div class="project-title-text">Website Redesign</div>
-                          <div class="project-meta-text">Frontend • 5 tasks</div>
+                          <div class="project-title-text">Rajesh Kumar</div>
+                          <div class="project-meta-text">rajesh@example.com</div>
                         </div>
                       </div>
                     </td>
-                    <td>85%</td>
-                    <td><span class="status-badge success">In Progress</span></td>
-                    <td>Dec 15, 2024</td>
+                    <td>Artist</td>
+                    <td><span class="status-badge success">Active</span></td>
+                    <td>Jan 15, 2025</td>
                   </tr>
                   <tr>
                     <td>
                       <div class="project-title-cell">
                         <div class="project-icon">
-                          <span class="material-symbols-rounded">phone_android</span>
+                          <span class="material-symbols-rounded">person</span>
                         </div>
                         <div class="project-info">
-                          <div class="project-title-text">Mobile App</div>
-                          <div class="project-meta-text">Mobile • 8 tasks</div>
+                          <div class="project-title-text">Priya Sharma</div>
+                          <div class="project-meta-text">priya@example.com</div>
                         </div>
                       </div>
                     </td>
-                    <td>60%</td>
-                    <td><span class="status-badge warning">In Progress</span></td>
-                    <td>Jan 20, 2025</td>
+                    <td>Service Provider</td>
+                    <td><span class="status-badge success">Active</span></td>
+                    <td>Jan 10, 2025</td>
                   </tr>
                   <tr>
                     <td>
                       <div class="project-title-cell">
                         <div class="project-icon">
-                          <span class="material-symbols-rounded">database</span>
+                          <span class="material-symbols-rounded">person</span>
                         </div>
                         <div class="project-info">
-                          <div class="project-title-text">Database Migration</div>
-                          <div class="project-meta-text">Backend • 3 tasks</div>
+                          <div class="project-title-text">Aman Singh</div>
+                          <div class="project-meta-text">aman@example.com</div>
                         </div>
                       </div>
                     </td>
-                    <td>100%</td>
-                    <td><span class="status-badge success">Completed</span></td>
-                    <td>Nov 30, 2024</td>
+                    <td>Audience</td>
+                    <td><span class="status-badge warning">Pending Approval</span></td>
+                    <td>Jan 18, 2025</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
           <!-- Projects View -->
-          <div class="dashboard-view" id="projects">
+          <div class="dashboard-view" id="users">
             <div class="empty-state">
               <div class="empty-state-icon">
-                <span class="material-symbols-rounded">folder</span>
+                <span class="material-symbols-rounded">people</span>
               </div>
-              <h3 class="empty-state-title">Projects</h3>
-              <p class="empty-state-description">Manage your projects here. Create new projects, track progress, and collaborate with your team.</p>
+              <h3 class="empty-state-title">User Management</h3>
+              <p class="empty-state-description">Add, remove, view, and edit user accounts. Manage user details and account status.</p>
+              <button class="btn btn-primary" style="margin-top: 20px;">
+                <span class="material-symbols-rounded">add</span>
+                Add New User
+              </button>
             </div>
           </div>
           <!-- Tasks View -->
-          <div class="dashboard-view" id="tasks">
-            <div class="empty-state">
-              <div class="empty-state-icon">
-                <span class="material-symbols-rounded">checklist</span>
+          <div class="dashboard-view" id="registrations">
+            <div class="dashboard-table-container">
+              <div class="dashboard-table-header">
+                <h2 class="dashboard-table-title">Pending Registrations</h2>
+                <div class="filter-buttons">
+                  <button class="btn btn-secondary filter-btn active" data-filter="all">All</button>
+                  <button class="btn btn-secondary filter-btn" data-filter="artist">Artists</button>
+                  <button class="btn btn-secondary filter-btn" data-filter="service_provider">Service Providers</button>
+                </div>
               </div>
-              <h3 class="empty-state-title">Tasks</h3>
-              <p class="empty-state-description">View and manage all your tasks. Create new tasks, set priorities, and track completion status.</p>
+              
+              <div id="registrationsTableContainer">
+                <!-- Loading state -->
+                <div class="loading-state" id="registrationsLoading">
+                  <span class="material-symbols-rounded spinning">progress_activity</span>
+                  <p>Loading registrations...</p>
+                </div>
+                
+                <!-- Empty state -->
+                <div class="empty-state" id="registrationsEmpty" style="display: none;">
+                  <div class="empty-state-icon">
+                    <span class="material-symbols-rounded">task_alt</span>
+                  </div>
+                  <h3 class="empty-state-title">No Pending Registrations</h3>
+                  <p class="empty-state-description">All registration requests have been processed.</p>
+                </div>
+                
+                <!-- Registrations table -->
+                <table class="dashboard-table" id="registrationsTable" style="display: none;">
+                  <thead>
+                    <tr>
+                      <th>User Details</th>
+                      <th>Role</th>
+                      <th>Contact</th>
+                      <th>Registration Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="registrationsTableBody">
+                    <!-- Data will be loaded dynamically -->
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
           <!-- Reports View -->
-          <div class="dashboard-view" id="reports">
+          <div class="dashboard-view" id="permissions">
             <div class="empty-state">
               <div class="empty-state-icon">
-                <span class="material-symbols-rounded">bar_chart</span>
+                <span class="material-symbols-rounded">security</span>
               </div>
-              <h3 class="empty-state-title">Reports</h3>
-              <p class="empty-state-description">Generate detailed reports and analytics. View project performance, team productivity, and time tracking data.</p>
+              <h3 class="empty-state-title">Permissions Management</h3>
+              <p class="empty-state-description">Configure user roles and permissions. Manage access levels for different user types.</p>
             </div>
           </div>
           <!-- Settings View -->
-          <div class="dashboard-view" id="settings">
+          <div class="dashboard-view" id="content">
             <div class="empty-state">
               <div class="empty-state-icon">
-                <span class="material-symbols-rounded">settings</span>
+                <span class="material-symbols-rounded">article</span>
               </div>
-              <h3 class="empty-state-title">Settings</h3>
-              <p class="empty-state-description">Configure your dashboard preferences, manage team members, and customize your workspace.</p>
+              <h3 class="empty-state-title">Website Content Management</h3>
+              <p class="empty-state-description">Add, edit, or delete website content. Manage pages and content sections.</p>
+              <button class="btn btn-primary" style="margin-top: 20px;">
+                <span class="material-symbols-rounded">add</span>
+                Add New Content
+              </button>
             </div>
           </div>
         </div>
@@ -311,5 +355,9 @@
     </div>
     <!-- Scripts -->
     <script src="<?= ROOT ?>/assets/JS/admindashboard.js"></script>
+    <script src="<?= ROOT ?>/assets/JS/admin-verification.js"></script>
+    <script>
+      const ROOT = '<?= ROOT ?>';
+    </script>
   </body>
 </html>

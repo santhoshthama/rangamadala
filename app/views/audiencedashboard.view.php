@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Google Icons -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" />
+  <!-- Material Design Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 
   <!-- Dashboard CSS -->
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css" />
@@ -26,10 +26,8 @@
     <!-- Sidebar -->
     <aside class="dashboard-sidebar" id="dashboardSidebar">
       <div class="dashboard-brand">
-        <button class="dashboard-sidebar-toggle">
-          <span class="material-symbols-rounded">menu</span>
-        </button>
-        <a class="logo">Audience Dashboard</a>
+        <div class="logo">👥</div>
+        <span>Audience</span>
       </div>
 
       <nav class="dashboard-nav">
