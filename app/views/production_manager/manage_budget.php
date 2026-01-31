@@ -201,17 +201,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>>
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                                <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(4)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
     </main>
 

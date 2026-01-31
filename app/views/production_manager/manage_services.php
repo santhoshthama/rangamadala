@@ -166,6 +166,7 @@
                     </button>
                 </div>
             <?php endif; ?>
+        </div>
     </main>
 
     <!-- Request Service Modal -->
