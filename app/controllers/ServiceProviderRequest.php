@@ -11,6 +11,75 @@ class ServiceProviderRequest
             exit;
         }
 
+        // Handle uploads (script/reference files)
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/request_references/';
+        $allowedExt = ['pdf','doc','docx','jpg','jpeg','png','gif','zip'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+        $uploadedFiles = [];
+
+        // Make sure destination exists
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+
+        $fileFields = [
+            'theater_reference',
+            'lighting_reference',
+            'sound_reference',
+            'video_reference',
+            'set_reference',
+            'costume_reference',
+            'makeup_reference',
+        ];
+
+        foreach ($fileFields as $field) {
+            if (!isset($_FILES[$field]) || empty($_FILES[$field]['name'])) {
+                continue; // nothing uploaded for this field
+            }
+
+            $file = $_FILES[$field];
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                $_SESSION['request_errors'] = ['File upload failed for ' . $field . ' (error code ' . $file['error'] . ').'];
+                header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? ROOT . '/BrowseServiceProviders'));
+                exit;
+            }
+
+            // Validate size
+            if ($file['size'] > $maxSize) {
+                $_SESSION['request_errors'] = ['File too large for ' . $field . ' (max 5MB).'];
+                header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? ROOT . '/BrowseServiceProviders'));
+                exit;
+            }
+
+            // Validate extension
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowedExt, true)) {
+                $_SESSION['request_errors'] = ['Invalid file type for ' . $field . '. Allowed: ' . implode(', ', $allowedExt) . '.'];
+                header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? ROOT . '/BrowseServiceProviders'));
+                exit;
+            }
+
+            // Build safe filename
+            $baseName = preg_replace('/[^A-Za-z0-9._-]/', '_', pathinfo($file['name'], PATHINFO_FILENAME));
+            $newName = uniqid('req_', true) . '_' . $baseName . '.' . $ext;
+            $destPath = $uploadDir . $newName;
+
+            if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+                $_SESSION['request_errors'] = ['Could not save uploaded file for ' . $field . '.'];
+                header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? ROOT . '/BrowseServiceProviders'));
+                exit;
+            }
+
+            // Store relative path for public access
+            $relativePath = 'uploads/request_references/' . $newName;
+            $uploadedFiles[$field] = [
+                'original_name' => $file['name'],
+                'relative_path' => $relativePath,
+                'size' => (int)$file['size'],
+                'mime' => $file['type'] ?? '',
+            ];
+        }
+
         // Collect form data
         $request = [
             'provider_id' => (int)($_POST['provider_id'] ?? 0),
@@ -19,13 +88,23 @@ class ServiceProviderRequest
             'requester_email' => trim($_POST['requester_email'] ?? ''),
             'requester_phone' => trim($_POST['requester_phone'] ?? ''),
             'drama_name' => trim($_POST['drama_name'] ?? ''),
+            'drama_id' => !empty($_POST['drama_id']) ? (int)$_POST['drama_id'] : null,
             'service_type' => trim($_POST['service_type'] ?? ''),
+            'service_required' => trim($_POST['service_required'] ?? ''),
             'start_date' => trim($_POST['start_date'] ?? ''),
             'end_date' => trim($_POST['end_date'] ?? ''),
+            'budget' => isset($_POST['budget']) && !empty(trim($_POST['budget'])) ? (float)($_POST['budget']) : null,
+            'description' => trim($_POST['description'] ?? ''),
             'notes' => trim($_POST['notes'] ?? ''),
             'status' => 'pending',
-            'created_at' => date('Y-m-d H:i:s')
+            'created_at' => date('Y-m-d H:i:s'),
+            'service_details' => $_POST // Start with all POST data for service-specific details
         ];
+
+        // Attach uploaded file metadata
+        if (!empty($uploadedFiles)) {
+            $request['service_details']['uploaded_files'] = $uploadedFiles;
+        }
 
         // Basic validation
         $errors = [];
@@ -47,6 +126,22 @@ class ServiceProviderRequest
             exit;
         }
 
+        // If drama_id is provided, ensure the service type exists in drama_services
+        if (!empty($request['drama_id']) && !empty($request['service_type'])) {
+            $dramaServicesModel = new M_drama_services();
+            $existingService = $dramaServicesModel->getService($request['drama_id'], $request['service_type']);
+            
+            // If service doesn't exist, add it automatically
+            if (!$existingService) {
+                $dramaServicesModel->addService(
+                    $request['drama_id'],
+                    $request['service_type'],
+                    $request['budget'],
+                    $request['description']
+                );
+            }
+        }
+
         // Save to database
         $model = new M_service_request();
         $saved = $model->createRequest($request);
@@ -54,12 +149,167 @@ class ServiceProviderRequest
         if ($saved) {
             // Success - redirect with success message
             $_SESSION['request_success'] = 'Service request submitted successfully! The provider will contact you soon.';
-            header('Location: ' . ROOT . '/BrowseServiceProviders/viewProfile/' . $request['provider_id']);
+            // If drama_id provided (production manager flow), take user to the manage_services page so counts update
+            if (!empty($request['drama_id'])) {
+                header('Location: ' . ROOT . '/production_manager/manage_services?drama_id=' . (int)$request['drama_id']);
+            } else {
+                header('Location: ' . ROOT . '/BrowseServiceProviders/viewProfile/' . $request['provider_id']);
+            }
         } else {
             // Failed - redirect with error
             $_SESSION['request_errors'] = ['Failed to submit request. Please try again.'];
             header('Location: ' . $_SERVER['HTTP_REFERER'] ?? ROOT . '/BrowseServiceProviders');
         }
         exit;
+    }
+
+    /**
+     * Provider responds to a pending request with quote/dates/note
+     */
+    public function respond()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            return;
+        }
+
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Not authenticated']);
+            return;
+        }
+
+        $request_id = $_POST['request_id'] ?? null;
+        $quote_amount = $_POST['quote_amount'] ?? null;
+        $needs_advance = isset($_POST['needs_advance']) && $_POST['needs_advance'] == '1' ? true : false;
+        $advance_amount = $_POST['advance_amount'] ?? null;
+        $advance_due_date = $_POST['advance_due_date'] ?? null;
+        $final_payment_due_date = $_POST['final_payment_due_date'] ?? null;
+        $note = $_POST['note'] ?? '';
+
+        if (!$request_id) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Missing request ID']);
+            return;
+        }
+
+        try {
+            $serviceModel = $this->getModel('M_service_request');
+            $result = $serviceModel->submitProviderResponse(
+                (int)$request_id,
+                $_SESSION['user_id'],
+                [
+                    'quote_amount' => $quote_amount,
+                    'needs_advance' => $needs_advance,
+                    'advance_amount' => $advance_amount,
+                    'advance_due_date' => $advance_due_date,
+                    'final_payment_due_date' => $final_payment_due_date,
+                    'note' => $note,
+                ]
+            );
+
+            if ($result['success']) {
+                echo json_encode(['success' => true, 'message' => 'Response submitted successfully']);
+            } else {
+                http_response_code(400);
+                echo json_encode($result);
+            }
+        } catch (Exception $e) {
+            error_log("Error in respond: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Server error']);
+        }
+    }
+
+    /**
+     * Provider accepts PM-confirmed terms
+     */
+    public function acceptConfirmed()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            return;
+        }
+
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Not authenticated']);
+            return;
+        }
+
+        $request_id = $_POST['request_id'] ?? null;
+
+        if (!$request_id) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Missing request ID']);
+            return;
+        }
+
+        try {
+            $serviceModel = $this->getModel('M_service_request');
+            $result = $serviceModel->acceptConfirmed((int)$request_id, $_SESSION['user_id']);
+
+            if ($result['success']) {
+                echo json_encode(['success' => true, 'message' => 'Request accepted successfully']);
+            } else {
+                http_response_code(400);
+                echo json_encode($result);
+            }
+        } catch (Exception $e) {
+            error_log("Error in acceptConfirmed: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Server error']);
+        }
+    }
+
+    /**
+     * Provider rejects PM-confirmed terms
+     */
+    public function rejectConfirmed()
+    {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            return;
+        }
+
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Not authenticated']);
+            return;
+        }
+
+        $request_id = $_POST['request_id'] ?? null;
+        $reason = $_POST['reason'] ?? 'Terms not acceptable';
+
+        if (!$request_id) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Missing request ID']);
+            return;
+        }
+
+        try {
+            $serviceModel = $this->getModel('M_service_request');
+            $ok = $serviceModel->updateStatusDetailed((int)$request_id, 'rejected', $reason, $_SESSION['user_id']);
+            
+            if ($ok) {
+                echo json_encode(['success' => true, 'message' => 'Request rejected']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'error' => 'Failed to reject']);
+            }
+        } catch (Exception $e) {
+            error_log("Error in rejectConfirmed: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Server error']);
+        }
     }
 }

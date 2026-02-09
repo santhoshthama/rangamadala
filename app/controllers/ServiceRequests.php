@@ -13,7 +13,7 @@ class ServiceRequests
 		}
 
 		// Check if user has service_provider role
-		if ($_SESSION['user_role'] !== 'service_provider') {
+		if (($_SESSION['user_role'] ?? '') !== 'service_provider') {
 			header("Location: " . ROOT . "/Home");
 			exit;
 		}
@@ -38,7 +38,7 @@ class ServiceRequests
 	public function updateStatus()
 	{
 		// Must be logged in as service provider
-		if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'service_provider') {
+		if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
 			http_response_code(403);
 			echo json_encode(['success' => false, 'error' => 'Unauthorized']);
 			return;
@@ -54,19 +54,25 @@ class ServiceRequests
 			return;
 		}
 
-		$reqModel = new M_service_request();
-		$ok = $reqModel->updateStatusDetailed((int)$id, (string)$status, $reason, (int)$_SESSION['user_id']);
-		if ($ok) {
-			echo json_encode(['success' => true, 'status' => $status]);
-		} else {
+		try {
+			$reqModel = new M_service_request();
+			$ok = $reqModel->updateStatusDetailed((int)$id, (string)$status, $reason, (int)$_SESSION['user_id']);
+			if ($ok) {
+				echo json_encode(['success' => true, 'status' => $status]);
+			} else {
+				http_response_code(500);
+				echo json_encode(['success' => false, 'error' => 'Failed to update status']);
+			}
+		} catch (Exception $e) {
+			error_log("Error in updateStatus: " . $e->getMessage());
 			http_response_code(500);
-			echo json_encode(['success' => false, 'error' => 'Failed to update status']);
+			echo json_encode(['success' => false, 'error' => 'Server error: ' . $e->getMessage()]);
 		}
 	}
 
 	public function updatePayment()
 	{
-		if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'service_provider') {
+		if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
 			http_response_code(403);
 			echo json_encode(['success' => false, 'error' => 'Unauthorized']);
 			return;

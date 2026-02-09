@@ -8,5 +8,5 @@ function show($stuff)
 
 function esc($string)
 {
-    return htmlspecialchars($string);
+    return htmlspecialchars((string)$string);
 }

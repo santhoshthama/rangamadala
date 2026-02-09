@@ -50,3 +50,4 @@ function bookTheater() {
 // Redirect to service schedule
 function viewServiceSchedule() {
     navigateTo(`manage_schedule.php?drama_id=${dramaId}`);
+}

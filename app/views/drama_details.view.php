@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($data['drama']->title ?? 'Drama Details') ?> - <?= APP_NAME ?></title>
+  <title><?= htmlspecialchars($data['drama']->drama_name ?? 'Drama Details') ?> - <?= APP_NAME ?></title>
   <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
@@ -36,31 +36,37 @@
       <div class="details-card">
         <div class="details-hero">
           <div>
-            <?php if (!empty($d->image)): ?>
-              <img class="details-img" src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($d->image) ?>" alt="<?= htmlspecialchars($d->title) ?>" onerror="this.onerror=null;this.replaceWith(document.createElement('div'))">
+            <?php 
+              $certificateFile = $d->certificate_image ?? '';
+              $extension = strtolower(pathinfo($certificateFile, PATHINFO_EXTENSION));
+              $isImage = !empty($certificateFile) && in_array($extension, ['jpg','jpeg','png','gif','webp']);
+            ?>
+            <?php if ($isImage): ?>
+              <img class="details-img" src="<?= ROOT ?>/uploads/certificates/<?= htmlspecialchars(rawurlencode($certificateFile)) ?>" alt="Certificate for <?= htmlspecialchars($d->drama_name ?? 'Drama') ?>" onerror="this.onerror=null;this.replaceWith(document.createElement('div'))">
             <?php else: ?>
-              <div class="placeholder-image" style="height:360px;border-radius:12px"><i class='bx bx-movie-play'></i></div>
+              <div class="placeholder-image" style="height:360px;border-radius:12px"><i class='bx bx-id-card'></i></div>
             <?php endif; ?>
           </div>
           <div>
-            <h1 class="details-title"><?= htmlspecialchars($d->title) ?></h1>
-            <div class="badge"><?= htmlspecialchars($d->category_name ?? 'Uncategorized') ?></div>
+            <h1 class="details-title"><?= htmlspecialchars($d->drama_name ?? 'Registered Drama') ?></h1>
+            <div class="badge">Certificate <?= htmlspecialchars($d->certificate_number ?? 'Pending') ?></div>
             <div class="details-meta">
-              <div><i class='bx bx-calendar'></i><?= !empty($d->event_date)?date('M d, Y', strtotime($d->event_date)):'TBA' ?></div>
-              <div><i class='bx bx-time'></i><?= htmlspecialchars($d->event_time ?? 'TBA') ?></div>
-              <div><i class='bx bx-map'></i><?= htmlspecialchars($d->venue ?? 'TBA') ?></div>
-              <div><i class='bx bx-purchase-tag'></i>LKR <?= number_format($d->ticket_price ?? 0, 2) ?></div>
-              <?php if (!empty($d->creator_name)): ?><div><i class='bx bx-user'></i>By <?= htmlspecialchars($d->creator_name) ?></div><?php endif; ?>
+              <div><i class='bx bx-user'></i>Owner: <?= htmlspecialchars($d->owner_name ?? 'Not recorded') ?></div>
+              <div><i class='bx bx-calendar'></i>Registered: <?= !empty($d->created_at) ? date('M d, Y', strtotime($d->created_at)) : 'N/A' ?></div>
+              <div><i class='bx bx-file'></i>Certificate #: <?= htmlspecialchars($d->certificate_number ?? 'Pending') ?></div>
+              <?php if (!empty($d->creator_name)): ?><div><i class='bx bx-id-card'></i>Added by <?= htmlspecialchars($d->creator_name) ?></div><?php endif; ?>
             </div>
             <div class="details-actions">
-              <a class="btn btn-primary" href="#"><i class='bx bx-cart-add'></i> Book Ticket</a>
-              <a class="btn btn-outline" href="<?= ROOT ?>/Audiencedashboard"><i class='bx bx-home'></i> Dashboard</a>
+              <?php if (!empty($certificateFile)): ?>
+                <a class="btn btn-primary" href="<?= ROOT ?>/uploads/certificates/<?= htmlspecialchars(rawurlencode($certificateFile)) ?>" target="_blank" rel="noopener"><i class='bx bx-show'></i> View Certificate</a>
+              <?php endif; ?>
+              <a class="btn btn-outline" href="<?= ROOT ?>/BrowseDramas"><i class='bx bx-home'></i> Back to Browse</a>
             </div>
           </div>
         </div>
         <div style="padding:0 24px 24px">
-          <h3 style="color:#d4af37;margin:0 0 8px">About</h3>
-          <p class="details-desc"><?= nl2br(htmlspecialchars($d->description ?? 'No description available.')) ?></p>
+          <h3 style="color:#d4af37;margin:0 0 8px">Notes</h3>
+          <p class="details-desc">This record confirms that the drama <strong><?= htmlspecialchars($d->drama_name ?? 'N/A') ?></strong> has been registered with the Public Performance Board under certificate number <strong><?= htmlspecialchars($d->certificate_number ?? 'N/A') ?></strong>. Keep the certificate image updated to ensure compliance.</p>
         </div>
       </div>
     <?php else: ?>
