@@ -1,7 +1,9 @@
 <?php
 
-class Payment extends Controller
+class Payment
 {
+    use Controller;
+    
     private $paymentModel;
     private $serviceRequestModel;
     
@@ -12,8 +14,45 @@ class Payment extends Controller
             redirect('login');
         }
         
-        $this->paymentModel = $this->model('M_payment');
-        $this->serviceRequestModel = $this->model('M_service_request');
+        $this->paymentModel = $this->getModel('M_payment');
+        $this->serviceRequestModel = $this->getModel('M_service_request');
+    }
+    
+    /**
+     * Display checkout page
+     */
+    public function checkout()
+    {
+        $requestId = $_GET['request_id'] ?? null;
+        $amount = $_GET['amount'] ?? null;
+        $type = $_GET['type'] ?? 'advance';
+        
+        if (!$requestId || !$amount) {
+            $_SESSION['error'] = 'Invalid payment parameters';
+            redirect('Production_manager/manage_services');
+            return;
+        }
+        
+        // Get service request details
+        $request = $this->serviceRequestModel->getRequestById($requestId);
+        if (!$request) {
+            $_SESSION['error'] = 'Service request not found';
+            redirect('Production_manager/manage_services');
+            return;
+        }
+        
+        // Parse service details for provider response
+        $serviceDetails = $request->service_details_json ? json_decode($request->service_details_json, true) : [];
+        $providerResponse = $serviceDetails['provider_response'] ?? [];
+        
+        $data = [
+            'request' => $request,
+            'amount' => $amount,
+            'type' => $type,
+            'provider_response' => $providerResponse
+        ];
+        
+        $this->view('payment_checkout', $data);
     }
     
     /**
@@ -215,47 +254,27 @@ class Payment extends Controller
      */
     public function success($payment_id = null)
     {
-        $payment = $payment_id ? $this->paymentModel->getPaymentById($payment_id) : null;
+        $paymentId = $payment_id ?? ($_GET['payment_id'] ?? null);
         
-        if ($payment) {
-            $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
+        if (!$paymentId) {
+            redirect('Production_manager/manage_services');
+            return;
         }
-        ?>
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Payment Successful - Rangamadala</title>
-            <style>
-                body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
-                .success-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
-                .success-icon { font-size: 64px; color: #28a745; margin-bottom: 20px; }
-                h2 { color: #333; margin: 10px 0; }
-                .transaction { background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; font-family: monospace; }
-                .btn { display: inline-block; padding: 12px 30px; margin: 10px 5px; border-radius: 6px; text-decoration: none; font-weight: 600; }
-                .btn-primary { background: #d4af37; color: white; }
-                .btn-secondary { background: #e5e5e5; color: #333; }
-            </style>
-        </head>
-        <body>
-            <div class="success-card">
-                <div class="success-icon">✓</div>
-                <h2>Payment Successful!</h2>
-                <p>Your payment has been processed successfully.</p>
-                
-                <?php if ($payment): ?>
-                <div class="transaction">
-                    <strong>Transaction ID:</strong> <?= htmlspecialchars($payment->transaction_id) ?><br>
-                    <strong>Amount:</strong> Rs <?= number_format($payment->amount, 2) ?><br>
-                    <strong>Type:</strong> <?= ucfirst($payment->payment_type) ?> Payment
-                </div>
-                <?php endif; ?>
-                
-                <a href="<?= ROOT ?>/production_manager/manage_services" class="btn btn-primary">Return to Services</a>
-                <a href="<?= ROOT ?>/production_manager" class="btn btn-secondary">Go to Dashboard</a>
-            </div>
-        </body>
-        </html>
-        <?php
+        
+        $payment = $this->paymentModel->getPaymentById($paymentId);
+        if (!$payment) {
+            redirect('Production_manager/manage_services');
+            return;
+        }
+        
+        $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
+        
+        $data = [
+            'payment' => $payment,
+            'request' => $request
+        ];
+        
+        $this->view('payment_success', $data);
     }
     
     /**
@@ -263,35 +282,19 @@ class Payment extends Controller
      */
     public function cancel($payment_id = null)
     {
-        if ($payment_id) {
-            $this->paymentModel->updatePaymentStatus($payment_id, 'failed', null, 'Payment cancelled by user');
+        $paymentId = $payment_id ?? ($_GET['payment_id'] ?? null);
+        
+        if ($paymentId) {
+            $this->paymentModel->updatePaymentStatus($paymentId, 'failed', null, 'Payment cancelled by user');
         }
         
         unset($_SESSION['pending_payment']);
-        ?>
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Payment Cancelled - Rangamadala</title>
-            <style>
-                body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
-                .cancel-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
-                .cancel-icon { font-size: 64px; color: #dc3545; margin-bottom: 20px; }
-                h2 { color: #333; margin: 10px 0; }
-                .btn { display: inline-block; padding: 12px 30px; margin: 10px 5px; border-radius: 6px; text-decoration: none; font-weight: 600; }
-                .btn-primary { background: #d4af37; color: white; }
-            </style>
-        </head>
-        <body>
-            <div class="cancel-card">
-                <div class="cancel-icon">✕</div>
-                <h2>Payment Cancelled</h2>
-                <p>You have cancelled the payment process.</p>
-                <a href="<?= ROOT ?>/production_manager/manage_services" class="btn btn-primary">Return to Services</a>
-            </div>
-        </body>
-        </html>
-        <?php
+        
+        $data = [
+            'payment_id' => $paymentId
+        ];
+        
+        $this->view('payment_cancel', $data);
     }
     
     /**

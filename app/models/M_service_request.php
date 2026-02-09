@@ -179,7 +179,16 @@ class M_service_request
      */
     public function getRequestById($request_id)
     {
-        $this->db->query("SELECT * FROM service_requests WHERE id = :id");
+        $this->db->query("
+            SELECT sr.*, 
+                   u.full_name as provider_name, 
+                   u.email as provider_email,
+                   d.drama_name
+            FROM service_requests sr
+            LEFT JOIN users u ON sr.provider_id = u.id
+            LEFT JOIN dramas d ON sr.drama_id = d.id
+            WHERE sr.id = :id
+        ");
         $this->db->bind(':id', $request_id);
         return $this->db->single();
     }

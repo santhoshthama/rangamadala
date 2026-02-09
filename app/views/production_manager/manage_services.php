@@ -464,31 +464,14 @@
                 <input type="hidden" id="confirm_advance_amount">
                 <input type="hidden" id="confirm_needs_advance">
 
-                <!-- Payment Section - ADVANCE PAYMENT (REQUIRED BEFORE CONFIRM) -->
-                <div id="paymentSection" style="display: none; background: #fff3cd; padding: 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #ffc107;">
-                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #856404;">⚠️ Advance Payment Required</h4>
-                    <p style="margin: 0 0 16px 0; font-size: 13px; color: #856404;">Service provider requires advance payment before confirming. You must pay to proceed.</p>
-                    
-                    <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 13px; color: #64748b;">Advance Amount:</span>
-                            <span style="font-size: 18px; font-weight: 700; color: #856404;">Rs <span id="payment_advance_amount">0</span></span>
-                        </div>
-                    </div>
-
-                    <button id="payAdvanceBtn" onclick="initiateAdvancePayment()" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; background: #ffc107; color: #000; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600;">
-                        💳 Pay Advance to Proceed
-                    </button>
-                    
-                    <p style="margin: 12px 0 0 0; font-size: 11px; color: #856404; text-align: center;">Payment required before confirmation</p>
+                <!-- Note about advance payment (informational only) -->
+                <div id="advanceInfoSection" style="display: none; background: #ecfdf5; padding: 14px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #10b981;">
+                    <p style="margin: 0; font-size: 13px; color: #065f46;">
+                        <strong>💳 Payment Required:</strong> After confirming, you'll be redirected to a secure checkout page to complete the advance payment of <strong>Rs <span id="advance_info_amount">0</span></strong> via PayPal.
+                    </p>
                 </div>
 
-                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                    <button onclick="closeConfirmModal()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: #6b7280; color: #fff;">Close</button>
-                    <button onclick="rejectProviderResponse()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: #ef4444; color: #fff;">Reject</button>
-                    <button id="confirmBtn" onclick="acceptProviderResponse()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: linear-gradient(135deg, #d4af37, #aa8c2c); color: #1a1410;">Confirm</button>
-                </div>
-
+                <!-- Action Buttons (single set) -->
                 <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
                     <button onclick="closeConfirmModal()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: #6b7280; color: #fff; transition: background 0.2s;">Close</button>
                     <button onclick="rejectProviderResponse()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: #ef4444; color: #fff; transition: background 0.2s;">
@@ -525,25 +508,13 @@
                 document.getElementById('review_advance_amount').textContent = advanceAmount;
                 document.getElementById('review_advance_due_date').textContent = providerResponse.advance_due_date || '-';
                 
-                // Show payment section
-                document.getElementById('paymentSection').style.display = 'block';
-                document.getElementById('payment_advance_amount').textContent = advanceAmount;
-                
-                // DISABLE CONFIRM BUTTON - Must pay first
-                document.getElementById('confirmBtn').disabled = true;
-                document.getElementById('confirmBtn').style.opacity = '0.5';
-                document.getElementById('confirmBtn').style.cursor = 'not-allowed';
-                document.getElementById('confirmBtn').textContent = '✓ Pay advance first →';
+                // Show informational section about advance payment
+                document.getElementById('advanceInfoSection').style.display = 'block';
+                document.getElementById('advance_info_amount').textContent = advanceAmount;
             } else {
                 document.getElementById('review_advance_status').textContent = 'Not Required';
                 document.getElementById('advanceDetailsRow').style.display = 'none';
-                document.getElementById('paymentSection').style.display = 'none';
-                
-                // ENABLE CONFIRM BUTTON - No payment needed
-                document.getElementById('confirmBtn').disabled = false;
-                document.getElementById('confirmBtn').style.opacity = '1';
-                document.getElementById('confirmBtn').style.cursor = 'pointer';
-                document.getElementById('confirmBtn').textContent = 'Confirm';
+                document.getElementById('advanceInfoSection').style.display = 'none';
             }
 
             if (providerResponse.final_payment_due_date) {
@@ -566,6 +537,8 @@
 
         function acceptProviderResponse() {
             const requestId = document.getElementById('confirm_request_id').value;
+            const needsAdvance = document.getElementById('confirm_needs_advance').value === '1';
+            const advanceAmount = document.getElementById('confirm_advance_amount').value;
 
             fetch(CONFIRM_ENDPOINTS.confirm, {
                 method: 'POST',
@@ -575,9 +548,18 @@
             .then(res => res.json())
             .then(json => {
                 if (json.success) {
-                    showMessage('Response accepted successfully!', 'success');
                     closeConfirmModal();
-                    setTimeout(() => location.reload(), 1500);
+                    
+                    // If advance payment required, redirect to payment page
+                    if (needsAdvance && advanceAmount > 0) {
+                        showMessage('Redirecting to payment...', 'success');
+                        setTimeout(() => {
+                            window.location.href = '<?= ROOT ?>/Payment/checkout?request_id=' + requestId + '&amount=' + advanceAmount + '&type=advance';
+                        }, 1000);
+                    } else {
+                        showMessage('Service confirmed successfully!', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    }
                 } else {
                     showMessage(json.error || 'Failed to accept', 'error');
                 }
@@ -585,7 +567,7 @@
             .catch(e => showMessage('Network error: ' + e.message, 'error'));
         }
 
-        // Payment Functions
+        // Payment Functions - Placeholder for PayPal integration
         function initiateAdvancePayment() {
             const requestId = document.getElementById('confirm_request_id').value;
             const amount = document.getElementById('confirm_advance_amount').value;
@@ -595,56 +577,11 @@
                 return;
             }
 
-            // Disable button to prevent double clicks
-            const btn = document.getElementById('payAdvanceBtn');
-            btn.disabled = true;
-            btn.textContent = 'Processing...';
-
-            fetch('<?= ROOT ?>/Payment/initiate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    request_id: requestId,
-                    amount: amount,
-                    type: 'advance',
-                    stage: 'before_confirmation'
-                })
-            })
-            .then(res => res.json())
-            .then(json => {
-                if (json.success) {
-                    showMessage('Redirecting to payment...', 'info');
-                    // Redirect to payment page
-                    window.location.href = json.redirect_url;
-                } else {
-                    showMessage(json.error || 'Failed to initiate payment', 'error');
-                    btn.disabled = false;
-                    btn.textContent = '💳 Pay Advance to Proceed';
-                }
-            })
-            .catch(e => {
-                showMessage('Network error: ' + e.message, 'error');
-                btn.disabled = false;
-                btn.textContent = '💳 Pay Advance to Proceed';
-            });
+            // TODO: Integrate PayPal payment here
+            showMessage('PayPal integration pending', 'info');
         }
 
         function onAdvancePaymentSuccess(requestId) {
-            // Re-enable the confirm button after advance payment is completed
-            const confirmBtn = document.getElementById('confirmBtn');
-            if (confirmBtn) {
-                confirmBtn.disabled = false;
-                confirmBtn.style.opacity = '1';
-                confirmBtn.style.cursor = 'pointer';
-                confirmBtn.textContent = 'Confirm';
-            }
-            
-            // Hide the payment section
-            const paymentSection = document.getElementById('paymentSection');
-            if (paymentSection) {
-                paymentSection.style.display = 'none';
-            }
-            
             showMessage('Advance payment completed! You can now confirm the service.', 'success');
         }
 
