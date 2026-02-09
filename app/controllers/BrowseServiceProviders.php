@@ -23,10 +23,25 @@ class BrowseServiceProviders
         // Get unique locations for filter
         $locations = $model->getAllLocations();
 
+        // If drama_id passed, fetch drama name so request form can pre-fill
+        $drama_name = null;
+        $drama_id = $_GET['drama_id'] ?? null;
+        if ($drama_id) {
+            try {
+                $dramaModel = new M_drama();
+                $dramaObj = $dramaModel->getDramaById((int)$drama_id);
+                $drama_name = $dramaObj ? $dramaObj->drama_name : null;
+            } catch (Exception $e) {
+                error_log('Error loading drama for BrowseServiceProviders: ' . $e->getMessage());
+            }
+        }
+
         $data = [
             'providers' => $providers,
             'locations' => $locations,
-            'filters' => $filters
+            'filters' => $filters,
+            'drama_id' => $drama_id,
+            'drama_name' => $drama_name,
         ];
 
         $this->view('browse_service_providers', $data);
@@ -89,11 +104,32 @@ class BrowseServiceProviders
             error_log("Error loading booked dates: " . $e->getMessage());
         }
 
+        // If drama_id passed forward it so the service request form can prefill
+        $drama_id = $_GET['drama_id'] ?? null;
+        $drama_name = null;
+        $dramaServices = [];
+        if ($drama_id) {
+            try {
+                $dramaModel = new M_drama();
+                $dramaObj = $dramaModel->getDramaById((int)$drama_id);
+                $drama_name = $dramaObj ? $dramaObj->drama_name : null;
+
+                // Preload services already added for this drama so UI can block requests until added
+                $dramaServicesModel = new M_drama_services();
+                $dramaServices = $dramaServicesModel->getServicesByDrama((int)$drama_id) ?? [];
+            } catch (Exception $e) {
+                error_log('Error loading drama for provider detail: ' . $e->getMessage());
+            }
+        }
+
         $data = [
             'provider' => $provider,
             'services' => $services,
             'projects' => $projects,
-            'booked_dates' => $bookedDateList
+            'booked_dates' => $bookedDateList,
+            'drama_id' => $drama_id,
+            'drama_name' => $drama_name,
+            'dramaServices' => $dramaServices,
         ];
 
         $this->view('service_provider_detail', $data);

@@ -128,6 +128,7 @@
         <form id="requestForm" method="POST" action="<?= ROOT ?>/ServiceProviderRequest/submit" enctype="multipart/form-data" data-booked-dates="<?= htmlspecialchars(json_encode($data['booked_dates'] ?? [])) ?>">
             <input type="hidden" name="provider_id" value="<?= $data['provider']->user_id ?>">
             <input type="hidden" name="requested_by" value="<?= $_SESSION['user_id'] ?? '' ?>">
+            <input type="hidden" name="drama_id" value="<?= htmlspecialchars($data['drama_id'] ?? '') ?>">
             
             <!-- Production Manager Contact Details (Pre-filled) -->
             <div class="form-group">
@@ -147,7 +148,8 @@
 
             <div class="form-group">
                 <label>Drama/Production Name <span class="required">*</span></label>
-                <input type="text" name="drama_name" required class="form-input">
+                <?php $__drama_name_val = htmlspecialchars($data['drama_name'] ?? ''); ?>
+                <input type="text" name="drama_name" required class="form-input" value="<?= $__drama_name_val ?>" <?= $__drama_name_val ? 'readonly' : '' ?>>
             </div>
 
             <!-- Hidden field to store the service type -->
