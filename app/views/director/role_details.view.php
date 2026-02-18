@@ -289,13 +289,8 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                 <?php foreach ($roleApplications as $application): ?>
                     <?php
                         $applicationStatus = strtolower($application->status ?? 'pending');
-                        $profileViewed = !empty($application->profile_viewed_at ?? null);
-                        $profileViewedByCurrent = $profileViewed && (int)($application->profile_viewed_by ?? 0) === $currentDirectorId;
                         $interviewScheduled = !empty($application->interview_at ?? null);
                         $interviewStatus = strtolower($application->interview_status ?? 'pending');
-                        $interviewScheduledByCurrent = $interviewScheduled && $interviewStatus !== 'cancelled' && (int)($application->interview_scheduled_by ?? 0) === $currentDirectorId;
-                        $canDecide = $profileViewedByCurrent && $interviewScheduledByCurrent;
-                        $decisionLock = $canDecide ? '' : 'disabled title="Review the profile and schedule an interview first."';
                         $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
                         $confirmationSeen = !empty($application->interview_confirmation_seen_at ?? null);
                         $confirmationColor = $confirmationStatus === 'confirmed' ? '#1f7a3c' : '#a3202c';
@@ -307,13 +302,9 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                                 <strong><?= esc($application->artist_name ?? 'Artist') ?></strong>
                                 <div style="font-size: 13px; color: var(--muted);">Applied <?= esc(date('Y-m-d H:i', strtotime($application->applied_at ?? 'now'))) ?></div>
                                 <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
-                                    <span class="status-chip <?= $profileViewedByCurrent ? 'ready' : 'pending' ?>">
-                                        <i class="fas <?= $profileViewedByCurrent ? 'fa-user-check' : 'fa-user-clock' ?>"></i>
-                                        <?= $profileViewedByCurrent ? 'Profile Reviewed' : 'Profile Review Needed' ?>
-                                    </span>
-                                    <span class="status-chip <?= $interviewScheduledByCurrent ? 'ready' : 'pending' ?>">
+                                    <span class="status-chip <?= $interviewScheduled ? 'ready' : 'pending' ?>">
                                         <i class="fas fa-calendar-alt"></i>
-                                        <?= $interviewScheduledByCurrent ? 'Interview Scheduled' : 'Interview Pending' ?>
+                                        <?= $interviewScheduled ? 'Interview Scheduled' : 'Interview Pending' ?>
                                     </span>
                                 </div>
                                 <?php if (!empty($application->application_message)): ?>
@@ -358,16 +349,13 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                                         <div class="actions-inline" style="justify-content: flex-end;">
                                             <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
                                                 <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                                <button type="submit" class="btn btn-success btn-sm" <?= $decisionLock ?>><i class="fas fa-check"></i>Accept</button>
+                                                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i>Accept</button>
                                             </form>
                                             <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
                                                 <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                                <button type="submit" class="btn btn-danger btn-sm" <?= $decisionLock ?>><i class="fas fa-times"></i>Reject</button>
+                                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i>Reject</button>
                                             </form>
                                         </div>
-                                        <?php if (!$canDecide): ?>
-                                            <p class="decision-hint">Complete the profile review and interview scheduling to enable decisions.</p>
-                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                             </div>

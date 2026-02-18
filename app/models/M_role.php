@@ -302,19 +302,6 @@ class M_role {
                 return false;
             }
 
-            if (empty($app->profile_viewed_at) || (int)($app->profile_viewed_by ?? 0) !== (int)$reviewed_by) {
-                $this->db->rollBack();
-                error_log("Application {$application_id} missing profile review prerequisites.");
-                return false;
-            }
-
-            $interviewStatus = strtolower($app->interview_status ?? '');
-            if (empty($app->interview_at) || (int)($app->interview_scheduled_by ?? 0) !== (int)$reviewed_by || $interviewStatus === 'cancelled') {
-                $this->db->rollBack();
-                error_log("Application {$application_id} missing interview prerequisites.");
-                return false;
-            }
-
             // Check if role is full
             if ((int)$app->positions_filled >= (int)$app->positions_available) {
                 $this->db->rollBack();
@@ -397,8 +384,7 @@ class M_role {
         try {
             $this->db->beginTransaction();
 
-            $this->db->query("SELECT status, profile_viewed_at, profile_viewed_by, interview_at, interview_scheduled_by, interview_status 
-                              FROM role_applications WHERE id = :id FOR UPDATE");
+            $this->db->query("SELECT status FROM role_applications WHERE id = :id FOR UPDATE");
             $this->db->bind(':id', $application_id);
             $application = $this->db->single();
 
@@ -407,19 +393,8 @@ class M_role {
                 return false;
             }
 
-            if (empty($application->profile_viewed_at) || (int)($application->profile_viewed_by ?? 0) !== (int)$reviewed_by) {
-                $this->db->rollBack();
-                return false;
-            }
-
-            $interviewStatus = strtolower($application->interview_status ?? '');
-            if (empty($application->interview_at) || (int)($application->interview_scheduled_by ?? 0) !== (int)$reviewed_by || $interviewStatus === 'cancelled') {
-                $this->db->rollBack();
-                return false;
-            }
-
             $this->db->query("UPDATE role_applications 
-                SET status = 'rejected', reviewed_at = NOW(), reviewed_by = :reviewed_by, interview_status = 'cancelled' 
+                SET status = 'rejected', reviewed_at = NOW(), reviewed_by = :reviewed_by 
                 WHERE id = :id");
             $this->db->bind(':id', $application_id);
             $this->db->bind(':reviewed_by', $reviewed_by);

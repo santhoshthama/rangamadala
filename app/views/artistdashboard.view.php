@@ -153,6 +153,9 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
             <a href="#actor" class="nav-tab-btn" onclick="openTabLink(event, 'actor-tab')">
                 <i class="fas fa-user-tie"></i> As Actor (<?= isset($stats['as_actor']) ? $stats['as_actor'] : 0 ?>)
             </a>
+            <a href="#interviews" class="nav-tab-btn" onclick="openTabLink(event, 'interviews-tab')">
+                <i class="fas fa-calendar-check"></i> View Interview Schedules (<?= isset($stats['upcoming_interviews']) ? $stats['upcoming_interviews'] : 0 ?>)
+            </a>
             <a href="#requests" class="nav-tab-btn" onclick="openTabLink(event, 'requests-tab')">
                 <i class="fas fa-envelope"></i> Requests 
                 (<?= (isset($stats['pending_requests']) ? $stats['pending_requests'] : 0) + (isset($stats['pending_pm_requests']) ? $stats['pending_pm_requests'] : 0) ?>)
@@ -282,73 +285,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                         <h3>
                             <span><i class="fas fa-user-tie"></i> Your Acting Roles</span>
                         </h3>
-                        <?php if (isset($upcoming_interviews) && !empty($upcoming_interviews)): ?>
-                            <div class="card-section" style="border: 1px solid rgba(255, 193, 7, 0.4); background: rgba(255, 193, 7, 0.08); margin-bottom: 24px;">
-                                <h4 style="margin-top: 0; display: flex; align-items: center; gap: 8px; color: #8a6d1a;">
-                                    <i class="fas fa-video"></i> Scheduled Interviews
-                                </h4>
-                                <p style="margin-bottom: 16px; color: #5a4b10;">Confirm your participation so the director knows you are joining.</p>
-                                <div style="display: grid; gap: 16px;">
-                                    <?php foreach ($upcoming_interviews as $application): ?>
-                                        <?php
-                                            $interviewTime = date('M d, Y g:i A', strtotime($application->interview_at));
-                                            $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
-                                            $statusPalette = [
-                                                'confirmed' => 'background: rgba(40, 167, 69, 0.15); color: #155724;',
-                                                'declined' => 'background: rgba(220, 53, 69, 0.15); color: #721c24;',
-                                                'pending' => 'background: rgba(255, 193, 7, 0.2); color: #8a6d1a;',
-                                            ];
-                                            $badgeStyle = $statusPalette[$confirmationStatus] ?? $statusPalette['pending'];
-                                        ?>
-                                        <div class="role-info-card" style="border-left: 4px solid #e0a800;">
-                                            <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-                                                <div>
-                                                    <h4 style="margin: 0;"><?= esc($application->role_name ?? 'Role') ?> <small style="color: var(--muted); font-weight: normal;">in <?= esc($application->drama_name ?? 'Drama') ?></small></h4>
-                                                    <div style="font-size: 13px; color: var(--muted);">
-                                                        Directed by <?= esc($application->director_name ?? 'Director') ?>
-                                                    </div>
-                                                </div>
-                                                <span class="status-badge" style="<?= $badgeStyle ?> text-transform: capitalize;">
-                                                    <?= esc($confirmationStatus) ?>
-                                                </span>
-                                            </div>
-                                            <div class="role-info-item" style="margin-top: 12px;">
-                                                <span class="role-info-label"><i class="fas fa-calendar"></i> Interview:</span>
-                                                <span class="role-info-value"><?= esc($interviewTime) ?></span>
-                                            </div>
-                                            <?php if (!empty($application->interview_notes)): ?>
-                                                <div style="margin-top: 12px; padding: 12px; background: rgba(0, 0, 0, 0.04); border-radius: 6px;">
-                                                    <strong>Director notes:</strong>
-                                                    <p style="margin: 6px 0 0; color: #4a4a4a; white-space: pre-wrap;"><?= nl2br(esc($application->interview_notes)) ?></p>
-                                                </div>
-                                            <?php endif; ?>
-                                            <?php if ($confirmationStatus === 'pending'): ?>
-                                                <form method="POST" action="<?= ROOT ?>/artistdashboard/confirm_interview" class="interview-response" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
-                                                    <input type="hidden" name="application_id" value="<?= (int)$application->id ?>">
-                                                    <label style="font-size: 13px; color: var(--muted);">Send an optional note to the director</label>
-                                                    <textarea name="note" rows="2" class="form-control" placeholder="Add details about your availability (optional)"></textarea>
-                                                    <div style="display: flex; flex-wrap: wrap; gap: 12px;">
-                                                        <button type="submit" name="response" value="confirm" class="btn btn-success" style="flex: 1; min-width: 140px;">
-                                                            <i class="fas fa-check"></i> Confirm Attendance
-                                                        </button>
-                                                        <button type="submit" name="response" value="decline" class="btn btn-danger" style="flex: 1; min-width: 120px;">
-                                                            <i class="fas fa-times"></i> Decline
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            <?php else: ?>
-                                                <div style="margin-top: 12px; font-size: 13px; color: #555;">
-                                                    Response sent <?= !empty($application->interview_confirmed_at) ? esc(date('M d, Y g:i A', strtotime($application->interview_confirmed_at))) : 'recently' ?>
-                                                    <?php if (!empty($application->interview_confirmation_note)): ?>
-                                                        <div style="margin-top: 6px; padding: 10px; background: rgba(0, 0, 0, 0.04); border-radius: 4px;">"<?= esc($application->interview_confirmation_note) ?>"</div>
-                                                    <?php endif; ?>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        <?php endif; ?>
                     <?php if (!isset($roles_as_actor) || empty($roles_as_actor)): ?>
                         <div class="no-results">
                             <i class="fas fa-user-tie"></i>
@@ -405,6 +341,86 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                             <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- View Interview Schedules Tab -->
+                <div id="interviews-tab" class="tab-content">
+                    <div class="card-section">
+                        <h3>
+                            <span><i class="fas fa-calendar-check"></i> View Interview Schedules</span>
+                        </h3>
+                        <?php if (isset($upcoming_interviews) && !empty($upcoming_interviews)): ?>
+                            <p style="margin-bottom: 16px; color: #5a4b10;">Confirm your participation so the director knows you are joining.</p>
+                            <div style="display: grid; gap: 16px;">
+                                <?php foreach ($upcoming_interviews as $application): ?>
+                                    <?php
+                                        $interviewTime = date('M d, Y g:i A', strtotime($application->interview_at));
+                                        $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
+                                        $statusPalette = [
+                                            'confirmed' => 'background: rgba(40, 167, 69, 0.15); color: #155724;',
+                                            'declined' => 'background: rgba(220, 53, 69, 0.15); color: #721c24;',
+                                            'pending' => 'background: rgba(255, 193, 7, 0.2); color: #8a6d1a;',
+                                        ];
+                                        $badgeStyle = $statusPalette[$confirmationStatus] ?? $statusPalette['pending'];
+                                    ?>
+                                    <div class="role-info-card" style="border-left: 4px solid #e0a800;">
+                                        <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                                            <div>
+                                                <h4 style="margin: 0;"><?= esc($application->role_name ?? 'Role') ?> <small style="color: var(--muted); font-weight: normal;">in <?= esc($application->drama_name ?? 'Drama') ?></small></h4>
+                                                <div style="font-size: 13px; color: var(--muted);">
+                                                    Directed by <?= esc($application->director_name ?? 'Director') ?>
+                                                </div>
+                                            </div>
+                                            <span class="status-badge" style="<?= $badgeStyle ?> text-transform: capitalize;">
+                                                <?= esc($confirmationStatus) ?>
+                                            </span>
+                                        </div>
+                                        <div class="role-info-item" style="margin-top: 12px;">
+                                            <span class="role-info-label"><i class="fas fa-calendar"></i> Interview:</span>
+                                            <span class="role-info-value"><?= esc($interviewTime) ?></span>
+                                        </div>
+                                        <?php if (!empty($application->interview_notes)): ?>
+                                            <div style="margin-top: 12px; padding: 12px; background: rgba(0, 0, 0, 0.04); border-radius: 6px;">
+                                                <strong>Director notes:</strong>
+                                                <p style="margin: 6px 0 0; color: #4a4a4a; white-space: pre-wrap;"><?= nl2br(esc($application->interview_notes)) ?></p>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if ($confirmationStatus === 'pending'): ?>
+                                            <form method="POST" action="<?= ROOT ?>/artistdashboard/confirm_interview" class="interview-response" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+                                                <input type="hidden" name="application_id" value="<?= (int)$application->id ?>">
+                                                <label style="font-size: 13px; color: var(--muted);">Send an optional note to the director</label>
+                                                <textarea name="note" rows="2" class="form-control" placeholder="Add details about your availability (optional)"></textarea>
+                                                <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                                                    <button type="submit" name="response" value="confirm" class="btn btn-success" style="flex: 1; min-width: 140px;">
+                                                        <i class="fas fa-check"></i> Confirm Attendance
+                                                    </button>
+                                                    <button type="submit" name="response" value="decline" class="btn btn-danger" style="flex: 1; min-width: 120px;">
+                                                        <i class="fas fa-times"></i> Decline
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        <?php else: ?>
+                                            <div style="margin-top: 12px; font-size: 13px; color: #555;">
+                                                Response sent <?= !empty($application->interview_confirmed_at) ? esc(date('M d, Y g:i A', strtotime($application->interview_confirmed_at))) : 'recently' ?>
+                                                <?php if (!empty($application->interview_confirmation_note)): ?>
+                                                    <div style="margin-top: 6px; padding: 10px; background: rgba(0, 0, 0, 0.04); border-radius: 4px;">"<?= esc($application->interview_confirmation_note) ?>"</div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="no-results">
+                                <i class="fas fa-calendar-check"></i>
+                                <h3>No Interview Schedules</h3>
+                                <p>You don't have any upcoming interview schedules at the moment.</p>
+                                <button class="btn btn-primary" style="margin-top: 16px;" onclick="window.location.href='<?=ROOT?>/artistdashboard/browse_vacancies'">
+                                    <i class="fas fa-search"></i> Browse Vacancies
+                                </button>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 

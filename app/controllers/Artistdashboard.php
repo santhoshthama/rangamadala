@@ -52,6 +52,7 @@ class Artistdashboard
             'as_director' => count($data['dramas_as_director']),
             'as_manager' => count($data['dramas_as_manager']),
             'as_actor' => count($data['roles_as_actor']),
+            'upcoming_interviews' => count($data['upcoming_interviews']),
             'pending_requests' => count($data['role_requests']),
             'pending_pm_requests' => count($data['pm_requests'])
         ];
