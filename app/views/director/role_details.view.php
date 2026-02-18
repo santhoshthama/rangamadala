@@ -30,6 +30,7 @@ $roleStatuses = [
 
 $dramaId = isset($drama->id) ? (int)$drama->id : 0;
 $roleId = (int)($role->id ?? 0);
+$currentDirectorId = (int)($_SESSION['user_id'] ?? 0);
 
 $updateDefaults = [
     'role_name' => $role->role_name ?? '',
@@ -82,6 +83,12 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
         .badge-rejected { background: rgba(244,67,54,.12); color: #a52714; }
         .actions-inline { display: flex; gap: 10px; flex-wrap: wrap; }
         .form-error { color: var(--danger); font-size: 12px; margin-top: 4px; }
+        .status-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .status-chip.ready { background: rgba(76,175,80,.12); color: #256029; }
+        .status-chip.pending { background: rgba(255,193,7,.18); color: #7a4f02; }
+        .interview-summary { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+        .application-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+        .decision-hint { font-size: 12px; color: #a52714; margin: 0; text-align: right; }
     </style>
 </head>
 <body>
@@ -280,31 +287,89 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                 <div class="list-item" style="text-align: center; color: var(--muted);">No applications received yet.</div>
             <?php else: ?>
                 <?php foreach ($roleApplications as $application): ?>
+                    <?php
+                        $applicationStatus = strtolower($application->status ?? 'pending');
+                        $profileViewed = !empty($application->profile_viewed_at ?? null);
+                        $profileViewedByCurrent = $profileViewed && (int)($application->profile_viewed_by ?? 0) === $currentDirectorId;
+                        $interviewScheduled = !empty($application->interview_at ?? null);
+                        $interviewStatus = strtolower($application->interview_status ?? 'pending');
+                        $interviewScheduledByCurrent = $interviewScheduled && $interviewStatus !== 'cancelled' && (int)($application->interview_scheduled_by ?? 0) === $currentDirectorId;
+                        $canDecide = $profileViewedByCurrent && $interviewScheduledByCurrent;
+                        $decisionLock = $canDecide ? '' : 'disabled title="Review the profile and schedule an interview first."';
+                        $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
+                        $confirmationSeen = !empty($application->interview_confirmation_seen_at ?? null);
+                        $confirmationColor = $confirmationStatus === 'confirmed' ? '#1f7a3c' : '#a3202c';
+                        $confirmationBackground = $confirmationStatus === 'confirmed' ? 'rgba(40, 167, 69, 0.12)' : 'rgba(220, 53, 69, 0.12)';
+                    ?>
                     <div class="list-item">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-                            <div>
+                            <div style="flex: 1;">
                                 <strong><?= esc($application->artist_name ?? 'Artist') ?></strong>
                                 <div style="font-size: 13px; color: var(--muted);">Applied <?= esc(date('Y-m-d H:i', strtotime($application->applied_at ?? 'now'))) ?></div>
+                                <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <span class="status-chip <?= $profileViewedByCurrent ? 'ready' : 'pending' ?>">
+                                        <i class="fas <?= $profileViewedByCurrent ? 'fa-user-check' : 'fa-user-clock' ?>"></i>
+                                        <?= $profileViewedByCurrent ? 'Profile Reviewed' : 'Profile Review Needed' ?>
+                                    </span>
+                                    <span class="status-chip <?= $interviewScheduledByCurrent ? 'ready' : 'pending' ?>">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <?= $interviewScheduledByCurrent ? 'Interview Scheduled' : 'Interview Pending' ?>
+                                    </span>
+                                </div>
                                 <?php if (!empty($application->application_message)): ?>
                                     <div style="margin-top: 8px; white-space: pre-wrap;"><?= nl2br(esc($application->application_message)) ?></div>
                                 <?php endif; ?>
-                            </div>
-                            <div style="text-align: right;">
-                                <span class="badge badge-<?= esc(strtolower($application->status ?? 'pending')) ?>" style="margin-bottom: 8px; display: inline-block;">
-                                    <?= esc(ucfirst($application->status ?? 'pending')) ?>
-                                </span>
-                                <?php if (strtolower($application->status ?? '') === 'pending'): ?>
-                                    <div class="actions-inline" style="justify-content: flex-end;">
-                                        <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
-                                            <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i>Accept</button>
-                                        </form>
-                                        <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
-                                            <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i>Reject</button>
-                                        </form>
+                                <?php if ($interviewScheduled): ?>
+                                    <div class="interview-summary">
+                                        <i class="fas fa-video"></i>
+                                        Scheduled for <?= esc(date('Y-m-d H:i', strtotime($application->interview_at))) ?>
+                                        <strong style="text-transform: capitalize;"><?= esc($interviewStatus === '' ? 'pending' : $interviewStatus) ?></strong>
                                     </div>
                                 <?php endif; ?>
+                                <?php if ($confirmationStatus !== 'pending'): ?>
+                                    <div class="interview-confirmation" style="margin-top: 10px; padding: 10px; border-left: 4px solid <?= $confirmationColor ?>; background: <?= $confirmationBackground ?>; border-radius: 6px;">
+                                        <div style="display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                            <strong style="color: <?= $confirmationColor ?>;">
+                                                <i class="fas <?= $confirmationStatus === 'confirmed' ? 'fa-user-check' : 'fa-user-times' ?>"></i>
+                                                <?= $confirmationStatus === 'confirmed' ? 'Artist confirmed attendance' : 'Artist declined the interview' ?>
+                                            </strong>
+                                            <?php if (!$confirmationSeen): ?>
+                                                <span class="status-badge assigned" style="background: #ffc107; color: #5a4300;">New</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div style="font-size: 13px; color: #333; margin-top: 6px;">
+                                            Received <?= !empty($application->interview_confirmed_at) ? esc(date('Y-m-d H:i', strtotime($application->interview_confirmed_at))) : 'just now' ?>
+                                            <?php if (!empty($application->interview_confirmation_note)): ?>
+                                                <div style="margin-top: 6px; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px;">"<?= esc($application->interview_confirmation_note) ?>"</div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div style="text-align: right; min-width: 220px;">
+                                <span class="badge badge-<?= esc($applicationStatus) ?>" style="margin-bottom: 8px; display: inline-block;">
+                                    <?= esc(ucfirst($application->status ?? 'pending')) ?>
+                                </span>
+                                <div class="application-actions">
+                                    <a class="btn btn-secondary btn-sm" href="<?= ROOT ?>/director/application_profile?drama_id=<?= esc($dramaId) ?>&application_id=<?= esc($application->id) ?>">
+                                        <i class="fas fa-id-card"></i>View Profile
+                                    </a>
+                                    <?php if ($applicationStatus === 'pending'): ?>
+                                        <div class="actions-inline" style="justify-content: flex-end;">
+                                            <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
+                                                <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                                <button type="submit" class="btn btn-success btn-sm" <?= $decisionLock ?>><i class="fas fa-check"></i>Accept</button>
+                                            </form>
+                                            <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
+                                                <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                                <button type="submit" class="btn btn-danger btn-sm" <?= $decisionLock ?>><i class="fas fa-times"></i>Reject</button>
+                                            </form>
+                                        </div>
+                                        <?php if (!$canDecide): ?>
+                                            <p class="decision-hint">Complete the profile review and interview scheduling to enable decisions.</p>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     </div>

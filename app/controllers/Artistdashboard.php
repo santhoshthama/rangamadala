@@ -31,6 +31,11 @@ class Artistdashboard
         
         // Get role assignments where user is cast as an actor (each role, not each drama)
         $data['roles_as_actor'] = $role_model ? $role_model->getAssignmentsByArtist($user_id) : [];
+
+        $data['my_applications'] = $role_model ? $role_model->getArtistApplications($user_id) : [];
+        $data['upcoming_interviews'] = array_filter($data['my_applications'], function ($app) {
+            return isset($app->interview_at) && $app->interview_at !== null && strtolower($app->status ?? '') === 'pending';
+        });
         
         // Get pending role requests for this artist
         $data['role_requests'] = $artist_model->get_pending_role_requests($user_id);
@@ -215,6 +220,57 @@ class Artistdashboard
         });
         
         $this->view('artist/my_applications', $data);
+    }
+
+    public function confirm_interview()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ROOT . '/artistdashboard#actor');
+            exit;
+        }
+
+        if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? null) !== 'artist') {
+            header('Location: ' . ROOT . '/login');
+            exit;
+        }
+
+        $applicationId = (int)($_POST['application_id'] ?? 0);
+        $response = strtolower(trim($_POST['response'] ?? ''));
+        $note = trim($_POST['note'] ?? '');
+
+        if ($applicationId <= 0 || !in_array($response, ['confirm', 'decline'], true)) {
+            $_SESSION['message'] = 'Invalid interview confirmation request.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard#actor');
+            exit;
+        }
+
+        $role_model = $this->getModel('M_role');
+        if (!$role_model) {
+            $_SESSION['message'] = 'Interview system is unavailable right now.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard#actor');
+            exit;
+        }
+
+        $success = $role_model->artistRespondInterview(
+            $applicationId,
+            (int)$_SESSION['user_id'],
+            $response,
+            $note !== '' ? $note : null
+        );
+
+        if ($success) {
+            $message = $response === 'confirm' ? 'Interview confirmed. See you there!' : 'Interview declined.';
+            $_SESSION['message'] = $message;
+            $_SESSION['message_type'] = 'success';
+        } else {
+            $_SESSION['message'] = 'Unable to update your interview response.';
+            $_SESSION['message_type'] = 'error';
+        }
+
+        header('Location: ' . ROOT . '/artistdashboard#actor');
+        exit;
     }
     
 

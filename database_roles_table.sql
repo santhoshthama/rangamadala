@@ -64,15 +64,47 @@ CREATE TABLE IF NOT EXISTS `role_applications` (
   `applied_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `reviewed_at` timestamp NULL DEFAULT NULL,
   `reviewed_by` int(11) DEFAULT NULL COMMENT 'Director who reviewed',
+  `profile_viewed_at` datetime DEFAULT NULL COMMENT 'When the reviewing director opened the artist profile',
+  `profile_viewed_by` int(11) DEFAULT NULL COMMENT 'Director who confirmed the profile review',
+  `interview_at` datetime DEFAULT NULL COMMENT 'Scheduled interview datetime',
+  `interview_scheduled_at` datetime DEFAULT NULL COMMENT 'When the interview was scheduled',
+  `interview_scheduled_by` int(11) DEFAULT NULL COMMENT 'Director who scheduled the interview',
+  `interview_status` enum('pending','completed','cancelled') NOT NULL DEFAULT 'pending' COMMENT 'Interview lifecycle status',
+  `interview_notes` text DEFAULT NULL COMMENT 'Optional interview notes or agenda',
+  `interview_confirmation_status` enum('pending','confirmed','declined') NOT NULL DEFAULT 'pending' COMMENT 'Artist confirmation state',
+  `interview_confirmed_at` datetime DEFAULT NULL COMMENT 'When artist responded to interview invite',
+  `interview_confirmation_note` text DEFAULT NULL COMMENT 'Optional note from artist when confirming/declining',
+  `interview_confirmation_seen_at` datetime DEFAULT NULL COMMENT 'When director acknowledged confirmation',
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_application` (`role_id`,`artist_id`),
   KEY `idx_role_applications_role_id` (`role_id`),
   KEY `idx_role_applications_artist_id` (`artist_id`),
   KEY `idx_role_applications_reviewed_by` (`reviewed_by`),
+  KEY `idx_role_applications_profile_viewed_by` (`profile_viewed_by`),
+  KEY `idx_role_applications_interview_scheduled_by` (`interview_scheduled_by`),
   CONSTRAINT `role_applications_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `drama_roles` (`id`) ON DELETE CASCADE,
   CONSTRAINT `role_applications_ibfk_2` FOREIGN KEY (`artist_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `role_applications_ibfk_3` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  CONSTRAINT `role_applications_ibfk_3` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `role_applications_ibfk_4` FOREIGN KEY (`profile_viewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `role_applications_ibfk_5` FOREIGN KEY (`interview_scheduled_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `role_applications`
+  ADD COLUMN IF NOT EXISTS `profile_viewed_at` datetime DEFAULT NULL COMMENT 'When the reviewing director opened the artist profile' AFTER `reviewed_by`,
+  ADD COLUMN IF NOT EXISTS `profile_viewed_by` int(11) DEFAULT NULL COMMENT 'Director who confirmed the profile review' AFTER `profile_viewed_at`,
+  ADD COLUMN IF NOT EXISTS `interview_at` datetime DEFAULT NULL COMMENT 'Scheduled interview datetime' AFTER `profile_viewed_by`,
+  ADD COLUMN IF NOT EXISTS `interview_scheduled_at` datetime DEFAULT NULL COMMENT 'When the interview was scheduled' AFTER `interview_at`,
+  ADD COLUMN IF NOT EXISTS `interview_scheduled_by` int(11) DEFAULT NULL COMMENT 'Director who scheduled the interview' AFTER `interview_scheduled_at`,
+  ADD COLUMN IF NOT EXISTS `interview_status` enum('pending','completed','cancelled') NOT NULL DEFAULT 'pending' COMMENT 'Interview lifecycle status' AFTER `interview_scheduled_by`,
+  ADD COLUMN IF NOT EXISTS `interview_notes` text DEFAULT NULL COMMENT 'Optional interview notes or agenda' AFTER `interview_status`,
+  ADD COLUMN IF NOT EXISTS `interview_confirmation_status` enum('pending','confirmed','declined') NOT NULL DEFAULT 'pending' COMMENT 'Artist confirmation state' AFTER `interview_notes`,
+  ADD COLUMN IF NOT EXISTS `interview_confirmed_at` datetime DEFAULT NULL COMMENT 'When artist responded to interview invite' AFTER `interview_confirmation_status`,
+  ADD COLUMN IF NOT EXISTS `interview_confirmation_note` text DEFAULT NULL COMMENT 'Optional note from artist when confirming/declining' AFTER `interview_confirmed_at`,
+  ADD COLUMN IF NOT EXISTS `interview_confirmation_seen_at` datetime DEFAULT NULL COMMENT 'When director acknowledged confirmation' AFTER `interview_confirmation_note`,
+  ADD KEY IF NOT EXISTS `idx_role_applications_profile_viewed_by` (`profile_viewed_by`),
+  ADD KEY IF NOT EXISTS `idx_role_applications_interview_scheduled_by` (`interview_scheduled_by`),
+  ADD CONSTRAINT IF NOT EXISTS `role_applications_ibfk_4` FOREIGN KEY (`profile_viewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT IF NOT EXISTS `role_applications_ibfk_5` FOREIGN KEY (`interview_scheduled_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------------
 -- Role Assignments (artists formally assigned to roles)

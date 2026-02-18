@@ -26,6 +26,7 @@ $roleStatuses = [
 
 $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
+$currentDirectorId = (int)($_SESSION['user_id'] ?? 0);
 
 $publishableRoles = array_filter($roles, function ($role) {
     $status = strtolower($role->status ?? 'open');
@@ -101,6 +102,21 @@ $publishedRoleIds = array_map(function ($role) {
         .form-inline .form-group { flex: 1 1 220px; }
 
         .empty-state { padding: 32px; text-align: center; border: 1px dashed var(--border); border-radius: 12px; color: var(--muted); }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-chip.ready { background: rgba(76,175,80,.12); color: #256029; }
+        .status-chip.pending { background: rgba(255,193,7,.18); color: #7a4f02; }
+        .application-actions { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+        .decision-hint { font-size: 12px; color: #a52714; margin: 0; text-align: right; }
+        .interview-summary { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
 
         @media (max-width: 768px) {
             .roles-table thead { display: none; }
@@ -250,6 +266,19 @@ $publishedRoleIds = array_map(function ($role) {
                 </div>
             <?php else: ?>
                 <?php foreach ($pendingApplications as $application): ?>
+                    <?php
+                        $profileViewed = !empty($application->profile_viewed_at ?? null);
+                        $profileViewedByCurrent = $profileViewed && (int)($application->profile_viewed_by ?? 0) === $currentDirectorId;
+                        $interviewScheduled = !empty($application->interview_at ?? null);
+                        $interviewStatus = strtolower($application->interview_status ?? 'pending');
+                        $interviewScheduledByCurrent = $interviewScheduled && $interviewStatus !== 'cancelled' && (int)($application->interview_scheduled_by ?? 0) === $currentDirectorId;
+                        $canDecide = $profileViewedByCurrent && $interviewScheduledByCurrent;
+                        $decisionLock = $canDecide ? '' : 'disabled title="Review the profile and schedule an interview first."';
+                        $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
+                        $confirmationSeen = !empty($application->interview_confirmation_seen_at ?? null);
+                        $confirmationColor = $confirmationStatus === 'confirmed' ? '#1f7a3c' : '#a3202c';
+                        $confirmationBackground = $confirmationStatus === 'confirmed' ? 'rgba(40, 167, 69, 0.12)' : 'rgba(220, 53, 69, 0.12)';
+                    ?>
                     <div class="application-card">
                         <div class="card-header">
                             <div>
@@ -259,20 +288,66 @@ $publishedRoleIds = array_map(function ($role) {
                                     <span><strong>Applied:</strong> <?= esc(date('Y-m-d H:i', strtotime($application->applied_at ?? 'now'))) ?></span>
                                     <?php if (!empty($application->artist_email)): ?><span><?= esc($application->artist_email) ?></span><?php endif; ?>
                                 </div>
+                                <div class="review-status" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <span class="status-chip <?= $profileViewedByCurrent ? 'ready' : 'pending' ?>">
+                                        <i class="fas <?= $profileViewedByCurrent ? 'fa-user-check' : 'fa-user-clock' ?>"></i>
+                                        <?= $profileViewedByCurrent ? 'Profile Reviewed' : 'Profile Review Needed' ?>
+                                    </span>
+                                    <span class="status-chip <?= $interviewScheduledByCurrent ? 'ready' : 'pending' ?>">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <?= $interviewScheduledByCurrent ? 'Interview Scheduled' : 'Interview Pending' ?>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="actions-inline">
-                                <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
-                                    <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i>Accept</button>
-                                </form>
-                                <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
-                                    <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                    <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i>Reject</button>
-                                </form>
+                            <div class="application-actions">
+                                <a class="btn btn-secondary" href="<?= ROOT ?>/director/application_profile?drama_id=<?= esc($dramaId) ?>&application_id=<?= esc($application->id) ?>">
+                                    <i class="fas fa-id-card"></i>View Profile
+                                </a>
+                                <div class="actions-inline">
+                                    <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
+                                        <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                        <button type="submit" class="btn btn-success" <?= $decisionLock ?>><i class="fas fa-check"></i>Accept</button>
+                                    </form>
+                                    <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
+                                        <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                        <button type="submit" class="btn btn-danger" <?= $decisionLock ?>><i class="fas fa-times"></i>Reject</button>
+                                    </form>
+                                </div>
+                                <?php if (!$canDecide): ?>
+                                    <p class="decision-hint">Complete the profile review and interview scheduling to enable decisions.</p>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <?php if (!empty($application->application_message)): ?>
                             <div style="margin-top: 12px; white-space: pre-wrap;"><?= nl2br(esc($application->application_message)) ?></div>
+                        <?php endif; ?>
+                        <?php if ($interviewScheduled): ?>
+                            <div class="interview-summary">
+                                <i class="fas fa-video"></i>
+                                Scheduled for <?= esc(date('Y-m-d H:i', strtotime($application->interview_at))) ?>
+                                <span class="status-badge <?= $interviewStatus === 'completed' ? 'assigned' : ($interviewStatus === 'cancelled' ? 'unassigned' : 'pending') ?>" style="text-transform: capitalize;">
+                                    <?= esc($interviewStatus === '' ? 'pending' : $interviewStatus) ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($confirmationStatus !== 'pending'): ?>
+                            <div class="interview-confirmation" style="margin-top: 12px; padding: 12px; border-left: 4px solid <?= $confirmationColor ?>; background: <?= $confirmationBackground ?>; border-radius: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                    <strong style="color: <?= $confirmationColor ?>;">
+                                        <i class="fas <?= $confirmationStatus === 'confirmed' ? 'fa-user-check' : 'fa-user-times' ?>"></i>
+                                        <?= $confirmationStatus === 'confirmed' ? 'Artist confirmed attendance' : 'Artist declined the interview' ?>
+                                    </strong>
+                                    <?php if (!$confirmationSeen): ?>
+                                        <span class="status-badge assigned" style="background: #ffc107; color: #5a4300;">New</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="font-size: 13px; color: #333; margin-top: 6px;">
+                                    Received <?= !empty($application->interview_confirmed_at) ? esc(date('Y-m-d H:i', strtotime($application->interview_confirmed_at))) : 'just now' ?>
+                                    <?php if (!empty($application->interview_confirmation_note)): ?>
+                                        <div style="margin-top: 6px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 4px;">"<?= esc($application->interview_confirmation_note) ?>"</div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>

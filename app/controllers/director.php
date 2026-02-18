@@ -669,6 +669,21 @@ class Director{
             $this->respondWithRedirect(false, 'Application not found or inaccessible.', (int)$drama->id);
         }
 
+        $directorId = (int)($_SESSION['user_id'] ?? 0);
+        $redirectOptions = [
+            'route' => 'application_profile',
+            'application_id' => $applicationId,
+        ];
+
+        if (empty($application->profile_viewed_at) || (int)($application->profile_viewed_by ?? 0) !== $directorId) {
+            $this->respondWithRedirect(false, 'Review the artist profile before accepting the application.', (int)$drama->id, $redirectOptions);
+        }
+
+        $interviewStatus = strtolower($application->interview_status ?? '');
+        if (empty($application->interview_at) || (int)($application->interview_scheduled_by ?? 0) !== $directorId || $interviewStatus === 'cancelled') {
+            $this->respondWithRedirect(false, 'Schedule the interview before accepting the application.', (int)$drama->id, $redirectOptions);
+        }
+
         $accepted = $this->roleModel->acceptApplication($applicationId, (int)$_SESSION['user_id']);
 
         if ($accepted) {
@@ -706,6 +721,21 @@ class Director{
             $this->respondWithRedirect(false, 'Application not found or inaccessible.', (int)$drama->id);
         }
 
+        $directorId = (int)($_SESSION['user_id'] ?? 0);
+        $redirectOptions = [
+            'route' => 'application_profile',
+            'application_id' => $applicationId,
+        ];
+
+        if (empty($application->profile_viewed_at) || (int)($application->profile_viewed_by ?? 0) !== $directorId) {
+            $this->respondWithRedirect(false, 'Review the artist profile before rejecting the application.', (int)$drama->id, $redirectOptions);
+        }
+
+        $interviewStatus = strtolower($application->interview_status ?? '');
+        if (empty($application->interview_at) || (int)($application->interview_scheduled_by ?? 0) !== $directorId || $interviewStatus === 'cancelled') {
+            $this->respondWithRedirect(false, 'Schedule the interview before rejecting the application.', (int)$drama->id, $redirectOptions);
+        }
+
         $rejected = $this->roleModel->rejectApplication($applicationId, (int)$_SESSION['user_id']);
 
         if ($rejected) {
@@ -717,6 +747,133 @@ class Director{
         $this->respondWithRedirect(false, 'Unable to reject the application.', (int)$drama->id, [
             'route' => 'manage',
         ]);
+    }
+
+    public function application_profile()
+    {
+        $applicationId = $this->sanitizeInt($this->getQueryParam('application_id'));
+        if (!$applicationId) {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel || !$this->artistModel) {
+            $this->respondWithRedirect(false, 'Role management is currently unavailable.', (int)$drama->id);
+        }
+
+        $application = $this->loadApplicationForDrama($applicationId, $drama);
+        if (!$application) {
+            $this->respondWithRedirect(false, 'Application not found or inaccessible.', (int)$drama->id);
+        }
+
+        $artist = $this->artistModel->get_artist_by_id((int)$application->artist_id);
+        if (!$artist) {
+            $this->respondWithRedirect(false, 'Unable to load artist profile.', (int)$drama->id);
+        }
+
+        $directorId = (int)($_SESSION['user_id'] ?? 0);
+        if ($directorId > 0 && strtolower($application->status ?? '') === 'pending') {
+            $this->roleModel->markApplicationProfileViewed($applicationId, $directorId);
+            $application = $this->roleModel->getApplicationById($applicationId);
+        }
+
+        $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
+        if (
+            $directorId > 0 &&
+            $confirmationStatus !== 'pending' &&
+            empty($application->interview_confirmation_seen_at ?? null)
+        ) {
+            $this->roleModel->markInterviewConfirmationSeen($applicationId, $directorId);
+            $application = $this->roleModel->getApplicationById($applicationId);
+        }
+
+        $this->renderDramaView('application_artist_profile', [
+            'application' => $application,
+            'artist' => $artist,
+            'directorId' => $directorId,
+        ]);
+    }
+
+    public function schedule_application_interview()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $this->respondWithRedirect(false, 'Role management is currently unavailable.', (int)$drama->id);
+        }
+
+        $applicationId = (int)($_POST['application_id'] ?? 0);
+        $application = $this->loadApplicationForDrama($applicationId, $drama);
+        if (!$application) {
+            $this->respondWithRedirect(false, 'Application not found or inaccessible.', (int)$drama->id);
+        }
+
+        if (strtolower($application->status ?? '') !== 'pending') {
+            $this->respondWithRedirect(false, 'Only pending applications can be scheduled for interviews.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $directorId = (int)($_SESSION['user_id'] ?? 0);
+        $redirectTarget = $_POST['redirect_to'] ?? 'manage';
+        $redirectOptions = [
+            'route' => $redirectTarget === 'profile' ? 'application_profile' : 'manage',
+            'application_id' => $applicationId,
+        ];
+
+        $interviewRaw = trim((string)($_POST['interview_at'] ?? ''));
+        $notes = trim((string)($_POST['interview_notes'] ?? ''));
+
+        $errors = [];
+        if (empty($application->profile_viewed_at) || (int)($application->profile_viewed_by ?? 0) !== $directorId) {
+            $errors[] = 'View the artist profile before scheduling the interview.';
+        }
+
+        $interviewAt = null;
+        if ($interviewRaw === '') {
+            $errors[] = 'Provide a date and time for the interview.';
+        } else {
+            $timestamp = strtotime($interviewRaw);
+            if ($timestamp === false) {
+                $errors[] = 'Enter a valid interview date and time.';
+            } elseif ($timestamp <= time()) {
+                $errors[] = 'Schedule the interview for a future time.';
+            } else {
+                $interviewAt = date('Y-m-d H:i:s', $timestamp);
+            }
+        }
+
+        if (!empty($errors)) {
+            $this->respondWithRedirect(false, implode(' ', $errors), (int)$drama->id, $redirectOptions);
+        }
+
+        $scheduled = $this->roleModel->scheduleApplicationInterview(
+            $applicationId,
+            $interviewAt,
+            $directorId,
+            $notes !== '' ? $notes : null
+        );
+
+        if ($scheduled) {
+            $this->respondWithRedirect(true, 'Interview scheduled successfully.', (int)$drama->id, $redirectOptions);
+        }
+
+        $this->respondWithRedirect(false, 'Unable to schedule the interview. Please try again.', (int)$drama->id, $redirectOptions);
     }
 
     public function create_drama()
@@ -884,6 +1041,7 @@ class Director{
     {
         $route = $options['route'] ?? null;
         $roleId = isset($options['role_id']) ? (int)$options['role_id'] : null;
+        $applicationId = isset($options['application_id']) ? (int)$options['application_id'] : null;
 
         if ($route === 'search') {
             $url = ROOT . '/director/search_artists?drama_id=' . $dramaId;
@@ -897,12 +1055,30 @@ class Director{
             return ROOT . '/director/view_role?drama_id=' . $dramaId . '&role_id=' . $roleId;
         }
 
+        if ($route === 'application_profile' && $applicationId) {
+            return ROOT . '/director/application_profile?drama_id=' . $dramaId . '&application_id=' . $applicationId;
+        }
+
         $query = ['drama_id' => $dramaId];
         if ($roleId) {
             $query['role_id'] = $roleId;
         }
 
         return ROOT . '/director/manage_roles?' . http_build_query($query);
+    }
+
+    protected function loadApplicationForDrama(int $applicationId, $drama)
+    {
+        if ($applicationId <= 0 || !$this->roleModel) {
+            return null;
+        }
+
+        $application = $this->roleModel->getApplicationById($applicationId);
+        if (!$application || (int)$application->drama_id !== (int)$drama->id) {
+            return null;
+        }
+
+        return $application;
     }
 
     protected function sanitizeInt($value): ?int

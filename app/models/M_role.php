@@ -190,6 +190,56 @@ class M_role {
         }
     }
 
+    public function markApplicationProfileViewed(int $application_id, int $director_id) {
+        try {
+            $this->db->query("UPDATE role_applications
+                              SET profile_viewed_at = NOW(), profile_viewed_by = :director_id
+                              WHERE id = :application_id AND status = 'pending'");
+            $this->db->bind(':director_id', $director_id);
+            $this->db->bind(':application_id', $application_id);
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log('Error in markApplicationProfileViewed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function scheduleApplicationInterview(int $application_id, string $interviewAt, int $director_id, ?string $notes = null) {
+        try {
+            $this->db->query("SELECT status, profile_viewed_by FROM role_applications WHERE id = :application_id");
+            $this->db->bind(':application_id', $application_id);
+            $application = $this->db->single();
+
+            if (!$application || strtolower($application->status) !== 'pending') {
+                return false;
+            }
+
+            if ((int)($application->profile_viewed_by ?? 0) !== $director_id) {
+                return false;
+            }
+
+            $this->db->query("UPDATE role_applications SET
+                                interview_at = :interview_at,
+                                interview_notes = :notes,
+                                interview_status = 'pending',
+                                interview_scheduled_at = NOW(),
+                                                                interview_scheduled_by = :director_id,
+                                                                interview_confirmation_status = 'pending',
+                                                                interview_confirmation_note = NULL,
+                                                                interview_confirmed_at = NULL,
+                                                                interview_confirmation_seen_at = NULL
+                              WHERE id = :application_id");
+            $this->db->bind(':interview_at', $interviewAt);
+            $this->db->bind(':notes', $notes);
+            $this->db->bind(':director_id', $director_id);
+            $this->db->bind(':application_id', $application_id);
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log('Error in scheduleApplicationInterview: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     // Get all pending applications for a drama
     public function getPendingApplications($drama_id) {
         try {
@@ -247,6 +297,24 @@ class M_role {
                 return false;
             }
 
+            if (strtolower($app->status ?? '') !== 'pending') {
+                $this->db->rollBack();
+                return false;
+            }
+
+            if (empty($app->profile_viewed_at) || (int)($app->profile_viewed_by ?? 0) !== (int)$reviewed_by) {
+                $this->db->rollBack();
+                error_log("Application {$application_id} missing profile review prerequisites.");
+                return false;
+            }
+
+            $interviewStatus = strtolower($app->interview_status ?? '');
+            if (empty($app->interview_at) || (int)($app->interview_scheduled_by ?? 0) !== (int)$reviewed_by || $interviewStatus === 'cancelled') {
+                $this->db->rollBack();
+                error_log("Application {$application_id} missing interview prerequisites.");
+                return false;
+            }
+
             // Check if role is full
             if ((int)$app->positions_filled >= (int)$app->positions_available) {
                 $this->db->rollBack();
@@ -255,7 +323,7 @@ class M_role {
 
             // Update application status
             $this->db->query("UPDATE role_applications 
-                SET status = 'accepted', reviewed_at = NOW(), reviewed_by = :reviewed_by 
+                SET status = 'accepted', reviewed_at = NOW(), reviewed_by = :reviewed_by, interview_status = 'completed' 
                 WHERE id = :id");
             $this->db->bind(':id', $application_id);
             $this->db->bind(':reviewed_by', $reviewed_by);
@@ -327,14 +395,113 @@ class M_role {
     // Reject application
     public function rejectApplication($application_id, $reviewed_by) {
         try {
+            $this->db->beginTransaction();
+
+            $this->db->query("SELECT status, profile_viewed_at, profile_viewed_by, interview_at, interview_scheduled_by, interview_status 
+                              FROM role_applications WHERE id = :id FOR UPDATE");
+            $this->db->bind(':id', $application_id);
+            $application = $this->db->single();
+
+            if (!$application || strtolower($application->status ?? '') !== 'pending') {
+                $this->db->rollBack();
+                return false;
+            }
+
+            if (empty($application->profile_viewed_at) || (int)($application->profile_viewed_by ?? 0) !== (int)$reviewed_by) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $interviewStatus = strtolower($application->interview_status ?? '');
+            if (empty($application->interview_at) || (int)($application->interview_scheduled_by ?? 0) !== (int)$reviewed_by || $interviewStatus === 'cancelled') {
+                $this->db->rollBack();
+                return false;
+            }
+
             $this->db->query("UPDATE role_applications 
-                SET status = 'rejected', reviewed_at = NOW(), reviewed_by = :reviewed_by 
+                SET status = 'rejected', reviewed_at = NOW(), reviewed_by = :reviewed_by, interview_status = 'cancelled' 
                 WHERE id = :id");
             $this->db->bind(':id', $application_id);
             $this->db->bind(':reviewed_by', $reviewed_by);
+            $result = $this->db->execute();
+            $this->db->commit();
+            return $result;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in rejectApplication: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getApplicationForArtist(int $application_id, int $artist_id) {
+        try {
+            $this->db->query("SELECT * FROM role_applications WHERE id = :application_id AND artist_id = :artist_id");
+            $this->db->bind(':application_id', $application_id);
+            $this->db->bind(':artist_id', $artist_id);
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log('Error in getApplicationForArtist: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function artistRespondInterview(int $application_id, int $artist_id, string $response, ?string $note = null) {
+        $response = strtolower($response);
+        if (!in_array($response, ['confirm', 'decline'], true)) {
+            return false;
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            $this->db->query("SELECT status, interview_at, interview_confirmation_status
+                              FROM role_applications
+                              WHERE id = :application_id AND artist_id = :artist_id FOR UPDATE");
+            $this->db->bind(':application_id', $application_id);
+            $this->db->bind(':artist_id', $artist_id);
+            $application = $this->db->single();
+
+            if (!$application) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            if (empty($application->interview_at) || strtolower($application->status ?? '') !== 'pending') {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $newStatus = $response === 'confirm' ? 'confirmed' : 'declined';
+
+            $this->db->query("UPDATE role_applications SET
+                                interview_confirmation_status = :status,
+                                interview_confirmation_note = :note,
+                                interview_confirmed_at = NOW(),
+                                interview_confirmation_seen_at = NULL
+                              WHERE id = :application_id");
+            $this->db->bind(':status', $newStatus);
+            $this->db->bind(':note', $note);
+            $this->db->bind(':application_id', $application_id);
+            $this->db->execute();
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log('Error in artistRespondInterview: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function markInterviewConfirmationSeen(int $application_id, int $director_id) {
+        try {
+            $this->db->query("UPDATE role_applications
+                              SET interview_confirmation_seen_at = NOW()
+                              WHERE id = :application_id");
+            $this->db->bind(':application_id', $application_id);
             return $this->db->execute();
         } catch (Exception $e) {
-            error_log("Error in rejectApplication: " . $e->getMessage());
+            error_log('Error in markInterviewConfirmationSeen: ' . $e->getMessage());
             return false;
         }
     }
