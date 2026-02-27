@@ -238,12 +238,15 @@
                                                 View Details
                                             </button>
                                         <?php elseif ($status === 'confirmed'): ?>
+                                            <button class="btn-details" data-request="<?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>" onclick="openRequestDetailsFromButton(this)">View Details</button>
                                             <div style="font-style: italic; color: #666; font-size: 13px;">⏱️ Awaiting Provider Acceptance</div>
                                         <?php else: ?>
                                             <button class="btn-details" data-request="<?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>" onclick="openRequestDetailsFromButton(this)">View Details</button>
                                         <?php endif; ?>
                                         
-                                        <button class="btn-reject" onclick="cancelServiceRequest(this)" data-id="<?= (int)$service->id ?>">Cancel</button>
+                                        <?php if (!in_array($status, ['confirmed', 'accepted'], true)): ?>
+                                            <button class="btn-reject" onclick="cancelServiceRequest(this)" data-id="<?= (int)$service->id ?>">Cancel</button>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -352,7 +355,13 @@
                 if (prefill) {
                     var selector = 'input[type="checkbox"][name="required_services[]"][value="' + prefill.replace(/"/g,'\\"') + '"]';
                     var cb = document.querySelector(selector);
-                    if (cb && !cb.disabled) {
+                    if                     <?php
+                    $merchant_id = "121XXXX"; // ← Replace with your Merchant ID
+                    $merchant_secret = "XXXXXXXXXXXXX"; // ← Replace with your Merchant Secret
+                    $sandbox = true; // ← Set to false for production                    <?php
+                    $merchant_id = "121XXXX"; // ← Replace with your Merchant ID
+                    $merchant_secret = "XXXXXXXXXXXXX"; // ← Replace with your Merchant Secret
+                    $sandbox = true; // ← Set to false for production(cb && !cb.disabled) {
                         cb.checked = true;
                     }
                 }
@@ -363,44 +372,216 @@
         function openRequestDetailsFromButton(button) {
             const requestData = JSON.parse(button.getAttribute('data-request'));
             const detailsContent = document.getElementById('detailsContent');
-            
-            let html = '<div style="padding: 24px;">';
-            html += '<h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1f2937;">Request Details</h3>';
-            
-            html += '<div style="background: #f9fafb; padding: 16px; border-radius: 6px; border: 1px solid #e5e7eb; margin-bottom: 20px;">';
-            
-            if (requestData.provider_name) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Provider Name</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.provider_name || '-') + '</div></div>';
+            const serviceType = requestData.service_type || '';
+            const uploadedFiles = normalizeFiles(requestData.uploaded_files);
+
+            let serviceSpecificHTML = '';
+
+            if (serviceType === 'Theater Production') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Theater Production Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Venue Type:</strong> ${requestData.theater_venue_type || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Stage Type:</strong> ${[requestData.theater_stage_proscenium && 'Proscenium', requestData.theater_stage_black_box && 'Black Box', requestData.theater_stage_open_floor && 'Open Floor'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Stage Size:</strong> ${requestData.theater_stage_size || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Days:</strong> ${requestData.theater_num_days || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Time:</strong> ${requestData.theater_time || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${requestData.theater_budget_range || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (serviceType === 'Lighting Design') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Lighting Design Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Lighting Services:</strong> ${[requestData.lighting_stage_lighting && 'Stage Lighting', requestData.lighting_spotlights && 'Spotlights', requestData.lighting_custom_programming && 'Custom Programming', requestData.lighting_moving_heads && 'Moving Heads'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Lights:</strong> ${requestData.lighting_num_lights || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Effects:</strong> ${requestData.lighting_effects || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Technician Needed:</strong> ${requestData.lighting_technician_needed || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${requestData.lighting_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${requestData.lighting_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (serviceType === 'Sound Systems') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Sound Systems Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Sound Services:</strong> ${[requestData.sound_pa_system && 'PA System', requestData.sound_microphones && 'Microphones', requestData.sound_sound_mixing && 'Sound Mixing', requestData.sound_background_music && 'Background Music', requestData.sound_special_effects && 'Special Effects'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Mics:</strong> ${requestData.sound_num_mics || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Stage Monitor:</strong> ${requestData.sound_stage_monitor || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Sound Engineer:</strong> ${requestData.sound_sound_engineer || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${requestData.sound_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Services:</strong> ${requestData.sound_additional_services || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (serviceType === 'Video Production') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Video Production Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Video Type:</strong> ${[requestData.video_full_event && 'Full Event', requestData.video_highlight_reel && 'Highlight Reel', requestData.video_short_promo && 'Short Promo'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Cameras:</strong> ${requestData.video_num_cameras || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Drone Coverage:</strong> ${requestData.video_drone_coverage || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Editors:</strong> ${requestData.video_editors || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${requestData.video_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${requestData.video_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (serviceType === 'Makeup Services' || serviceType === 'Makeup & Hair') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Makeup Services Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Makeup Type:</strong> ${[requestData.makeup_stage_makeup && 'Stage Makeup', requestData.makeup_character_makeup && 'Character Makeup', requestData.makeup_special_effects && 'Special Effects'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Artists:</strong> ${requestData.makeup_num_artists || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Actors:</strong> ${requestData.makeup_num_actors || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Special Requirements:</strong> ${requestData.makeup_special_requirements || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${requestData.makeup_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Details:</strong> ${requestData.makeup_additional_details || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (serviceType === 'Costume Design') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Costume Design Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Costume Style:</strong> ${[requestData.costume_period && 'Period', requestData.costume_contemporary && 'Contemporary', requestData.costume_fantasy && 'Fantasy'].filter(Boolean).join(', ') || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Costumes:</strong> ${requestData.costume_num_costumes || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Actors:</strong> ${requestData.costume_num_actors || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Alterations Needed:</strong> ${requestData.costume_alterations_needed || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${requestData.costume_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${requestData.costume_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
             }
-            
-            if (requestData.service_required) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Service Required</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.service_required || '-') + '</div></div>';
-            }
-            
-            if (requestData.budget) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Budget</label><div style="font-size: 14px; color: #1f2937;">Rs ' + (requestData.budget || '-') + '</div></div>';
-            }
-            
-            if (requestData.service_date) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Service Date</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.service_date || '-') + '</div></div>';
-            }
-            
-            if (requestData.start_date || requestData.end_date) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Duration</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.start_date || '-') + ' to ' + (requestData.end_date || '-') + '</div></div>';
-            }
-            
-            if (requestData.status) {
-                html += '<div style="margin-bottom: 0;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Status</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.status || '-') + '</div></div>';
-            }
-            
-            html += '</div>';
-            html += '<div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;">';
-            html += '<button onclick="closeDetailsModal()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: #6b7280; color: #fff;">Close</button>';
-            html += '</div>';
-            html += '</div>';
-            
-            detailsContent.innerHTML = html;
+
+            detailsContent.innerHTML = `
+                <div style="padding: 20px; background: #fff; border-radius: 8px; max-height: 70vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0; color: #333;">${requestData.service_type || 'Request'} - ${requestData.drama_name || 'N/A'}</h2>
+                        <button onclick="closeDetailsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <strong>Status:</strong> <span style="padding: 5px 10px; border-radius: 4px; background: #f0f0f0; text-transform: capitalize;">${requestData.status || 'pending'}</span>
+                        </div>
+                        <div>
+                            <strong>Payment Status:</strong> <span style="padding: 5px 10px; border-radius: 4px; background: #f0f0f0; text-transform: capitalize;">${requestData.payment_status || 'unpaid'}</span>
+                        </div>
+                        <div>
+                            <strong>Budget:</strong> <span style="padding: 5px 10px; border-radius: 4px; background: #f0f0f0;">${requestData.budget ? 'Rs ' + requestData.budget : 'N/A'}</span>
+                        </div>
+                        <div>
+                            <strong>Created:</strong> <span style="padding: 5px 10px; border-radius: 4px; background: #f0f0f0;">${requestData.created_at ? new Date(requestData.created_at).toLocaleString() : 'N/A'}</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <strong>Provider Information:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Name:</strong> ${requestData.provider_name || 'N/A'}</p>
+                            ${requestData.provider_email ? `<p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${requestData.provider_email}">${requestData.provider_email}</a></p>` : ''}
+                            ${requestData.provider_phone ? `<p style="margin: 5px 0;"><strong>Phone:</strong> ${requestData.provider_phone}</p>` : ''}
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <strong>Schedule:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            ${requestData.service_date ? `<p style="margin: 5px 0;"><strong>Service Date:</strong> ${requestData.service_date}</p>` : ''}
+                            <p style="margin: 5px 0;"><strong>Start Date:</strong> ${requestData.start_date || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>End Date:</strong> ${requestData.end_date || 'N/A'}</p>
+                        </div>
+                    </div>
+
+                    ${serviceSpecificHTML}
+
+                    <div style="margin-bottom: 20px;">
+                        <strong>Service Required:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
+                            ${requestData.service_required || 'No details provided'}
+                        </div>
+                    </div>
+
+                    ${requestData.description ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Description:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
+                            ${requestData.description}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${requestData.notes ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Notes:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
+                            ${requestData.notes}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div style="margin-bottom: 20px;">
+                        <strong>Uploaded References:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            ${uploadedFiles && Object.keys(uploadedFiles).length > 0 ? Object.entries(uploadedFiles).map(([fieldName, fileInfo]) => {
+                                return `
+                                    <p style="margin: 6px 0; font-size: 12px;">
+                                        <a href="${'<?= ROOT ?>'}/${fileInfo.relative_path}" target="_blank" style="color: #007bff; text-decoration: none;">
+                                            <i class="fas fa-link"></i> View reference (${fieldName}${fileInfo.original_name ? ' - ' + fileInfo.original_name : ''})
+                                        </a>
+                                    </p>
+                                `;
+                            }).join('') : '<p style="margin: 5px 0; font-size: 12px; color: #666;">No files uploaded</p>'}
+                        </div>
+                    </div>
+
+                    ${requestData.provider_notes ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Provider Notes:</strong>
+                        <div style="background: #f0f8ff; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
+                            ${requestData.provider_notes}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${requestData.rejection_reason ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Rejection Reason:</strong>
+                        <div style="background: #ffe6e6; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
+                            ${requestData.rejection_reason}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;">
+                        <button onclick="closeDetailsModal()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: #6b7280; color: #fff;">Close</button>
+                    </div>
+                </div>
+            `;
+
             document.getElementById('detailsModal').style.display = 'flex';
+        }
+
+        function normalizeFiles(files) {
+            if (!files) return {};
+            if (typeof files === 'string') {
+                try {
+                    return JSON.parse(files) || {};
+                } catch (e) {
+                    return {};
+                }
+            }
+            return files;
         }
 
         function closeDetailsModal() {
@@ -467,7 +648,7 @@
                 <!-- Note about advance payment (informational only) -->
                 <div id="advanceInfoSection" style="display: none; background: #ecfdf5; padding: 14px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #10b981;">
                     <p style="margin: 0; font-size: 13px; color: #065f46;">
-                        <strong>💳 Payment Required:</strong> After confirming, you'll be redirected to a secure checkout page to complete the advance payment of <strong>Rs <span id="advance_info_amount">0</span></strong> via PayPal.
+                        <strong>💳 Payment Required:</strong> After confirming, you'll be redirected to a secure checkout page to complete the advance payment of <strong>Rs <span id="advance_info_amount">0</span></strong> via PayHere.
                     </p>
                 </div>
 
@@ -567,7 +748,7 @@
             .catch(e => showMessage('Network error: ' + e.message, 'error'));
         }
 
-        // Payment Functions - Placeholder for PayPal integration
+        // Payment Functions - Placeholder for PayHere integration
         function initiateAdvancePayment() {
             const requestId = document.getElementById('confirm_request_id').value;
             const amount = document.getElementById('confirm_advance_amount').value;
@@ -577,8 +758,8 @@
                 return;
             }
 
-            // TODO: Integrate PayPal payment here
-            showMessage('PayPal integration pending', 'info');
+            // TODO: Integrate PayHere payment here
+            showMessage('PayHere integration pending', 'info');
         }
 
         function onAdvancePaymentSuccess(requestId) {
