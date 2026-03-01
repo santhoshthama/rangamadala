@@ -16,6 +16,12 @@ class M_login{
         }
         return false;
     }
+
+    public function getUserById($user_id){
+        $this->db->query("SELECT * FROM users WHERE id = :id");
+        $this->db->bind(":id", $user_id);
+        return $this->db->single();
+    }
 }
 
 

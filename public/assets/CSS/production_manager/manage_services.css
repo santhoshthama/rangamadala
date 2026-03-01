@@ -113,6 +113,12 @@
     border: 1px solid rgba(139, 69, 19, 0.3);
 }
 
+.status-badge.status-completed_fully_paid {
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
 .status-badge.status-rejected {
     background: rgba(220, 20, 60, 0.15);
     color: #DC143C;

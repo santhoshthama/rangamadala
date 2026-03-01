@@ -362,12 +362,11 @@ class Production_manager{
             return;
         }
 
-        $id = $_POST['id'] ?? null;
-        $status = $_POST['status'] ?? null;
+        $id = $_POST['id'] ?? $_POST['request_id'] ?? null;
 
-        if (!$id || !$status) {
+        if (!$id) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing id or status']);
+            echo json_encode(['success' => false, 'error' => 'Missing request id']);
             return;
         }
 
@@ -390,10 +389,17 @@ class Production_manager{
                 return;
             }
 
-            // Update status
-            $ok = $serviceModel->updateStatusDetailed((int)$id, (string)$status);
+            // Simplest rule: only pending requests can be cancelled
+            if (strtolower((string)$request->status) !== 'pending') {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Only pending requests can be cancelled']);
+                return;
+            }
+
+            // Update status to cancelled (no payment logic here)
+            $ok = $serviceModel->updateStatusDetailed((int)$id, 'cancelled');
             if ($ok) {
-                echo json_encode(['success' => true, 'status' => $status]);
+                echo json_encode(['success' => true, 'status' => 'cancelled']);
             } else {
                 http_response_code(500);
                 echo json_encode(['success' => false, 'error' => 'Failed to update status']);
