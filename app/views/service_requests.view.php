@@ -31,12 +31,13 @@
                 'confirmed' => 'Confirmed',
                 'accepted' => 'Accepted',
                 'completed' => 'Completed',
+                'completed_paid' => 'Completed & Paid',
                 'rejected' => 'Rejected',
                 'cancelled' => 'Cancelled'
             ];
             
             // Count by status
-            $counts = ['all' => 0, 'pending' => 0, 'provider_responded' => 0, 'confirmed' => 0, 'accepted' => 0, 'completed' => 0, 'rejected' => 0, 'cancelled' => 0];
+            $counts = ['all' => 0, 'pending' => 0, 'provider_responded' => 0, 'confirmed' => 0, 'accepted' => 0, 'completed' => 0, 'completed_paid' => 0, 'rejected' => 0, 'cancelled' => 0];
             foreach ($requests as $r) {
                 $st = isset($r->status) ? strtolower($r->status) : 'pending';
                 if (!isset($counts[$st])) { $counts[$st] = 0; }
@@ -53,6 +54,7 @@
             <button class="tab" id="confirmedTab" onclick="switchTab('confirmed')"><?=$counts['confirmed']?> Confirmed</button>
             <button class="tab" id="acceptedTab" onclick="switchTab('accepted')"><?=$counts['accepted']?> Accepted</button>
             <button class="tab" id="completedTab" onclick="switchTab('completed')"><?=$counts['completed']?> Completed</button>
+            <button class="tab" id="completed_paidTab" onclick="switchTab('completed_paid')"><?=$counts['completed_paid']?> Fully Paid</button>
             <button class="tab" id="rejectedTab" onclick="switchTab('rejected')"><?=$counts['rejected']?> Rejected</button>
         </div>
 
@@ -74,6 +76,16 @@
                     }
                     $title = (isset($req->drama_name) ? htmlspecialchars($req->drama_name) : '') . ' — ' . (isset($req->service_type) ? htmlspecialchars($req->service_type) : '');
                     $requester = (isset($req->requester_name) ? htmlspecialchars($req->requester_name) : '') . (isset($req->requester_phone) ? ' • ' . htmlspecialchars($req->requester_phone) : '');
+                    $needsPaymentVerification = isset($req->payment_gateway, $req->advance_payment_status)
+                        && in_array($req->payment_gateway, ['cash', 'bank_transfer'])
+                        && strtolower($req->advance_payment_status) === 'pending';
+                    $verificationRejected = false;
+                    if (!empty($req->transaction_response)) {
+                        $transactionData = json_decode($req->transaction_response, true);
+                        if (is_array($transactionData) && (($transactionData['provider_verification_status'] ?? '') === 'rejected')) {
+                            $verificationRejected = true;
+                        }
+                    }
                 ?>
                 <div class="request-item" data-category="<?= htmlspecialchars($status) ?>" style="display: none;">
                     <div class="request-info">
@@ -88,6 +100,13 @@
                         <span class="status-badge status-<?= htmlspecialchars($status) ?>"><?= htmlspecialchars($statusMap[$status] ?? ucfirst($status)) ?></span>
                         <?php if ($budget !== null): ?><span class="price">Rs <?= $budget ?></span><?php endif; ?>
                         <button class="btn btn-details" onclick="openDetails(event, <?= htmlspecialchars(json_encode((array)$req)) ?>)">View Details</button>
+                        <?php if ($needsPaymentVerification): ?>
+                            <?php if ($verificationRejected): ?>
+                                <span style="color: #dc3545; font-style: italic; font-size: 13px;">Verification marked as failed. Waiting for PM update</span>
+                            <?php else: ?>
+                                <span style="color: #f39c12; font-style: italic; font-size: 13px;">View details and confirm the payment</span>
+                            <?php endif; ?>
+                        <?php endif; ?>
                         <?php if ($status === 'pending'): ?>
                             <button class="btn btn-reject" onclick="rejectRequest(this)" data-id="<?= (int)$req->id ?>">Reject</button>
                             <button class="btn btn-accept" onclick="openRespondModal(<?= (int)$req->id ?>, <?= htmlspecialchars(json_encode((array)$req)) ?>)">Respond with Quote</button>
@@ -97,10 +116,26 @@
                             </button>
                             <span style="color: #f39c12; font-style: italic; font-size: 13px;"><i class="fas fa-clock"></i> Awaiting PM Confirmation</span>
                         <?php elseif ($status === 'confirmed'): ?>
-                            <button class="btn btn-accept" onclick="acceptConfirmedRequest(this)" data-id="<?= (int)$req->id ?>">Accept Terms</button>
-                            <button class="btn btn-reject" onclick="rejectConfirmedRequest(this)" data-id="<?= (int)$req->id ?>">Reject Terms</button>
+                            <?php
+                            // Check if payment needs confirmation (only for cash/bank)
+                            $needsConfirmation = false;
+                            if (isset($req->payment_gateway) && isset($req->advance_payment_status)) {
+                                $needsConfirmation = 
+                                    in_array($req->payment_gateway, ['cash', 'bank_transfer']) && 
+                                    $req->advance_payment_status === 'pending';
+                            }
+                            ?>
+                            
+                            <button 
+                                class="btn btn-accept" 
+                                onclick="<?= $needsConfirmation ? 'return false;' : 'acceptConfirmedRequest(this)' ?>" 
+                                data-id="<?= (int)$req->id ?>"
+                                <?= $needsConfirmation ? 'disabled style="opacity: 0.4; cursor: not-allowed;"' : '' ?>
+                                <?= $needsConfirmation ? 'title="Confirm ' . ($req->payment_gateway === 'cash' ? 'cash payment' : 'bank transfer') . ' in View Details first"' : '' ?>
+                            >Accept</button>
+                            
+                            <button class="btn btn-reject" onclick="rejectConfirmedRequest(this)" data-id="<?= (int)$req->id ?>">Reject</button>
                         <?php elseif ($status === 'accepted'): ?>
-                            <button class="btn btn-update" onclick="updatePayment(this)" data-id="<?= (int)$req->id ?>">Update Payment</button>
                             <button class="btn btn-complete" onclick="markCompleted(this)" data-id="<?= (int)$req->id ?>">Mark Complete</button>
                         <?php endif; ?>
                     </div>
@@ -114,10 +149,12 @@
         let currentTab = '<?= htmlspecialchars($initialTab) ?>';
         const ENDPOINTS = {
             updateStatus: '<?= ROOT ?>/ServiceRequests/updateStatus',
-            updatePayment: '<?= ROOT ?>/ServiceRequests/updatePayment',
             respond: '<?= ROOT ?>/ServiceProviderRequest/respond',
             acceptConfirmed: '<?= ROOT ?>/ServiceProviderRequest/acceptConfirmed',
             rejectConfirmed: '<?= ROOT ?>/ServiceProviderRequest/rejectConfirmed',
+            confirmCashPayment: '<?= ROOT ?>/Payment/confirmCashPayment',
+            confirmBankPayment: '<?= ROOT ?>/Payment/confirmBankPayment',
+            rejectManualPayment: '<?= ROOT ?>/Payment/rejectManualPayment',
         };
 
         function switchTab(category) {
@@ -157,7 +194,13 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ id, status: 'accepted' }),
                 });
-                const json = await res.json();
+                const raw = await res.text();
+                let json = null;
+                try {
+                    json = JSON.parse(raw);
+                } catch (parseError) {
+                    throw new Error(raw || 'Invalid server response');
+                }
                 if (json.success) {
                     button.classList.add('selected');
                     button.textContent = 'Accepted';
@@ -168,7 +211,7 @@
                     showMessage(json.error || 'Failed to accept', 'error');
                 }
             } catch (e) {
-                showMessage('Network error while accepting', 'error');
+                showMessage((e && e.message) ? e.message : 'Network error while accepting', 'error');
             }
         }
 
@@ -197,26 +240,71 @@
             }
         }
 
-        async function updatePayment(button) {
-            const id = button.getAttribute('data-id');
-            const payment_status = prompt('Update payment status to: unpaid/partially_paid/paid', 'paid');
-            if (!payment_status) return;
+        async function confirmCashPayment(paymentId) {
+            if (!confirm('Confirm that you received this cash payment?')) return;
+
             try {
-                const res = await fetch(ENDPOINTS.updatePayment, {
+                const res = await fetch(ENDPOINTS.confirmCashPayment, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ id, payment_status }),
+                    body: new URLSearchParams({ payment_id: paymentId }),
                 });
                 const json = await res.json();
                 if (json.success) {
-                    button.classList.add('selected');
-                    button.textContent = 'Payment Updated';
-                    showMessage('Payment information updated!', 'success');
+                    showMessage('Cash payment confirmed successfully!', 'success');
+                    setTimeout(() => location.reload(), 1200);
                 } else {
-                    showMessage(json.error || 'Failed to update payment', 'error');
+                    showMessage(json.error || 'Failed to confirm cash payment', 'error');
                 }
             } catch (e) {
-                showMessage('Network error while updating payment', 'error');
+                showMessage('Network error while confirming payment', 'error');
+            }
+        }
+
+        async function confirmBankPayment(paymentId) {
+            if (!confirm('Confirm that you verified and received this bank transfer payment?')) return;
+
+            try {
+                const res = await fetch(ENDPOINTS.confirmBankPayment, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ payment_id: paymentId }),
+                });
+                const json = await res.json();
+                if (json.success) {
+                    showMessage('Bank payment confirmed successfully!', 'success');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    showMessage(json.error || 'Failed to confirm bank payment', 'error');
+                }
+            } catch (e) {
+                showMessage('Network error while confirming payment', 'error');
+            }
+        }
+
+        async function rejectManualPayment(paymentId, paymentTypeLabel) {
+            const reason = prompt(`Why can't you verify this ${paymentTypeLabel} payment?`);
+            if (reason === null) return;
+            if (!reason.trim()) {
+                showMessage('Please enter a reason', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(ENDPOINTS.rejectManualPayment, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ payment_id: paymentId, reason: reason.trim() }),
+                });
+                const json = await res.json();
+                if (json.success) {
+                    showMessage('Marked as verification failed. PM has been notified.', 'success');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    showMessage(json.error || 'Failed to update verification status', 'error');
+                }
+            } catch (e) {
+                showMessage('Network error while updating verification status', 'error');
             }
         }
 
@@ -396,9 +484,47 @@
                             <strong>Status:</strong> <span style="padding: 5px 10px; border-radius: 4px; background: #f0f0f0; text-transform: capitalize;">${req.status}</span>
                         </div>
                         <div>
-                            <strong>Payment Status:</strong> <span style="padding: 5px 10px; border-radius: 4px; background: #f0f0f0; text-transform: capitalize;">${req.payment_status || 'unpaid'}</span>
+                            <strong>Payment Status:</strong> <span style="padding: 5px 10px; border-radius: 4px; background: #f0f0f0; text-transform: capitalize;">${req.calculated_payment_status || 'unpaid'}</span>
                         </div>
                     </div>
+
+                    ${['confirmed', 'accepted', 'completed', 'completed_paid'].includes(req.status) && req.payment_id ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Payment Information:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Payment Method:</strong> ${req.payment_gateway === 'bank_transfer' ? 'Bank Transfer' : (req.payment_gateway === 'cash' ? 'Cash' : 'PayHere')}</p>
+                            <p style="margin: 5px 0;"><strong>Amount:</strong> Rs ${parseFloat(req.payment_amount || 0).toFixed(2)}</p>
+                            <p style="margin: 5px 0;"><strong>Type:</strong> ${req.payment_type ? req.payment_type.charAt(0).toUpperCase() + req.payment_type.slice(1) : 'N/A'}</p>
+                                        ${req.payment_gateway === 'bank_transfer' && req.transaction_response ? (() => {
+                                try {
+                                    const transData = JSON.parse(req.transaction_response);
+                                    const bankSlipPath = transData.bank_slip_path || '';
+                                    return bankSlipPath ? `
+                                        <p style="margin: 5px 0;"><strong>Bank Slip:</strong> <a href="${'<?= ROOT ?>'}/Payment/viewBankSlip/${req.payment_id}" target="_blank" style="color: #1d4ed8; text-decoration: none; font-weight: 600;">View Uploaded Slip</a></p>
+                                        ${transData.provider_verification_status === 'rejected' ? `<p style="margin: 8px 0; color: #b91c1c; font-size: 12px;"><strong>Verification Status:</strong> Failed (${transData.provider_verification_reason || 'No reason'})</p>` : ''}
+                                        ${req.advance_payment_status === 'pending' ? `<div style="margin-top: 10px; display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-accept" style="padding:6px 10px;" onclick="confirmBankPayment(${req.payment_id})">Confirm Payment Received</button><button class="btn btn-reject" style="padding:6px 10px;" onclick="rejectManualPayment(${req.payment_id}, 'bank transfer')">Cannot Verify</button></div>` : ''}
+                                    ` : '';
+                                } catch (e) {
+                                    return '';
+                                }
+                            })() : ''}
+                            ${req.payment_gateway === 'cash' && req.transaction_response ? (() => {
+                                try {
+                                    const transData = JSON.parse(req.transaction_response);
+                                    return `
+                                        ${transData.received_date ? `<p style="margin: 5px 0;"><strong>Received Date:</strong> ${transData.received_date}</p>` : ''}
+                                        ${transData.note ? `<p style="margin: 5px 0;"><strong>Note:</strong> ${transData.note}</p>` : ''}
+                                        ${transData.provider_verification_status === 'rejected' ? `<p style="margin: 8px 0; color: #b91c1c; font-size: 12px;"><strong>Verification Status:</strong> Failed (${transData.provider_verification_reason || 'No reason'})</p>` : ''}
+                                        ${req.advance_payment_status === 'pending' ? `<div style="margin-top: 10px; display:flex; gap:8px; flex-wrap:wrap;"><button class="btn btn-accept" style="padding:6px 10px;" onclick="confirmCashPayment(${req.payment_id})">Confirm Payment Received</button><button class="btn btn-reject" style="padding:6px 10px;" onclick="rejectManualPayment(${req.payment_id}, 'cash')">Cannot Verify</button></div>` : ''}
+                                    `;
+                                } catch (e) {
+                                    return '';
+                                }
+                            })() : ''}
+                            ${req.paid_at ? `<p style="margin: 5px 0;"><strong>Confirmed At:</strong> ${new Date(req.paid_at).toLocaleString()}</p>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
 
                     <div style="margin-bottom: 20px;">
                         <strong>Requester Information:</strong>
@@ -452,7 +578,7 @@
                     ${req.provider_notes ? `
                     <div style="margin-bottom: 20px;">
                         <strong>Your Notes:</strong>
-                        <div style="background: #f0f8ff; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
                             ${req.provider_notes}
                         </div>
                     </div>
@@ -501,7 +627,13 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ request_id: id }),
                 });
-                const json = await res.json();
+                const raw = await res.text();
+                let json = null;
+                try {
+                    json = JSON.parse(raw);
+                } catch (parseError) {
+                    throw new Error(raw || 'Invalid server response');
+                }
                 if (json.success) {
                     showMessage('Request accepted! Dates have been booked.', 'success');
                     setTimeout(() => location.reload(), 1500);
@@ -509,7 +641,7 @@
                     showMessage(json.error || 'Failed to accept', 'error');
                 }
             } catch (e) {
-                showMessage('Network error while accepting', 'error');
+                showMessage((e && e.message) ? e.message : 'Network error while accepting', 'error');
             }
         }
 

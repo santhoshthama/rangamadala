@@ -1,0 +1,212 @@
+/* Bank Transfer Payment Form Styles */
+
+* {
+    box-sizing: border-box;
+}
+
+body.payment-bank-upload {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f5f7fa;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.payment-card {
+    width: 100%;
+    max-width: 700px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.payment-header {
+    padding: 24px;
+    border-bottom: 1px solid #eceff3;
+    background: #fffef8;
+}
+
+.payment-header h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.payment-header p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.payment-body {
+    padding: 24px;
+}
+
+.payment-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: #f9fafb;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.payment-info-item span {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 3px;
+}
+
+.payment-info-item strong {
+    font-size: 14px;
+    color: #111827;
+}
+
+.payment-form-group {
+    margin-bottom: 16px;
+}
+
+.payment-label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.payment-input {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.payment-input:focus {
+    outline: none;
+    border-color: #d4af37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.payment-help {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 6px;
+}
+
+.payment-help.warning {
+    margin-top: 8px;
+    color: #92400e;
+    background: #fef3c7;
+    padding: 8px;
+    border-radius: 4px;
+    border-left: 3px solid #f59e0b;
+}
+
+.payment-alert {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.payment-alert strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.payment-alert.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.payment-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.payment-btn {
+    text-decoration: none;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.payment-btn-primary {
+    background: #d4af37;
+    color: #1a1410;
+}
+
+.payment-btn-primary:hover {
+    background: #c9a130;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.payment-btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.payment-btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+/* Responsive Design */
+@media (max-width: 680px) {
+    .payment-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-actions {
+        flex-direction: column;
+    }
+
+    .payment-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .payment-card {
+        max-width: 100%;
+    }
+
+    .payment-header h1 {
+        font-size: 18px;
+    }
+
+    body.payment-bank-upload {
+        padding: 16px;
+    }
+}
+
+/* Tablet and above adjustments */
+@media (max-width: 1024px) and (min-width: 681px) {
+    .payment-card {
+        max-width: 600px;
+    }
+}

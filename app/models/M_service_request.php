@@ -90,7 +90,39 @@ class M_service_request
 
     public function getRequestsByProvider($provider_id)
     {
-        $this->db->query("SELECT * FROM service_requests WHERE provider_id = :provider_id ORDER BY created_at DESC");
+        $this->db->query("
+            SELECT sr.*, 
+                   p.id as payment_id,
+                   p.payment_type,
+                   p.amount as payment_amount,
+                   p.payment_gateway,
+                   p.payment_status as advance_payment_status,
+                   p.transaction_response,
+                   p.paid_at,
+                   p.reference_number,
+                   CASE 
+                       WHEN pf.id IS NOT NULL THEN 'paid'
+                       WHEN (pa.id IS NOT NULL OR pr.id IS NOT NULL) THEN 'partially_paid'
+                       WHEN p.id IS NOT NULL THEN 'pending'
+                       ELSE 'unpaid'
+                   END as calculated_payment_status
+            FROM service_requests sr
+            LEFT JOIN payments p ON sr.id = p.service_request_id 
+                AND p.payment_status != 'canceled'
+                AND p.id = (
+                    SELECT p2.id FROM payments p2 
+                    WHERE p2.service_request_id = sr.id 
+                    AND p2.payment_status != 'canceled'
+                    ORDER BY p2.created_at DESC 
+                    LIMIT 1
+                )
+            LEFT JOIN payments pf ON sr.id = pf.service_request_id AND pf.payment_type = 'full' AND pf.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pa ON sr.id = pa.service_request_id AND pa.payment_type = 'advance' AND pa.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pr ON sr.id = pr.service_request_id AND pr.payment_type = 'remaining' AND pr.payment_status IN ('completed', 'success')
+            WHERE sr.provider_id = :provider_id 
+            GROUP BY sr.id
+            ORDER BY sr.created_at DESC
+        ");
         $this->db->bind(':provider_id', $provider_id);
         $results = $this->db->resultSet();
         
@@ -198,7 +230,39 @@ class M_service_request
      */
     public function getServicesByDrama($drama_id)
     {
-        $this->db->query("SELECT * FROM service_requests WHERE drama_id = :drama_id ORDER BY created_at DESC");
+        $this->db->query("
+            SELECT sr.*, 
+                   p.id as payment_id,
+                   p.payment_type,
+                   p.amount as payment_amount,
+                   p.payment_gateway,
+                   p.payment_status as advance_payment_status,
+                   p.transaction_response,
+                   p.paid_at,
+                   p.reference_number,
+                   CASE 
+                       WHEN pf.id IS NOT NULL THEN 'paid'
+                       WHEN (pa.id IS NOT NULL OR pr.id IS NOT NULL) THEN 'partially_paid'
+                       WHEN p.id IS NOT NULL THEN 'pending'
+                       ELSE 'unpaid'
+                   END as calculated_payment_status
+            FROM service_requests sr
+            LEFT JOIN payments p ON sr.id = p.service_request_id 
+                AND p.payment_status != 'canceled'
+                AND p.id = (
+                    SELECT p2.id FROM payments p2 
+                    WHERE p2.service_request_id = sr.id 
+                    AND p2.payment_status != 'canceled'
+                    ORDER BY p2.created_at DESC 
+                    LIMIT 1
+                )
+            LEFT JOIN payments pf ON sr.id = pf.service_request_id AND pf.payment_type = 'full' AND pf.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pa ON sr.id = pa.service_request_id AND pa.payment_type = 'advance' AND pa.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pr ON sr.id = pr.service_request_id AND pr.payment_type = 'remaining' AND pr.payment_status IN ('completed', 'success')
+            WHERE sr.drama_id = :drama_id 
+            GROUP BY sr.id
+            ORDER BY sr.created_at DESC
+        ");
         $this->db->bind(':drama_id', $drama_id);
         return $this->db->resultSet();
     }
@@ -435,5 +499,14 @@ class M_service_request
             error_log("acceptConfirmed error: " . $e->getMessage());
             return ['success' => false, 'error' => 'Server error'];
         }
+    }
+
+    /**
+     * Simple method to update request status
+     * Used by Payment controller to auto-upgrade to completed_paid
+     */
+    public function updateStatus($request_id, $status)
+    {
+        return $this->updateRequestStatus($request_id, $status);
     }
 }
