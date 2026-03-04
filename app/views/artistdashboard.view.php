@@ -45,6 +45,12 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                 </a>
             </li>
             <li>
+                <a href="<?=ROOT?>/artistdashboard/notifications">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+            </li>
+            <li>
                 <a href="<?=ROOT?>/artistdashboard/browse_vacancies">
                     <i class="fas fa-bullhorn"></i>
                     <span>View All Vacancies</span>

@@ -8,6 +8,7 @@ class Director{
     protected $artistModel;
     protected $pmModel;
     protected $scheduleModel;
+    protected $notificationModel;
 
     public function __construct()
     {
@@ -16,6 +17,7 @@ class Director{
         $this->artistModel = $this->getModel('M_artist');
         $this->pmModel = $this->getModel('M_production_manager');
         $this->scheduleModel = $this->getModel('M_schedule');
+        $this->notificationModel = $this->getModel('M_notification');
     }
 
     public function index()
@@ -569,6 +571,19 @@ class Director{
         if ($eventId) {
             $_SESSION['message'] = 'Schedule event created successfully.';
             $_SESSION['message_type'] = 'success';
+
+            // Notify all artists in this drama about the new event
+            if ($this->notificationModel) {
+                $eventLink = ROOT . '/artistdashboard/event_detail?event_id=' . $eventId . '&drama_id=' . $drama->id;
+                $this->notificationModel->notifyDramaArtists(
+                    (int)$drama->id,
+                    'event_scheduled',
+                    'New ' . ucfirst($eventType) . ' Scheduled: ' . $eventTitle,
+                    ucfirst($eventType) . ' "' . $eventTitle . '" has been scheduled for ' . date('M d, Y', strtotime($scheduledDate)) . ' at ' . $venue . ' (' . date('h:i A', strtotime($startTime)) . ' - ' . date('h:i A', strtotime($endTime)) . ').',
+                    $eventLink,
+                    (int)$_SESSION['user_id']
+                );
+            }
         } else {
             $_SESSION['message'] = 'Failed to create schedule event.';
             $_SESSION['message_type'] = 'error';
@@ -732,6 +747,19 @@ class Director{
         if ($deleted) {
             $_SESSION['message'] = 'Schedule event deleted successfully.';
             $_SESSION['message_type'] = 'success';
+
+            // Notify all artists that the event was cancelled/deleted
+            if ($this->notificationModel) {
+                $dramaLink = ROOT . '/artistdashboard/view_drama?drama_id=' . $drama->id;
+                $this->notificationModel->notifyDramaArtists(
+                    (int)$drama->id,
+                    'event_cancelled',
+                    'Event Cancelled: ' . ($event->event_title ?? 'Event'),
+                    'The ' . ($event->event_type ?? 'event') . ' "' . ($event->event_title ?? 'Event') . '" on ' . date('M d, Y', strtotime($event->scheduled_date)) . ' has been removed from the schedule.',
+                    $dramaLink,
+                    (int)$_SESSION['user_id']
+                );
+            }
         } else {
             $_SESSION['message'] = 'Failed to delete schedule event.';
             $_SESSION['message_type'] = 'error';
@@ -782,6 +810,20 @@ class Director{
         if ($updated) {
             $_SESSION['message'] = 'Event status updated to ' . ucfirst($status) . '.';
             $_SESSION['message_type'] = 'success';
+
+            // Notify artists about status change (cancelled or confirmed)
+            if ($this->notificationModel && in_array($status, ['cancelled', 'confirmed'])) {
+                $notifType = $status === 'cancelled' ? 'event_cancelled' : 'event_updated';
+                $eventLink = ROOT . '/artistdashboard/event_detail?event_id=' . $eventId . '&drama_id=' . $drama->id;
+                $this->notificationModel->notifyDramaArtists(
+                    (int)$drama->id,
+                    $notifType,
+                    'Event ' . ucfirst($status) . ': ' . ($event->event_title ?? 'Event'),
+                    'The ' . ($event->event_type ?? 'event') . ' "' . ($event->event_title ?? 'Event') . '" on ' . date('M d, Y', strtotime($event->scheduled_date)) . ' has been ' . $status . '.',
+                    $eventLink,
+                    (int)$_SESSION['user_id']
+                );
+            }
         } else {
             $_SESSION['message'] = 'Failed to update event status.';
             $_SESSION['message_type'] = 'error';
@@ -960,6 +1002,19 @@ class Director{
         );
 
         if ($requestId) {
+            // Notify the artist about the role request/invitation
+            if ($this->notificationModel && $role) {
+                $dramaLink = ROOT . '/artistdashboard';
+                $this->notificationModel->createNotification([
+                    'user_id' => $artistId,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'role_assigned',
+                    'title' => 'Role Invitation: ' . ($role->role_name ?? 'Role'),
+                    'message' => 'You have been invited for the role "' . ($role->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '". Please check your dashboard to respond.',
+                    'link' => $dramaLink,
+                ]);
+            }
+
             $this->respondWithRedirect(true, 'Artist request sent successfully.', (int)$drama->id, [
                 'route' => 'search',
                 'role_id' => $roleId,
@@ -1073,6 +1128,19 @@ class Director{
         $accepted = $this->roleModel->acceptApplication($applicationId, (int)$_SESSION['user_id']);
 
         if ($accepted) {
+            // Notify the artist that their application was accepted
+            if ($this->notificationModel && $application) {
+                $dramaLink = ROOT . '/artistdashboard/view_drama?drama_id=' . $drama->id;
+                $this->notificationModel->createNotification([
+                    'user_id' => (int)$application->artist_id,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'application_accepted',
+                    'title' => 'Role Assigned: ' . ($application->role_name ?? 'Role'),
+                    'message' => 'Congratulations! Your application for the role "' . ($application->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '" has been accepted. You are now assigned to this role.',
+                    'link' => $dramaLink,
+                ]);
+            }
+
             $this->respondWithRedirect(true, 'Application accepted and artist assigned.', (int)$drama->id, [
                 'route' => 'manage',
             ]);
@@ -1110,6 +1178,18 @@ class Director{
         $rejected = $this->roleModel->rejectApplication($applicationId, (int)$_SESSION['user_id']);
 
         if ($rejected) {
+            // Notify the artist that their application was rejected
+            if ($this->notificationModel && $application) {
+                $this->notificationModel->createNotification([
+                    'user_id' => (int)$application->artist_id,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'application_rejected',
+                    'title' => 'Application Update: ' . ($application->role_name ?? 'Role'),
+                    'message' => 'Your application for the role "' . ($application->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '" was not selected. Keep exploring other opportunities!',
+                    'link' => ROOT . '/artistdashboard/browse_vacancies',
+                ]);
+            }
+
             $this->respondWithRedirect(true, 'Application rejected.', (int)$drama->id, [
                 'route' => 'manage',
             ], 'info');
@@ -1241,6 +1321,19 @@ class Director{
         );
 
         if ($scheduled) {
+            // Notify the artist about their scheduled interview
+            if ($this->notificationModel && $application) {
+                $dramaLink = ROOT . '/artistdashboard/view_drama?drama_id=' . $drama->id;
+                $this->notificationModel->createNotification([
+                    'user_id' => (int)$application->artist_id,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'interview_scheduled',
+                    'title' => 'Interview Scheduled: ' . ($application->role_name ?? 'Role'),
+                    'message' => 'An interview has been scheduled for the role "' . ($application->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '" on ' . date('M d, Y \a\t h:i A', strtotime($interviewAt)) . '.',
+                    'link' => $dramaLink,
+                ]);
+            }
+
             $this->respondWithRedirect(true, 'Interview scheduled successfully.', (int)$drama->id, $redirectOptions);
         }
 

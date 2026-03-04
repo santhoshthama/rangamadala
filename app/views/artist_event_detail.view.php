@@ -110,6 +110,12 @@ if ($event) {
                 </a>
             </li>
             <li>
+                <a href="<?= ROOT ?>/artistdashboard/notifications">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+            </li>
+            <li>
                 <a href="<?= ROOT ?>/profile">
                     <i class="fas fa-user"></i>
                     <span>Profile</span>

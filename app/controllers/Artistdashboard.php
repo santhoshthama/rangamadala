@@ -435,4 +435,72 @@ class Artistdashboard
 
         $this->view('artist_event_detail', $data);
     }
+
+    /**
+     * Notifications page - shows all notifications grouped by drama
+     */
+    public function notifications()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $notification_model = $this->getModel('M_notification');
+        $user_id = $_SESSION['user_id'];
+
+        $data['grouped_notifications'] = $notification_model ? $notification_model->getNotificationsGroupedByDrama($user_id) : [];
+        $data['unread_count'] = $notification_model ? $notification_model->getUnreadCount($user_id) : 0;
+        $data['all_notifications'] = $notification_model ? $notification_model->getNotificationsByUser($user_id) : [];
+
+        $this->view('artist/notifications', $data);
+    }
+
+    /**
+     * Mark a single notification as read (AJAX or regular request)
+     */
+    public function mark_notification_read()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $notification_id = $_GET['id'] ?? $_POST['notification_id'] ?? null;
+        $redirect = $_GET['redirect'] ?? $_POST['redirect'] ?? null;
+
+        if ($notification_id) {
+            $notification_model = $this->getModel('M_notification');
+            $notification_model->markAsRead((int)$notification_id, (int)$_SESSION['user_id']);
+        }
+
+        if ($redirect) {
+            header("Location: " . $redirect);
+            exit;
+        }
+
+        header("Location: " . ROOT . "/artistdashboard/notifications");
+        exit;
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    public function mark_all_notifications_read()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $notification_model = $this->getModel('M_notification');
+        if ($notification_model) {
+            $notification_model->markAllAsRead((int)$_SESSION['user_id']);
+        }
+
+        $_SESSION['message'] = 'All notifications marked as read.';
+        $_SESSION['message_type'] = 'success';
+        header("Location: " . ROOT . "/artistdashboard/notifications");
+        exit;
+    }
 }
