@@ -76,9 +76,9 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/profile">
-                    <i class="fas fa-user-circle"></i>
-                    <span>My Profile</span>
+                <a href="<?= ROOT ?>/artistdashboard">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Profile</span>
                 </a>
             </li>
             <li>

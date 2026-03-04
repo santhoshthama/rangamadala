@@ -368,10 +368,71 @@ class Artistdashboard
         // Get artist's role in this drama
         $data['my_role'] = $role_model ? $role_model->getArtistRoleInDrama($user_id, $drama_id) : null;
         
-        // Get schedule/rehearsal data (if available)
-        // TODO: Add schedule model when available
-        $data['schedules'] = [];
+        // Get schedule/rehearsal data from drama_schedules table
+        $schedule_model = $this->getModel('M_schedule');
+        if ($schedule_model) {
+            // Upcoming rehearsals, performances, meetings
+            $data['schedules'] = $schedule_model->getUpcomingSchedulesForArtist($drama_id);
+            // Past events
+            $data['past_schedules'] = $schedule_model->getPastSchedulesForArtist($drama_id);
+            // Artist's interview schedules
+            $data['my_interviews'] = $schedule_model->getArtistInterviews($user_id, $drama_id);
+            // Stats
+            $data['schedule_stats'] = $schedule_model->getArtistScheduleStats($drama_id);
+        } else {
+            $data['schedules'] = [];
+            $data['past_schedules'] = [];
+            $data['my_interviews'] = [];
+            $data['schedule_stats'] = null;
+        }
 
         $this->view('artist_drama_view', $data);
+    }
+
+    /**
+     * View individual event detail page (artist read-only)
+     * URL: /artistdashboard/event_detail?event_id=X&drama_id=Y
+     */
+    public function event_detail()
+    {
+        // Auth check
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $event_id = $_GET['event_id'] ?? null;
+        $drama_id = $_GET['drama_id'] ?? null;
+
+        if (!$event_id || !$drama_id) {
+            $_SESSION['message'] = 'Event not found.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/artistdashboard");
+            exit;
+        }
+
+        $schedule_model = $this->getModel('M_schedule');
+        $drama_model = $this->getModel('M_drama');
+        $role_model = $this->getModel('M_role');
+        $user_id = $_SESSION['user_id'];
+
+        // Get event details (includes creator_name, role_name, drama_name)
+        $data['event'] = $schedule_model ? $schedule_model->getEventById($event_id) : null;
+
+        // Verify the event belongs to the requested drama
+        if (!$data['event'] || (int)$data['event']->drama_id !== (int)$drama_id) {
+            $_SESSION['message'] = 'Event not found or access denied.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/artistdashboard/view_drama?drama_id=" . (int)$drama_id);
+            exit;
+        }
+
+        // Get drama info
+        $data['drama'] = $drama_model->getDramaById($drama_id);
+
+        // Get artist's own role in this drama
+        $data['my_role'] = $role_model ? $role_model->getArtistRoleInDrama($user_id, $drama_id) : null;
+
+        $this->view('artist_event_detail', $data);
     }
 }

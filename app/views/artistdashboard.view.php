@@ -30,7 +30,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     <aside class="sidebar">
         <div class="logo">
             <h2>🎭</h2>
-            <span>Rangamadala</span>
         </div>
         <ul class="menu">
             <li class="active">

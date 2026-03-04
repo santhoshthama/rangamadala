@@ -306,6 +306,96 @@ class M_schedule {
         }
     }
 
+    // ─── ARTIST VIEW METHODS ────────────────────────────────────────────
+
+    /**
+     * Get upcoming rehearsals, performances & meetings for a drama (artist view)
+     * Excludes interviews (private to director) and cancelled events
+     */
+    public function getUpcomingSchedulesForArtist($drama_id) {
+        try {
+            $this->db->query("SELECT s.*, r.role_name
+                             FROM drama_schedules s
+                             LEFT JOIN drama_roles r ON s.role_id = r.id
+                             WHERE s.drama_id = :drama_id
+                               AND s.scheduled_date >= CURDATE()
+                               AND s.status NOT IN ('cancelled')
+                               AND s.event_type IN ('rehearsal', 'performance', 'meeting')
+                             ORDER BY s.scheduled_date ASC, s.start_time ASC");
+            $this->db->bind(':drama_id', $drama_id);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in getUpcomingSchedulesForArtist: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get past rehearsals, performances & meetings for a drama (artist history)
+     */
+    public function getPastSchedulesForArtist($drama_id) {
+        try {
+            $this->db->query("SELECT s.*, r.role_name
+                             FROM drama_schedules s
+                             LEFT JOIN drama_roles r ON s.role_id = r.id
+                             WHERE s.drama_id = :drama_id
+                               AND (s.scheduled_date < CURDATE() OR s.status IN ('completed', 'cancelled'))
+                               AND s.event_type IN ('rehearsal', 'performance', 'meeting')
+                             ORDER BY s.scheduled_date DESC, s.start_time DESC");
+            $this->db->bind(':drama_id', $drama_id);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in getPastSchedulesForArtist: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get upcoming interview schedule for a specific artist in a drama
+     */
+    public function getArtistInterviews($artist_id, $drama_id) {
+        try {
+            $this->db->query("SELECT ra.id AS application_id, ra.interview_at, ra.interview_status,
+                                     ra.interview_notes, r.role_name, r.id AS role_id
+                             FROM role_applications ra
+                             INNER JOIN drama_roles r ON ra.role_id = r.id
+                             WHERE ra.artist_id = :artist_id
+                               AND r.drama_id = :drama_id
+                               AND ra.interview_at IS NOT NULL
+                               AND ra.interview_at >= NOW()
+                             ORDER BY ra.interview_at ASC");
+            $this->db->bind(':artist_id', $artist_id);
+            $this->db->bind(':drama_id', $drama_id);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in getArtistInterviews: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Count upcoming events by type for artist stats display
+     */
+    public function getArtistScheduleStats($drama_id) {
+        try {
+            $this->db->query("SELECT 
+                SUM(CASE WHEN event_type = 'rehearsal' THEN 1 ELSE 0 END) AS upcoming_rehearsals,
+                SUM(CASE WHEN event_type = 'performance' THEN 1 ELSE 0 END) AS upcoming_performances,
+                SUM(CASE WHEN event_type = 'meeting' THEN 1 ELSE 0 END) AS upcoming_meetings,
+                COUNT(*) AS total_upcoming
+                FROM drama_schedules
+                WHERE drama_id = :drama_id
+                  AND scheduled_date >= CURDATE()
+                  AND status NOT IN ('cancelled')
+                  AND event_type IN ('rehearsal', 'performance', 'meeting')");
+            $this->db->bind(':drama_id', $drama_id);
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log("Error in getArtistScheduleStats: " . $e->getMessage());
+            return null;
+        }
+    }
+
     // ─── STATISTICS ─────────────────────────────────────────────────────
 
     /**

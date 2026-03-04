@@ -96,20 +96,20 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
         <!-- My Role Card (if assigned) -->
         <?php if (isset($my_role) && $my_role): ?>
-        <div class="card-section" style="background: linear-gradient(135deg, #ffc107, #e0a800); color: #1f1f1f; margin-bottom: 30px;">
+        <div class="card-section" style="background: linear-gradient(135deg, #ba8e23, #a0781e); color: #fff; margin-bottom: 30px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                 <div style="flex: 1;">
-                    <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700; color: #1f1f1f;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700; color: #fff;">
                         <i class="fas fa-star"></i> Your Role: <?= esc($my_role->role_name) ?>
                     </h2>
-                    <p style="margin: 0; font-size: 16px; line-height: 1.5; color: #1f1f1f;">
+                    <p style="margin: 0; font-size: 16px; line-height: 1.5; color: #fff;">
                         <strong>Type:</strong> <?= esc(ucfirst($my_role->role_type)) ?>
                         <?php if (!empty($my_role->salary)): ?>
                         | <strong>Salary:</strong> LKR <?= number_format($my_role->salary) ?>
                         <?php endif; ?>
                     </p>
                     <?php if (!empty($my_role->role_description)): ?>
-                    <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px; color: #1f1f1f;">
+                    <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px; color: #fff;">
                         <?= esc($my_role->role_description) ?>
                     </p>
                     <?php endif; ?>
@@ -231,32 +231,206 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <!-- Schedule/Rehearsal Information -->
                     <div class="card-section" style="margin-top: 30px;">
                         <h3>
-                            <span><i class="fas fa-calendar-alt"></i> Schedule & Rehearsals</span>
+                            <span><i class="fas fa-calendar-alt"></i> Upcoming Schedule & Rehearsals</span>
                         </h3>
-                        
-                        <?php if (empty($schedules)): ?>
+
+                        <?php
+                        // Prepare variables
+                        $schedules = isset($schedules) ? $schedules : [];
+                        $past_schedules = isset($past_schedules) ? $past_schedules : [];
+                        $my_interviews = isset($my_interviews) ? $my_interviews : [];
+                        $schedule_stats = isset($schedule_stats) ? $schedule_stats : null;
+                        ?>
+
+                        <?php if ($schedule_stats && (int)$schedule_stats->total_upcoming > 0): ?>
+                        <!-- Mini Stats -->
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px;">
+                            <?php if ((int)$schedule_stats->upcoming_rehearsals > 0): ?>
+                            <div style="background: linear-gradient(135deg, #007bff, #0056b3); color: #fff; padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 90px;">
+                                <strong style="font-size: 20px;"><?= (int)$schedule_stats->upcoming_rehearsals ?></strong>
+                                <div style="font-size: 11px; opacity: 0.9;">Rehearsals</div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if ((int)$schedule_stats->upcoming_performances > 0): ?>
+                            <div style="background: linear-gradient(135deg, #ba8e23, #a0781e); color: #fff; padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 90px;">
+                                <strong style="font-size: 20px;"><?= (int)$schedule_stats->upcoming_performances ?></strong>
+                                <div style="font-size: 11px; opacity: 0.9;">Performances</div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if ((int)$schedule_stats->upcoming_meetings > 0): ?>
+                            <div style="background: linear-gradient(135deg, #ffc107, #d39e00); color: #fff; padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 90px;">
+                                <strong style="font-size: 20px;"><?= (int)$schedule_stats->upcoming_meetings ?></strong>
+                                <div style="font-size: 11px; opacity: 0.9;">Meetings</div>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if (empty($schedules) && empty($my_interviews)): ?>
                             <div class="view-only-notice" style="margin-top: 15px;">
                                 <i class="fas fa-info-circle"></i>
-                                The director hasn't added any rehearsal schedules yet.
+                                No upcoming rehearsals or events scheduled yet.
                             </div>
                         <?php else: ?>
+
+                            <!-- Upcoming Interview (if any) -->
+                            <?php if (!empty($my_interviews)): ?>
+                            <h4 style="margin: 16px 0 10px; color: var(--brand); font-size: 15px;">
+                                <i class="fas fa-user-check"></i> Your Interviews
+                            </h4>
                             <ul>
-                                <?php foreach ($schedules as $schedule): ?>
-                                    <li>
-                                        <div>
-                                            <strong><?= date('M d, Y', strtotime($schedule->date)) ?> at <?= esc($schedule->time) ?></strong>
-                                            <div class="request-info">
-                                                Venue: <?= esc($schedule->venue) ?>
-                                                <?php if (!empty($schedule->details)): ?>
-                                                    <br><?= esc($schedule->details) ?>
-                                                <?php endif; ?>
-                                            </div>
+                                <?php foreach ($my_interviews as $interview): ?>
+                                <li>
+                                    <div>
+                                        <strong style="color: #28a745;">
+                                            <i class="fas fa-user-check"></i> 
+                                            Interview for: <?= esc($interview->role_name) ?>
+                                        </strong>
+                                        <div class="request-info">
+                                            <i class="fas fa-clock"></i> 
+                                            <?= date('M d, Y \a\t h:i A', strtotime($interview->interview_at)) ?>
+                                            <?php if (!empty($interview->interview_notes)): ?>
+                                                <br><i class="fas fa-sticky-note"></i> <?= esc($interview->interview_notes) ?>
+                                            <?php endif; ?>
                                         </div>
-                                    </li>
+                                    </div>
+                                    <div>
+                                        <span class="status-badge <?= $interview->interview_status === 'confirmed' ? 'assigned' : 'pending' ?>">
+                                            <?= esc(ucfirst($interview->interview_status ?? 'Pending')) ?>
+                                        </span>
+                                    </div>
+                                </li>
                                 <?php endforeach; ?>
                             </ul>
+                            <?php endif; ?>
+
+                            <!-- Upcoming Rehearsals / Performances / Meetings -->
+                            <?php if (!empty($schedules)): ?>
+                            <h4 style="margin: 16px 0 10px; color: var(--ink); font-size: 15px;">
+                                <i class="fas fa-calendar-day"></i> Upcoming Events
+                            </h4>
+                            <ul>
+                                <?php foreach ($schedules as $schedule): ?>
+                                <li>
+                                    <div style="flex: 1;">
+                                        <strong>
+                                            <?php
+                                            // Event type icon
+                                            $typeIcons = [
+                                                'rehearsal' => 'fa-theater-masks',
+                                                'performance' => 'fa-star',
+                                                'meeting' => 'fa-users',
+                                            ];
+                                            $icon = $typeIcons[$schedule->event_type] ?? 'fa-calendar';
+                                            ?>
+                                            <i class="fas <?= $icon ?>"></i> 
+                                            <?= esc($schedule->event_title) ?>
+                                        </strong>
+                                        <div class="request-info">
+                                            <i class="fas fa-calendar"></i> 
+                                            <?= date('M d, Y (l)', strtotime($schedule->scheduled_date)) ?>
+                                            &nbsp;|&nbsp;
+                                            <i class="fas fa-clock"></i> 
+                                            <?= date('h:i A', strtotime($schedule->start_time)) ?> 
+                                            - <?= date('h:i A', strtotime($schedule->end_time)) ?>
+                                            <br>
+                                            <i class="fas fa-map-marker-alt"></i> 
+                                            <strong>Venue:</strong> <?= esc($schedule->venue) ?>
+                                            <?php if (!empty($schedule->event_description)): ?>
+                                                <br><i class="fas fa-info-circle"></i> <?= esc($schedule->event_description) ?>
+                                            <?php endif; ?>
+                                            <?php if (!empty($schedule->notes)): ?>
+                                                <br><i class="fas fa-sticky-note"></i> <?= esc($schedule->notes) ?>
+                                            <?php endif; ?>
+                                            <?php if (!empty($schedule->role_name)): ?>
+                                                <br><i class="fas fa-user-tag"></i> Role: <?= esc($schedule->role_name) ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+                                        <?php
+                                        $typeBadgeColors = [
+                                            'rehearsal' => 'background: #007bff; color: #fff;',
+                                            'performance' => 'background: #ba8e23; color: #fff;',
+                                            'meeting' => 'background: #ffc107; color: #333;',
+                                        ];
+                                        $statusBadge = [
+                                            'scheduled' => 'pending',
+                                            'confirmed' => 'assigned',
+                                            'completed' => '',
+                                        ];
+                                        ?>
+                                        <span class="status-badge" style="<?= $typeBadgeColors[$schedule->event_type] ?? '' ?>; font-size: 11px; padding: 3px 10px; border-radius: 12px;">
+                                            <?= esc(ucfirst($schedule->event_type)) ?>
+                                        </span>
+                                        <span class="status-badge <?= $statusBadge[$schedule->status] ?? 'pending' ?>" style="font-size: 11px;">
+                                            <?= esc(ucfirst($schedule->status)) ?>
+                                        </span>
+                                        <a href="<?= ROOT ?>/artistdashboard/event_detail?event_id=<?= (int)$schedule->id ?>&drama_id=<?= (int)$drama->id ?>" 
+                                           class="btn btn-primary" 
+                                           style="font-size: 13px; padding: 8px 18px; border-radius: 8px; text-decoration: none; margin-top: 4px; font-weight: 700; letter-spacing: 0.3px;">
+                                            <i class="fas fa-eye"></i> View Details
+                                        </a>
+                                    </div>
+                                </li>
+                                <?php endforeach; ?>
+                            </ul>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
+
+                    <!-- Past Events History -->
+                    <?php if (!empty($past_schedules)): ?>
+                    <div class="card-section" style="margin-top: 30px;">
+                        <h3>
+                            <span><i class="fas fa-history"></i> Past Events</span>
+                        </h3>
+                        <ul>
+                            <?php foreach ($past_schedules as $pastEvt): ?>
+                            <li style="opacity: 0.75;">
+                                <div style="flex: 1;">
+                                    <strong>
+                                        <?php
+                                        $pIcon = [
+                                            'rehearsal' => 'fa-theater-masks',
+                                            'performance' => 'fa-star',
+                                            'meeting' => 'fa-users',
+                                        ];
+                                        ?>
+                                        <i class="fas <?= $pIcon[$pastEvt->event_type] ?? 'fa-calendar' ?>"></i>
+                                        <?= esc($pastEvt->event_title) ?>
+                                    </strong>
+                                    <div class="request-info">
+                                        <i class="fas fa-calendar"></i> 
+                                        <?= date('M d, Y', strtotime($pastEvt->scheduled_date)) ?>
+                                        &nbsp;|&nbsp;
+                                        <i class="fas fa-clock"></i> 
+                                        <?= date('h:i A', strtotime($pastEvt->start_time)) ?> 
+                                        - <?= date('h:i A', strtotime($pastEvt->end_time)) ?>
+                                        <br>
+                                        <i class="fas fa-map-marker-alt"></i> <?= esc($pastEvt->venue) ?>
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+                                    <?php
+                                    $pastStatusStyle = '';
+                                    if ($pastEvt->status === 'completed') $pastStatusStyle = 'background: #6c757d; color: #fff;';
+                                    if ($pastEvt->status === 'cancelled') $pastStatusStyle = 'background: #dc3545; color: #fff;';
+                                    ?>
+                                    <span class="status-badge" style="<?= $pastStatusStyle ?>; font-size: 11px; padding: 3px 10px; border-radius: 12px;">
+                                        <?= esc(ucfirst($pastEvt->status)) ?>
+                                    </span>
+                                    <a href="<?= ROOT ?>/artistdashboard/event_detail?event_id=<?= (int)$pastEvt->id ?>&drama_id=<?= (int)$drama->id ?>" 
+                                       class="btn btn-secondary" 
+                                       style="font-size: 13px; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 700; letter-spacing: 0.3px;">
+                                        <i class="fas fa-eye"></i> Details
+                                    </a>
+                                </div>
+                            </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

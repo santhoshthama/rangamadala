@@ -28,39 +28,45 @@ $drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
         </div>
         <ul class="menu">
             <li>
-                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li class="active">
-                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-dollar-sign"></i>
                     <span>Services & Budget</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?= ROOT ?>/artistdashboard">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Profile</span>
                 </a>
             </li>
             <li>
