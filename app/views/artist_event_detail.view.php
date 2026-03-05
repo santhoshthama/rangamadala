@@ -121,12 +121,6 @@ if ($event) {
                     <span>Profile</span>
                 </a>
             </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
         </ul>
     </aside>
 
@@ -168,6 +162,9 @@ if ($event) {
                         <i class="fas <?= $evtType['icon'] ?>"></i> <?= $evtType['label'] ?>
                     </div>
                     <img src="<?= esc($profileImageSrc) ?>" alt="Artist Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                    <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
                 </div>
             </div>
 

@@ -97,6 +97,21 @@ function statusBadgeStyle($status) {
     if ($status === 'cancelled') return 'background: #dc3545; color: #fff;';
     return '';
 }
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -164,11 +179,6 @@ function statusBadgeStyle($status) {
                     <i class="fas fa-arrow-left"></i><span>Back to Profile</span>
                 </a>
             </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i><span>Logout</span>
-                </a>
-            </li>
         </ul>
     </aside>
 
@@ -184,13 +194,20 @@ function statusBadgeStyle($status) {
                 <span><?= esc($dramaName) ?></span>
                 <h2>Schedule Management</h2>
             </div>
-            <div class="header-controls" style="display: flex; gap: 10px;">
+            <div class="user--info">
                 <button class="btn btn-primary" onclick="openCreateModal('rehearsal')">
                     <i class="fas fa-theater-masks"></i> Schedule Rehearsal
                 </button>
                 <button class="btn btn-success" onclick="openCreateModal('interview')">
                     <i class="fas fa-user-check"></i> Schedule Interview
                 </button>
+                <div class="role-badge">
+                    <i class="fas fa-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 

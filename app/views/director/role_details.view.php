@@ -60,6 +60,21 @@ function groupByStatus(array $items, $statusKey = 'status') {
 
 $groupedApplications = groupByStatus($roleApplications, 'status');
 $groupedRequests = groupByStatus($roleRequests, 'status');
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,12 +117,27 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
             <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
             <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-dollar-sign"></i><span>Services & Budget</span></a></li>
             <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
-            <li><a href="<?= ROOT ?>/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
         </ul>
     </aside>
 
     <main class="main--content">
         <a class="back-button" href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-arrow-left"></i>Back to Manage Roles</a>
+
+        <div class="header--wrapper">
+            <div class="header--title">
+                <span><?= esc($drama->drama_name ?? 'Drama') ?></span>
+                <h2>Role Details</h2>
+            </div>
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="fas fa-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </div>
 
         <?php if (isset($_SESSION['message'])): ?>
             <div class="card" style="border-left: 4px solid var(--brand); background: rgba(186,142,35,0.1); color: var(--ink);">

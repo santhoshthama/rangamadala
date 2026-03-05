@@ -10,6 +10,21 @@ if (!isset($drama) && isset($data['drama'])) {
 $currentManager = $data['currentManager'] ?? null;
 $pendingRequests = $data['pendingRequests'] ?? [];
 $drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,12 +84,6 @@ $drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
                     <span>Back to Profile</span>
                 </a>
             </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
         </ul>
     </aside>
 
@@ -88,8 +97,17 @@ $drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
-                <h2>Production Manager</h2>
                 <span><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></span>
+                <h2>Production Manager</h2>
+            </div>
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="fas fa-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 

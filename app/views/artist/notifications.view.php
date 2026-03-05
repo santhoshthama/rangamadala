@@ -224,12 +224,6 @@ $typeConfig = [
                     <span>Browse Dramas</span>
                 </a>
             </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
         </ul>
     </aside>
 
@@ -253,6 +247,9 @@ $typeConfig = [
                     </a>
                 <?php endif; ?>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Artist Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 

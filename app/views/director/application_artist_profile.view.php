@@ -28,6 +28,21 @@ $pendingDecision = $applicationStatus === 'pending';
 $nameSource = $artist->full_name ?? 'A';
 $artistInitial = strtoupper((function_exists('mb_substr') ? mb_substr($nameSource, 0, 1) : substr($nameSource, 0, 1)) ?: 'A');
 $profileImage = !empty($artist->profile_image) ? ROOT . '/uploads/profile_images/' . $artist->profile_image : null;
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$directorImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $directorImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $directorImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $directorImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -77,7 +92,6 @@ $profileImage = !empty($artist->profile_image) ? ROOT . '/uploads/profile_images
             <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
             <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-dollar-sign"></i><span>Services & Budget</span></a></li>
             <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
-            <li><a href="<?= ROOT ?>/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
         </ul>
     </aside>
 
@@ -96,6 +110,19 @@ $profileImage = !empty($artist->profile_image) ? ROOT . '/uploads/profile_images
             <h1 style="margin: 6px 0 4px;">Application Review</h1>
             <p class="muted" style="max-width: 520px;">Review the artist profile, capture interview intent, and keep an audit trail before making a decision.</p>
         </header>
+
+        <div class="header--wrapper" style="margin-bottom: 20px;">
+            <div style="flex: 1;"></div>
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="fas fa-video"></i> Director
+                </div>
+                <img src="<?= esc($directorImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </div>
 
         <div class="page-grid">
             <section class="card">

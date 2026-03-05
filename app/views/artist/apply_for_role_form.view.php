@@ -1,3 +1,19 @@
+<?php
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +28,6 @@
     <aside class="sidebar">
         <div class="logo">
             <h2>🎭</h2>
-            <span>Rangamadala</span>
         </div>
         <ul class="menu">
             <li>
@@ -40,9 +55,9 @@
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                <a href="<?=ROOT?>/artistdashboard/notifications">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
                 </a>
             </li>
         </ul>
@@ -65,6 +80,10 @@
                 <div class="role-badge">
                     <i class="fas fa-star"></i> Artist
                 </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 

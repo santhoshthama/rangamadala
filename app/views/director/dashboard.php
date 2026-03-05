@@ -81,12 +81,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <span>Back to Profile</span>
                 </a>
             </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
         </ul>
     </aside>
 
@@ -112,6 +106,9 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     Director
                 </div>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 
