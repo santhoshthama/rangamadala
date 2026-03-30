@@ -7,6 +7,8 @@ if (!isset($drama) && isset($data['drama'])) {
     $drama = $data['drama'];
 }
 
+$dramaId = isset($drama->id) ? (int)$drama->id : (isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0);
+
 $formValues = [
     'drama_name' => $form_data['drama_name'] ?? ($drama->drama_name ?? ''),
     'certificate_number' => $form_data['certificate_number'] ?? ($drama->certificate_number ?? ''),
@@ -81,43 +83,43 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         </div>
         <ul class="menu">
             <li>
-                <a href="dashboard.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
-                <a href="drama_details.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
-                <a href="manage_roles.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
-                <a href="assign_managers.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
-                <a href="schedule_management.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
-                <a href="view_services_budget.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
-                <a href="../artist/profile.php">
+                <a href="<?= ROOT ?>/artistdashboard">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
@@ -127,7 +129,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php?drama_id=1" class="back-button">
+        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>

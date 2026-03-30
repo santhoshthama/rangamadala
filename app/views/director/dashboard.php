@@ -7,6 +7,8 @@ if (!isset($drama) && isset($data['drama'])) {
     $drama = $data['drama'];
 }
 
+$dramaId = isset($drama->id) ? (int)$drama->id : (isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0);
+
 // Get current user profile image
 $userModel = new M_universal_profile();
 $currentUser = $userModel->getUserById($_SESSION['user_id']);
@@ -40,37 +42,37 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         </div>
         <ul class="menu">
             <li class="active">
-                <a href="dashboard.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="drama_details.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
-                <a href="manage_roles.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
-                <a href="assign_managers.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
-                <a href="schedule_management.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
-                <a href="view_services_budget.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
@@ -86,7 +88,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="../artist/profile.php" class="back-button">
+        <a href="<?= ROOT ?>/artistdashboard" class="back-button">
             <i class="fas fa-arrow-left"></i>
             Back to Profile
         </a>
@@ -134,22 +136,22 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
         <!-- Navigation Tab Bar -->
         <div class="nav-tabs-bar">
-            <a href="dashboard.php?drama_id=1" class="nav-tab-btn active">
+            <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="nav-tab-btn active">
                 <i class="fas fa-home"></i> Dashboard
             </a>
-            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-film"></i>  Drama Details
             </a>
-            <a href="manage_roles.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-users"></i> Artist Roles
             </a>
-            <a href="assign_managers.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-user-tie"></i> Production Manager
             </a>
-            <a href="schedule_management.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-calendar-alt"></i> Schedule
             </a>
-            <a href="view_services_budget.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-dollar-sign"></i> Services & Budget
             </a>
         </div>
@@ -162,7 +164,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="card-section">
                         <h3>
                             <span>Drama Overview</span>
-                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
                                 <i class="fas fa-eye"></i>
                                 View Details
                             </a>
@@ -213,7 +215,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <div class="card-section">
                             <h3>
                                 <span>Assigned Artists (<?= count($assignedArtists) ?>)</span>
-                                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
                                     <i class="fas fa-users"></i>
                                     Manage Roles
                                 </a>
@@ -241,7 +243,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="card-section">
                         <h3>
                             <span>Services & Budget Overview</span>
-                            <a href="view_services_budget.php?drama_id=1" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">View Details</a>
+                            <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">View Details</a>
                         </h3>
                         <div class="view-only-notice" style="margin-top: 15px;">
                             <i class="fas fa-info-circle"></i>
@@ -274,7 +276,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         });
         
         // Special case: if on dashboard.php, mark dashboard tab as active
-        if (currentPage === 'dashboard.php' || currentPage === '') {
+        if (currentPage === 'dashboard.php' || currentPage === 'dashboard' || currentPage === '') {
             navTabs[0]?.classList.add('active');
         }
         

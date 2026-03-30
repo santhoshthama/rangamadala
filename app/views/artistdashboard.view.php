@@ -63,13 +63,13 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/classes">
+                <a href="<?=ROOT?>/#drama-class">
                     <i class="fas fa-chalkboard-teacher"></i>
                     <span>Classes</span>
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/portfolio">
+                <a href="<?=ROOT?>/artistprofile">
                     <i class="fas fa-briefcase"></i>
                     <span>Portfolio</span>
                 </a>
