@@ -89,7 +89,11 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                 <div class="role-badge">
                     <i class="fas fa-star"></i> Artist
                 </div>
-<img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.jpg'">            </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
         </div>
 
         <?php if (isset($_SESSION['message'])): ?>
