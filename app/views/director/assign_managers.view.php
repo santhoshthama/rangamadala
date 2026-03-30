@@ -10,6 +10,21 @@ if (!isset($drama) && isset($data['drama'])) {
 $currentManager = $data['currentManager'] ?? null;
 $pendingRequests = $data['pendingRequests'] ?? [];
 $drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,45 +43,45 @@ $drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
         </div>
         <ul class="menu">
             <li>
-                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li class="active">
-                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $drama_id ?>">
+                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($drama_id) ?>">
                     <i class="fas fa-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                <a href="<?= ROOT ?>/artistdashboard">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Profile</span>
                 </a>
             </li>
         </ul>
@@ -82,8 +97,17 @@ $drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
-                <h2>Production Manager</h2>
                 <span><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></span>
+                <h2>Production Manager</h2>
+            </div>
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="fas fa-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 
@@ -125,7 +149,7 @@ $drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
                             <?php if ($currentManager): ?>
                                 <li>
                                     <div>
-                                        <strong><?= esc($currentManager->full_name) ?></strong>
+                                        <strong><?= esc($currentManager->manager_name) ?></strong>
                                         <div class="request-info">
                                             Email: <?= esc($currentManager->email) ?> | Phone: <?= esc($currentManager->phone ?? 'N/A') ?>
                                         </div>

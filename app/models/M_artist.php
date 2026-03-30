@@ -21,7 +21,7 @@ class M_artist extends M_signup {
             return false;
         }
 
-        $allowed = ['full_name', 'phone', 'profile_image', 'years_experience'];
+        $allowed = ['full_name', 'phone', 'profile_image', 'years_experience', 'bio', 'location', 'website'];
         $setParts = [];
         $bindValues = [];
 
@@ -39,6 +39,7 @@ class M_artist extends M_signup {
 
         try {
             $sql = 'UPDATE users SET ' . implode(', ', $setParts) . " WHERE id = :user_id AND role = 'artist'";
+            
             $this->db->query($sql);
 
             foreach ($bindValues as $param => $value) {
@@ -106,11 +107,13 @@ class M_artist extends M_signup {
                 return true;
             }
 
+            // Check if role is full
             if ((int)$request->positions_filled >= (int)$request->positions_available) {
                 $this->db->rollBack();
                 return false;
             }
 
+            // Create role assignment
             $this->db->query("INSERT INTO role_assignments (role_id, artist_id, assigned_by)
                               VALUES (:role_id, :artist_id, :assigned_by)");
             $this->db->bind(':role_id', $request->role_id);
@@ -118,6 +121,7 @@ class M_artist extends M_signup {
             $this->db->bind(':assigned_by', $request->director_id);
             $this->db->execute();
 
+            // Update role positions
             $this->db->query("UPDATE drama_roles 
                               SET positions_filled = positions_filled + 1,
                                   status = CASE WHEN positions_filled + 1 >= positions_available THEN 'filled' ELSE status END
@@ -125,11 +129,33 @@ class M_artist extends M_signup {
             $this->db->bind(':role_id', $request->role_id);
             $this->db->execute();
 
+            // Accept this artist's request
             $this->db->query("UPDATE role_requests 
                               SET status = 'accepted', responded_at = NOW()
                               WHERE id = :request_id");
             $this->db->bind(':request_id', $request_id);
             $this->db->execute();
+
+            // Auto-reject other pending requests if role is now full
+            $newPositionsFilled = (int)$request->positions_filled + 1;
+            $positionsAvailable = (int)$request->positions_available;
+            
+            if ($newPositionsFilled >= $positionsAvailable) {
+                error_log("Role {$request->role_id} is now full. Auto-rejecting other pending requests.");
+                
+                $this->db->query("UPDATE role_requests 
+                                  SET status = 'cancelled', responded_at = NOW()
+                                  WHERE role_id = :role_id 
+                                  AND status IN ('pending', 'interview')
+                                  AND id != :current_request_id");
+                $this->db->bind(':role_id', $request->role_id);
+                $this->db->bind(':current_request_id', $request_id);
+                $affectedRows = $this->db->execute();
+                
+                if ($affectedRows) {
+                    error_log("Auto-cancelled {$affectedRows} pending request(s) for filled role {$request->role_id}");
+                }
+            }
 
             $this->db->commit();
             return true;
@@ -153,7 +179,10 @@ class M_artist extends M_signup {
                              NULL AS years_experience,
                              NULL AS request_status, NULL AS request_id, NULL AS assignment_status
                       FROM users u
-                      WHERE u.role IS NOT NULL AND LOWER(TRIM(u.role)) = 'artist'";
+                      WHERE u.role IS NOT NULL AND LOWER(TRIM(u.role)) = 'artist'
+                      AND u.id NOT IN (
+                          SELECT artist_id FROM role_assignments WHERE role_id = :role_id
+                      )";
 
         if ($searchTerm !== '') {
             $query .= " AND LOWER(u.full_name) LIKE :search_name";
@@ -163,6 +192,7 @@ class M_artist extends M_signup {
 
         try {
             $this->db->query($query);
+            $this->db->bind(':role_id', $role_id);
 
             if ($searchTerm !== '') {
                 $this->db->bind(':search_name', '%' . strtolower($searchTerm) . '%');

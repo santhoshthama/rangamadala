@@ -15,15 +15,9 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="dashboard.php">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="manage_dramas.php">
-                    <i class="fas fa-film"></i>
-                    <span>My Dramas</span>
+                <a href="<?= ROOT ?>/artistdashboard">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Dashboard</span>
                 </a>
             </li>
             <li class="active">
@@ -33,27 +27,9 @@
                 </a>
             </li>
             <li>
-                <a href="search_artists.php">
-                    <i class="fas fa-search"></i>
-                    <span>Search Artists</span>
-                </a>
-            </li>
-            <li>
-                <a href="role_management.php">
-                    <i class="fas fa-users"></i>
-                    <span>Role Management</span>
-                </a>
-            </li>
-            <li>
-                <a href="schedule_management.php">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>Schedule</span>
-                </a>
-            </li>
-            <li>
-                <a href="assign_managers.php">
-                    <i class="fas fa-user-tie"></i>
-                    <span>Assign Managers</span>
+                <a href="<?= ROOT ?>/profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span>My Profile</span>
                 </a>
             </li>
             <li>

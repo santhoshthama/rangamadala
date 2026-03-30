@@ -10,6 +10,21 @@ $searchTerm = isset($searchTerm) ? (string)$searchTerm : '';
 $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 $roleId = isset($role->id) ? (int)$role->id : (int)($_GET['role_id'] ?? 0);
 $roleName = $role->role_name ?? 'Role';
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -26,6 +41,8 @@ $roleName = $role->role_name ?? 'Role';
         label { font-weight: 600; margin-bottom: 6px; }
         .artist-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
         .artist-card { background: #fff; border-radius: 16px; border: 1px solid var(--border); padding: 20px; box-shadow: var(--shadow-xs, 0 2px 10px rgba(15,23,42,.05)); display: flex; flex-direction: column; gap: 12px; }
+        .artist-card-header { display: flex; align-items: center; gap: 14px; }
+        .artist-avatar { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 2px solid var(--border); }
         .artist-status { font-size: 12px; color: var(--muted); }
         .badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
         .badge-available { background: rgba(76,175,80,.15); color: #256029; }
@@ -50,15 +67,25 @@ $roleName = $role->role_name ?? 'Role';
         <div class="logo"><h2>🎭</h2></div>
         <ul class="menu">
             <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-users"></i><span>Artist Roles</span></a></li>
-            <li class="active"><a href="#"><i class="fas fa-user-search"></i><span>Find Artists</span></a></li>
-            <li><a href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>"><i class="fas fa-mask"></i><span><?= esc($roleName) ?></span></a></li>
+            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-film"></i><span>Drama Details</span></a></li>
+            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-users"></i><span>Artist Roles</span></a></li>
+            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-user-tie"></i><span>Production Manager</span></a></li>
+            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
+            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-dollar-sign"></i><span>Services & Budget</span></a></li>
             <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
         </ul>
     </aside>
 
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>" class="back-button"><i class="fas fa-arrow-left"></i>Back to Role</a>
+        <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="fas fa-arrow-left"></i>Back to Manage Roles</a>
+
+        <?php if (isset($_SESSION['message'])): ?>
+            <div class="message <?= $_SESSION['message_type'] ?? 'info' ?>" style="padding: 16px; border-radius: 12px; margin-bottom: 20px; background: <?= ($_SESSION['message_type'] ?? '') === 'success' ? '#d4edda' : (($_SESSION['message_type'] ?? '') === 'error' ? '#f8d7da' : '#d1ecf1') ?>; color: <?= ($_SESSION['message_type'] ?? '') === 'success' ? '#155724' : (($_SESSION['message_type'] ?? '') === 'error' ? '#721c24' : '#0c5460') ?>; border: 1px solid <?= ($_SESSION['message_type'] ?? '') === 'success' ? '#c3e6cb' : (($_SESSION['message_type'] ?? '') === 'error' ? '#f5c6cb' : '#bee5eb') ?>;">
+                <i class="fas fa-<?= ($_SESSION['message_type'] ?? '') === 'success' ? 'check-circle' : (($_SESSION['message_type'] ?? '') === 'error' ? 'exclamation-circle' : 'info-circle') ?>"></i>
+                <?= esc($_SESSION['message']) ?>
+            </div>
+            <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+        <?php endif; ?>
 
         <div class="header--wrapper">
             <div class="header--title">
@@ -66,7 +93,28 @@ $roleName = $role->role_name ?? 'Role';
                 <h2>Invite Artists for "<?= esc($roleName) ?>"</h2>
                 <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">Browse artists, review experience, and send collaboration requests.</p>
             </div>
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="fas fa-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
         </div>
+
+        <?php 
+        $isRoleFull = isset($role->positions_filled, $role->positions_available) && 
+                      (int)$role->positions_filled >= (int)$role->positions_available;
+        ?>
+        <?php if ($isRoleFull): ?>
+            <div style="padding: 16px 20px; margin-bottom: 20px; background: rgba(244,67,54,0.1); border-left: 4px solid #f44336; border-radius: 8px; color: #721c24;">
+                <i class="fas fa-exclamation-triangle" style="color: #d32f2f; margin-right: 10px;"></i>
+                <strong>All positions filled for this role.</strong> You cannot send new requests until you remove a currently assigned artist. 
+                <a href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>" style="color: #d32f2f; text-decoration: underline; margin-left: 8px;">View assigned artists</a>
+            </div>
+        <?php endif; ?>
 
         <section class="search-card">
             <form class="search-form" method="get" action="<?= ROOT ?>/director/search_artists">
@@ -103,16 +151,32 @@ $roleName = $role->role_name ?? 'Role';
                         $assignmentStatus = strtolower($artist->assignment_status ?? '');
                         $isAssigned = $assignmentStatus === 'active';
                         $hasPendingRequest = in_array($requestStatus, ['pending','interview'], true);
+                        
+                        // Get artist profile image
+                        $artistImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+                        if (!empty($artist->profile_image)) {
+                            $imageValue = str_replace('\\', '/', $artist->profile_image);
+                            if (strpos($imageValue, '/') !== false) {
+                                $artistImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+                            } else {
+                                $artistImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+                            }
+                        } elseif (!empty($artist->nic_photo)) {
+                            $artistImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $artist->nic_photo), '/');
+                        }
                     ?>
                     <article class="artist-card">
-                        <div>
-                            <h3 style="margin: 0 0 6px; font-size: 20px;"><?= esc($artist->full_name ?? 'Artist') ?></h3>
-                            <div class="artist-status">
-                                <?php if (!empty($artist->years_experience)): ?>
-                                    Experience: <?= esc($artist->years_experience) ?> years
-                                <?php else: ?>
-                                    Experience: Not specified
-                                <?php endif; ?>
+                        <div class="artist-card-header">
+                            <img src="<?= esc($artistImageSrc) ?>" alt="<?= esc($artist->full_name ?? 'Artist') ?>" class="artist-avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 6px; font-size: 20px;"><?= esc($artist->full_name ?? 'Artist') ?></h3>
+                                <div class="artist-status">
+                                    <?php if (!empty($artist->years_experience)): ?>
+                                        Experience: <?= esc($artist->years_experience) ?> years
+                                    <?php else: ?>
+                                        Experience: Not specified
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
 
@@ -137,6 +201,8 @@ $roleName = $role->role_name ?? 'Role';
                                 <button type="button" class="btn btn-secondary" disabled><i class="fas fa-lock"></i>Assigned</button>
                             <?php elseif ($hasPendingRequest): ?>
                                 <button type="button" class="btn btn-secondary" disabled><i class="fas fa-hourglass-half"></i>Awaiting reply</button>
+                            <?php elseif ($isRoleFull): ?>
+                                <button type="button" class="btn btn-secondary" disabled title="All positions filled"><i class="fas fa-ban"></i>Role Full</button>
                             <?php else: ?>
                                 <form class="js-role-action" data-action="request" action="<?= ROOT ?>/director/send_role_request?drama_id=<?= esc($dramaId) ?>" method="POST" style="margin: 0;">
                                     <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
