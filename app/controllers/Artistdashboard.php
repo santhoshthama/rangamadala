@@ -6,8 +6,6 @@ class Artistdashboard
 
     public function index()
     {
-        // error_log("AWA AWA BADU AWA");
-        error_log(print_r($_SESSION, true));    
         // Check if user is logged in and is an artist
         if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
             header("Location: " . ROOT . "/login");
@@ -17,6 +15,7 @@ class Artistdashboard
 
         $artist_model = $this->getModel('M_artist');
         $drama_model = $this->getModel('M_drama');
+        $pm_model = $this->getModel('M_production_manager');
         
         $user_id = $_SESSION['user_id'];
         
@@ -35,18 +34,23 @@ class Artistdashboard
         // Get pending role requests for this artist
         $data['role_requests'] = $artist_model->get_pending_role_requests($user_id);
         
+        // Get pending PM requests for this artist
+        $data['pm_requests'] = $pm_model ? $pm_model->getPendingRequestsForArtist($user_id) : [];
+        
         // Count statistics
         $data['stats'] = [
             'total_dramas' => count($data['dramas_as_director']) + count($data['dramas_as_manager']) + count($data['dramas_as_actor']),
             'as_director' => count($data['dramas_as_director']),
             'as_manager' => count($data['dramas_as_manager']),
             'as_actor' => count($data['dramas_as_actor']),
-            'pending_requests' => count($data['role_requests'])
+            'pending_requests' => count($data['role_requests']),
+            'pending_pm_requests' => count($data['pm_requests'])
         ];
         
         $this->view('artistdashboard', $data);
     }
     
+
     public function respond_to_request()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -55,7 +59,8 @@ class Artistdashboard
             
             if ($request_id && $response) {
                 $artist_model = $this->getModel('M_artist');
-                $result = $artist_model->respond_to_role_request($request_id, $response);
+                $user_id = $_SESSION['user_id'];
+                $result = $artist_model->respond_to_role_request($request_id, $user_id, $response);
                 
                 if ($result) {
                     $_SESSION['message'] = $response === 'accept' ? 'Role request accepted successfully!' : 'Role request declined.';
@@ -64,6 +69,35 @@ class Artistdashboard
                     $_SESSION['message'] = 'Failed to process request.';
                     $_SESSION['message_type'] = 'error';
                 }
+            }
+            
+            header("Location: " . ROOT . "/artistdashboard");
+            exit;
+        }
+    }
+
+    public function respond_to_manager_request()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $request_id = isset($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
+            $response = $_POST['response'] ?? null; // 'accept' or 'reject'
+            
+            if ($request_id && $response) {
+                $pm_model = $this->getModel('M_production_manager');
+                $user_id = $_SESSION['user_id'];
+                
+                if ($response === 'accept') {
+                    $result = $pm_model->acceptRequest($request_id, $user_id);
+                } else {
+                    $response_note = $_POST['response_note'] ?? null;
+                    $result = $pm_model->rejectRequest($request_id, $user_id, $response_note);
+                }
+                
+                $_SESSION['message'] = $result['message'];
+                $_SESSION['message_type'] = $result['success'] ? 'success' : 'error';
+            } else {
+                $_SESSION['message'] = 'Invalid request.';
+                $_SESSION['message_type'] = 'error';
             }
             
             header("Location: " . ROOT . "/artistdashboard");

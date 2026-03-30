@@ -3,16 +3,23 @@ trait Controller
 {
     public function view($name,$data=[])
     {
-        $base = "../app/views/" . ltrim($name, '/');
-        $candidates = [$base . ".view.php", $base . ".php"];
-
-        foreach ($candidates as $filename) {
-            if (file_exists($filename)) {
-                require $filename;
-                return;
-            }
+        // First try .view.php extension
+        $filename = "../app/views/" . $name . ".view.php";
+        if (file_exists($filename)) {
+               extract($data);
+               require $filename;
+               return;
         }
-
+        
+        // Fallback to .php extension
+        $filename = "../app/views/" . $name . ".php";
+        if (file_exists($filename)) {
+               extract($data);
+               require $filename;
+               return;
+        }
+        
+        // If neither exists, show 404
         require "../app/views/_404.view.php";
     }
     public function getModel($name)

@@ -24,30 +24,24 @@ class BrowseDramas
 
         $data = [
             'dramas' => [],
-            'categories' => [],
             'search' => '',
-            'category_filter' => '',
             'total_dramas' => 0,
             'page' => $page,
             'per_page' => $perPage,
             'total_pages' => 1,
+            'sort' => 'latest',
         ];
 
         $search = $_GET['search'] ?? '';
-        $category = $_GET['category'] ?? '';
         $sort = $_GET['sort'] ?? 'latest';
         $data['search'] = $search;
-        $data['category_filter'] = $category;
         $data['sort'] = $sort;
 
-        // Categories for dropdown
-        $data['categories'] = $this->model ? $this->model->getAllCategories() : [];
-
         if ($this->model) {
-            $total = $this->model->countDramas($search, $category);
+            $total = $this->model->countDramas($search);
             $data['total_dramas'] = (int)$total;
             $data['total_pages'] = max(1, (int)ceil($total / $perPage));
-            $data['dramas'] = $this->model->getDramasPaginated($search, $category, $perPage, $offset, $sort);
+            $data['dramas'] = $this->model->getDramasPaginated($search, $perPage, $offset, $sort);
         }
 
         $this->view('browse_dramas', $data);

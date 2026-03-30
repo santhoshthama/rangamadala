@@ -22,14 +22,6 @@ class Login
 
             // pass the data to the model for authentication
             $user = $this->model->authenticate($email, $password);
-            
-            
-            
-            // error_log(print_r($user, true)); // Debugging line
-            
-            
-            
-            
             if ($user) {
                 // set session and redirect to dashboard or home page
                 $_SESSION['user_id'] = $user->id;
@@ -37,7 +29,7 @@ class Login
                 $_SESSION['full_name'] = $user->full_name;
                 $_SESSION['email'] = $user->email;
                 $_SESSION['phone'] = $user->phone;
-                $_SESSION['role'] = $user->role;
+                $_SESSION['user_role'] = $user->role;
 
                 // Redirect based on user role
                 if ($user->role === 'admin') {
@@ -46,7 +38,7 @@ class Login
                 } elseif ($user->role === 'artist') {
                     header("Location: " . ROOT . "/ArtistDashboard");
                     // Temporary redirect for testing
-                    // header("Location: " . ROOT . "/BrowseServiceProviders");
+                    //header("Location: " . ROOT . "/BrowseServiceProviders");
                     exit;
                 } elseif ($user->role === 'service_provider') {
                     header("Location: " . ROOT . "/ServiceProviderDashboard");
@@ -65,7 +57,6 @@ class Login
             }
         }
 
-        // error_log("RENDERING LOGIN VIEW"); // Debugging line
         $this->view("login", $data);
     }
 }

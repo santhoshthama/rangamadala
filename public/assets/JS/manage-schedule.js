@@ -1,51 +1,30 @@
-// Mock data - Replace with backend API calls
-const serviceData = [
-    {
-        id: 1,
-        type: 'Sound System Setup',
-        provider: 'Sri Lanka Sound Services',
-        date: new Date(2025, 11, 22),
-        cost: 45000,
-        status: 'awaiting',
-        description: 'Professional sound system setup for main hall'
-    },
-    {
-        id: 2,
-        type: 'Professional Lighting',
-        provider: 'Colombo Lighting Studio',
-        date: new Date(2025, 11, 25),
-        cost: 65000,
-        status: 'accepted',
-        description: 'Stage lighting and color management'
-    },
-    {
-        id: 3,
-        type: 'Makeup & Costume',
-        provider: 'Elite Makeup Artistry',
-        date: new Date(2025, 12, 2),
-        cost: 35000,
-        status: 'paid',
-        description: 'Makeup application and costume fitting'
-    },
-    {
-        id: 4,
-        type: 'Theater Booking',
-        provider: 'Elphinstone Theatre',
-        date: new Date(2025, 12, 15),
-        cost: 150000,
-        status: 'theater',
-        description: 'Main theater booking for performance'
-    },
-    {
-        id: 5,
-        type: 'Dance Choreography',
-        provider: 'Dance Masters Studio',
-        date: new Date(2025, 11, 28),
-        cost: 40000,
-        status: 'accepted',
-        description: 'Professional dance choreography services'
-    }
-];
+// Dynamic data loaded from database via manage_schedule.php
+// The 'schedules' variable is populated from PHP in the view file
+let serviceData = [];
+
+// Convert database schedules to calendar format
+if (typeof schedules !== 'undefined' && Array.isArray(schedules)) {
+    serviceData = schedules.map(schedule => {
+        // Parse the scheduled date
+        const dateObj = schedule.scheduledDate ? new Date(schedule.scheduledDate) : new Date();
+        
+        return {
+            id: schedule.id || null,
+            type: schedule.serviceName || 'Service',
+            provider: schedule.venue || 'TBD',
+            date: dateObj,
+            cost: 0, // Cost should come from budget or service request
+            status: schedule.status === 'completed' ? 'paid' : schedule.status === 'in_progress' ? 'accepted' : 'awaiting',
+            description: schedule.notes || 'No description provided',
+            startTime: schedule.startTime || '',
+            endTime: schedule.endTime || ''
+        };
+    });
+    
+    console.log('Converted ' + serviceData.length + ' database schedules to calendar format');
+} else {
+    console.warn('No schedule data available from database');
+}
 
 let currentDate = new Date();
 let currentFilter = '';

@@ -454,11 +454,11 @@
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
-                <span>Sinhabahu</span>
+                <span><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></span>
                 <h2>Service Schedule Management</h2>
             </div>
             <div class="user--info">
-                <img src="../../assets/images/default-avatar.jpg" alt="Avatar">
+                <img src="<?= ROOT ?>/assets/images/default-avatar.jpg" alt="Avatar">
                 <span class="role-badge">
                     <i class="fas fa-user-tie"></i>
                     Production Manager
@@ -564,5 +564,25 @@
     </div>
 
     <script src="/Rangamadala/public/assets/JS/manage-schedule.js"></script>
+    <script>
+        // Initialize schedule data from database
+        const dramatId = <?= isset($_GET['drama_id']) ? intval($_GET['drama_id']) : '1' ?>;
+        const scheduleData = <?= isset($schedules) && is_array($schedules) ? json_encode($schedules) : '[]' ?>;
+        
+        // Convert PHP objects to JavaScript format if needed
+        const schedules = scheduleData.map(item => ({
+            id: item.id || null,
+            serviceName: item.service_name || 'Service',
+            scheduledDate: item.scheduled_date || '',
+            startTime: item.start_time || '',
+            endTime: item.end_time || '',
+            venue: item.venue || '',
+            status: item.status || 'scheduled',
+            notes: item.notes || ''
+        }));
+        
+        console.log('Loaded ' + schedules.length + ' schedules for drama ' + dramatId);
+        console.log('Schedules:', schedules);
+    </script>
 </body>
 </html>
