@@ -9,138 +9,504 @@ class M_service_request
         $this->db = new Database();
     }
 
-    /**
-     * Get all service requests for a specific drama
-     */
-    public function getServicesByDrama($drama_id)
-    {
-        $this->db->query("SELECT * FROM service_requests 
-                         WHERE drama_id = :drama_id 
-                         ORDER BY created_at DESC");
-        $this->db->bind(':drama_id', $drama_id);
-        $result = $this->db->resultSet();
-        return $result ? $result : [];
-    }
-
-    /**
-     * Get service requests by status for a drama
-     */
-    public function getServicesByStatus($drama_id, $status)
-    {
-        $this->db->query("SELECT * FROM service_requests 
-                         WHERE drama_id = :drama_id AND status = :status 
-                         ORDER BY created_at DESC");
-        $this->db->bind(':drama_id', $drama_id);
-        $this->db->bind(':status', $status);
-        $result = $this->db->resultSet();
-        return $result ? $result : [];
-    }
-
-    /**
-     * Count services by status
-     */
-    public function countServicesByStatus($drama_id, $status)
-    {
-        $this->db->query("SELECT COUNT(*) as count FROM service_requests 
-                         WHERE drama_id = :drama_id AND status = :status");
-        $this->db->bind(':drama_id', $drama_id);
-        $this->db->bind(':status', $status);
-        $result = $this->db->single();
-        return $result ? intval($result->count) : 0;
-    }
-
-    /**
-     * Get all service requests for a provider
-     */
-    public function getRequestsByProvider($provider_id)
-    {
-        $this->db->query("SELECT sr.*, d.drama_name, d.image_url,
-                         u.name as requester_name, u.email as requester_email 
-                         FROM service_requests sr
-                         JOIN dramas d ON sr.drama_id = d.id
-                         JOIN users u ON sr.created_by = u.id
-                         WHERE sr.service_provider_id = :provider_id 
-                         ORDER BY sr.created_at DESC");
-        $this->db->bind(':provider_id', $provider_id);
-        $result = $this->db->resultSet();
-        return $result ? $result : [];
-    }
-
-    /**
-     * Create a new service request
-     */
     public function createRequest($data)
     {
+        // Prepare service details JSON
+        $serviceDetailsJson = null;
+        if (!empty($data['service_details'])) {
+            $serviceDetailsJson = json_encode($this->filterServiceDetails($data['service_details']));
+        }
+
         $this->db->query("INSERT INTO service_requests (
-            drama_id, service_provider_id, service_type, status, 
-            request_date, required_date, budget_range, description, 
-            special_requirements, created_by
+            drama_id, provider_id, requested_by, requester_name, requester_email, requester_phone,
+            drama_name, service_type, service_required, start_date, end_date, budget, description, notes, service_details_json, status, created_at
         ) VALUES (
-            :drama_id, :service_provider_id, :service_type, :status,
-            :request_date, :required_date, :budget_range, :description,
-            :special_requirements, :created_by
+            :drama_id, :provider_id, :requested_by, :requester_name, :requester_email, :requester_phone,
+            :drama_name, :service_type, :service_required, :start_date, :end_date, :budget, :description, :notes, :service_details_json, :status, :created_at
         )");
 
-        $this->db->bind(':drama_id', $data['drama_id']);
-        $this->db->bind(':service_provider_id', $data['service_provider_id']);
-        $this->db->bind(':service_type', $data['service_type']);
-        $this->db->bind(':status', $data['status'] ?? 'pending');
-        $this->db->bind(':request_date', $data['request_date'] ?? date('Y-m-d'));
-        $this->db->bind(':required_date', $data['required_date'] ?? null);
-        $this->db->bind(':budget_range', $data['budget_range'] ?? null);
+        // Bind drama_id if provided (nullable)
+        $this->db->bind(':drama_id', isset($data['drama_id']) && $data['drama_id'] !== '' ? (int)$data['drama_id'] : null);
+        $this->db->bind(':provider_id', $data['provider_id']);
+        $this->db->bind(':requested_by', $data['requested_by'] ?? null);
+        $this->db->bind(':requester_name', $data['requester_name']);
+        $this->db->bind(':requester_email', $data['requester_email']);
+        $this->db->bind(':requester_phone', $data['requester_phone']);
+        $this->db->bind(':drama_name', $data['drama_name']);
+        $this->db->bind(':service_type', $data['service_type'] ?? null);
+        $this->db->bind(':service_required', $data['service_required'] ?? null);
+        $this->db->bind(':start_date', $data['start_date']);
+        $this->db->bind(':end_date', $data['end_date']);
+        $this->db->bind(':budget', $data['budget'] ?? null);
         $this->db->bind(':description', $data['description'] ?? null);
-        $this->db->bind(':special_requirements', $data['special_requirements'] ?? null);
-        $this->db->bind(':created_by', $data['created_by']);
+        $this->db->bind(':notes', $data['notes']);
+        $this->db->bind(':service_details_json', $serviceDetailsJson);
+        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':created_at', $data['created_at']);
 
         return $this->db->execute();
     }
 
     /**
-     * Update service request status
+     * Filter and extract only valid service detail keys
      */
+    private function filterServiceDetails($details_array)
+    {
+        $serviceDetails = [];
+        $serviceDetailKeys = [
+            // Theater Production
+            'theater_venue_type', 'theater_stage_proscenium', 'theater_stage_black_box', 
+            'theater_stage_open_floor', 'theater_stage_size', 'theater_num_days', 'theater_time', 
+            'theater_budget_range', 'theater_reference',
+            // Lighting
+            'lighting_stage_lighting', 'lighting_spotlights', 'lighting_custom_programming', 
+            'lighting_moving_heads', 'lighting_num_lights', 'lighting_effects', 'lighting_technician_needed',
+            'lighting_budget_range', 'lighting_additional_requirements', 'lighting_reference',
+            // Sound
+            'sound_pa_system', 'sound_microphones', 'sound_sound_mixing', 'sound_background_music',
+            'sound_special_effects', 'sound_additional_services', 'sound_budget_range', 'sound_reference',
+            // Video
+            'video_recording_type', 'video_duration', 'video_delivery_format', 'video_equipment',
+            'video_budget_range', 'video_reference',
+            // Set Design
+            'set_design_type', 'set_materials', 'set_dimensions', 'set_budget_range', 'set_reference',
+            // Costume
+            'costume_count', 'costume_style', 'costume_rental_custom', 'costume_budget_range', 'costume_reference',
+            // Makeup & Hair
+            'makeup_artist_count', 'makeup_session_length', 'makeup_special_effects', 
+            'makeup_budget_range', 'makeup_reference',
+            // Uploaded files (metadata array)
+            'uploaded_files'
+        ];
+        
+        foreach ($serviceDetailKeys as $key) {
+            if (isset($details_array[$key]) && $details_array[$key] !== '' && $details_array[$key] !== null) {
+                $serviceDetails[$key] = $details_array[$key];
+            }
+        }
+        
+        return $serviceDetails;
+    }
+
+    public function getRequestsByProvider($provider_id)
+    {
+        $this->db->query("
+            SELECT sr.*, 
+                   p.id as payment_id,
+                   p.payment_type,
+                   p.amount as payment_amount,
+                   p.payment_gateway,
+                   p.payment_status as advance_payment_status,
+                   p.transaction_response,
+                   p.paid_at,
+                   p.reference_number,
+                   CASE 
+                       WHEN pf.id IS NOT NULL THEN 'paid'
+                       WHEN (pa.id IS NOT NULL OR pr.id IS NOT NULL) THEN 'partially_paid'
+                       WHEN p.id IS NOT NULL THEN 'pending'
+                       ELSE 'unpaid'
+                   END as calculated_payment_status
+            FROM service_requests sr
+            LEFT JOIN payments p ON sr.id = p.service_request_id 
+                AND p.payment_status != 'canceled'
+                AND p.id = (
+                    SELECT p2.id FROM payments p2 
+                    WHERE p2.service_request_id = sr.id 
+                    AND p2.payment_status != 'canceled'
+                    ORDER BY p2.created_at DESC 
+                    LIMIT 1
+                )
+            LEFT JOIN payments pf ON sr.id = pf.service_request_id AND pf.payment_type = 'full' AND pf.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pa ON sr.id = pa.service_request_id AND pa.payment_type = 'advance' AND pa.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pr ON sr.id = pr.service_request_id AND pr.payment_type = 'remaining' AND pr.payment_status IN ('completed', 'success')
+            WHERE sr.provider_id = :provider_id 
+            GROUP BY sr.id
+            ORDER BY sr.created_at DESC
+        ");
+        $this->db->bind(':provider_id', $provider_id);
+        $results = $this->db->resultSet();
+        
+        // Parse JSON details and merge into each request object
+        foreach ($results as $result) {
+            if (!empty($result->service_details_json)) {
+                try {
+                    $details = json_decode($result->service_details_json, true);
+                    if (is_array($details)) {
+                        // Merge service details properties into request object
+                        foreach ($details as $key => $value) {
+                            $result->$key = $value;
+                        }
+                    }
+                } catch (Exception $e) {
+                    // Log error but continue - invalid JSON won't break the display
+                    error_log("Error parsing service details JSON for request {$result->id}: " . $e->getMessage());
+                }
+            }
+        }
+        
+        return $results;
+    }
+
     public function updateRequestStatus($request_id, $status)
     {
-        $this->db->query("UPDATE service_requests 
-                         SET status = :status, updated_at = CURRENT_TIMESTAMP 
-                         WHERE id = :id");
+        $this->db->query("UPDATE service_requests SET status = :status WHERE id = :id");
         $this->db->bind(':status', $status);
         $this->db->bind(':id', $request_id);
         return $this->db->execute();
     }
 
+    public function updateStatusDetailed($request_id, $status, $reason = null, $provider_id = null)
+    {
+        // Restrict updates to this provider if provided
+        $whereProvider = $provider_id ? " AND provider_id = :provider_id" : "";
+
+        if ($status === 'accepted') {
+            $sql = "UPDATE service_requests SET status = 'accepted', accepted_at = NOW(), rejection_reason = NULL WHERE id = :id" . $whereProvider;
+        } elseif ($status === 'completed') {
+            $sql = "UPDATE service_requests SET status = 'completed', completed_at = NOW() WHERE id = :id" . $whereProvider;
+        } elseif ($status === 'rejected') {
+            $sql = "UPDATE service_requests SET status = 'rejected', rejection_reason = :reason WHERE id = :id" . $whereProvider;
+        } else {
+            $sql = "UPDATE service_requests SET status = :status WHERE id = :id" . $whereProvider;
+        }
+
+        $this->db->query($sql);
+        $this->db->bind(':id', $request_id);
+        if ($provider_id) {
+            $this->db->bind(':provider_id', $provider_id);
+        }
+        if ($status === 'rejected') {
+            $this->db->bind(':reason', $reason);
+        } elseif (!in_array($status, ['accepted', 'completed'])) {
+            $this->db->bind(':status', $status);
+        }
+
+        $result = $this->db->execute();
+
+        // If accepted, mark the dates as booked in provider_availability
+        if ($result && $status === 'accepted') {
+            try {
+                $this->markDatesAsBooked($request_id);
+            } catch (Exception $e) {
+                // Log error but don't fail the request - availability marking is optional
+                error_log("Error marking dates as booked: " . $e->getMessage());
+            }
+        }
+
+        // If rejected or cancelled, unmark the booked dates
+        if ($result && in_array($status, ['rejected', 'cancelled'])) {
+            try {
+                $this->unmarkBookedDates($request_id);
+            } catch (Exception $e) {
+                // Log error but don't fail the request
+                error_log("Error unmarking booked dates: " . $e->getMessage());
+            }
+        }
+
+        return $result;
+    }
+
     /**
-     * Get a single service request by ID
+     * Get service request details by ID
      */
     public function getRequestById($request_id)
     {
-        $this->db->query("SELECT sr.*, d.drama_name, u.name as requester_name 
-                         FROM service_requests sr
-                         JOIN dramas d ON sr.drama_id = d.id
-                         JOIN users u ON sr.created_by = u.id
-                         WHERE sr.id = :id");
+        $this->db->query("
+            SELECT sr.*, 
+                   u.full_name as provider_name, 
+                   u.email as provider_email,
+                   d.drama_name
+            FROM service_requests sr
+            LEFT JOIN users u ON sr.provider_id = u.id
+            LEFT JOIN dramas d ON sr.drama_id = d.id
+            WHERE sr.id = :id
+        ");
         $this->db->bind(':id', $request_id);
         return $this->db->single();
     }
 
     /**
-     * Delete a service request
+     * Get all service requests for a specific drama
      */
-    public function deleteRequest($request_id)
+    public function getServicesByDrama($drama_id)
     {
-        $this->db->query("DELETE FROM service_requests WHERE id = :id");
+        $this->db->query("
+            SELECT sr.*, 
+                   p.id as payment_id,
+                   p.payment_type,
+                   p.amount as payment_amount,
+                   p.payment_gateway,
+                   p.payment_status as advance_payment_status,
+                   p.transaction_response,
+                   p.paid_at,
+                   p.reference_number,
+                   CASE 
+                       WHEN pf.id IS NOT NULL THEN 'paid'
+                       WHEN (pa.id IS NOT NULL OR pr.id IS NOT NULL) THEN 'partially_paid'
+                       WHEN p.id IS NOT NULL THEN 'pending'
+                       ELSE 'unpaid'
+                   END as calculated_payment_status
+            FROM service_requests sr
+            LEFT JOIN payments p ON sr.id = p.service_request_id 
+                AND p.payment_status != 'canceled'
+                AND p.id = (
+                    SELECT p2.id FROM payments p2 
+                    WHERE p2.service_request_id = sr.id 
+                    AND p2.payment_status != 'canceled'
+                    ORDER BY p2.created_at DESC 
+                    LIMIT 1
+                )
+            LEFT JOIN payments pf ON sr.id = pf.service_request_id AND pf.payment_type = 'full' AND pf.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pa ON sr.id = pa.service_request_id AND pa.payment_type = 'advance' AND pa.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pr ON sr.id = pr.service_request_id AND pr.payment_type = 'remaining' AND pr.payment_status IN ('completed', 'success')
+            WHERE sr.drama_id = :drama_id 
+            GROUP BY sr.id
+            ORDER BY sr.created_at DESC
+        ");
+        $this->db->bind(':drama_id', $drama_id);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Mark dates as booked when request is accepted
+     */
+    private function markDatesAsBooked($request_id)
+    {
+        try {
+            // Get request details
+            $request = $this->getRequestById($request_id);
+            if (!$request || !isset($request->start_date) || !isset($request->end_date)) {
+                return false;
+            }
+
+            // Use the unified addAvailableDate method
+            $availabilityModel = new M_provider_availability();
+            
+            // Mark all dates from start_date to end_date as booked
+            $start = strtotime($request->start_date);
+            $end = strtotime($request->end_date);
+            
+            if ($start === false || $end === false) {
+                return false;
+            }
+
+            $booked_for = (isset($request->requester_name) ? $request->requester_name : 'Unknown') . ' - ' . (isset($request->drama_name) ? $request->drama_name : '');
+            $booking_details = 'Service: ' . (isset($request->service_required) ? $request->service_required : '') . ' | Notes: ' . (isset($request->notes) ? $request->notes : '');
+
+            for ($current = $start; $current <= $end; $current += 86400) { // 86400 = 1 day in seconds
+                $date = date('Y-m-d', $current);
+                // Use the unified addAvailableDate method directly
+                $availabilityModel->addAvailableDate(
+                    $request->provider_id,
+                    $date,
+                    $booking_details,
+                    'booked',
+                    $booked_for,
+                    $booking_details,
+                    $request_id
+                );
+            }
+
+            return true;
+        } catch (Exception $e) {
+            error_log("Error in markDatesAsBooked: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Unmark dates as booked when request is rejected/cancelled
+     */
+    private function unmarkBookedDates($request_id)
+    {
+        try {
+            // Get request details
+            $request = $this->getRequestById($request_id);
+            if (!$request || !isset($request->start_date) || !isset($request->end_date)) {
+                return false;
+            }
+
+            // Load availability model and unmark dates
+            $availabilityModel = new M_provider_availability();
+            
+            // Unmark all dates from start_date to end_date
+            $start = strtotime($request->start_date);
+            $end = strtotime($request->end_date);
+
+            if ($start === false || $end === false) {
+                return false;
+            }
+
+            for ($current = $start; $current <= $end; $current += 86400) {
+                $date = date('Y-m-d', $current);
+                $availabilityModel->unmarkBooked($request->provider_id, $date);
+            }
+
+            return true;
+        } catch (Exception $e) {
+            error_log("Error in unmarkBookedDates: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updatePaymentStatus($request_id, $payment_status, $provider_id = null)
+    {
+        $whereProvider = $provider_id ? " AND provider_id = :provider_id" : "";
+        $this->db->query("UPDATE service_requests SET payment_status = :payment_status WHERE id = :id" . $whereProvider);
+        $this->db->bind(':payment_status', $payment_status);
         $this->db->bind(':id', $request_id);
+        if ($provider_id) {
+            $this->db->bind(':provider_id', $provider_id);
+        }
         return $this->db->execute();
     }
 
     /**
-     * Get total count of service requests for a drama
+     * Provider submits a response/proposal to an existing request
      */
-    public function getTotalCount($drama_id)
+    public function submitProviderResponse($request_id, $provider_id, $payload)
     {
-        $this->db->query("SELECT COUNT(*) as count FROM service_requests 
-                         WHERE drama_id = :drama_id");
-        $this->db->bind(':drama_id', $drama_id);
-        $result = $this->db->single();
-        return $result ? intval($result->count) : 0;
+        try {
+            // Verify the request belongs to this provider
+            $request = $this->getRequestById($request_id);
+            if (!$request || $request->provider_id != $provider_id) {
+                return ['success' => false, 'error' => 'Request not found or access denied'];
+            }
+
+            // Can only respond to pending requests
+            if ($request->status !== 'pending') {
+                return ['success' => false, 'error' => 'Cannot respond to this request'];
+            }
+
+            // Merge provider response into service_details_json
+            $existingDetails = !empty($request->service_details_json) 
+                ? json_decode($request->service_details_json, true) 
+                : [];
+            
+            $existingDetails['provider_response'] = [
+                'quote_amount' => $payload['quote_amount'] ?? null,
+                'needs_advance' => $payload['needs_advance'] ?? false,
+                'advance_amount' => $payload['advance_amount'] ?? null,
+                'advance_due_date' => $payload['advance_due_date'] ?? null,
+                'final_payment_due_date' => $payload['final_payment_due_date'] ?? null,
+                'note' => $payload['note'] ?? null,
+                'responded_at' => date('Y-m-d H:i:s'),
+            ];
+
+            $this->db->query("UPDATE service_requests 
+                SET status = 'provider_responded', 
+                    service_details_json = :details,
+                    provider_notes = :notes
+                WHERE id = :id AND provider_id = :provider_id");
+            
+            $this->db->bind(':details', json_encode($existingDetails));
+            $this->db->bind(':notes', $payload['note'] ?? null);
+            $this->db->bind(':id', $request_id);
+            $this->db->bind(':provider_id', $provider_id);
+            
+            if ($this->db->execute()) {
+                return ['success' => true];
+            }
+            return ['success' => false, 'error' => 'Database update failed'];
+        } catch (Exception $e) {
+            error_log("submitProviderResponse error: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Server error'];
+        }
+    }
+
+    /**
+     * PM confirms the provider's response
+     */
+    public function confirmByPM($request_id, $pm_user_id, $payload)
+    {
+        try {
+            // Verify the request exists and is awaiting PM confirmation
+            $request = $this->getRequestById($request_id);
+            if (!$request) {
+                return ['success' => false, 'error' => 'Request not found'];
+            }
+
+            // Verify PM has access to this drama
+            $pmModel = new M_production_manager();
+            if (!$pmModel->isManagerForDrama($pm_user_id, $request->drama_id)) {
+                return ['success' => false, 'error' => 'Unauthorized'];
+            }
+
+            // Can only confirm provider_responded requests
+            if ($request->status !== 'provider_responded') {
+                return ['success' => false, 'error' => 'Cannot confirm this request'];
+            }
+
+            // Merge PM confirmation into service_details_json
+            $existingDetails = !empty($request->service_details_json) 
+                ? json_decode($request->service_details_json, true) 
+                : [];
+            
+            $existingDetails['pm_confirmation'] = [
+                'final_quote' => $payload['final_quote'] ?? null,
+                'final_start_date' => $payload['final_start_date'] ?? null,
+                'final_end_date' => $payload['final_end_date'] ?? null,
+                'note' => $payload['note'] ?? null,
+                'confirmed_at' => date('Y-m-d H:i:s'),
+                'confirmed_by' => $pm_user_id,
+            ];
+
+            $this->db->query("UPDATE service_requests 
+                SET status = 'confirmed', 
+                    service_details_json = :details,
+                    notes = :notes
+                WHERE id = :id");
+            
+            $this->db->bind(':details', json_encode($existingDetails));
+            $this->db->bind(':notes', $payload['note'] ?? null);
+            $this->db->bind(':id', $request_id);
+            
+            if ($this->db->execute()) {
+                return ['success' => true];
+            }
+            return ['success' => false, 'error' => 'Database update failed'];
+        } catch (Exception $e) {
+            error_log("confirmByPM error: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Server error'];
+        }
+    }
+
+    /**
+     * Provider accepts the PM-confirmed terms
+     */
+    public function acceptConfirmed($request_id, $provider_id)
+    {
+        try {
+            // Verify the request belongs to this provider
+            $request = $this->getRequestById($request_id);
+            if (!$request || $request->provider_id != $provider_id) {
+                return ['success' => false, 'error' => 'Request not found or access denied'];
+            }
+
+            // Can only accept confirmed requests
+            if ($request->status !== 'confirmed') {
+                return ['success' => false, 'error' => 'Cannot accept this request'];
+            }
+
+            // Update status to accepted and mark availability
+            $result = $this->updateStatusDetailed($request_id, 'accepted', null, $provider_id);
+            
+            if ($result) {
+                return ['success' => true];
+            }
+            return ['success' => false, 'error' => 'Database update failed'];
+        } catch (Exception $e) {
+            error_log("acceptConfirmed error: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Server error'];
+        }
+    }
+
+    /**
+     * Simple method to update request status
+     * Used by Payment controller to auto-upgrade to completed_paid
+     */
+    public function updateStatus($request_id, $status)
+    {
+        return $this->updateRequestStatus($request_id, $status);
     }
 }
