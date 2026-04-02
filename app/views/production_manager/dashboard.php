@@ -2,6 +2,7 @@
 // Get current user profile image
 $userModel = new M_universal_profile();
 $currentUser = $userModel->getUserById($_SESSION['user_id']);
+$dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1);
 
 $profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
 if ($currentUser && !empty($currentUser->profile_image)) {
@@ -32,31 +33,31 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         </div>
         <ul class="menu">
             <li class="active">
-                <a href="dashboard.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="manage_services.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li>
-                <a href="manage_budget.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
             <li>
-                <a href="book_theater.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-theater-masks"></i>
                     <span>Theater Bookings</span>
                 </a>
             </li>
             <li>
-                <a href="manage_schedule.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Service Schedule</span>
                 </a>
@@ -123,19 +124,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
         <!-- Navigation Tab Bar -->
         <div class="nav-tabs-bar">
-            <a href="dashboard.php?drama_id=1" class="nav-tab-btn active">
+            <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="nav-tab-btn active">
                 <i class="fas fa-home"></i> Dashboard
             </a>
-            <a href="manage_services.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-briefcase"></i> Manage Services
             </a>
-            <a href="manage_budget.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-chart-bar"></i> Budget Management
             </a>
-            <a href="book_theater.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-theater-masks"></i> Theater Bookings
             </a>
-            <a href="manage_schedule.php?drama_id=1" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-calendar-alt"></i> Service Schedule
             </a>
         </div>
@@ -149,7 +150,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <h3>
                             <i class="fas fa-wallet" style="color: var(--brand);"></i>
                             <span>Budget Overview</span>
-                            <a href="manage_budget.php?drama_id=1" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
                                 <i class="fas fa-pencil-alt"></i>
                                 Manage Budget
                             </a>
@@ -192,7 +193,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="card-section">
                         <h3>
                             <span>Recent Service Requests</span>
-                            <a href="manage_services.php?drama_id=1" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
+                            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
                                 <i class="fas fa-arrow-right"></i>
                                 View All Services
                             </a>
@@ -220,7 +221,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="card-section">
                         <h3>
                             <span>Upcoming Theater Bookings</span>
-                            <a href="book_theater.php?drama_id=1" class="btn btn-success" style="font-size: 12px; padding: 8px 16px;">
+                            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>" class="btn btn-success" style="font-size: 12px; padding: 8px 16px;">
                                 <i class="fas fa-plus"></i>
                                 Book Theater
                             </a>
@@ -248,7 +249,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="card-section">
                         <h3>
                             <span>Service Schedule</span>
-                            <a href="manage_schedule.php?drama_id=1" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">Manage Schedule</a>
+                            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">Manage Schedule</a>
                         </h3>
                         <?php if (isset($schedules) && is_array($schedules) && !empty($schedules)): ?>
                             <ul id="serviceScheduleList">
@@ -273,19 +274,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="card-section">
                         <h3>Quick Actions</h3>
                         <div class="permission-controls">
-                            <a href="manage_services.php?drama_id=1" class="btn btn-primary">
+                            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>" class="btn btn-primary">
                                 <i class="fas fa-briefcase"></i>
                                 Manage Services
                             </a>
-                            <a href="manage_budget.php?drama_id=1" class="btn btn-success">
+                            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="btn btn-success">
                                 <i class="fas fa-chart-bar"></i>
                                 Manage Budget
                             </a>
-                            <a href="book_theater.php?drama_id=1" class="btn btn-warning">
+                            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>" class="btn btn-warning">
                                 <i class="fas fa-theater-masks"></i>
                                 Book Theater
                             </a>
-                            <a href="manage_schedule.php?drama_id=1" class="btn btn-secondary">
+                            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="btn btn-secondary">
                                 <i class="fas fa-calendar-alt"></i>
                                 Service Schedule
                             </a>
