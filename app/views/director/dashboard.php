@@ -139,7 +139,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="nav-tab-btn active">
                 <i class="fas fa-home"></i> Dashboard
             </a>
-            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
+            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
                 <i class="fas fa-film"></i>  Drama Details
             </a>
             <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
@@ -164,7 +164,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="card-section">
                         <h3>
                             <span>Drama Overview</span>
-                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
                                 <i class="fas fa-eye"></i>
                                 View Details
                             </a>

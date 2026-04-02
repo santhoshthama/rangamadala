@@ -362,11 +362,12 @@ class Production_manager{
             return;
         }
 
-        $id = $_POST['id'] ?? $_POST['request_id'] ?? null;
+        $id = $_POST['id']  ?? null;
+        $status = $_POST['status'] ?? null;
 
-        if (!$id) {
+        if (!$id || !$status) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing request id']);
+            echo json_encode(['success' => false, 'error' => 'Missing id or status']);
             return;
         }
 

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <?php $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1); ?>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
@@ -16,25 +17,25 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="dashboard.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
-                <a href="manage_services.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li>
-                <a href="manage_budget.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
             <li>
-                <a href="book_theater.php?drama_id=1">
+                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-theater-masks"></i>
                     <span>Theater Bookings</span>
                 </a>
@@ -56,7 +57,7 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php?drama_id=1" class="back-button">
+        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>
