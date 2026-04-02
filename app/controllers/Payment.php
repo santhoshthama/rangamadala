@@ -6,16 +6,19 @@ class Payment
     
     private $paymentModel;
     private $serviceRequestModel;
+    private $payHereHelper;
     
     public function __construct()
     {
         // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
-            redirect('login');
+            header('Location: ' . ROOT . '/login');
+            exit;
         }
         
         $this->paymentModel = $this->getModel('M_payment');
         $this->serviceRequestModel = $this->getModel('M_service_request');
+        $this->payHereHelper = new PayHereHelper();
     }
     
     /**
@@ -29,272 +32,625 @@ class Payment
         
         if (!$requestId || !$amount) {
             $_SESSION['error'] = 'Invalid payment parameters';
-            redirect('Production_manager/manage_services');
-            return;
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
         }
         
         // Get service request details
         $request = $this->serviceRequestModel->getRequestById($requestId);
         if (!$request) {
             $_SESSION['error'] = 'Service request not found';
-            redirect('Production_manager/manage_services');
-            return;
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
         }
         
         // Parse service details for provider response
         $serviceDetails = $request->service_details_json ? json_decode($request->service_details_json, true) : [];
         $providerResponse = $serviceDetails['provider_response'] ?? [];
         
+        // Get user details for payment
+        $userId = $_SESSION['user_id'];
+        $userModel = $this->getModel('M_login');
+        $user = $userModel ? $userModel->getUserById($userId) : null;
+        
+        if (!$user) {
+            $_SESSION['error'] = 'User information not found';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+        
         $data = [
             'request' => $request,
             'amount' => $amount,
             'type' => $type,
-            'provider_response' => $providerResponse
+            'provider_response' => $providerResponse,
+            'user' => $user,
+            'payhere_config' => [
+                'merchant_id' => $this->payHereHelper->getConfig('merchant_id'),
+                'sandbox' => $this->payHereHelper->getConfig('sandbox'),
+                'return_url' => $this->payHereHelper->getConfig('return_url'),
+                'cancel_url' => ROOT . '/Production_manager/manage_services',
+                'notify_url' => $this->payHereHelper->getConfig('notify_url'),
+            ]
         ];
         
         $this->view('payment_checkout', $data);
     }
-    
+
     /**
-     * Initiate payment process
+     * AJAX endpoint: Create PayHere payment and return order details
      */
-    public function initiate()
+    public function createPayHerePayment()
     {
+        header('Content-Type: application/json');
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            exit;
         }
         
         $requestId = $_POST['request_id'] ?? null;
         $amount = $_POST['amount'] ?? null;
-        $type = $_POST['type'] ?? 'advance'; // 'advance', 'final', or 'full'
-        $stage = $_POST['stage'] ?? 'after_completion'; // NEW: when payment happens
+        $type = $_POST['type'] ?? 'advance';
         
         if (!$requestId || !$amount) {
-            echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
-            return;
+            echo json_encode(['success' => false, 'error' => 'Invalid parameters']);
+            exit;
         }
         
-        // Validate amount
-        if (!is_numeric($amount) || $amount <= 0) {
-            echo json_encode(['success' => false, 'error' => 'Invalid amount']);
-            return;
-        }
-        
-        // Get service request details
         $request = $this->serviceRequestModel->getRequestById($requestId);
         if (!$request) {
             echo json_encode(['success' => false, 'error' => 'Service request not found']);
-            return;
+            exit;
         }
         
-        // Verify user has permission (must be PM for this drama)
-        // For now, checking if user is logged in
         $userId = $_SESSION['user_id'];
         
-        // Check if payment already exists
+        // Check if a pending PayHere payment already exists for this request and type
         $existingPayment = $this->paymentModel->getPaymentByType($requestId, $type);
-        if ($existingPayment && $existingPayment->payment_status === 'completed') {
-            echo json_encode(['success' => false, 'error' => ucfirst($type) . ' payment already completed']);
-            return;
+        
+        if ($existingPayment && $existingPayment->payment_status === 'pending' && $existingPayment->payment_gateway === 'payhere') {
+            // Reuse existing pending payment
+            $paymentId = $existingPayment->id;
+            $order_id = $existingPayment->gateway_order_id;
+        } else {
+            // Generate order ID
+            $order_id = 'REQ-' . $requestId . '-' . $type . '-' . time();
+            
+            // Create PayHere payment
+            $paymentId = $this->paymentModel->createPayment([
+                'service_request_id' => $requestId,
+                'payment_type' => $type,
+                'amount' => $amount,
+                'payment_gateway' => 'payhere',
+                'payment_status' => 'pending',
+                'paid_by' => $userId,
+                'paid_to' => $request->provider_id ?? null,
+                'gateway_order_id' => $order_id,
+                'transaction_response' => json_encode(['source' => 'payhere_init'])
+            ]);
+            
+            if (!$paymentId) {
+                echo json_encode(['success' => false, 'error' => 'Unable to create payment']);
+                exit;
+            }
         }
         
-        // Create pending payment record
+        // Generate hash for PayHere
+        $hash = $this->payHereHelper->generateHash($order_id, $amount);
+        
+        echo json_encode([
+            'success' => true,
+            'order_id' => $order_id,
+            'hash' => $hash,
+            'payment_id' => $paymentId
+        ]);
+        exit;
+    }
+
+    /**
+     * Display bank transfer upload form
+     */
+    public function bankForm()
+    {
+        $requestId = $_GET['request_id'] ?? null;
+        $amount = $_GET['amount'] ?? null;
+        $type = $_GET['type'] ?? 'advance';
+
+        if (!$requestId || !$amount) {
+            $_SESSION['error'] = 'Invalid bank payment parameters';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+
+        $request = $this->serviceRequestModel->getRequestById($requestId);
+        if (!$request) {
+            $_SESSION['error'] = 'Service request not found';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+
+        $data = [
+            'request' => $request,
+            'amount' => $amount,
+            'type' => $type,
+        ];
+
+        $this->view('payment_bank_upload', $data);
+    }
+
+    /**
+     * Display cash payment form
+     */
+    public function cashForm()
+    {
+        $requestId = $_GET['request_id'] ?? null;
+        $amount = $_GET['amount'] ?? null;
+        $type = $_GET['type'] ?? 'advance';
+
+        if (!$requestId || !$amount) {
+            $_SESSION['error'] = 'Invalid cash payment parameters';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+
+        $request = $this->serviceRequestModel->getRequestById($requestId);
+        if (!$request) {
+            $_SESSION['error'] = 'Service request not found';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+
+        $data = [
+            'request' => $request,
+            'amount' => $amount,
+            'type' => $type,
+        ];
+
+        $this->view('payment_cash_form', $data);
+    }
+
+    /**
+     * Save cash payment record (pending until provider confirms)
+     */
+    public function submitCashPayment()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+
+        $requestId = $_POST['request_id'] ?? null;
+        $amount = $_POST['amount'] ?? null;
+        $type = $_POST['type'] ?? 'advance';
+        $receivedDate = $_POST['received_date'] ?? null;
+        $note = trim($_POST['note'] ?? '');
+
+        if (!$requestId || !$amount || !$receivedDate) {
+            $_SESSION['error'] = 'Missing required cash payment details';
+            header('Location: ' . ROOT . '/Payment/cashForm?request_id=' . (int)$requestId . '&amount=' . urlencode((string)$amount) . '&type=' . urlencode($type));
+            exit;
+        }
+
+        $request = $this->serviceRequestModel->getRequestById($requestId);
+        if (!$request) {
+            $_SESSION['error'] = 'Service request not found';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+
+        // Cancel any previous rejected payments for this request
+        $this->cancelRejectedPayments($requestId);
+
         $paymentId = $this->paymentModel->createPayment([
             'service_request_id' => $requestId,
             'payment_type' => $type,
             'amount' => $amount,
-            'payment_gateway' => 'paypal',
+            'payment_gateway' => 'cash',
             'payment_status' => 'pending',
-            'paid_by' => $userId,
-            'payment_stage' => $stage,
-            'paid_to' => $request->provider_id
+            'paid_by' => $_SESSION['user_id'],
+            'paid_to' => $request->provider_id ?? null,
+            'transaction_response' => json_encode([
+                'source' => 'cash_payment',
+                'recorded_at' => date('Y-m-d H:i:s'),
+                'received_date' => $receivedDate,
+                'note' => $note !== '' ? $note : null
+            ])
         ]);
-        
+
         if (!$paymentId) {
-            echo json_encode(['success' => false, 'error' => 'Failed to create payment record']);
-            return;
+            $_SESSION['error'] = 'Could not save cash payment record';
+            header('Location: ' . ROOT . '/Payment/cashForm?request_id=' . (int)$requestId . '&amount=' . urlencode((string)$amount) . '&type=' . urlencode($type));
+            exit;
         }
-        
-        // Store payment info in session for callback
-        $_SESSION['pending_payment'] = [
-            'payment_id' => $paymentId,
-            'request_id' => $requestId,
-            'type' => $type,
-            'amount' => $amount
-        ];
-        
-        // For now, return a mock approval URL (will be replaced with PayPal integration)
-        echo json_encode([
-            'success' => true,
-            'payment_id' => $paymentId,
-            'message' => 'Payment initiated. Ready for PayPal integration.',
-            'redirect_url' => ROOT . '/Payment/process/' . $paymentId
-        ]);
+
+        $_SESSION['success'] = 'Cash payment recorded. Waiting for provider confirmation.';
+        header('Location: ' . ROOT . '/Payment/receipt/' . $paymentId);
+        exit;
     }
-    
+
     /**
-     * Process payment (placeholder for PayPal integration)
+     * Save bank transfer evidence (slip upload)
      */
-    public function process($payment_id = null)
-    {
-        if (!$payment_id) {
-            die('Invalid payment ID');
-        }
-        
-        $payment = $this->paymentModel->getPaymentById($payment_id);
-        if (!$payment) {
-            die('Payment not found');
-        }
-        
-        $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
-        
-        // Display payment confirmation page
-        ?>
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Process Payment - Rangamadala</title>
-            <style>
-                body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
-                .payment-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                h2 { color: #333; margin-top: 0; }
-                .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
-                .label { font-weight: 600; color: #666; }
-                .value { color: #333; }
-                .amount { font-size: 24px; font-weight: bold; color: #d4af37; margin: 20px 0; text-align: center; }
-                .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; }
-                .btn-pay { background: #0070ba; color: white; }
-                .btn-pay:hover { background: #005ea6; }
-                .btn-cancel { background: #e5e5e5; color: #333; }
-                .btn-cancel:hover { background: #d5d5d5; }
-            </style>
-        </head>
-        <body>
-            <div class="payment-card">
-                <h2>💳 Confirm Payment</h2>
-                
-                <div class="detail-row">
-                    <span class="label">Drama:</span>
-                    <span class="value"><?= htmlspecialchars($request->drama_name) ?></span>
-                </div>
-                
-                <div class="detail-row">
-                    <span class="label">Service:</span>
-                    <span class="value"><?= htmlspecialchars($request->service_type) ?></span>
-                </div>
-                
-                <div class="detail-row">
-                    <span class="label">Payment Type:</span>
-                    <span class="value"><?= ucfirst($payment->payment_type) ?> Payment</span>
-                </div>
-                
-                <div class="amount">
-                    Rs <?= number_format($payment->amount, 2) ?>
-                </div>
-                
-                <form method="POST" action="<?= ROOT ?>/Payment/simulate/<?= $payment->id ?>">
-                    <button type="submit" name="action" value="complete" class="btn btn-pay">
-                        Pay with PayPal (Simulation)
-                    </button>
-                </form>
-                
-                <button onclick="window.location.href='<?= ROOT ?>/Payment/cancel/<?= $payment->id ?>'" class="btn btn-cancel">
-                    Cancel Payment
-                </button>
-                
-                <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
-                    🔒 This is a simulation. PayPal integration will be added next.
-                </p>
-            </div>
-        </body>
-        </html>
-        <?php
-    }
-    
-    /**
-     * Simulate payment completion (for testing before PayPal integration)
-     */
-    public function simulate($payment_id = null)
+    public function submitBankSlip()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('Payment/process/' . $payment_id);
-            return;
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
         }
-        
-        $action = $_POST['action'] ?? null;
-        
-        if ($action === 'complete' && $payment_id) {
-            $payment = $this->paymentModel->getPaymentById($payment_id);
-            if ($payment) {
-                // Update payment status
-                $transactionId = 'SIM-' . time() . '-' . rand(1000, 9999);
-                $this->paymentModel->updatePaymentStatus(
-                    $payment_id,
-                    'completed',
-                    $transactionId,
-                    json_encode(['simulated' => true, 'timestamp' => date('Y-m-d H:i:s')])
-                );
-                
-                // Update service request payment status
-                $this->updateServiceRequestPaymentStatus($payment->service_request_id);
-                
-                // Clear session
-                unset($_SESSION['pending_payment']);
-                
-                // Redirect to success page
-                redirect('Payment/success/' . $payment_id);
-            }
+
+        $requestId = $_POST['request_id'] ?? null;
+        $amount = $_POST['amount'] ?? null;
+        $type = $_POST['type'] ?? 'advance';
+
+        if (!$requestId || !$amount || !isset($_FILES['bank_slip'])) {
+            $_SESSION['error'] = 'Missing required bank payment details';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
         }
-    }
-    
-    /**
-     * Payment success page
-     */
-    public function success($payment_id = null)
-    {
-        $paymentId = $payment_id ?? ($_GET['payment_id'] ?? null);
-        
+
+        $request = $this->serviceRequestModel->getRequestById($requestId);
+        if (!$request) {
+            $_SESSION['error'] = 'Service request not found';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+
+        // Cancel any previous rejected payments for this request
+        $this->cancelRejectedPayments($requestId);
+
+        $file = $_FILES['bank_slip'];
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $_SESSION['error'] = 'Failed to upload bank slip';
+            header('Location: ' . ROOT . '/Payment/bankForm?request_id=' . (int)$requestId . '&amount=' . urlencode($amount) . '&type=' . urlencode($type));
+            exit;
+        }
+
+        if ($file['size'] > 5 * 1024 * 1024) {
+            $_SESSION['error'] = 'Bank slip must be smaller than 5MB';
+            header('Location: ' . ROOT . '/Payment/bankForm?request_id=' . (int)$requestId . '&amount=' . urlencode($amount) . '&type=' . urlencode($type));
+            exit;
+        }
+
+        $allowedMime = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'application/pdf' => 'pdf'
+        ];
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if (!isset($allowedMime[$mimeType])) {
+            $_SESSION['error'] = 'Only JPG, PNG, or PDF files are allowed';
+            header('Location: ' . ROOT . '/Payment/bankForm?request_id=' . (int)$requestId . '&amount=' . urlencode($amount) . '&type=' . urlencode($type));
+            exit;
+        }
+
+        $uploadDir = dirname(__DIR__, 2) . '/app/uploads/bank_slips/';
+        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {
+            $_SESSION['error'] = 'Could not create upload directory';
+            header('Location: ' . ROOT . '/Payment/bankForm?request_id=' . (int)$requestId . '&amount=' . urlencode($amount) . '&type=' . urlencode($type));
+            exit;
+        }
+
+        $extension = $allowedMime[$mimeType];
+        $filename = 'slip_' . (int)$requestId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+        $targetPath = $uploadDir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            $_SESSION['error'] = 'Could not save uploaded slip';
+            header('Location: ' . ROOT . '/Payment/bankForm?request_id=' . (int)$requestId . '&amount=' . urlencode($amount) . '&type=' . urlencode($type));
+            exit;
+        }
+
+        $paymentId = $this->paymentModel->createBankPayment([
+            'service_request_id' => $requestId,
+            'payment_type' => $type,
+            'amount' => $amount,
+            'payment_status' => 'pending',
+            'paid_by' => $_SESSION['user_id'],
+            'paid_to' => $request->provider_id ?? null,
+            'transaction_response' => json_encode([
+                'source' => 'bank_slip_upload',
+                'uploaded_at' => date('Y-m-d H:i:s'),
+                'bank_slip_path' => $filename,
+                'bank_submitted_at' => date('Y-m-d H:i:s')
+            ])
+        ]);
+
         if (!$paymentId) {
-            redirect('Production_manager/manage_services');
+            if (file_exists($targetPath)) {
+                unlink($targetPath);
+            }
+
+            $_SESSION['error'] = 'Could not save bank payment';
+            header('Location: ' . ROOT . '/Payment/bankForm?request_id=' . (int)$requestId . '&amount=' . urlencode($amount) . '&type=' . urlencode($type));
+            exit;
+        }
+
+        $_SESSION['success'] = 'Bank slip uploaded successfully. Provider can now review it.';
+        header('Location: ' . ROOT . '/Payment/receipt/' . $paymentId);
+        exit;
+    }
+
+    /**
+     * Securely view uploaded bank slip (only payer or provider)
+     */
+    public function viewBankSlip($payment_id = null)
+    {
+        if (!$payment_id) {
+            http_response_code(404);
+            exit;
+        }
+
+        $payment = $this->paymentModel->getPaymentById($payment_id);
+        if (!$payment) {
+            http_response_code(404);
+            exit;
+        }
+
+        $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
+        $bankSlipPath = $transactionData['bank_slip_path'] ?? null;
+        if (empty($bankSlipPath)) {
+            http_response_code(404);
+            exit;
+        }
+
+        $currentUserId = $_SESSION['user_id'] ?? 0;
+        $isPayer = (int)$payment->paid_by === (int)$currentUserId;
+        $isProvider = (int)$payment->paid_to === (int)$currentUserId;
+
+        if (!$isPayer && !$isProvider) {
+            http_response_code(403);
+            exit;
+        }
+
+        $fileName = basename($bankSlipPath);
+        $filePath = dirname(__DIR__, 2) . '/app/uploads/bank_slips/' . $fileName;
+
+        if (!file_exists($filePath)) {
+            http_response_code(404);
+            exit;
+        }
+
+        $mimeType = mime_content_type($filePath);
+        header('Content-Type: ' . $mimeType);
+        header('Content-Disposition: inline; filename="' . $fileName . '"');
+        header('Content-Length: ' . filesize($filePath));
+        readfile($filePath);
+        exit;
+    }
+
+    /**
+     * Provider confirms pending cash payment
+     */
+    public function confirmCashPayment()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
             return;
         }
-        
+
+        if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+            return;
+        }
+
+        $paymentId = $_POST['payment_id'] ?? null;
+        if (!$paymentId) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Missing payment id']);
+            return;
+        }
+
         $payment = $this->paymentModel->getPaymentById($paymentId);
         if (!$payment) {
-            redirect('Production_manager/manage_services');
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Payment not found']);
             return;
         }
-        
-        $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
-        
-        $data = [
-            'payment' => $payment,
-            'request' => $request
-        ];
-        
-        $this->view('payment_success', $data);
-    }
-    
-    /**
-     * Payment cancellation page
-     */
-    public function cancel($payment_id = null)
-    {
-        $paymentId = $payment_id ?? ($_GET['payment_id'] ?? null);
-        
-        if ($paymentId) {
-            $this->paymentModel->updatePaymentStatus($paymentId, 'failed', null, 'Payment cancelled by user');
+
+        if (($payment->payment_gateway ?? '') !== 'cash') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid payment type']);
+            return;
         }
-        
-        unset($_SESSION['pending_payment']);
-        
-        $data = [
-            'payment_id' => $paymentId
-        ];
-        
-        $this->view('payment_cancel', $data);
+
+        if ((int)$payment->paid_to !== (int)$_SESSION['user_id']) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Not allowed for this payment']);
+            return;
+        }
+
+        if (($payment->payment_status ?? '') !== 'pending') {
+            echo json_encode(['success' => true, 'message' => 'Payment already confirmed']);
+            return;
+        }
+
+        $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
+        if (!is_array($transactionData)) {
+            $transactionData = [];
+        }
+        $transactionData['provider_confirmed_at'] = date('Y-m-d H:i:s');
+        $transactionData['provider_confirmed_by'] = (int)$_SESSION['user_id'];
+
+        $ok = $this->paymentModel->updatePaymentStatus(
+            $payment->id,
+            'completed',
+            json_encode($transactionData)
+        );
+
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Failed to confirm payment']);
+            return;
+        }
+
+        $this->updateServiceRequestPaymentStatus($payment->service_request_id);
+        echo json_encode(['success' => true]);
+    }
+
+    /**
+     * Provider confirms pending bank transfer payment
+     */
+    public function confirmBankPayment()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+            return;
+        }
+
+        if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+            return;
+        }
+
+        $paymentId = $_POST['payment_id'] ?? null;
+        if (!$paymentId) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Missing payment id']);
+            return;
+        }
+
+        $payment = $this->paymentModel->getPaymentById($paymentId);
+        if (!$payment) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Payment not found']);
+            return;
+        }
+
+        if (($payment->payment_gateway ?? '') !== 'bank_transfer') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid payment type']);
+            return;
+        }
+
+        if ((int)$payment->paid_to !== (int)$_SESSION['user_id']) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Not allowed for this payment']);
+            return;
+        }
+
+        if (($payment->payment_status ?? '') !== 'pending') {
+            echo json_encode(['success' => true, 'message' => 'Payment already confirmed']);
+            return;
+        }
+
+        $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
+        if (!is_array($transactionData)) {
+            $transactionData = [];
+        }
+        $transactionData['provider_confirmed_at'] = date('Y-m-d H:i:s');
+        $transactionData['provider_confirmed_by'] = (int)$_SESSION['user_id'];
+
+        $ok = $this->paymentModel->updatePaymentStatus(
+            $payment->id,
+            'completed',
+            json_encode($transactionData)
+        );
+
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Failed to confirm payment']);
+            return;
+        }
+
+        $this->updateServiceRequestPaymentStatus($payment->service_request_id);
+        echo json_encode(['success' => true]);
+    }
+
+    /**
+     * Provider rejects manual payment verification (cash/bank transfer)
+     */
+    public function rejectManualPayment()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+            return;
+        }
+
+        if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+            return;
+        }
+
+        $paymentId = $_POST['payment_id'] ?? null;
+        $reason = trim((string)($_POST['reason'] ?? ''));
+
+        if (!$paymentId) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Missing payment id']);
+            return;
+        }
+
+        if ($reason === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Reason is required']);
+            return;
+        }
+
+        $payment = $this->paymentModel->getPaymentById($paymentId);
+        if (!$payment) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Payment not found']);
+            return;
+        }
+
+        $gateway = $payment->payment_gateway ?? '';
+        if (!in_array($gateway, ['cash', 'bank_transfer'], true)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Only cash or bank transfer can be rejected']);
+            return;
+        }
+
+        if ((int)$payment->paid_to !== (int)$_SESSION['user_id']) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Not allowed for this payment']);
+            return;
+        }
+
+        if (($payment->payment_status ?? '') !== 'pending') {
+            echo json_encode(['success' => true, 'message' => 'Payment is already finalized']);
+            return;
+        }
+
+        $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
+        if (!is_array($transactionData)) {
+            $transactionData = [];
+        }
+
+        $transactionData['provider_verification_status'] = 'rejected';
+        $transactionData['provider_verification_reason'] = $reason;
+        $transactionData['provider_verification_at'] = date('Y-m-d H:i:s');
+        $transactionData['provider_verification_by'] = (int)$_SESSION['user_id'];
+
+        $ok = $this->paymentModel->updatePaymentStatus(
+            $payment->id,
+            'pending',
+            json_encode($transactionData)
+        );
+
+        if (!$ok) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Failed to update verification status']);
+            return;
+        }
+
+        echo json_encode(['success' => true]);
     }
     
     /**
@@ -302,33 +658,177 @@ class Payment
      */
     private function updateServiceRequestPaymentStatus($request_id)
     {
+        $fullPaid = $this->paymentModel->isFullyPaid($request_id);
         $advancePaid = $this->paymentModel->isAdvancePaid($request_id);
-        $finalPaid = $this->paymentModel->isFinalPaid($request_id);
+        $remainingPaid = $this->paymentModel->isRemainingPaid($request_id);
         
-        if ($advancePaid && $finalPaid) {
+        if ($fullPaid) {
             $this->serviceRequestModel->updatePaymentStatus($request_id, 'paid');
-        } elseif ($advancePaid || $finalPaid) {
+            
+            // Auto-upgrade to completed_paid if service is completed and fully paid
+            $request = $this->serviceRequestModel->getRequestById($request_id);
+            if ($request && strtolower($request->status) === 'completed') {
+                $this->serviceRequestModel->updateRequestStatus($request_id, 'completed_paid');
+            }
+        } elseif ($advancePaid && $remainingPaid) {
+            $this->serviceRequestModel->updatePaymentStatus($request_id, 'paid');
+            
+            // Auto-upgrade to completed_paid if service is completed and fully paid
+            $request = $this->serviceRequestModel->getRequestById($request_id);
+            if ($request && strtolower($request->status) === 'completed') {
+                $this->serviceRequestModel->updateRequestStatus($request_id, 'completed_paid');
+            }
+        } elseif ($advancePaid || $remainingPaid) {
             $this->serviceRequestModel->updatePaymentStatus($request_id, 'partially_paid');
         }
     }
     
     /**
-     * View payment history for a request
+     * Display payment receipt/invoice
      */
-    public function history($request_id = null)
+    public function receipt($payment_id = null)
     {
-        if (!$request_id) {
-            die('Invalid request ID');
+        if (!$payment_id) {
+            $_SESSION['error'] = 'Invalid payment reference';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
         }
         
-        $payments = $this->paymentModel->getPaymentsByRequest($request_id);
-        $request = $this->serviceRequestModel->getRequestById($request_id);
+        // Get payment details
+        $payment = $this->paymentModel->getPaymentById($payment_id);
+        if (!$payment) {
+            $_SESSION['error'] = 'Payment not found';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+
+        $currentUserId = $_SESSION['user_id'] ?? 0;
+        $isPayer = (int)$payment->paid_by === (int)$currentUserId;
+        $isProvider = (int)$payment->paid_to === (int)$currentUserId;
+        if (!$isPayer && !$isProvider) {
+            $_SESSION['error'] = 'You are not authorized to view this receipt';
+            header('Location: ' . ROOT . '/Home');
+            exit;
+        }
         
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
+        // Get service request details
+        $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
+        
+        // Get payer and payee user details
+        $userModel = $this->getModel('M_login');
+        $paidBy = $payment->paid_by ? $userModel->getUserById($payment->paid_by) : null;
+        $paidTo = $payment->paid_to ? $userModel->getUserById($payment->paid_to) : null;
+        
+        // Parse transaction response
+        $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
+        
+        $data = [
+            'payment' => $payment,
             'request' => $request,
-            'payments' => $payments
-        ]);
+            'paidBy' => $paidBy,
+            'paidTo' => $paidTo,
+            'transactionData' => $transactionData,
+            'isProviderView' => $isProvider,
+            'receipt_number' => 'RCP-' . str_pad($payment->id, 6, '0', STR_PAD_LEFT)
+        ];
+        
+        $this->view('payment_receipt', $data);
+    }
+    
+    /**
+     * Return URL Handler - User redirected here after payment
+     * PayHere only redirects here on completion, so we mark payment as successful
+     */
+    public function return()
+    {
+        // Check if user is logged in for this step
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . ROOT . '/login');
+            exit;
+        }
+        
+        // Log all GET parameters from PayHere for debugging
+        error_log('PayHere Return URL Parameters: ' . json_encode($_GET));
+        
+        $order_id = $_GET['order_id'] ?? null;
+        
+        if (!$order_id) {
+            $_SESSION['error'] = 'Invalid payment reference';
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+        
+        // Fetch payment by order_id
+        $payment = $this->paymentModel->getPaymentByOrderId($order_id);
+        
+        if (!$payment) {
+            $_SESSION['error'] = 'Payment record not found. Please contact support.';
+            error_log('Payment not found for order_id: ' . $order_id);
+            header('Location: ' . ROOT . '/Production_manager/manage_services');
+            exit;
+        }
+        
+        // Update payment status only if it's pending (prevent duplicate updates)
+        if ($payment->payment_status === 'pending') {
+            $this->paymentModel->updatePaymentStatus(
+                $payment->id, 
+                'completed',
+                json_encode([
+                    'source' => 'return_url',
+                    'order_id' => $order_id,
+                    'timestamp' => time(),
+                    'status' => 'completed',
+                    'returned_at' => date('Y-m-d H:i:s')
+                ])
+            );
+            
+            // Update service request payment status
+            $this->updateServiceRequestPaymentStatus($payment->service_request_id);
+        }
+        
+        // Redirect directly to receipt page (no summary page)
+        header('Location: ' . ROOT . '/Payment/receipt/' . $payment->id);
+        exit;
+    }
+
+    /**
+     * Cancel any rejected payments for a service request
+     * Called before creating a new payment to prevent duplicates
+     */
+    private function cancelRejectedPayments($requestId)
+    {
+        // Get all pending payments for this request
+        $payments = $this->paymentModel->getPaymentsByRequest($requestId);
+        
+        if (!$payments) {
+            return;
+        }
+
+        foreach ($payments as $payment) {
+            // Only process pending payments
+            if (strtolower($payment->payment_status ?? '') !== 'pending') {
+                continue;
+            }
+
+            // Check if payment was rejected by provider
+            $transactionData = !empty($payment->transaction_response) 
+                ? json_decode($payment->transaction_response, true) 
+                : [];
+            
+            if (is_array($transactionData) && 
+                isset($transactionData['provider_verification_status']) && 
+                $transactionData['provider_verification_status'] === 'rejected') {
+                
+                // Mark this rejected payment as cancelled
+                $this->paymentModel->updatePaymentStatus(
+                    $payment->id,
+                    'cancelled',
+                    json_encode(array_merge($transactionData, [
+                        'cancelled_at' => date('Y-m-d H:i:s'),
+                        'cancelled_reason' => 'Replaced with new payment submission'
+                    ]))
+                );
+            }
+        }
     }
 }

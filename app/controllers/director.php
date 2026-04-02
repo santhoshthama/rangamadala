@@ -7,6 +7,8 @@ class Director{
     protected $roleModel;
     protected $artistModel;
     protected $pmModel;
+    protected $scheduleModel;
+    protected $notificationModel;
 
     public function __construct()
     {
@@ -14,6 +16,8 @@ class Director{
         $this->roleModel = $this->getModel('M_role');
         $this->artistModel = $this->getModel('M_artist');
         $this->pmModel = $this->getModel('M_production_manager');
+        $this->scheduleModel = $this->getModel('M_schedule');
+        $this->notificationModel = $this->getModel('M_notification');
     }
 
     public function index()
@@ -23,7 +27,34 @@ class Director{
 
     public function dashboard()
     {
-        $this->renderDramaView('dashboard');
+        $this->renderDramaView('dashboard', [], function ($drama) {
+            // Get production manager
+            $productionManager = $this->pmModel ? $this->pmModel->getAssignedManager((int)$drama->id) : null;
+            
+            // Get all roles for this drama
+            $roles = $this->roleModel ? $this->roleModel->getRolesByDrama((int)$drama->id) : [];
+            
+            // Get assigned artists for each role
+            $assignedArtists = [];
+            if ($this->roleModel && !empty($roles)) {
+                foreach ($roles as $role) {
+                    $assignments = $this->roleModel->getAssignmentsByRole((int)$role->id);
+                    foreach ($assignments as $assignment) {
+                        $assignedArtists[] = (object)[
+                            'artist_name' => $assignment->artist_name ?? 'Unknown',
+                            'role_name' => $role->role_name ?? 'Unknown Role',
+                            'role_type' => $role->role_type ?? 'supporting',
+                            'assigned_at' => $assignment->assigned_at ?? null,
+                        ];
+                    }
+                }
+            }
+            
+            return [
+                'productionManager' => $productionManager,
+                'assignedArtists' => $assignedArtists,
+            ];
+        });
     }
 
     public function drama_details()
@@ -38,14 +69,25 @@ class Director{
             $roles = $this->roleModel ? $this->roleModel->getRolesByDrama((int)$drama->id) : [];
             $stats = $this->roleModel ? $this->roleModel->getRoleStats((int)$drama->id) : null;
             $pendingApplications = $this->roleModel ? $this->roleModel->getApplicationsByDrama((int)$drama->id, 'pending') : [];
-            $pendingRequests = $this->roleModel ? $this->roleModel->getRoleRequestsByDrama((int)$drama->id, 'pending') : [];
+            
+            // Get all requests without status filter to see everything
+            $allRequests = $this->roleModel ? $this->roleModel->getRoleRequestsByDrama((int)$drama->id) : [];
+            
+            // Filter to pending and interview status
+            $pendingRequests = array_filter($allRequests, function($req) {
+                $status = strtolower($req->status ?? '');
+                error_log("Request ID {$req->id} - Status: {$status}, Artist: {$req->artist_name}, Role: {$req->role_name}");
+                return in_array($status, ['pending', 'interview']);
+            });
+            error_log("Filtered pending requests: " . count($pendingRequests));
+            
             $publishedRoles = $this->roleModel ? $this->roleModel->getPublishedRolesByDrama((int)$drama->id) : [];
 
             return [
                 'roles' => $roles,
                 'roleStats' => $stats,
                 'pendingApplications' => $pendingApplications,
-                'pendingRequests' => $pendingRequests,
+                'pendingRequests' => array_values($pendingRequests), // Re-index array
                 'publishedRoles' => $publishedRoles,
             ];
         });
@@ -413,7 +455,446 @@ class Director{
 
     public function schedule_management()
     {
-        $this->renderDramaView('schedule_management');
+        $this->renderDramaView('schedule_management', [], function ($drama) {
+            $dramaId = (int)$drama->id;
+
+            // Get all events
+            $upcomingEvents = $this->scheduleModel ? $this->scheduleModel->getUpcomingEvents($dramaId) : [];
+            $pastEvents = $this->scheduleModel ? $this->scheduleModel->getPastEvents($dramaId) : [];
+            $allEvents = $this->scheduleModel ? $this->scheduleModel->getEventsByDrama($dramaId) : [];
+            $stats = $this->scheduleModel ? $this->scheduleModel->getScheduleStats($dramaId) : null;
+
+            // Get interview events from role_applications for calendar integration
+            $interviewEvents = $this->scheduleModel ? $this->scheduleModel->getInterviewsFromApplications($dramaId) : [];
+
+            // Get roles for the interview schedule dropdown
+            $roles = $this->roleModel ? $this->roleModel->getRolesByDrama($dramaId) : [];
+
+            return [
+                'upcomingEvents' => $upcomingEvents,
+                'pastEvents' => $pastEvents,
+                'allEvents' => $allEvents,
+                'interviewEvents' => $interviewEvents,
+                'scheduleStats' => $stats,
+                'roles' => $roles,
+            ];
+        });
+    }
+
+    /**
+     * Create a new schedule event (POST)
+     */
+    public function create_schedule()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $dramaId);
+                exit;
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->scheduleModel) {
+            $_SESSION['message'] = 'Schedule management is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        // Validate inputs
+        $eventType = trim($_POST['event_type'] ?? '');
+        $eventTitle = trim($_POST['event_title'] ?? '');
+        $eventDescription = trim($_POST['event_description'] ?? '');
+        $scheduledDate = trim($_POST['scheduled_date'] ?? '');
+        $startTime = trim($_POST['start_time'] ?? '');
+        $endTime = trim($_POST['end_time'] ?? '');
+        $venue = trim($_POST['venue'] ?? '');
+        $roleId = !empty($_POST['role_id']) ? (int)$_POST['role_id'] : null;
+        $notes = trim($_POST['notes'] ?? '');
+
+        $errors = [];
+        if (!in_array($eventType, ['rehearsal', 'interview', 'meeting', 'performance'])) {
+            $errors[] = 'Invalid event type.';
+        }
+        if (empty($eventTitle)) {
+            $errors[] = 'Event title is required.';
+        }
+        if (empty($scheduledDate)) {
+            $errors[] = 'Date is required.';
+        }
+        if (empty($startTime) || empty($endTime)) {
+            $errors[] = 'Start and end times are required.';
+        }
+        if ($startTime >= $endTime) {
+            $errors[] = 'End time must be after start time.';
+        }
+        if (empty($venue)) {
+            $errors[] = 'Venue is required.';
+        }
+
+        if (!empty($errors)) {
+            $_SESSION['message'] = implode(' ', $errors);
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        // Check time slot availability
+        $isAvailable = $this->scheduleModel->isTimeSlotAvailable((int)$drama->id, $scheduledDate, $startTime, $endTime);
+        if (!$isAvailable) {
+            $_SESSION['message'] = 'This time slot conflicts with an existing schedule on ' . $scheduledDate . '. Please choose a different time.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        $data = [
+            'drama_id' => (int)$drama->id,
+            'event_type' => $eventType,
+            'event_title' => $eventTitle,
+            'event_description' => $eventDescription ?: null,
+            'scheduled_date' => $scheduledDate,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'venue' => $venue,
+            'role_id' => $roleId,
+            'notes' => $notes ?: null,
+            'created_by' => (int)$_SESSION['user_id'],
+        ];
+
+        $eventId = $this->scheduleModel->createEvent($data);
+
+        if ($eventId) {
+            $_SESSION['message'] = 'Schedule event created successfully.';
+            $_SESSION['message_type'] = 'success';
+
+            // Notify all artists in this drama about the new event
+            if ($this->notificationModel) {
+                $eventLink = ROOT . '/artistdashboard/event_detail?event_id=' . $eventId . '&drama_id=' . $drama->id;
+                $this->notificationModel->notifyDramaArtists(
+                    (int)$drama->id,
+                    'event_scheduled',
+                    'New ' . ucfirst($eventType) . ' Scheduled: ' . $eventTitle,
+                    ucfirst($eventType) . ' "' . $eventTitle . '" has been scheduled for ' . date('M d, Y', strtotime($scheduledDate)) . ' at ' . $venue . ' (' . date('h:i A', strtotime($startTime)) . ' - ' . date('h:i A', strtotime($endTime)) . ').',
+                    $eventLink,
+                    (int)$_SESSION['user_id']
+                );
+            }
+        } else {
+            $_SESSION['message'] = 'Failed to create schedule event.';
+            $_SESSION['message_type'] = 'error';
+        }
+
+        header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+        exit;
+    }
+
+    /**
+     * Update an existing schedule event (POST)
+     */
+    public function update_schedule()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $dramaId);
+                exit;
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->scheduleModel) {
+            $_SESSION['message'] = 'Schedule management is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        $eventId = (int)($_POST['event_id'] ?? 0);
+        if (!$eventId) {
+            $_SESSION['message'] = 'Invalid event.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        // Verify event belongs to this drama
+        $event = $this->scheduleModel->getEventById($eventId);
+        if (!$event || (int)$event->drama_id !== (int)$drama->id) {
+            $_SESSION['message'] = 'Event not found or inaccessible.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        // Validate inputs
+        $eventType = trim($_POST['event_type'] ?? '');
+        $eventTitle = trim($_POST['event_title'] ?? '');
+        $eventDescription = trim($_POST['event_description'] ?? '');
+        $scheduledDate = trim($_POST['scheduled_date'] ?? '');
+        $startTime = trim($_POST['start_time'] ?? '');
+        $endTime = trim($_POST['end_time'] ?? '');
+        $venue = trim($_POST['venue'] ?? '');
+        $roleId = !empty($_POST['role_id']) ? (int)$_POST['role_id'] : null;
+        $notes = trim($_POST['notes'] ?? '');
+
+        $errors = [];
+        if (!in_array($eventType, ['rehearsal', 'interview', 'meeting', 'performance'])) {
+            $errors[] = 'Invalid event type.';
+        }
+        if (empty($eventTitle)) {
+            $errors[] = 'Event title is required.';
+        }
+        if (empty($scheduledDate)) {
+            $errors[] = 'Date is required.';
+        }
+        if (empty($startTime) || empty($endTime)) {
+            $errors[] = 'Start and end times are required.';
+        }
+        if ($startTime >= $endTime) {
+            $errors[] = 'End time must be after start time.';
+        }
+        if (empty($venue)) {
+            $errors[] = 'Venue is required.';
+        }
+
+        if (!empty($errors)) {
+            $_SESSION['message'] = implode(' ', $errors);
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        // Check time slot availability (exclude current event)
+        $isAvailable = $this->scheduleModel->isTimeSlotAvailable((int)$drama->id, $scheduledDate, $startTime, $endTime, $eventId);
+        if (!$isAvailable) {
+            $_SESSION['message'] = 'This time slot conflicts with an existing schedule on ' . $scheduledDate . '. Please choose a different time.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        $data = [
+            'event_type' => $eventType,
+            'event_title' => $eventTitle,
+            'event_description' => $eventDescription ?: null,
+            'scheduled_date' => $scheduledDate,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'venue' => $venue,
+            'role_id' => $roleId,
+            'notes' => $notes ?: null,
+        ];
+
+        $updated = $this->scheduleModel->updateEvent($eventId, $data);
+
+        if ($updated) {
+            $_SESSION['message'] = 'Schedule event updated successfully.';
+            $_SESSION['message_type'] = 'success';
+        } else {
+            $_SESSION['message'] = 'Failed to update schedule event.';
+            $_SESSION['message_type'] = 'error';
+        }
+
+        header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+        exit;
+    }
+
+    /**
+     * Delete a schedule event (POST)
+     */
+    public function delete_schedule()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $dramaId);
+                exit;
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->scheduleModel) {
+            $_SESSION['message'] = 'Schedule management is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        $eventId = (int)($_POST['event_id'] ?? 0);
+
+        // Verify event belongs to this drama
+        $event = $this->scheduleModel->getEventById($eventId);
+        if (!$event || (int)$event->drama_id !== (int)$drama->id) {
+            $_SESSION['message'] = 'Event not found or inaccessible.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        $deleted = $this->scheduleModel->deleteEvent($eventId);
+
+        if ($deleted) {
+            $_SESSION['message'] = 'Schedule event deleted successfully.';
+            $_SESSION['message_type'] = 'success';
+
+            // Notify all artists that the event was cancelled/deleted
+            if ($this->notificationModel) {
+                $dramaLink = ROOT . '/artistdashboard/view_drama?drama_id=' . $drama->id;
+                $this->notificationModel->notifyDramaArtists(
+                    (int)$drama->id,
+                    'event_cancelled',
+                    'Event Cancelled: ' . ($event->event_title ?? 'Event'),
+                    'The ' . ($event->event_type ?? 'event') . ' "' . ($event->event_title ?? 'Event') . '" on ' . date('M d, Y', strtotime($event->scheduled_date)) . ' has been removed from the schedule.',
+                    $dramaLink,
+                    (int)$_SESSION['user_id']
+                );
+            }
+        } else {
+            $_SESSION['message'] = 'Failed to delete schedule event.';
+            $_SESSION['message_type'] = 'error';
+        }
+
+        header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+        exit;
+    }
+
+    /**
+     * Update schedule event status (POST) — confirm, complete, cancel
+     */
+    public function update_schedule_status()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $dramaId);
+                exit;
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->scheduleModel) {
+            $_SESSION['message'] = 'Schedule management is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        $eventId = (int)($_POST['event_id'] ?? 0);
+        $status = trim($_POST['status'] ?? '');
+
+        // Verify event belongs to this drama
+        $event = $this->scheduleModel->getEventById($eventId);
+        if (!$event || (int)$event->drama_id !== (int)$drama->id) {
+            $_SESSION['message'] = 'Event not found or inaccessible.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+            exit;
+        }
+
+        $updated = $this->scheduleModel->updateEventStatus($eventId, $status);
+
+        if ($updated) {
+            $_SESSION['message'] = 'Event status updated to ' . ucfirst($status) . '.';
+            $_SESSION['message_type'] = 'success';
+
+            // Notify artists about status change (cancelled or confirmed)
+            if ($this->notificationModel && in_array($status, ['cancelled', 'confirmed'])) {
+                $notifType = $status === 'cancelled' ? 'event_cancelled' : 'event_updated';
+                $eventLink = ROOT . '/artistdashboard/event_detail?event_id=' . $eventId . '&drama_id=' . $drama->id;
+                $this->notificationModel->notifyDramaArtists(
+                    (int)$drama->id,
+                    $notifType,
+                    'Event ' . ucfirst($status) . ': ' . ($event->event_title ?? 'Event'),
+                    'The ' . ($event->event_type ?? 'event') . ' "' . ($event->event_title ?? 'Event') . '" on ' . date('M d, Y', strtotime($event->scheduled_date)) . ' has been ' . $status . '.',
+                    $eventLink,
+                    (int)$_SESSION['user_id']
+                );
+            }
+        } else {
+            $_SESSION['message'] = 'Failed to update event status.';
+            $_SESSION['message_type'] = 'error';
+        }
+
+        header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+        exit;
+    }
+
+    /**
+     * AJAX endpoint: check date availability
+     */
+    public function check_date_availability()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['available' => false, 'message' => 'Not authenticated.']);
+            exit;
+        }
+
+        $dramaId = (int)($this->getQueryParam('drama_id') ?? 0);
+        $date = $this->getQueryParam('date') ?? '';
+        $startTime = $this->getQueryParam('start_time') ?? '';
+        $endTime = $this->getQueryParam('end_time') ?? '';
+        $excludeId = (int)($this->getQueryParam('exclude_id') ?? 0);
+
+        if (!$dramaId || !$date) {
+            echo json_encode(['available' => false, 'message' => 'Missing parameters.']);
+            exit;
+        }
+
+        if (!$this->scheduleModel) {
+            echo json_encode(['available' => false, 'message' => 'Schedule service unavailable.']);
+            exit;
+        }
+
+        // Get events on this date
+        $eventsOnDate = $this->scheduleModel->getEventsByDate($dramaId, $date);
+
+        // Check specific time slot if provided
+        $timeAvailable = true;
+        if ($startTime && $endTime) {
+            $timeAvailable = $this->scheduleModel->isTimeSlotAvailable($dramaId, $date, $startTime, $endTime, $excludeId ?: null);
+        }
+
+        $eventList = [];
+        foreach ($eventsOnDate as $evt) {
+            $eventList[] = [
+                'id' => $evt->id,
+                'title' => $evt->event_title,
+                'type' => $evt->event_type,
+                'start_time' => $evt->start_time,
+                'end_time' => $evt->end_time,
+                'venue' => $evt->venue,
+                'status' => $evt->status,
+            ];
+        }
+
+        echo json_encode([
+            'available' => $timeAvailable,
+            'date' => $date,
+            'events_count' => count($eventsOnDate),
+            'events' => $eventList,
+            'message' => $timeAvailable
+                ? (count($eventsOnDate) > 0
+                    ? 'Date has ' . count($eventsOnDate) . ' event(s) but the selected time slot is available.'
+                    : 'Date is completely free. You can schedule your event.')
+                : 'Time slot conflicts with an existing event. Please choose a different time.',
+        ]);
+        exit;
     }
 
     public function view_services_budget()
@@ -521,6 +1002,19 @@ class Director{
         );
 
         if ($requestId) {
+            // Notify the artist about the role request/invitation
+            if ($this->notificationModel && $role) {
+                $dramaLink = ROOT . '/artistdashboard';
+                $this->notificationModel->createNotification([
+                    'user_id' => $artistId,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'role_assigned',
+                    'title' => 'Role Invitation: ' . ($role->role_name ?? 'Role'),
+                    'message' => 'You have been invited for the role "' . ($role->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '". Please check your dashboard to respond.',
+                    'link' => $dramaLink,
+                ]);
+            }
+
             $this->respondWithRedirect(true, 'Artist request sent successfully.', (int)$drama->id, [
                 'route' => 'search',
                 'role_id' => $roleId,
@@ -634,6 +1128,19 @@ class Director{
         $accepted = $this->roleModel->acceptApplication($applicationId, (int)$_SESSION['user_id']);
 
         if ($accepted) {
+            // Notify the artist that their application was accepted
+            if ($this->notificationModel && $application) {
+                $dramaLink = ROOT . '/artistdashboard/view_drama?drama_id=' . $drama->id;
+                $this->notificationModel->createNotification([
+                    'user_id' => (int)$application->artist_id,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'application_accepted',
+                    'title' => 'Role Assigned: ' . ($application->role_name ?? 'Role'),
+                    'message' => 'Congratulations! Your application for the role "' . ($application->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '" has been accepted. You are now assigned to this role.',
+                    'link' => $dramaLink,
+                ]);
+            }
+
             $this->respondWithRedirect(true, 'Application accepted and artist assigned.', (int)$drama->id, [
                 'route' => 'manage',
             ]);
@@ -671,6 +1178,18 @@ class Director{
         $rejected = $this->roleModel->rejectApplication($applicationId, (int)$_SESSION['user_id']);
 
         if ($rejected) {
+            // Notify the artist that their application was rejected
+            if ($this->notificationModel && $application) {
+                $this->notificationModel->createNotification([
+                    'user_id' => (int)$application->artist_id,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'application_rejected',
+                    'title' => 'Application Update: ' . ($application->role_name ?? 'Role'),
+                    'message' => 'Your application for the role "' . ($application->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '" was not selected. Keep exploring other opportunities!',
+                    'link' => ROOT . '/artistdashboard/browse_vacancies',
+                ]);
+            }
+
             $this->respondWithRedirect(true, 'Application rejected.', (int)$drama->id, [
                 'route' => 'manage',
             ], 'info');
@@ -679,6 +1198,146 @@ class Director{
         $this->respondWithRedirect(false, 'Unable to reject the application.', (int)$drama->id, [
             'route' => 'manage',
         ]);
+    }
+
+    public function application_profile()
+    {
+        $applicationId = $this->sanitizeInt($this->getQueryParam('application_id'));
+        if (!$applicationId) {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel || !$this->artistModel) {
+            $this->respondWithRedirect(false, 'Role management is currently unavailable.', (int)$drama->id);
+        }
+
+        $application = $this->loadApplicationForDrama($applicationId, $drama);
+        if (!$application) {
+            $this->respondWithRedirect(false, 'Application not found or inaccessible.', (int)$drama->id);
+        }
+
+        $artist = $this->artistModel->get_artist_by_id((int)$application->artist_id);
+        if (!$artist) {
+            $this->respondWithRedirect(false, 'Unable to load artist profile.', (int)$drama->id);
+        }
+
+        $directorId = (int)($_SESSION['user_id'] ?? 0);
+        if ($directorId > 0 && strtolower($application->status ?? '') === 'pending') {
+            $this->roleModel->markApplicationProfileViewed($applicationId, $directorId);
+            $application = $this->roleModel->getApplicationById($applicationId);
+        }
+
+        $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
+        if (
+            $directorId > 0 &&
+            $confirmationStatus !== 'pending' &&
+            empty($application->interview_confirmation_seen_at ?? null)
+        ) {
+            $this->roleModel->markInterviewConfirmationSeen($applicationId, $directorId);
+            $application = $this->roleModel->getApplicationById($applicationId);
+        }
+
+        $this->renderDramaView('application_artist_profile', [
+            'application' => $application,
+            'artist' => $artist,
+            'directorId' => $directorId,
+        ]);
+    }
+
+    public function schedule_application_interview()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $this->respondWithRedirect(false, 'Role management is currently unavailable.', (int)$drama->id);
+        }
+
+        $applicationId = (int)($_POST['application_id'] ?? 0);
+        $application = $this->loadApplicationForDrama($applicationId, $drama);
+        if (!$application) {
+            $this->respondWithRedirect(false, 'Application not found or inaccessible.', (int)$drama->id);
+        }
+
+        if (strtolower($application->status ?? '') !== 'pending') {
+            $this->respondWithRedirect(false, 'Only pending applications can be scheduled for interviews.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $directorId = (int)($_SESSION['user_id'] ?? 0);
+        $redirectTarget = $_POST['redirect_to'] ?? 'manage';
+        $redirectOptions = [
+            'route' => $redirectTarget === 'profile' ? 'application_profile' : 'manage',
+            'application_id' => $applicationId,
+        ];
+
+        $interviewRaw = trim((string)($_POST['interview_at'] ?? ''));
+        $notes = trim((string)($_POST['interview_notes'] ?? ''));
+
+        $errors = [];
+        if (empty($application->profile_viewed_at) || (int)($application->profile_viewed_by ?? 0) !== $directorId) {
+            $errors[] = 'View the artist profile before scheduling the interview.';
+        }
+
+        $interviewAt = null;
+        if ($interviewRaw === '') {
+            $errors[] = 'Provide a date and time for the interview.';
+        } else {
+            $timestamp = strtotime($interviewRaw);
+            if ($timestamp === false) {
+                $errors[] = 'Enter a valid interview date and time.';
+            } elseif ($timestamp <= time()) {
+                $errors[] = 'Schedule the interview for a future time.';
+            } else {
+                $interviewAt = date('Y-m-d H:i:s', $timestamp);
+            }
+        }
+
+        if (!empty($errors)) {
+            $this->respondWithRedirect(false, implode(' ', $errors), (int)$drama->id, $redirectOptions);
+        }
+
+        $scheduled = $this->roleModel->scheduleApplicationInterview(
+            $applicationId,
+            $interviewAt,
+            $directorId,
+            $notes !== '' ? $notes : null
+        );
+
+        if ($scheduled) {
+            // Notify the artist about their scheduled interview
+            if ($this->notificationModel && $application) {
+                $dramaLink = ROOT . '/artistdashboard/view_drama?drama_id=' . $drama->id;
+                $this->notificationModel->createNotification([
+                    'user_id' => (int)$application->artist_id,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'interview_scheduled',
+                    'title' => 'Interview Scheduled: ' . ($application->role_name ?? 'Role'),
+                    'message' => 'An interview has been scheduled for the role "' . ($application->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '" on ' . date('M d, Y \a\t h:i A', strtotime($interviewAt)) . '.',
+                    'link' => $dramaLink,
+                ]);
+            }
+
+            $this->respondWithRedirect(true, 'Interview scheduled successfully.', (int)$drama->id, $redirectOptions);
+        }
+
+        $this->respondWithRedirect(false, 'Unable to schedule the interview. Please try again.', (int)$drama->id, $redirectOptions);
     }
 
     public function create_drama()
@@ -846,6 +1505,7 @@ class Director{
     {
         $route = $options['route'] ?? null;
         $roleId = isset($options['role_id']) ? (int)$options['role_id'] : null;
+        $applicationId = isset($options['application_id']) ? (int)$options['application_id'] : null;
 
         if ($route === 'search') {
             $url = ROOT . '/director/search_artists?drama_id=' . $dramaId;
@@ -859,12 +1519,30 @@ class Director{
             return ROOT . '/director/view_role?drama_id=' . $dramaId . '&role_id=' . $roleId;
         }
 
+        if ($route === 'application_profile' && $applicationId) {
+            return ROOT . '/director/application_profile?drama_id=' . $dramaId . '&application_id=' . $applicationId;
+        }
+
         $query = ['drama_id' => $dramaId];
         if ($roleId) {
             $query['role_id'] = $roleId;
         }
 
         return ROOT . '/director/manage_roles?' . http_build_query($query);
+    }
+
+    protected function loadApplicationForDrama(int $applicationId, $drama)
+    {
+        if ($applicationId <= 0 || !$this->roleModel) {
+            return null;
+        }
+
+        $application = $this->roleModel->getApplicationById($applicationId);
+        if (!$application || (int)$application->drama_id !== (int)$drama->id) {
+            return null;
+        }
+
+        return $application;
     }
 
     protected function sanitizeInt($value): ?int
@@ -1022,6 +1700,66 @@ class Director{
         }
 
         return false;
+    }
+
+    /**
+     * Remove an artist assignment from a role
+     */
+    public function remove_assignment()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $_SESSION['message'] = 'Role management is currently unavailable.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        $assignmentId = (int)($_POST['assignment_id'] ?? 0);
+        $roleId = (int)($_POST['role_id'] ?? 0);
+
+        if (!$assignmentId || !$roleId) {
+            $_SESSION['message'] = 'Invalid request. Missing assignment or role information.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        // Verify the role belongs to this drama
+        $role = $this->findRoleForDrama($roleId, (int)$drama->id);
+        if (!$role) {
+            $_SESSION['message'] = 'Role not found or inaccessible.';
+            $_SESSION['message_type'] = 'error';
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        // Remove the assignment
+        $removed = $this->roleModel->removeAssignment($assignmentId);
+
+        if ($removed) {
+            $_SESSION['message'] = 'Artist removed from role successfully.';
+            $_SESSION['message_type'] = 'success';
+        } else {
+            $_SESSION['message'] = 'Failed to remove artist assignment. Please try again.';
+            $_SESSION['message_type'] = 'error';
+        }
+
+        // Redirect back to role details or manage roles
+        $returnTo = $_POST['return_to'] ?? 'manage_roles';
+        if ($returnTo === 'role_details') {
+            header("Location: " . ROOT . "/director/view_role?drama_id=" . $drama->id . "&role_id=" . $roleId);
+        } else {
+            $this->redirectToManageRoles((int)$drama->id);
+        }
+        exit;
     }
 }
 

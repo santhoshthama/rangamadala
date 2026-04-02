@@ -7,12 +7,29 @@ if (!isset($drama) && isset($data['drama'])) {
     $drama = $data['drama'];
 }
 
+$dramaId = isset($drama->id) ? (int)$drama->id : (isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0);
+
 $formValues = [
     'drama_name' => $form_data['drama_name'] ?? ($drama->drama_name ?? ''),
     'certificate_number' => $form_data['certificate_number'] ?? ($drama->certificate_number ?? ''),
     'owner_name' => $form_data['owner_name'] ?? ($drama->owner_name ?? ''),
     'description' => $form_data['description'] ?? ($drama->description ?? ''),
 ];
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -66,51 +83,45 @@ $formValues = [
         </div>
         <ul class="menu">
             <li>
-                <a href="dashboard.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
-                <a href="drama_details.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
-                <a href="manage_roles.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
-                <a href="assign_managers.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
-                <a href="schedule_management.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
-                <a href="view_services_budget.php?drama_id=1">
+                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
-                <a href="../artist/profile.php">
+                <a href="<?= ROOT ?>/artistdashboard">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="../../public/index.php">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
                 </a>
             </li>
         </ul>
@@ -118,7 +129,7 @@ $formValues = [
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php?drama_id=1" class="back-button">
+        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
         </a>
@@ -129,7 +140,15 @@ $formValues = [
                 <span>Drama Details</span>
                 <h2><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></h2>
             </div>
-            
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="fas fa-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
         </div>
 
         <!-- Drama Information -->

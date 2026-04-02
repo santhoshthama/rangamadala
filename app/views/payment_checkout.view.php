@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Checkout - <?= APP_NAME ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PayHere Payment Gateway Script -->
+    <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -473,30 +477,45 @@
                 </div>
 
                 <!-- Payment Methods -->
-                <div class="payment-method selected" onclick="selectPaymentMethod('paypal')">
+                <div class="payment-method selected" onclick="selectPaymentMethod('payhere', event)">
                     <div class="method-header">
                         <div class="method-info">
                             <div class="method-icon">
-                                <i class="fab fa-paypal" style="color: #003087;"></i>
+                                <i class="fas fa-credit-card" style="color: #d4af37;"></i>
                             </div>
                             <div>
-                                <div class="method-name">PayPal</div>
-                                <div class="method-desc">Pay securely with your PayPal account</div>
+                                <div class="method-name">PayHere</div>
+                                <div class="method-desc">Pay securely with Cards, eZcash, mCash & more</div>
                             </div>
                         </div>
                         <div class="radio-btn"></div>
                     </div>
                 </div>
 
-                <div class="payment-method" onclick="selectPaymentMethod('card')">
+                <div class="payment-method" onclick="selectPaymentMethod('bank', event)">
                     <div class="method-header">
                         <div class="method-info">
                             <div class="method-icon">
-                                <i class="fas fa-credit-card" style="color: #6b7280;"></i>
+                                <i class="fas fa-university" style="color: #6b7280;"></i>
                             </div>
                             <div>
-                                <div class="method-name">Credit/Debit Card</div>
-                                <div class="method-desc">Coming soon</div>
+                                <div class="method-name">Bank Transfer</div>
+                                <div class="method-desc">Upload bank slip evidence</div>
+                            </div>
+                        </div>
+                        <div class="radio-btn"></div>
+                    </div>
+                </div>
+
+                <div class="payment-method" onclick="selectPaymentMethod('cash', event)">
+                    <div class="method-header">
+                        <div class="method-info">
+                            <div class="method-icon">
+                                <i class="fas fa-money-bill-wave" style="color: #16a34a;"></i>
+                            </div>
+                            <div>
+                                <div class="method-name">Cash Payment</div>
+                                <div class="method-desc">Record manual cash payment</div>
                             </div>
                         </div>
                         <div class="radio-btn"></div>
@@ -563,7 +582,7 @@
                 <div style="margin-top: 24px;">
                     <button type="button" class="btn btn-primary" id="proceedPaymentBtn" onclick="proceedToPayment()">
                         <i class="fas fa-lock"></i>
-                        Proceed to PayPal
+                        Proceed to Payment
                     </button>
                     <a href="<?= ROOT ?>/Production_manager/manage_services?drama_id=<?= $request->drama_id ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i>
@@ -586,14 +605,16 @@
     </div>
 
     <script>
-        let selectedMethod = 'paypal';
+        let selectedMethod = 'payhere';
 
-        function selectPaymentMethod(method) {
+        function selectPaymentMethod(method, event) {
             selectedMethod = method;
             document.querySelectorAll('.payment-method').forEach(el => {
                 el.classList.remove('selected');
             });
-            event.currentTarget.classList.add('selected');
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('selected');
+            }
         }
 
         function proceedToPayment() {
@@ -608,50 +629,120 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
-            if (selectedMethod === 'paypal') {
-                // Initiate PayPal payment
-                initiatePayPalPayment();
+            if (selectedMethod === 'payhere') {
+                initiatePayHerePayment();
+            } else if (selectedMethod === 'bank') {
+                // Redirect to bank slip upload form
+                const urlParams = new URLSearchParams(window.location.search);
+                const requestId = urlParams.get('request_id');
+                const amount = urlParams.get('amount');
+                const type = urlParams.get('type');
+                window.location.href = '<?= ROOT ?>/Payment/bankForm?request_id=' + requestId + '&amount=' + amount + '&type=' + type;
+            } else if (selectedMethod === 'cash') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const requestId = urlParams.get('request_id');
+                const amount = urlParams.get('amount');
+                const type = urlParams.get('type');
+                window.location.href = '<?= ROOT ?>/Payment/cashForm?request_id=' + requestId + '&amount=' + amount + '&type=' + type;
             } else {
-                alert('This payment method is coming soon. Please use PayPal.');
+                alert('Invalid payment method selected.');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to PayPal';
+                btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
             }
         }
 
-        function initiatePayPalPayment() {
-            // TODO: Integrate with PayPal SDK
-            // For now, create payment record and show placeholder
+        function initiatePayHerePayment() {
+            // Check if PayHere is loaded
+            if (typeof payhere === 'undefined') {
+                alert('PayHere payment gateway not loaded. Please refresh the page.');
+                console.error('PayHere script not loaded');
+                const btn = document.getElementById('proceedPaymentBtn');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
+                return;
+            }
             
-            fetch('<?= ROOT ?>/Payment/initiate', {
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const requestId = urlParams.get('request_id');
+            const amount = urlParams.get('amount');
+            const type = urlParams.get('type');
+            
+            // Create payment via AJAX first
+            fetch('<?= ROOT ?>/Payment/createPayHerePayment', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    request_id: '<?= $request->id ?>',
-                    amount: '<?= $amount ?>',
-                    type: '<?= $type ?>',
-                    stage: 'after_confirmation'
-                })
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'request_id=' + encodeURIComponent(requestId) + '&amount=' + encodeURIComponent(amount) + '&type=' + encodeURIComponent(type)
             })
-            .then(res => res.json())
+            .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    // TODO: Redirect to PayPal or open PayPal modal
-                    alert('PayPal integration pending. Payment record created with ID: ' + data.payment_id);
-                    
-                    // For testing, simulate successful payment
-                    setTimeout(() => {
-                        window.location.href = '<?= ROOT ?>/Payment/success?payment_id=' + data.payment_id;
-                    }, 2000);
-                } else {
-                    alert('Error: ' + data.error);
-                    document.getElementById('proceedPaymentBtn').disabled = false;
-                    document.getElementById('proceedPaymentBtn').innerHTML = '<i class="fas fa-lock"></i> Proceed to PayPal';
+                if (!data.success) {
+                    alert(data.error || 'Failed to initialize payment');
+                    const btn = document.getElementById('proceedPaymentBtn');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
+                    return;
                 }
+                
+                // Prepare PayHere payment object with returned order_id and hash
+                const payment = {
+                    "sandbox": <?= json_encode($payhere_config['sandbox']) ?>,
+                    "merchant_id": "<?= htmlspecialchars($payhere_config['merchant_id']) ?>",
+                    "return_url": "<?= htmlspecialchars($payhere_config['return_url']) ?>?order_id=" + data.order_id,
+                    "cancel_url": "<?= htmlspecialchars($payhere_config['cancel_url']) ?>",
+                    "notify_url": "<?= htmlspecialchars($payhere_config['notify_url']) ?>",
+                    "order_id": data.order_id,
+                    "items": "<?= htmlspecialchars($request->service_type) ?> - Service Request #<?= $request->id ?>",
+                    "amount": "<?= number_format($amount, 2, '.', '') ?>",
+                    "currency": "LKR",
+                    "hash": data.hash,
+                    "first_name": "<?= htmlspecialchars($user->first_name ?? explode(' ', $user->full_name ?? 'Customer')[0]) ?>",
+                    "last_name": "<?= htmlspecialchars($user->last_name ?? (isset($user->full_name) ? implode(' ', array_slice(explode(' ', $user->full_name), 1)) : '')) ?>",
+                    "email": "<?= htmlspecialchars($user->email) ?>",
+                    "phone": "<?= htmlspecialchars($user->phone ?? '0771234567') ?>",
+                    "address": "<?= htmlspecialchars($user->address ?? 'Colombo') ?>",
+                    "city": "<?= htmlspecialchars($user->city ?? 'Colombo') ?>",
+                    "country": "Sri Lanka",
+                    "custom_1": "<?= htmlspecialchars($request->id) ?>",
+                    "custom_2": "<?= htmlspecialchars($type) ?>"
+                };
+
+                console.log('PayHere Payment Object:', payment);
+
+                // Payment completed callback
+                payhere.onCompleted = function onCompleted(orderId) {
+                    console.log("Payment completed. OrderID: " + orderId);
+                    // Redirect to return URL - webhook will update status
+                    window.location.href = payment.return_url;
+                };
+
+                // Payment window closed  
+                payhere.onDismissed = function onDismissed() {
+                    console.log("Payment dismissed");
+                    window.location.href = "<?= ROOT ?>/Production_manager/manage_services";
+                };
+
+                // Error occurred
+                payhere.onError = function onError(error) {
+                    console.error("PayHere Error: " + error);
+                    const btn = document.getElementById('proceedPaymentBtn');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
+                    alert('Payment error: ' + error);
+                };
+
+                // Start PayHere payment
+                console.log('Starting PayHere payment...');
+                payhere.startPayment(payment);
             })
             .catch(error => {
-                alert('Network error: ' + error.message);
-                document.getElementById('proceedPaymentBtn').disabled = false;
-                document.getElementById('proceedPaymentBtn').innerHTML = '<i class="fas fa-lock"></i> Proceed to PayPal';
+                console.error('Error creating payment:', error);
+                alert('Failed to initialize payment. Please try again.');
+                const btn = document.getElementById('proceedPaymentBtn');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
             });
         }
     </script>

@@ -26,6 +26,22 @@ $roleStatuses = [
 
 $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
+$currentDirectorId = (int)($_SESSION['user_id'] ?? 0);
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 
 $publishableRoles = array_filter($roles, function ($role) {
     $status = strtolower($role->status ?? 'open');
@@ -102,6 +118,21 @@ $publishedRoleIds = array_map(function ($role) {
 
         .empty-state { padding: 32px; text-align: center; border: 1px dashed var(--border); border-radius: 12px; color: var(--muted); }
 
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-chip.ready { background: rgba(76,175,80,.12); color: #256029; }
+        .status-chip.pending { background: rgba(255,193,7,.18); color: #7a4f02; }
+        .application-actions { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+        .decision-hint { font-size: 12px; color: #a52714; margin: 0; text-align: right; }
+        .interview-summary { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+
         @media (max-width: 768px) {
             .roles-table thead { display: none; }
             .roles-table tbody tr { display: block; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; padding: 12px; }
@@ -121,7 +152,6 @@ $publishedRoleIds = array_map(function ($role) {
             <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
             <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-dollar-sign"></i><span>Services & Budget</span></a></li>
             <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
-            <li><a href="<?= ROOT ?>/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
         </ul>
     </aside>
 
@@ -134,8 +164,15 @@ $publishedRoleIds = array_map(function ($role) {
                 <h2>Manage Artist Roles</h2>
                 <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">Review open roles, handle applications, and collaborate with artists in one place.</p>
             </div>
-            <div class="header-controls">
+            <div class="user--info">
                 <a href="<?= ROOT ?>/director/create_role?drama_id=<?= esc($dramaId) ?>" class="btn btn-primary"><i class="fas fa-plus-circle"></i>Create Role</a>
+                <div class="role-badge">
+                    <i class="fas fa-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 
@@ -250,6 +287,14 @@ $publishedRoleIds = array_map(function ($role) {
                 </div>
             <?php else: ?>
                 <?php foreach ($pendingApplications as $application): ?>
+                    <?php
+                        $interviewScheduled = !empty($application->interview_at ?? null);
+                        $interviewStatus = strtolower($application->interview_status ?? 'pending');
+                        $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
+                        $confirmationSeen = !empty($application->interview_confirmation_seen_at ?? null);
+                        $confirmationColor = $confirmationStatus === 'confirmed' ? '#1f7a3c' : '#a3202c';
+                        $confirmationBackground = $confirmationStatus === 'confirmed' ? 'rgba(40, 167, 69, 0.12)' : 'rgba(220, 53, 69, 0.12)';
+                    ?>
                     <div class="application-card">
                         <div class="card-header">
                             <div>
@@ -259,20 +304,59 @@ $publishedRoleIds = array_map(function ($role) {
                                     <span><strong>Applied:</strong> <?= esc(date('Y-m-d H:i', strtotime($application->applied_at ?? 'now'))) ?></span>
                                     <?php if (!empty($application->artist_email)): ?><span><?= esc($application->artist_email) ?></span><?php endif; ?>
                                 </div>
+                                <div class="review-status" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <span class="status-chip <?= $interviewScheduled ? 'ready' : 'pending' ?>">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <?= $interviewScheduled ? 'Interview Scheduled' : 'Interview Pending' ?>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="actions-inline">
-                                <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
-                                    <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i>Accept</button>
-                                </form>
-                                <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
-                                    <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                    <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i>Reject</button>
-                                </form>
+                            <div class="application-actions">
+                                <a class="btn btn-secondary" href="<?= ROOT ?>/director/application_profile?drama_id=<?= esc($dramaId) ?>&application_id=<?= esc($application->id) ?>">
+                                    <i class="fas fa-id-card"></i>View Profile
+                                </a>
+                                <div class="actions-inline">
+                                    <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
+                                        <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i>Accept</button>
+                                    </form>
+                                    <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
+                                        <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                        <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i>Reject</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                         <?php if (!empty($application->application_message)): ?>
                             <div style="margin-top: 12px; white-space: pre-wrap;"><?= nl2br(esc($application->application_message)) ?></div>
+                        <?php endif; ?>
+                        <?php if ($interviewScheduled): ?>
+                            <div class="interview-summary">
+                                <i class="fas fa-video"></i>
+                                Scheduled for <?= esc(date('Y-m-d H:i', strtotime($application->interview_at))) ?>
+                                <span class="status-badge <?= $interviewStatus === 'completed' ? 'assigned' : ($interviewStatus === 'cancelled' ? 'unassigned' : 'pending') ?>" style="text-transform: capitalize;">
+                                    <?= esc($interviewStatus === '' ? 'pending' : $interviewStatus) ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($confirmationStatus !== 'pending'): ?>
+                            <div class="interview-confirmation" style="margin-top: 12px; padding: 12px; border-left: 4px solid <?= $confirmationColor ?>; background: <?= $confirmationBackground ?>; border-radius: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                    <strong style="color: <?= $confirmationColor ?>;">
+                                        <i class="fas <?= $confirmationStatus === 'confirmed' ? 'fa-user-check' : 'fa-user-times' ?>"></i>
+                                        <?= $confirmationStatus === 'confirmed' ? 'Artist confirmed attendance' : 'Artist declined the interview' ?>
+                                    </strong>
+                                    <?php if (!$confirmationSeen): ?>
+                                        <span class="status-badge assigned" style="background: #ffc107; color: #5a4300;">New</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="font-size: 13px; color: #333; margin-top: 6px;">
+                                    Received <?= !empty($application->interview_confirmed_at) ? esc(date('Y-m-d H:i', strtotime($application->interview_confirmed_at))) : 'just now' ?>
+                                    <?php if (!empty($application->interview_confirmation_note)): ?>
+                                        <div style="margin-top: 6px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 4px;">"<?= esc($application->interview_confirmation_note) ?>"</div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>

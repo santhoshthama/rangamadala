@@ -109,7 +109,7 @@ PM can now confirm the service request
 payments table:
 - id
 - service_request_id (links to service request)
-- payment_type (advance/final)
+- payment_type (advance/remaining/full)
 - amount
 - payment_status (pending/completed/failed)
 - transaction_id (from PayPal)

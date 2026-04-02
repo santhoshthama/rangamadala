@@ -36,13 +36,19 @@ class Artistprofile
             'phone' => $data['user']->phone ?? '',
             'years_experience' => isset($data['user']->years_experience) && $data['user']->years_experience !== null
                 ? (string)$data['user']->years_experience
-                : ''
+                : '',
+            'bio' => $data['user']->bio ?? '',
+            'location' => $data['user']->location ?? '',
+            'website' => $data['user']->website ?? ''
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $full_name = trim($_POST['full_name'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
             $years_input = trim($_POST['years_experience'] ?? '');
+            $bio = trim($_POST['bio'] ?? '');
+            $location = trim($_POST['location'] ?? '');
+            $website = trim($_POST['website'] ?? '');
 
             $errors = [];
             $profileImageName = null;
@@ -66,6 +72,10 @@ class Artistprofile
                 } else {
                     $yearsValue = (int)$years_input;
                 }
+            }
+
+            if ($website !== '' && !filter_var($website, FILTER_VALIDATE_URL)) {
+                $errors[] = 'Please enter a valid website URL (e.g., https://yourwebsite.com).';
             }
 
             if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] !== UPLOAD_ERR_NO_FILE) {
@@ -110,7 +120,10 @@ class Artistprofile
             $data['form'] = [
                 'full_name' => $full_name,
                 'phone' => $phone,
-                'years_experience' => $years_input
+                'years_experience' => $years_input,
+                'bio' => $bio,
+                'location' => $location,
+                'website' => $website
             ];
 
             if (empty($errors)) {
@@ -119,6 +132,17 @@ class Artistprofile
                     'phone' => $phone,
                     'years_experience' => $years_input === '' ? null : $yearsValue
                 ];
+
+                // Only add optional fields if columns exist
+                if ($bio !== '') {
+                    $updateFields['bio'] = $bio;
+                }
+                if ($location !== '') {
+                    $updateFields['location'] = $location;
+                }
+                if ($website !== '') {
+                    $updateFields['website'] = $website;
+                }
 
                 if ($profileImageName !== null) {
                     $updateFields['profile_image'] = $profileImageName;
@@ -142,7 +166,10 @@ class Artistprofile
                         'phone' => $data['user']->phone ?? '',
                         'years_experience' => isset($data['user']->years_experience) && $data['user']->years_experience !== null
                             ? (string)$data['user']->years_experience
-                            : ''
+                            : '',
+                        'bio' => $data['user']->bio ?? '',
+                        'location' => $data['user']->location ?? '',
+                        'website' => $data['user']->website ?? ''
                     ];
                 } else {
                     if ($profileImageName !== null && $uploadedFilePath && is_file($uploadedFilePath)) {

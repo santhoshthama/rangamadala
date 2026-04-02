@@ -4,7 +4,7 @@ if (isset($data) && is_array($data)) {
 }
 
 $user = $user ?? null;
-$form = $form ?? ['full_name' => '', 'phone' => '', 'years_experience' => ''];
+$form = $form ?? ['full_name' => '', 'phone' => '', 'years_experience' => '', 'bio' => '', 'location' => '', 'website' => ''];
 $errors = $errors ?? [];
 $success = $success ?? '';
 
@@ -250,10 +250,23 @@ $currentImageLabel = $user && !empty($user->profile_image)
         input[type="text"]:focus,
         input[type="email"]:focus,
         input[type="tel"]:focus,
-        input[type="number"]:focus {
+        input[type="url"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
             outline: none;
             border-color: var(--brand);
             box-shadow: 0 0 0 4px rgba(186, 142, 35, 0.18);
+        }
+
+        textarea {
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            transition: border 0.2s ease, box-shadow 0.2s ease;
         }
 
         input[readonly] {
@@ -350,6 +363,9 @@ $currentImageLabel = $user && !empty($user->profile_image)
                     <h2><?= $user ? esc($user->full_name ?? 'Artist') : 'Artist' ?></h2>
                     <p><i class="fas fa-envelope"></i> <?= $user ? esc($user->email ?? 'N/A') : 'N/A' ?></p>
                     <p><i class="fas fa-phone"></i> <?= $user ? esc($user->phone ?? 'N/A') : 'N/A' ?></p>
+                    <?php if ($user && !empty($user->location)): ?>
+                    <p><i class="fas fa-map-marker-alt"></i> <?= esc($user->location) ?></p>
+                    <?php endif; ?>
 
                     <div class="summary-item">
                         <span>Years of Experience</span>
@@ -408,6 +424,21 @@ $currentImageLabel = $user && !empty($user->profile_image)
                     <div class="form-group">
                         <label for="years_experience">Years of Experience</label>
                         <input id="years_experience" name="years_experience" type="number" min="0" placeholder="e.g. 5" value="<?= esc($form['years_experience'] ?? '') ?>">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input id="location" name="location" type="text" placeholder="e.g. Colombo, Sri Lanka" value="<?= esc($form['location'] ?? '') ?>">
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="bio">Bio / About Me</label>
+                        <textarea id="bio" name="bio" rows="4" placeholder="Tell us about yourself, your experience, and what makes you unique..."><?= esc($form['bio'] ?? '') ?></textarea>
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="website">Website / Portfolio URL</label>
+                        <input id="website" name="website" type="url" placeholder="https://yourwebsite.com" value="<?= esc($form['website'] ?? '') ?>">
                     </div>
 
                     <div class="form-group full">

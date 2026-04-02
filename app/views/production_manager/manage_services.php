@@ -205,6 +205,45 @@
                                 <?php 
                                     $status = isset($service->status) ? strtolower($service->status) : 'pending';
                                     $statusText = ucfirst($status);
+                                    $statusStyle = '';
+                                    $hideGenericBadge = false;
+                                    
+                                    // Check if payment date is overdue for provider_responded status
+                                    if ($status === 'provider_responded') {
+                                        $serviceDetails = $service->service_details_json ? json_decode($service->service_details_json, true) : [];
+                                        $providerResponse = $serviceDetails['provider_response'] ?? [];
+                                        $advanceDueDate = $providerResponse['advance_due_date'] ?? null;
+                                        $needsAdvance = $providerResponse['needs_advance'] === true || $providerResponse['needs_advance'] === 'true' || $providerResponse['needs_advance'] === 1;
+                                        
+                                        if ($advanceDueDate && $needsAdvance) {
+                                            $dueDate = new DateTime($advanceDueDate);
+                                            $today = new DateTime();
+                                            $today->setTime(0, 0, 0);
+                                            $dueDate->setTime(0, 0, 0);
+                                            
+                                            if ($dueDate < $today) {
+                                                $statusText = 'Payment date overdue';
+                                                $statusStyle = 'background: rgba(220, 20, 60, 0.15); color: #DC143C; border: 1px solid rgba(220, 20, 60, 0.3);';
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Hide generic badge for completed with payment pending confirmation
+                                    if ($status === 'completed') {
+                                        $paymentGateway = $service->payment_gateway ?? '';
+                                        $advancePaymentStatus = strtolower($service->advance_payment_status ?? '');
+                                        $hasPendingCashBankPayment = ($paymentGateway === 'cash' || $paymentGateway === 'bank_transfer') && $advancePaymentStatus === 'pending';
+                                        
+                                        if ($hasPendingCashBankPayment) {
+                                            $hideGenericBadge = true;
+                                        }
+                                    }
+                                    
+                                    // Always hide generic badge for completed_paid (uses custom badge)
+                                    if ($status === 'completed_paid') {
+                                        $hideGenericBadge = true;
+                                    }
+                                    
                                     $budget = isset($service->budget) && $service->budget !== null ? number_format((float)$service->budget, 2) : null;
                                     $dateLabel = '';
                                     if (!empty($service->service_date)) {
@@ -223,7 +262,7 @@
                                         <?php if (!empty($service->service_required)): ?><div class="request-snippet" style="margin-top: 8px; font-size: 13px; color: #555; line-height: 1.4;"><?= htmlspecialchars(substr($service->service_required, 0, 100)) ?><?= strlen($service->service_required) > 100 ? '...' : '' ?></div><?php endif; ?>
                                     </div>
                                     <div class="request-actions">
-                                        <span class="status-badge status-<?= htmlspecialchars($status) ?>"><?= htmlspecialchars($statusText) ?></span>
+                                        <?php if (!$hideGenericBadge): ?><span class="status-badge status-<?= htmlspecialchars($status) ?>" style="<?= $statusStyle ?>"><?= htmlspecialchars($statusText) ?></span><?php endif; ?>
                                         <?php if ($budget !== null): ?><span class="price">Rs <?= $budget ?></span><?php endif; ?>
                                         
                                         <?php if ($status === 'provider_responded'): ?>
@@ -234,16 +273,89 @@
                                             <button class="btn-details" onclick="openConfirmModal(<?= (int)$service->id ?>, <?= htmlspecialchars(json_encode($providerResponse), ENT_QUOTES, 'UTF-8') ?>)">
                                                 Review & Confirm
                                             </button>
-                                            <button class="btn-details" data-request="<?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>" onclick="openRequestDetailsFromButton(this)">
+                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
                                                 View Details
                                             </button>
                                         <?php elseif ($status === 'confirmed'): ?>
-                                            <div style="font-style: italic; color: #666; font-size: 13px;">⏱️ Awaiting Provider Acceptance</div>
+                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
+                                                View Details
+                                            </button>
+                                            <div style="font-style: italic; color: #666; font-size: 13px; margin-left: auto; text-align: right;">⏱️ Awaiting Provider Acceptance</div>
+                                        <?php elseif ($status === 'accepted'): ?>
+                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
+                                                View Details
+                                            </button>
+                                            <div style="font-style: italic; color: #666; font-size: 13px; margin-left: auto; text-align: right;">🟢 In Progress</div>
+                                        <?php elseif ($status === 'completed'): ?>
+                                            <?php
+                                                $serviceDetailsForPayment = $service->service_details_json ? json_decode($service->service_details_json, true) : [];
+                                                $providerResponseForPayment = $serviceDetailsForPayment['provider_response'] ?? [];
+                                                $quoteAmount = (float)($providerResponseForPayment['quote_amount'] ?? ($service->budget ?? 0));
+                                                $advanceAmount = (float)($providerResponseForPayment['advance_amount'] ?? 0);
+                                                $paymentStatus = strtolower($service->calculated_payment_status ?? 'unpaid');
+                                                $remainingAmount = max(0, $quoteAmount - $advanceAmount);
+                                                
+                                                // Check if payment is pending for cash/bank
+                                                $paymentGateway = $service->payment_gateway ?? '';
+                                                $advancePaymentStatus = strtolower($service->advance_payment_status ?? '');
+                                                $hasPendingCashBankPayment = ($paymentGateway === 'cash' || $paymentGateway === 'bank_transfer') && $advancePaymentStatus === 'pending';
+                                                $providerVerificationRejected = false;
+                                                $providerVerificationReason = '';
+                                                if (!empty($service->transaction_response)) {
+                                                    $transactionData = json_decode($service->transaction_response, true);
+                                                    if (is_array($transactionData) && (($transactionData['provider_verification_status'] ?? '') === 'rejected')) {
+                                                        $providerVerificationRejected = true;
+                                                        $providerVerificationReason = trim((string)($transactionData['provider_verification_reason'] ?? ''));
+                                                    }
+                                                }
+                                            ?>
+                                            <?php if ($hasPendingCashBankPayment): ?>
+                                                <?php if ($providerVerificationRejected): ?>
+                                                    <span class="status-badge" style="background: rgba(220, 20, 60, 0.15); color: #DC143C; border: 1px solid rgba(220, 20, 60, 0.3);">Verification Failed</span>
+                                                <?php else: ?>
+                                                    <span class="status-badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;">Fully Paid</span>
+                                                <?php endif; ?>
+                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
+                                                    View Details
+                                                </button>
+                                                <?php if ($providerVerificationRejected): ?>
+                                                    <button class="btn-details" style="background: #dc2626; color: white; box-shadow: 0 3px 10px rgba(220, 38, 38, 0.35);" 
+                                                        onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= urlencode(number_format($remainingAmount, 2, '.', '')) ?>&type=remaining'">
+                                                        Re-submit Payment
+                                                    </button>
+                                                    <div style="font-style: italic; color: #DC143C; font-size: 13px; margin-left: auto; text-align: right;">
+                                                        ⚠️ Provider could not verify<?= $providerVerificationReason !== '' ? ': ' . htmlspecialchars($providerVerificationReason) : '' ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div style="font-style: italic; color: #666; font-size: 13px; margin-left: auto; text-align: right;">⏳ Awaiting provider's payment confirmation</div>
+                                                <?php endif; ?>
+                                            <?php elseif ($paymentStatus === 'partially_paid' && $remainingAmount > 0): ?>
+                                                <button class="btn-details" style="background: #16a34a; box-shadow: 0 3px 10px rgba(22, 163, 74, 0.35);" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($remainingAmount, 2, '.', '') ?>&type=remaining'">
+                                                    Pay Remaining (Rs <?= number_format($remainingAmount, 2) ?>)
+                                                </button>
+                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
+                                                    View Details
+                                                </button>
+                                            <?php else: ?>
+                                                <button class="btn-details" style="background: #16a34a; box-shadow: 0 3px 10px rgba(22, 163, 74, 0.35);" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($quoteAmount, 2, '.', '') ?>&type=full'">
+                                                    Pay Full Amount (Rs <?= number_format($quoteAmount, 2) ?>)
+                                                </button>
+                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
+                                                    View Details
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php elseif ($status === 'completed_paid'): ?>
+                                            <span class="status-badge status-completed_fully_paid">Completed and Fully paid</span>
+                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
+                                                View Details
+                                            </button>
                                         <?php else: ?>
-                                            <button class="btn-details" data-request="<?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>" onclick="openRequestDetailsFromButton(this)">View Details</button>
+                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                         <?php endif; ?>
                                         
-                                        <button class="btn-reject" onclick="cancelServiceRequest(this)" data-id="<?= (int)$service->id ?>">Cancel</button>
+                                        <?php if (in_array($status, ['pending'])): ?>
+                                            <button class="btn-reject" onclick="cancelServiceRequest(this)" data-id="<?= (int)$service->id ?>">Cancel</button>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -407,6 +519,34 @@
             document.getElementById('detailsModal').style.display = 'none';
         }
 
+        function cancelServiceRequest(button) {
+            const requestId = button.getAttribute('data-id');
+            if (!requestId) {
+                showMessage('Invalid request', 'error');
+                return;
+            }
+
+            if (!confirm('Cancel this pending request?')) {
+                return;
+            }
+
+            fetch('<?= ROOT ?>/Production_manager/cancelServiceRequest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id: requestId })
+            })
+            .then(res => res.json())
+            .then(json => {
+                if (json.success) {
+                    showMessage('Request cancelled successfully', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showMessage(json.error || 'Failed to cancel request', 'error');
+                }
+            })
+            .catch(e => showMessage('Network error: ' + e.message, 'error'));
+        }
+
         // Close details modal on outside click
         document.addEventListener('click', function(e) {
             const modal = document.getElementById('detailsModal');
@@ -467,7 +607,7 @@
                 <!-- Note about advance payment (informational only) -->
                 <div id="advanceInfoSection" style="display: none; background: #ecfdf5; padding: 14px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #10b981;">
                     <p style="margin: 0; font-size: 13px; color: #065f46;">
-                        <strong>💳 Payment Required:</strong> After confirming, you'll be redirected to a secure checkout page to complete the advance payment of <strong>Rs <span id="advance_info_amount">0</span></strong> via PayPal.
+                        <strong>💳 Payment Required:</strong> After confirming, you'll be redirected to pay the advance amount of <strong>Rs <span id="advance_info_amount">0</span></strong>.
                     </p>
                 </div>
 
@@ -528,6 +668,34 @@
                 document.getElementById('providerNoteRow').style.display = 'none';
             }
 
+            // Disable confirm button if advance due date has passed
+            const advanceDueDate = providerResponse.advance_due_date;
+            const confirmBtn = document.getElementById('confirmBtn');
+
+            if (advanceDueDate && needsAdvance) {
+                const dueDate = new Date(advanceDueDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                dueDate.setHours(0, 0, 0, 0);
+                
+                if (dueDate < today) {
+                    confirmBtn.disabled = true;
+                    confirmBtn.style.opacity = '0.5';
+                    confirmBtn.style.cursor = 'not-allowed';
+                    confirmBtn.title = 'Payment deadline has passed';
+                } else {
+                    confirmBtn.disabled = false;
+                    confirmBtn.style.opacity = '1';
+                    confirmBtn.style.cursor = 'pointer';
+                    confirmBtn.title = '';
+                }
+            } else {
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = '1';
+                confirmBtn.style.cursor = 'pointer';
+                confirmBtn.title = '';
+            }
+
             document.getElementById('confirmModal').style.display = 'flex';
         }
 
@@ -565,24 +733,6 @@
                 }
             })
             .catch(e => showMessage('Network error: ' + e.message, 'error'));
-        }
-
-        // Payment Functions - Placeholder for PayPal integration
-        function initiateAdvancePayment() {
-            const requestId = document.getElementById('confirm_request_id').value;
-            const amount = document.getElementById('confirm_advance_amount').value;
-            
-            if (!requestId || !amount) {
-                showMessage('Missing payment information', 'error');
-                return;
-            }
-
-            // TODO: Integrate PayPal payment here
-            showMessage('PayPal integration pending', 'info');
-        }
-
-        function onAdvancePaymentSuccess(requestId) {
-            showMessage('Advance payment completed! You can now confirm the service.', 'success');
         }
 
         function rejectProviderResponse() {
@@ -643,4 +793,286 @@
                 document.body.removeChild(message);
             }, 3000);
         }
+
+        function openPMRequestDetails(event, service) {
+            event.stopPropagation();
+            const modal = document.getElementById('pmDetailsModal');
+            const serviceDetails = service.service_details_json ? JSON.parse(service.service_details_json) : {};
+            const providerResponse = serviceDetails.provider_response || {};
+            
+            // Build payment status section
+            let paymentStatusHTML = '';
+            if (service.calculated_payment_status) {
+                paymentStatusHTML = `<div>
+                    <strong>Payment Status:</strong> <span style="padding: 5px 10px; border-radius: 4px; background: #f0f0f0; text-transform: capitalize;">${service.calculated_payment_status}</span>
+                </div>`;
+            }
+
+            // Build payment details section for completed/completed_paid
+            let paymentDetailsHTML = '';
+            if ((service.status === 'completed' || service.status === 'completed_paid') && providerResponse.quote_amount) {
+                const quoteAmount = parseFloat(providerResponse.quote_amount || 0);
+                const advanceAmount = parseFloat(providerResponse.advance_amount || 0);
+                const remainingAmount = service.calculated_payment_status === 'paid' ? 0 : Math.max(0, quoteAmount - advanceAmount);
+                
+                let paymentMethodHTML = '';
+                if (service.payment_gateway) {
+                    const gatewayMap = {
+                        'payhere': 'PayHere (Online)',
+                        'cash': 'Cash Payment',
+                        'bank_transfer': 'Bank Transfer'
+                    };
+                    paymentMethodHTML = `<p style="margin: 5px 0;"><strong>Payment Method:</strong> ${gatewayMap[service.payment_gateway] || service.payment_gateway}</p>`;
+                }
+                
+                let paymentDateHTML = '';
+                if (service.paid_at) {
+                    paymentDateHTML = `<p style="margin: 5px 0;"><strong>Payment Date:</strong> ${new Date(service.paid_at).toLocaleString()}</p>`;
+                }
+                
+                let transactionDetailsHTML = '';
+                if (service.transaction_response) {
+                    try {
+                        const txData = JSON.parse(service.transaction_response);
+                        if (txData.received_date) {
+                            transactionDetailsHTML += `<p style="margin: 5px 0;"><strong>Received Date:</strong> ${txData.received_date}</p>`;
+                        }
+                        if (txData.note) {
+                            transactionDetailsHTML += `<p style="margin: 5px 0;"><strong>Payment Note:</strong> ${txData.note}</p>`;
+                        }
+                        if (txData.bank_slip_path) {
+                            transactionDetailsHTML += `<p style="margin: 5px 0;"><strong>Bank Slip:</strong> <a href="<?= ROOT ?>/Payment/viewBankSlip/${service.payment_id}" target="_blank" style="color: #3b82f6;">View Bank Slip</a></p>`;
+                        }
+                        if (txData.order_id) {
+                            transactionDetailsHTML += `<p style="margin: 5px 0;"><strong>Order ID:</strong> ${txData.order_id}</p>`;
+                        }
+                    } catch (e) {
+                        // Invalid JSON, skip
+                    }
+                }
+                
+                let paymentStatusBadge = '';
+                if (service.advance_payment_status === 'completed' || service.advance_payment_status === 'success') {
+                    paymentStatusBadge = '<span style="color: #16a34a;">✓ Confirmed</span>';
+                } else if (service.advance_payment_status === 'pending') {
+                    paymentStatusBadge = '<span style="color: #f59e0b;">⏳ Pending Confirmation</span>';
+                }
+                
+                paymentDetailsHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Payment Information:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Total Amount:</strong> Rs ${quoteAmount.toFixed(2)} ${paymentStatusBadge}</p>
+                            ${advanceAmount > 0 ? `<p style="margin: 5px 0;"><strong>Advance Paid:</strong> Rs ${advanceAmount.toFixed(2)}</p>` : ''}
+                            ${remainingAmount > 0 ? `<p style="margin: 5px 0;"><strong>Remaining Amount:</strong> Rs ${remainingAmount.toFixed(2)}</p>` : ''}
+                            ${paymentMethodHTML}
+                            ${paymentDateHTML}
+                            ${transactionDetailsHTML}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Build service-specific fields based on service type
+            let serviceSpecificHTML = '';
+            
+            if (service.service_type === 'Theater Production') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Theater Production Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Venue Type:</strong> ${service.theater_venue_type || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Stage Type:</strong> ${service.theater_stage_type || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Stage Size:</strong> ${service.theater_stage_size || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Days:</strong> ${service.theater_num_days || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Time:</strong> ${service.theater_time || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${service.theater_budget_range || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (service.service_type === 'Lighting Design') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Lighting Design Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Lighting Services:</strong> ${service.lighting_stage_lighting || service.lighting_spotlights || service.lighting_custom_programming || service.lighting_moving_heads ? 'Services selected' : 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Lights:</strong> ${service.lighting_num_lights || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Effects:</strong> ${service.lighting_effects || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Technician Needed:</strong> ${service.lighting_technician_needed || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${service.lighting_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${service.lighting_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (service.service_type === 'Sound Systems') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Sound Systems Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Sound Services:</strong> ${service.sound_speakers || service.sound_microphones || service.sound_mixing_console || service.sound_recording ? 'Services selected' : 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Venue Size:</strong> ${service.sound_venue_size || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Microphones:</strong> ${service.sound_num_microphones || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Recording Required:</strong> ${service.sound_recording_required || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Technician Needed:</strong> ${service.sound_technician_needed || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${service.sound_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${service.sound_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (service.service_type === 'Video Production') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Video Production Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Video Services:</strong> ${service.video_filming || service.video_editing || service.video_live_streaming || service.video_photography ? 'Services selected' : 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Cameras:</strong> ${service.video_num_cameras || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Duration:</strong> ${service.video_duration || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Editing Required:</strong> ${service.video_editing_required || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${service.video_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${service.video_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (service.service_type === 'Set Design') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Set Design Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Set Components:</strong> ${service.set_backdrop || service.set_props || service.set_furniture || service.set_platforms ? 'Components selected' : 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Stage Size:</strong> ${service.set_stage_size || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Sets:</strong> ${service.set_num_sets || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Installation Required:</strong> ${service.set_installation_required || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${service.set_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${service.set_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (service.service_type === 'Costume Design') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Costume Design Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Costume Services:</strong> ${service.costume_design || service.costume_rental || service.costume_alterations ? 'Services selected' : 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Costumes:</strong> ${service.costume_num_costumes || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Period/Style:</strong> ${service.costume_period_style || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Custom Design Required:</strong> ${service.costume_custom_design || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${service.costume_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${service.costume_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (service.service_type === 'Makeup & Hair') {
+                serviceSpecificHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Makeup & Hair Details:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Services:</strong> ${service.makeup_stage || service.makeup_special_effects || service.makeup_hair_styling ? 'Services selected' : 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Number of Artists:</strong> ${service.makeup_num_artists || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Makeup Style:</strong> ${service.makeup_style || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Special Effects Required:</strong> ${service.makeup_special_effects_required || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Budget Range:</strong> ${service.makeup_budget_range || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Additional Requirements:</strong> ${service.makeup_additional_requirements || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('pmDetailsContent').innerHTML = `
+                <div style="padding: 20px; background: #fff; border-radius: 8px; max-height: 70vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0; color: #333;">${service.service_type || 'Request'} - ${service.drama_name || 'N/A'}</h2>
+                        <button onclick="closePMRequestDetails()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <strong>Status:</strong> <span style="padding: 5px 10px; border-radius: 4px; background: #f0f0f0; text-transform: capitalize;">${service.status}</span>
+                        </div>
+                        ${paymentStatusHTML}
+                    </div>
+
+                    ${providerResponse && Object.keys(providerResponse).length > 0 ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Provider Response:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            ${providerResponse.quote_amount ? `<p style="margin: 5px 0;"><strong>Quotation Amount:</strong> Rs ${providerResponse.quote_amount}</p>` : ''}
+                            ${providerResponse.needs_advance ? `<p style="margin: 5px 0;"><strong>Advance Payment:</strong> Required - Rs ${providerResponse.advance_amount || '0'} (Due: ${providerResponse.advance_due_date || 'N/A'})</p>` : ''}
+                            ${providerResponse.final_payment_due_date ? `<p style="margin: 5px 0;"><strong>Final Payment Due:</strong> ${providerResponse.final_payment_due_date}</p>` : ''}
+                            ${providerResponse.note ? `<p style="margin: 5px 0;"><strong>Provider Notes:</strong> ${providerResponse.note}</p>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${paymentDetailsHTML}
+
+                    <div style="margin-bottom: 20px;">
+                        <strong>Requester Information:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            <p style="margin: 5px 0;"><strong>Name:</strong> ${service.requester_name || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${service.requester_email || ''}">${service.requester_email || 'N/A'}</a></p>
+                            <p style="margin: 5px 0;"><strong>Phone:</strong> ${service.requester_phone || 'N/A'}</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <strong>Schedule:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            ${service.service_date ? `<p style="margin: 5px 0;"><strong>Service Date:</strong> ${service.service_date}</p>` : ''}
+                            <p style="margin: 5px 0;"><strong>Start Date:</strong> ${service.start_date || 'N/A'}</p>
+                            <p style="margin: 5px 0;"><strong>End Date:</strong> ${service.end_date || 'N/A'}</p>
+                        </div>
+                    </div>
+
+                    ${serviceSpecificHTML}
+
+                    <div style="margin-bottom: 20px;">
+                        <strong>Description:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
+                            ${service.service_required || 'No description provided'}
+                        </div>
+                    </div>
+
+                    ${service.budget ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Budget Range:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
+                            Rs ${service.budget}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${serviceDetails.additional_requirements ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Additional Requirements:</strong>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px; word-wrap: break-word;">
+                            ${serviceDetails.additional_requirements}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 20px; font-size: 12px; color: #666;">
+                        <p style="margin: 5px 0;"><strong>Created:</strong> ${service.created_at ? new Date(service.created_at).toLocaleString() : 'N/A'}</p>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        function closePMRequestDetails() {
+            document.getElementById('pmDetailsModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const pmDetailsModal = document.getElementById('pmDetailsModal');
+            if (event.target === pmDetailsModal) {
+                pmDetailsModal.style.display = 'none';
+            }
+        };
     </script>
+
+    <!-- PM Request Details Modal -->
+    <div id="pmDetailsModal" style="display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center;">
+        <div style="background-color: #fefefe; padding: 0; border-radius: 8px; width: 90%; max-width: 700px; box-shadow: 0 4px 6px rgba(0,0,0,0.15);" id="pmDetailsContent">
+        </div>
+    </div>
