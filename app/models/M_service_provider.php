@@ -1,11 +1,11 @@
 <?php
 
 class M_service_provider extends M_signup {
-    private $db;
+    // $db is inherited from M_signup (protected), no need to redeclare
 
     public function __construct() {
         parent::__construct();
-        $this->db = new Database();
+        // $db is already initialized in parent constructor
     }
 
     public function register($full_name, $email, $password, $phone, $nic_photo_front = null, $nic_photo_back = null) {

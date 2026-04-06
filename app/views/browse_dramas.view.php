@@ -6,9 +6,29 @@
     <title>Browse Dramas - <?= APP_NAME ?></title>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css">
 </head>
 <body>
+    <!-- Toast Notification Script -->
+    <script src="<?= ROOT ?>/assets/JS/toast.js"></script>
+    <?php if (!empty($_SESSION['success_message'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            toastSuccess('<?= addslashes($_SESSION['success_message']); ?>');
+        });
+    </script>
+    <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['error_message'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            toastError('<?= addslashes($_SESSION['error_message']); ?>');
+        });
+    </script>
+    <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
 
 <div class="container">
     <!-- Header -->

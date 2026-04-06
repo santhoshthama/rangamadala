@@ -15,6 +15,13 @@ class UserVerification
         $this->model = $this->getModel("M_user");
     }
 
+    // Default index redirects to pending
+    public function index()
+    {
+        header("Location: " . ROOT . "/UserVerification/pending");
+        exit;
+    }
+
     // View pending users for verification
     public function pending()
     {

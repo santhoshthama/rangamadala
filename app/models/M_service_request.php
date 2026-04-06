@@ -43,6 +43,13 @@ class M_service_request
         return $this->db->resultSet();
     }
 
+    public function getRequestById($request_id)
+    {
+        $this->db->query("SELECT * FROM service_requests WHERE id = :id LIMIT 1");
+        $this->db->bind(':id', $request_id);
+        return $this->db->single();
+    }
+
     public function updateRequestStatus($request_id, $status)
     {
         $this->db->query("UPDATE service_requests SET status = :status WHERE id = :id");

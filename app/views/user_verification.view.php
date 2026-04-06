@@ -421,8 +421,12 @@
                             </div>
 
                             <div class="nic-image-preview">
-                                <?php if (!empty($user->nic_photo) && file_exists(ROOT_PATH . '/public/' . $user->nic_photo)): ?>
-                                    <img src="<?= ROOT ?>/<?= htmlspecialchars($user->nic_photo) ?>" alt="NIC Photo">
+                                <?php if (!empty($user->nic_photo)): ?>
+                                    <img src="<?= ROOT ?>/<?= htmlspecialchars($user->nic_photo) ?>" alt="NIC Photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <div class="nic-image-placeholder" style="display: none;">
+                                        <i class="fas fa-id-card"></i><br>
+                                        Image Not Found
+                                    </div>
                                 <?php else: ?>
                                     <div class="nic-image-placeholder">
                                         <i class="fas fa-id-card"></i><br>

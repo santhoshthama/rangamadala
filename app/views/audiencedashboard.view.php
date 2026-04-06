@@ -13,20 +13,44 @@
 
   <!-- Material Design Icons -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Dashboard CSS -->
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css" />
+  <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css" />
 
   <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
 
 <body>
+  <!-- Toast Notification Script -->
+  <script src="<?= ROOT ?>/assets/JS/toast.js"></script>
+  <?php if (!empty($_SESSION['success_message'])): ?>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      toastSuccess('<?= addslashes($_SESSION['success_message']); ?>');
+    });
+  </script>
+  <?php unset($_SESSION['success_message']); ?>
+  <?php endif; ?>
+  <?php if (!empty($_SESSION['error_message'])): ?>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      toastError('<?= addslashes($_SESSION['error_message']); ?>');
+    });
+  </script>
+  <?php unset($_SESSION['error_message']); ?>
+  <?php endif; ?>
   <div class="dashboard-container">
 
     <!-- Sidebar -->
     <aside class="dashboard-sidebar" id="dashboardSidebar">
       <div class="dashboard-brand">
-        <div class="logo">👥</div>
+        <div class="logo">
+          <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" />
+        </div>
         <span>Audience</span>
       </div>
 
@@ -336,6 +360,26 @@
   </div>
 
   <script src="<?= ROOT ?>/assets/JS/audiencedashboard.js"></script>
+  <script>
+    // Toast notification handler
+    function closeToast() {
+      const toast = document.getElementById('successToast');
+      if (toast) {
+        toast.style.animation = 'toastSlideOut 0.4s ease forwards';
+        setTimeout(() => toast.remove(), 400);
+      }
+    }
+
+    // Auto-hide toast after 4 seconds
+    window.addEventListener('load', function() {
+      const toast = document.getElementById('successToast');
+      if (toast) {
+        setTimeout(() => {
+          closeToast();
+        }, 4000);
+      }
+    });
+  </script>
 </body>
 
 </html>

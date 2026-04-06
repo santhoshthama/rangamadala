@@ -10,22 +10,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <!-- Google Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSS -->
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css" />
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css" />
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <link rel="shortcut icon" href="<?php echo ROOT;?>/assets/images/Rangamadala logo.png" type="image/x-icon">
-
+    <link rel="shortcut icon" href="<?php echo ROOT;?>/assets/images/Rangamadala logo.png" type="image/x-icon">
   </head>
   <body>
+    <!-- Toast Notification Script -->
+    <script src="<?= ROOT ?>/assets/JS/toast.js"></script>
+    <?php if (!empty($_SESSION['success_message'])): ?>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        toastSuccess('<?= addslashes($_SESSION['success_message']); ?>');
+      });
+    </script>
+    <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['error_message'])): ?>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        toastError('<?= addslashes($_SESSION['error_message']); ?>');
+      });
+    </script>
+    <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
     <div class="dashboard-container">
       <!-- Dashboard Sidebar -->
       <aside class="dashboard-sidebar" id="dashboardSidebar">
         <div class="dashboard-brand">
-          <button class="dashboard-sidebar-toggle">
-            <span class="material-symbols-rounded">menu</span>
-          </button>
-          <a class="logo">ADMIN Dashboard</a>
+          <div class="logo">
+            <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" />
+          </div>
+          <span>Admin</span>
         </div>
         <nav class="dashboard-nav">
           <div class="dashboard-nav-section">
@@ -94,11 +114,11 @@
             <div class="user-menu" id="userMenu">
               <div class="user-menu-trigger" id="user-menu-trigger">
                 <div class="user-avatar-small">
-                  <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face&auto=format" alt="User Avatar" />
+                  <span><?= htmlspecialchars(strtoupper(substr($_SESSION['full_name'] ?? $_SESSION['user_name'] ?? 'A', 0, 1))) ?></span>
                 </div>
               </div>
               <div class="user-menu-dropdown">
-                <a href="#" class="user-menu-item">
+                <a href="#" class="user-menu-item" id="adminProfileMenuItem">
                   <span class="icon material-symbols-rounded">person</span>
                   <span>Profile</span>
                 </a>
@@ -268,16 +288,60 @@
           </div>
           <!-- Projects View -->
           <div class="dashboard-view" id="users">
-            <div class="empty-state">
-              <div class="empty-state-icon">
-                <span class="material-symbols-rounded">people</span>
+            <div class="dashboard-table-container">
+              <div class="dashboard-table-header">
+                <h2 class="dashboard-table-title">User Management</h2>
+                <div class="header-actions">
+                  <div class="filter-buttons">
+                    <button class="btn btn-secondary filter-btn active" data-filter="all" data-target="users">All</button>
+                    <button class="btn btn-secondary filter-btn" data-filter="artist" data-target="users">Artists</button>
+                    <button class="btn btn-secondary filter-btn" data-filter="audience" data-target="users">Audience</button>
+                    <button class="btn btn-secondary filter-btn" data-filter="service_provider" data-target="users">Service Providers</button>
+                  </div>
+                  <button class="btn btn-primary" onclick="showAddUserModal()">
+                    <span class="material-symbols-rounded">add</span>
+                    Add New User
+                  </button>
+                </div>
               </div>
-              <h3 class="empty-state-title">User Management</h3>
-              <p class="empty-state-description">Add, remove, view, and edit user accounts. Manage user details and account status.</p>
-              <button class="btn btn-primary" style="margin-top: 20px;">
-                <span class="material-symbols-rounded">add</span>
-                Add New User
-              </button>
+              
+              <div id="usersTableContainer">
+                <!-- Loading state -->
+                <div class="loading-state" id="usersLoading">
+                  <span class="material-symbols-rounded spinning">progress_activity</span>
+                  <p>Loading users...</p>
+                </div>
+                
+                <!-- Empty state -->
+                <div class="empty-state" id="usersEmpty" style="display: none;">
+                  <div class="empty-state-icon">
+                    <span class="material-symbols-rounded">people</span>
+                  </div>
+                  <h3 class="empty-state-title">No Users Found</h3>
+                  <p class="empty-state-description">There are no users in the system yet. Add a new user to get started.</p>
+                  <button class="btn btn-primary" style="margin-top: 20px;" onclick="showAddUserModal()">
+                    <span class="material-symbols-rounded">add</span>
+                    Add New User
+                  </button>
+                </div>
+                
+                <!-- Users table -->
+                <table class="dashboard-table" id="usersTable" style="display: none;">
+                  <thead>
+                    <tr>
+                      <th>User Details</th>
+                      <th>Role</th>
+                      <th>Contact</th>
+                      <th>Status</th>
+                      <th>Joined Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTableBody">
+                    <!-- Data will be loaded dynamically -->
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
           <!-- Tasks View -->
@@ -338,26 +402,96 @@
           </div>
           <!-- Settings View -->
           <div class="dashboard-view" id="content">
-            <div class="empty-state">
-              <div class="empty-state-icon">
-                <span class="material-symbols-rounded">article</span>
-              </div>
-              <h3 class="empty-state-title">Website Content Management</h3>
-              <p class="empty-state-description">Add, edit, or delete website content. Manage pages and content sections.</p>
-              <button class="btn btn-primary" style="margin-top: 20px;">
-                <span class="material-symbols-rounded">add</span>
-                Add New Content
+            <!-- Content Management Tabs -->
+            <div class="content-tabs">
+              <button class="content-tab active" data-content-tab="swiper">
+                <span class="material-symbols-rounded">view_carousel</span>
+                Drama Slides
               </button>
+              <button class="content-tab" data-content-tab="gallery">
+                <span class="material-symbols-rounded">photo_library</span>
+                Stage Highlights
+              </button>
+              <button class="content-tab" data-content-tab="testimonials">
+                <span class="material-symbols-rounded">reviews</span>
+                Testimonials
+              </button>
+            </div>
+
+            <!-- Swiper/Drama Slides Section -->
+            <div class="content-section active" id="swiperSection">
+              <div class="dashboard-table-header">
+                <h3 class="dashboard-table-title">Drama Slides (Swiper)</h3>
+                <button class="btn btn-primary" onclick="showAddSwiperModal()">
+                  <span class="material-symbols-rounded">add_photo_alternate</span>
+                  Add Slide
+                </button>
+              </div>
+              <div class="content-grid" id="swiperGrid">
+                <div class="loading-state" id="swiperLoading">
+                  <span class="material-symbols-rounded spinning">progress_activity</span>
+                  <p>Loading slides...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gallery Section -->
+            <div class="content-section" id="gallerySection">
+              <div class="dashboard-table-header">
+                <h3 class="dashboard-table-title">Stage Highlights (Gallery)</h3>
+                <button class="btn btn-primary" onclick="showAddGalleryModal()">
+                  <span class="material-symbols-rounded">add_photo_alternate</span>
+                  Add Image
+                </button>
+              </div>
+              <div class="content-grid" id="galleryGrid">
+                <!-- Content loads when tab is clicked -->
+              </div>
+            </div>
+
+            <!-- Testimonials Section -->
+            <div class="content-section" id="testimonialsSection">
+              <div class="dashboard-table-header">
+                <h3 class="dashboard-table-title">Testimonials</h3>
+                <button class="btn btn-primary" onclick="showAddTestimonialModal()">
+                  <span class="material-symbols-rounded">rate_review</span>
+                  Add Testimonial
+                </button>
+              </div>
+              <div class="testimonials-list" id="testimonialsList">
+                <!-- Content loads when tab is clicked -->
+              </div>
             </div>
           </div>
         </div>
       </main>
     </div>
     <!-- Scripts -->
-    <script src="<?= ROOT ?>/assets/JS/admindashboard.js"></script>
+    <script src="<?= ROOT ?>/assets/JS/admindashboard.js?v=20260404"></script>
     <script src="<?= ROOT ?>/assets/JS/admin-verification.js"></script>
+    <script src="<?= ROOT ?>/assets/JS/admin-user-management.js"></script>
+    <script src="<?= ROOT ?>/assets/JS/admin-content-management.js"></script>
     <script>
       const ROOT = '<?= ROOT ?>';
+
+      // Toast notification handler
+      function closeToast() {
+        const toast = document.getElementById('successToast');
+        if (toast) {
+          toast.style.animation = 'toastSlideOut 0.4s ease forwards';
+          setTimeout(() => toast.remove(), 400);
+        }
+      }
+
+      // Auto-hide toast after 4 seconds
+      window.addEventListener('load', function() {
+        const toast = document.getElementById('successToast');
+        if (toast) {
+          setTimeout(() => {
+            closeToast();
+          }, 4000);
+        }
+      });
     </script>
   </body>
 </html>

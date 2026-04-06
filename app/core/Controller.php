@@ -3,6 +3,11 @@ trait Controller
 {
     public function view($name,$data=[])
     {
+        // Extract data array to individual variables for use in views
+        if (!empty($data) && is_array($data)) {
+            extract($data);
+        }
+        
         $base = "../app/views/" . ltrim($name, '/');
         $candidates = [$base . ".view.php", $base . ".php"];
 

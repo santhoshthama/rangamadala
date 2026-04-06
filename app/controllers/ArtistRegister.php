@@ -37,15 +37,15 @@ class ArtistRegister
             if (empty($errors)) {
                 $model = new M_artist();
 
-                // 🔹 Handle file upload (save to app/uploads/)
-                $uploadDir = __DIR__ . '/../uploads/';
+                // 🔹 Handle file upload (save to public/uploads/nic/)
+                $uploadDir = __DIR__ . '/../../public/uploads/nic/';
                 if (!file_exists($uploadDir)) {
                     mkdir($uploadDir, 0777, true); // create folder if missing
                 }
 
                 $uniqueName = uniqid() . "_" . basename($nic_photo);
                 $uploadPath = $uploadDir . $uniqueName;
-                $dbPath = 'app/uploads/' . $uniqueName; // for database storage
+                $dbPath = 'uploads/nic/' . $uniqueName; // for database storage (relative to public)
 
                 if (is_uploaded_file($_FILES['nic_photo']['tmp_name'])) {
                     if (!move_uploaded_file($_FILES['nic_photo']['tmp_name'], $uploadPath)) {
@@ -56,13 +56,12 @@ class ArtistRegister
                 if (empty($errors)) {
                     // 🔹 Save artist to DB
                     if ($model->register($full_name, $email, $password, $phone, $dbPath)) {
-                        echo "<script>
-                                alert('Artist registered successfully!');
-                                window.location = '" . ROOT . "/login';
-                              </script>";
+                        $_SESSION['registration_success'] = true;
+                        $_SESSION['registration_message'] = 'Your artist registration has been submitted successfully! Your account is pending admin verification. You will be able to login once your NIC and details are verified.';
+                        header("Location: " . ROOT . "/Login");
                         exit;
                     } else {
-                        $errors[] = "Registration failed. Try again.";
+                        $errors[] = "Registration failed. Email may already exist.";
                     }
                 }
             }

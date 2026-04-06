@@ -10,9 +10,29 @@
             crossorigin="anonymous" />
         
         <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
+        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css">
         <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     </head>
     <body>
+        <!-- Toast Notification Script -->
+        <script src="<?= ROOT ?>/assets/JS/toast.js"></script>
+        <?php if (!empty($_SESSION['success_message'])): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                toastSuccess('<?= addslashes($_SESSION['success_message']); ?>');
+            });
+        </script>
+        <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+        <?php if (!empty($_SESSION['error_message'])): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                toastError('<?= addslashes($_SESSION['error_message']); ?>');
+            });
+        </script>
+        <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
+        
         <?php $activePage = 'dashboard'; include 'includes/service_provider/sidebar.php'; ?>
 
         

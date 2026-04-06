@@ -10,15 +10,71 @@
     <link rel="shortcut icon" href="<?php echo ROOT;?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 
   <style>
+    /* Custom validation tooltip styles */
+    .input-box {
+      position: relative;
+    }
+    
+    .validation-error {
+      position: absolute;
+      bottom: -28px;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #2d1810 0%, #3d2817 100%);
+      color: #d4af37;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #d4af37;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+      display: none;
+      animation: tooltipFade 0.3s ease;
+      z-index: 10;
+    }
+    
+    .validation-error::before {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 20px;
+      width: 10px;
+      height: 10px;
+      background: #2d1810;
+      border-left: 1px solid #d4af37;
+      border-top: 1px solid #d4af37;
+      transform: rotate(45deg);
+    }
+    
+    .validation-error i {
+      margin-right: 6px;
+      color: #d4af37;
+    }
+    
+    .input-box.error input {
+      border-color: #d4af37 !important;
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.3) !important;
+    }
+    
+    @keyframes tooltipFade {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
     .success-message {
-      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-      color: #fff;
+      background: linear-gradient(135deg, #1a4d1a 0%, #2d5a2d 100%);
+      color: #90EE90;
       padding: 14px 20px;
       border-radius: 8px;
       margin-bottom: 20px;
       text-align: center;
-      border-left: 4px solid #155724;
-      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+      border: 1px solid #4a7c4a;
+      box-shadow: 0 4px 15px rgba(45, 90, 45, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -26,32 +82,71 @@
       animation: slideDown 0.4s ease;
     }
 
-    .error-message {
-      background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
-      color: #fff;
-      padding: 14px 20px;
+    .registration-success-message {
+      background: linear-gradient(135deg, #2d1810 0%, #3d2817 100%);
+      color: #d4af37;
+      padding: 18px 20px;
       border-radius: 8px;
       margin-bottom: 20px;
-      text-align: center;
-      border-left: 4px solid #721c24;
-      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      text-align: left;
+      border: 1px solid #d4af37;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
       animation: slideDown 0.4s ease;
+      font-size: 14px;
+      line-height: 1.6;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .registration-success-message i {
+      font-size: 24px;
+      margin-top: 2px;
+      color: #d4af37;
+    }
+
+    .registration-success-message strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+      color: #e8d5a8;
+    }
+
+    .error-message {
+      background: linear-gradient(135deg, #2d1810 0%, #4a1515 100%);
+      color: #ff9999;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: left;
+      border: 1px solid #d4af37;
+      border-left: 4px solid #d4af37;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+      animation: slideDown 0.4s ease;
+      font-size: 14px;
+      line-height: 1.6;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .error-message::before {
+      content: '⚠';
+      font-size: 18px;
+      color: #d4af37;
+      flex-shrink: 0;
+    }
+
+    .error-message strong {
+      font-weight: 600;
+      color: #e8d5a8;
     }
 
     .success-message::before {
       content: '✓';
       font-weight: bold;
       font-size: 18px;
-    }
-
-    .error-message::before {
-      content: '✕';
-      font-weight: bold;
-      font-size: 18px;
+      color: #90EE90;
     }
 
     @keyframes slideDown {
@@ -71,23 +166,24 @@
         top: 20px;
         left: 50%;
         transform: translateX(-50%);
-        background: #28a745;
-        color: #fff;
+        background: linear-gradient(135deg, #1a4d1a 0%, #2d5a2d 100%);
+        color: #90EE90;
         padding: 16px 24px;
         font-size: 15px;
         border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.35);
         z-index: 9999;
         font-weight: 500;
         min-width: 320px;
         text-align: center;
-        border-left: 4px solid #155724;
+        border: 1px solid #4a7c4a;
         animation: toastSlideDown 0.4s ease forwards;
     }
 
     .toast-error {
-        background: #dc3545;
-        border-left: 4px solid #721c24;
+        background: linear-gradient(135deg, #2d1810 0%, #4a1515 100%);
+        border: 1px solid #d4af37;
+        color: #ff9999;
     }
 
     /* Toast animations */
@@ -117,7 +213,7 @@
 <body>
 
 <div class="wrapper">
-<form action="<?= ROOT ?>/Login" method="POST">
+<form action="<?= ROOT ?>/Login" method="POST" id="loginForm" novalidate>
     <div class="back-container">
       <a href="<?= ROOT ?>/Home" class="back-link">
         <button type="button" class="back-btn">
@@ -129,9 +225,20 @@
     <h1>Login</h1>
     <p>Access your professional theater dashboard</p>
 
+    <?php if (!empty($_SESSION['registration_success'])): ?>
+        <div class="registration-success-message">
+            <i class="fas fa-check-circle"></i>
+            <div>
+                <strong>Registration Submitted!</strong><br>
+                <?= $_SESSION['registration_message'] ?? 'Your account is pending verification.' ?>
+            </div>
+        </div>
+        <?php unset($_SESSION['registration_success'], $_SESSION['registration_message']); ?>
+    <?php endif; ?>
+
     <?php if (!empty($error)): ?>
-        <div class="error-message">
-            <?= htmlspecialchars($error) ?>
+        <div class="error-message" style="display: block; text-align: left;">
+            <?= $error ?>
         </div>
     <?php endif; ?>
 
@@ -141,14 +248,16 @@
         </div>
     <?php endif; ?>
 
-    <div class="input-box">
-      <input type="email" name="email" placeholder="Email" value="<?= htmlspecialchars($email ?? '') ?>" required>
+    <div class="input-box" id="emailBox">
+      <input type="email" name="email" id="email" placeholder="Email" value="<?= htmlspecialchars($email ?? '') ?>">
       <i class='bx bxs-user'></i>
+      <div class="validation-error" id="emailError"><i class='bx bx-error-circle'></i><span></span></div>
     </div>
 
-    <div class="input-box">
-      <input type="password" name="password" id="password" placeholder="Password" required>
+    <div class="input-box" id="passwordBox">
+      <input type="password" name="password" id="password" placeholder="Password">
       <i class='bx bx-hide' id="togglePassword"></i>
+      <div class="validation-error" id="passwordError"><i class='bx bx-error-circle'></i><span></span></div>
     </div>
 
     <div class="remember-frogot">
@@ -181,12 +290,83 @@
 <script>
   const toggle = document.getElementById("togglePassword");
   const password = document.getElementById("password");
+  const email = document.getElementById("email");
+  const form = document.getElementById("loginForm");
+  const emailBox = document.getElementById("emailBox");
+  const passwordBox = document.getElementById("passwordBox");
+  const emailError = document.getElementById("emailError").querySelector("span");
+  const passwordError = document.getElementById("passwordError").querySelector("span");
 
+  // Password toggle
   toggle.addEventListener("click", function () {
     const type = password.getAttribute("type") === "password" ? "text" : "password";
     password.setAttribute("type", type);
     this.classList.toggle("bx-show");
     this.classList.toggle("bx-hide");
+  });
+
+  // Show error function
+  function showError(box, errorSpan, message) {
+    box.classList.add("error");
+    errorSpan.textContent = message;
+    errorSpan.parentElement.style.display = "block";
+  }
+
+  // Hide error function
+  function hideError(box, errorSpan) {
+    box.classList.remove("error");
+    errorSpan.parentElement.style.display = "none";
+  }
+
+  // Email validation
+  function validateEmail(emailValue) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailValue);
+  }
+
+  // Real-time validation
+  email.addEventListener("input", function() {
+    if (this.value.trim() === "") {
+      hideError(emailBox, emailError);
+    } else if (!validateEmail(this.value.trim())) {
+      showError(emailBox, emailError, "Please enter a valid email address");
+    } else {
+      hideError(emailBox, emailError);
+    }
+  });
+
+  password.addEventListener("input", function() {
+    if (this.value.trim() !== "") {
+      hideError(passwordBox, passwordError);
+    }
+  });
+
+  // Form validation on submit
+  form.addEventListener("submit", function(e) {
+    let isValid = true;
+
+    // Validate email
+    if (email.value.trim() === "") {
+      showError(emailBox, emailError, "Email address is required");
+      isValid = false;
+    } else if (!validateEmail(email.value.trim())) {
+      showError(emailBox, emailError, "Please enter a valid email address");
+      isValid = false;
+    } else {
+      hideError(emailBox, emailError);
+    }
+
+    // Validate password
+    if (password.value.trim() === "") {
+      showError(passwordBox, passwordError, "Password is required");
+      isValid = false;
+    } else {
+      hideError(passwordBox, passwordError);
+    }
+
+    if (!isValid) {
+      e.preventDefault();
+    }
   });
 
   // Handle toast messages

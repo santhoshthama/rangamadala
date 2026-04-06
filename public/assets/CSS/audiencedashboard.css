@@ -194,7 +194,7 @@ button {
   position: fixed;
   top: 0;
   left: 0;
-  width: 72px;
+  width: var(--sidebar-collapsed-width);
   height: 100vh;
   padding: 0;
   color: #fff;
@@ -206,32 +206,35 @@ button {
 }
 
 .dashboard-sidebar:hover {
-  width: 240px;
+  width: var(--sidebar-expanded-width);
 }
 
 .dashboard-sidebar.collapsed {
-  width: 72px;
+  width: var(--sidebar-collapsed-width);
 }
 .dashboard-brand {
-  height: 80px;
-  padding: 16px;
+  height: 72px;
+  padding: 12px 0;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dashboard-sidebar .logo {
-  font-size: 28px;
-  margin: 0;
-  min-width: 40px;
-  text-align: center;
-  white-space: nowrap;
-  font-weight: var(--weight-bold);
-  color: #fff;
-  transition: var(--transition);
-  opacity: 1;
+  height: 48px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-sidebar .logo img {
+  max-width: 140px;
+  max-height: 40px;
+  width: auto;
+  transition: all 0.5s linear;
 }
 
 .dashboard-brand span {
@@ -331,13 +334,18 @@ button {
 }
 /* Main Content */
 .dashboard-main {
-  margin-left: var(--sidebar-width);
+  margin-left: var(--sidebar-collapsed-width);
   padding: 20px;
   min-height: 100vh;
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: margin-left 0.4s ease;
+}
+
+.dashboard-sidebar:hover ~ .dashboard-main {
+  margin-left: var(--sidebar-expanded-width);
 }
 /* Header */
 .dashboard-header {

@@ -37,6 +37,16 @@ class Login
                 return;
             }
 
+            // First check if email exists
+            $emailExists = $this->model->checkEmailExists($email);
+            
+            if (!$emailExists) {
+                $data['error'] = "No account found with this email address. Please check your email or sign up for a new account.";
+                $data['email'] = $email;
+                $this->view("login", $data);
+                return;
+            }
+
             // pass the data to the model for authentication
             $user = $this->model->authenticate($email, $password);
 
@@ -45,12 +55,15 @@ class Login
                 if (in_array($user->role, ['artist', 'service_provider'])) {
                     // Check if user is verified
                     if (isset($user->is_verified) && $user->is_verified == 0) {
-                        // Check if registration was rejected
-                        if (!empty($user->rejection_reason)) {
-                            $data['error'] = "Your registration was rejected. Reason: " . $user->rejection_reason . " Please contact admin support.";
+                        // Check verification status
+                        $verificationStatus = $user->verification_status ?? 'pending';
+                        
+                        if ($verificationStatus === 'rejected') {
+                            $rejectionReason = $user->rejection_reason ?? 'No reason provided';
+                            $data['error'] = "Your registration was rejected.<br><br><strong>Reason:</strong> " . htmlspecialchars($rejectionReason) . "<br><br>Please contact admin support for more information.";
                         } else {
                             // Account is pending approval
-                            $data['error'] = "Your account is pending admin approval. Please wait for verification. You will receive an email once approved.";
+                            $data['error'] = "Your account is pending admin approval.<br><br>Our team is reviewing your submitted documents. This usually takes 1-2 business days.<br><br>You will be able to login once your account is verified.";
                         }
                         $data['email'] = $email;
                         $this->view("login", $data);
@@ -88,7 +101,7 @@ class Login
                 header("Location: " . ROOT . "/Home");
                 exit();
             } else {
-                $data['error'] = "Invalid email or password. Please check your credentials and try again.";
+                $data['error'] = "Incorrect password. Please try again or use 'Forgot password' to reset it.";
                 $data['email'] = $email;
             }
         }

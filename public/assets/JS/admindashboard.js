@@ -12,6 +12,7 @@ const searchContainer = document.getElementById("searchContainer");
 const searchInput = document.getElementById("searchInput");
 const searchClose = document.getElementById("searchClose");
 const mobileSearchBtn = document.getElementById("mobileSearchBtn");
+const adminProfileMenuItem = document.getElementById("adminProfileMenuItem");
 
 // State
 let sidebarCollapsed = false;
@@ -29,6 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initSearch();
   initCharts();
   initRegistrationsView();
+  initAdminProfile();
 });
 // ===================================
 // SIDEBAR FUNCTIONALITY
@@ -116,14 +118,193 @@ function switchView(viewId) {
 function updatePageTitle(viewId) {
   const titles = {
     overview: "Overview",
-    projects: "Projects",
-    tasks: "Tasks",
-    reports: "Reports",
-    settings: "Settings",
+    users: "User Management",
+    registrations: "Registrations",
+    permissions: "Permissions",
+    content: "Content",
   };
   if (dashboardTitle) {
     dashboardTitle.textContent = titles[viewId] || "Dashboard";
   }
+}
+
+// ===================================
+// ADMIN PROFILE FUNCTIONALITY
+// ===================================
+function initAdminProfile() {
+  if (!adminProfileMenuItem) return;
+
+  adminProfileMenuItem.addEventListener("click", (e) => {
+    e.preventDefault();
+    openAdminProfileModal();
+    userMenu?.classList.remove("active");
+  });
+}
+
+function openAdminProfileModal() {
+  const existingModal = document.getElementById("adminProfileModal");
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modalHtml = `
+    <div class="modal-overlay active" id="adminProfileModal">
+      <div class="modal-content user-form-modal">
+        <div class="modal-header">
+          <h3>Edit Profile</h3>
+          <button class="modal-close" onclick="closeAdminProfileModal()">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="adminProfileForm">
+            <div class="input-box">
+              <input type="text" id="adminProfileName" placeholder="Full Name" required />
+              <i class="material-symbols-rounded">person</i>
+            </div>
+            <div class="input-box">
+              <input type="email" id="adminProfileEmail" placeholder="Email Address" required />
+              <i class="material-symbols-rounded">mail</i>
+            </div>
+            <div class="input-box">
+              <input type="tel" id="adminProfilePhone" placeholder="Phone Number" />
+              <i class="material-symbols-rounded">phone</i>
+            </div>
+            <div class="input-box">
+              <input type="password" id="adminProfileNewPassword" placeholder="New Password (optional)" minlength="6" />
+              <i class="material-symbols-rounded">lock</i>
+            </div>
+            <div class="input-box">
+              <input type="password" id="adminProfileConfirmPassword" placeholder="Confirm New Password" minlength="6" />
+              <i class="material-symbols-rounded">lock_reset</i>
+            </div>
+            <p class="form-note">
+              <span class="material-symbols-rounded">info</span>
+              Leave password fields empty if you do not want to change the password.
+            </p>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeAdminProfileModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitAdminProfile()">
+            <span class="material-symbols-rounded">save</span>
+            Save Profile
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+  loadAdminProfile();
+}
+
+function closeAdminProfileModal() {
+  const modal = document.getElementById("adminProfileModal");
+  if (modal) {
+    modal.remove();
+  }
+}
+
+function loadAdminProfile() {
+  fetch(ROOT + "/Admindashboard/getAdminProfile")
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success || !data.admin) {
+        if (typeof toastError === "function") {
+          toastError(data.message || "Failed to load profile");
+        }
+        return;
+      }
+
+      document.getElementById("adminProfileName").value = data.admin.full_name || "";
+      document.getElementById("adminProfileEmail").value = data.admin.email || "";
+      document.getElementById("adminProfilePhone").value = data.admin.phone || "";
+    })
+    .catch((error) => {
+      console.error("Error loading admin profile:", error);
+      if (typeof toastError === "function") {
+        toastError("An error occurred while loading profile details");
+      }
+    });
+}
+
+function submitAdminProfile() {
+  const fullName = document.getElementById("adminProfileName").value.trim();
+  const email = document.getElementById("adminProfileEmail").value.trim();
+  const phone = document.getElementById("adminProfilePhone").value.trim();
+  const newPassword = document.getElementById("adminProfileNewPassword").value;
+  const confirmPassword = document.getElementById("adminProfileConfirmPassword").value;
+
+  if (!fullName || !email) {
+    if (typeof toastError === "function") {
+      toastError("Full name and email are required");
+    }
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    if (typeof toastError === "function") {
+      toastError("Please enter a valid email address");
+    }
+    return;
+  }
+
+  if (newPassword || confirmPassword) {
+    if (newPassword.length < 6) {
+      if (typeof toastError === "function") {
+        toastError("New password must be at least 6 characters");
+      }
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      if (typeof toastError === "function") {
+        toastError("New password and confirm password do not match");
+      }
+      return;
+    }
+  }
+
+  fetch(ROOT + "/Admindashboard/updateAdminProfile", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      full_name: fullName,
+      email,
+      phone,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success) {
+        if (typeof toastError === "function") {
+          toastError(data.message || "Failed to update profile");
+        }
+        return;
+      }
+
+      const avatarText = document.querySelector(".user-avatar-small span");
+      if (avatarText) {
+        avatarText.textContent = (fullName.charAt(0) || "A").toUpperCase();
+      }
+
+      if (typeof toastSuccess === "function") {
+        toastSuccess(data.message || "Profile saved successfully");
+      }
+      closeAdminProfileModal();
+    })
+    .catch((error) => {
+      console.error("Error updating admin profile:", error);
+      if (typeof toastError === "function") {
+        toastError("An error occurred while updating profile");
+      }
+    });
 }
 // ===================================
 // THEME FUNCTIONALITY
@@ -238,3 +419,7 @@ function initCategoryChart() {
     },
   });
 }
+
+window.openAdminProfileModal = openAdminProfileModal;
+window.closeAdminProfileModal = closeAdminProfileModal;
+window.submitAdminProfile = submitAdminProfile;

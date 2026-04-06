@@ -17,8 +17,8 @@ require __DIR__ . '/../app/core/init.php';
 
 $loginModel = new M_login();
 
-$email = 'admin@rangamadala.com';
-$password = 'Admin@123';
+$email = 'rangamadala@admin.com';
+$password = 'admin@2003';
 
 $user = $loginModel->authenticate($email, $password);
 

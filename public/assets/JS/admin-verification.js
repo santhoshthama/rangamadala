@@ -20,6 +20,12 @@ function initRegistrationsView() {
   if (registrationsNav) {
     registrationsNav.addEventListener('click', loadRegistrations);
   }
+  
+  // Also load immediately if the registrations view is already visible
+  const registrationsView = document.getElementById('registrations');
+  if (registrationsView && registrationsView.classList.contains('active')) {
+    loadRegistrations();
+  }
 }
 
 function loadRegistrations() {
@@ -86,6 +92,10 @@ function renderRegistrations(registrations) {
       <td>${formattedDate}</td>
       <td>
         <div class="action-buttons">
+          <button class="btn btn-secondary" onclick="showUserDetails(${user.id})">
+            <span class="material-symbols-rounded">visibility</span>
+            View
+          </button>
           <button class="btn btn-approve" onclick="approveUser(${user.id}, '${user.full_name}')">
             <span class="material-symbols-rounded">check_circle</span>
             Approve
@@ -114,10 +124,177 @@ function filterRegistrations(filter) {
   });
 }
 
-function approveUser(userId, userName) {
-  if (!confirm(`Are you sure you want to approve ${userName}?`)) {
-    return;
+function showUserDetails(userId) {
+  fetch(ROOT + '/admindashboard/getRegistrationDetails?user_id=' + encodeURIComponent(userId))
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        toastError(data.message || 'Failed to load user details');
+        return;
+      }
+
+      const user = data.user;
+      const sp = data.service_provider || null;
+
+      const nicImage = user.nic_photo ? `<img src="${ROOT}/${user.nic_photo}" alt="NIC" class="nic-image" />` : '<em>No NIC image uploaded</em>';
+
+      let extraDetails = '';
+      if (sp) {
+        const frontImg = sp.nic_photo_front ? `<img src="${ROOT}/${sp.nic_photo_front}" alt="NIC Front" class="nic-image" />` : '<em>No front image</em>';
+        const backImg = sp.nic_photo_back ? `<img src="${ROOT}/${sp.nic_photo_back}" alt="NIC Back" class="nic-image" />` : '<em>No back image</em>';
+
+        extraDetails = `
+          <div class="details-section-header">
+            <span class="material-symbols-rounded">work</span>
+            <span>Service Provider Details</span>
+          </div>
+          <div class="input-box readonly">
+            <input type="text" value="${sp.professional_title || 'N/A'}" readonly />
+            <i class="material-symbols-rounded">badge</i>
+            <label>Professional Title</label>
+          </div>
+          <div class="input-box readonly">
+            <input type="text" value="${sp.location || 'N/A'}" readonly />
+            <i class="material-symbols-rounded">location_on</i>
+            <label>Location</label>
+          </div>
+          <div class="input-box readonly">
+            <input type="text" value="${sp.nic_number || 'N/A'}" readonly />
+            <i class="material-symbols-rounded">credit_card</i>
+            <label>NIC Number</label>
+          </div>
+          <div class="input-box readonly">
+            <input type="text" value="${sp.years_experience || 'N/A'}" readonly />
+            <i class="material-symbols-rounded">timeline</i>
+            <label>Years of Experience</label>
+          </div>
+          <div class="input-box readonly">
+            <input type="text" value="${sp.professional_summary || 'N/A'}" readonly />
+            <i class="material-symbols-rounded">description</i>
+            <label>Professional Summary</label>
+          </div>
+          <div class="input-box readonly">
+            <input type="text" value="${sp.availability === 1 ? 'Available' : 'Not available'}" readonly />
+            <i class="material-symbols-rounded">event_available</i>
+            <label>Availability</label>
+          </div>
+          <div class="details-section-header">
+            <span class="material-symbols-rounded">badge</span>
+            <span>NIC Verification Images</span>
+          </div>
+          <div class="nic-images-row">
+            <div class="nic-image-box">
+              <h5>NIC Front</h5>
+              ${frontImg}
+            </div>
+            <div class="nic-image-box">
+              <h5>NIC Back</h5>
+              ${backImg}
+            </div>
+          </div>
+        `;
+      } else {
+        extraDetails = `
+          <div class="details-section-header">
+            <span class="material-symbols-rounded">badge</span>
+            <span>NIC / Verification</span>
+          </div>
+          <div class="nic-images-row">
+            <div class="nic-image-box">
+              ${nicImage}
+            </div>
+          </div>
+        `;
+      }
+
+      const roleDisplay = user.role.replace('_', ' ');
+      const statusDisplay = user.verification_status || 'pending';
+
+      const modalHTML = `
+        <div class="modal-overlay active" id="userDetailsModal">
+          <div class="modal-content user-form-modal">
+            <div class="modal-header">
+              <h3>Registration Details</h3>
+              <button class="modal-close" onclick="closeUserDetailsModal()">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="details-section-header">
+                <span class="material-symbols-rounded">person</span>
+                <span>Personal Information</span>
+              </div>
+              <div class="input-box readonly">
+                <input type="text" value="${user.full_name}" readonly />
+                <i class="material-symbols-rounded">person</i>
+                <label>Full Name</label>
+              </div>
+              <div class="input-box readonly">
+                <input type="email" value="${user.email}" readonly />
+                <i class="material-symbols-rounded">mail</i>
+                <label>Email Address</label>
+              </div>
+              <div class="input-box readonly">
+                <input type="text" value="${user.phone || 'N/A'}" readonly />
+                <i class="material-symbols-rounded">phone</i>
+                <label>Phone Number</label>
+              </div>
+              <div class="input-box readonly">
+                <input type="text" value="${roleDisplay}" readonly />
+                <i class="material-symbols-rounded">badge</i>
+                <label>Role</label>
+              </div>
+              <div class="input-box readonly">
+                <input type="text" value="${statusDisplay}" readonly />
+                <i class="material-symbols-rounded">verified</i>
+                <label>Verification Status</label>
+              </div>
+              ${extraDetails}
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" onclick="closeUserDetailsModal()">
+                <span class="material-symbols-rounded">close</span>
+                Close
+              </button>
+              <button class="btn btn-approve" onclick="closeUserDetailsModal(); approveUser(${user.id}, '${user.full_name}')">
+                <span class="material-symbols-rounded">check_circle</span>
+                Approve
+              </button>
+              <button class="btn btn-reject" onclick="closeUserDetailsModal(); showRejectModal(${user.id}, '${user.full_name}')">
+                <span class="material-symbols-rounded">cancel</span>
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const existingModal = document.getElementById('userDetailsModal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+    })
+    .catch(error => {
+      console.error('Error loading user details:', error);
+      toastError('An error occurred while loading user details');
+    });
+}
+
+function closeUserDetailsModal() {
+  const modal = document.getElementById('userDetailsModal');
+  if (modal) {
+    modal.remove();
   }
+}
+
+async function approveUser(userId, userName) {
+  const confirmed = await showConfirm(
+    `Are you sure you want to approve ${userName}?`,
+    { title: 'Approve User', confirmText: 'Yes, Approve', type: 'success' }
+  );
+  if (!confirmed) return;
   
   fetch(ROOT + '/admindashboard/approveUser', {
     method: 'POST',
@@ -129,15 +306,15 @@ function approveUser(userId, userName) {
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert('User approved successfully!');
+      toastSuccess('User approved successfully!');
       loadRegistrations(); // Reload the list
     } else {
-      alert('Error: ' + (data.message || 'Failed to approve user'));
+      toastError(data.message || 'Failed to approve user');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('An error occurred while approving the user');
+    toastError('An error occurred while approving the user');
   });
 }
 
@@ -201,15 +378,15 @@ function rejectUser(userId) {
   .then(data => {
     if (data.success) {
       closeRejectModal();
-      alert('User rejected successfully!');
+      toastSuccess('User has been rejected');
       loadRegistrations(); // Reload the list
     } else {
-      alert('Error: ' + (data.message || 'Failed to reject user'));
+      toastError(data.message || 'Failed to reject user');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('An error occurred while rejecting the user');
+    toastError('An error occurred while rejecting the user');
   });
 }
 
@@ -218,3 +395,5 @@ window.approveUser = approveUser;
 window.showRejectModal = showRejectModal;
 window.closeRejectModal = closeRejectModal;
 window.rejectUser = rejectUser;
+window.showUserDetails = showUserDetails;
+window.closeUserDetailsModal = closeUserDetailsModal;

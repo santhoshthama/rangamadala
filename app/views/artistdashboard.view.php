@@ -11,6 +11,8 @@ if(isset($data) && is_array($data)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artist Dashboard - Rangamadala</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css" />
     <style>
         :root {
             --brand: #ba8e23;
@@ -480,6 +482,25 @@ if(isset($data) && is_array($data)) {
     </style>
 </head>
 <body>
+    <!-- Toast Notification Script -->
+    <script src="<?= ROOT ?>/assets/JS/toast.js"></script>
+    <?php if (!empty($_SESSION['success_message'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            toastSuccess('<?= addslashes($_SESSION['success_message']); ?>');
+        });
+    </script>
+    <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['error_message'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            toastError('<?= addslashes($_SESSION['error_message']); ?>');
+        });
+    </script>
+    <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
+    
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo">

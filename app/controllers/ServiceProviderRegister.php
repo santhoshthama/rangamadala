@@ -69,13 +69,13 @@ class ServiceProviderRegister
                 if (empty($errors)) {
                     // 🔹 Save provider to DB
                     if ($model->register($full_name, $email, $password, $phone, $frontDbPath, $backDbPath)) {
-                        echo "<script>
-                                alert('Service Provider registered successfully!');
-                                window.location = '" . ROOT . "/login';
-                              </script>";
+                        // Set session message for pending verification notice
+                        $_SESSION['registration_success'] = true;
+                        $_SESSION['registration_message'] = 'Your service provider registration has been submitted successfully! Your account is pending admin verification. You will be able to login once your NIC and details are verified. This usually takes 1-2 business days.';
+                        header("Location: " . ROOT . "/Login");
                         exit;
                     } else {
-                        $errors[] = "Registration failed. Try again.";
+                        $errors[] = "Registration failed. Email may already exist or try again.";
                     }
                 }
             }
