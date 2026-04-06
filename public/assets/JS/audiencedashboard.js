@@ -301,7 +301,7 @@ document.addEventListener("DOMContentLoaded", function () {
   bookButtons.forEach((btn) => {
     btn.addEventListener("click", function () {
       const dramaId = this.getAttribute("data-drama-id");
-      alert(`Booking functionality for Drama ID: ${dramaId} will be implemented soon!`);
+      toastInfo('Booking functionality coming soon!');
       // TODO: Implement actual booking functionality
     });
   });

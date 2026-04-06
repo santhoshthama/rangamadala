@@ -12,7 +12,6 @@ class Artistdashboard
             exit;
         }
 
-
         $artist_model = $this->getModel('M_artist');
         $drama_model = $this->getModel('M_drama');
         $pm_model = $this->getModel('M_production_manager');

@@ -231,8 +231,6 @@
             border-bottom: 2px solid #d4af37;
         }
 
-
-
         .detail-row {
             display: flex;
             justify-content: space-between;
