@@ -5,6 +5,24 @@ if (isset($data) && is_array($data)) {
 
 $dramaId = isset($drama->id) ? (int)$drama->id : (isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0);
 
+$services = isset($services) && is_array($services) ? $services : [];
+$budgetItems = isset($budgetItems) && is_array($budgetItems) ? $budgetItems : [];
+$budgetCategories = isset($budgetCategories) && is_array($budgetCategories) ? $budgetCategories : [];
+$theaterBookings = isset($theaterBookings) && is_array($theaterBookings) ? $theaterBookings : [];
+$budgetSummary = isset($budgetSummary) && is_array($budgetSummary) ? $budgetSummary : [];
+
+$getField = static function ($item, string $key, $default = null) {
+    if (is_array($item) && array_key_exists($key, $item)) {
+        return $item[$key];
+    }
+
+    if (is_object($item) && isset($item->$key)) {
+        return $item->$key;
+    }
+
+    return $default;
+};
+
 // Get current user profile image
 $userModel = new M_universal_profile();
 $currentUser = $userModel->getUserById($_SESSION['user_id']);
@@ -114,19 +132,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <!-- Budget Summary Cards -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>LKR 800,000</h3>
+                <h3><?= isset($budgetSummary['total_budget']) ? 'LKR ' . number_format((float)$budgetSummary['total_budget'], 0) : '—' ?></h3>
                 <p>Total Budget</p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--success), #1f9b3b);">
-                <h3>LKR 336,000</h3>
-                <p>Budget Used (42%)</p>
+                <h3><?= isset($budgetSummary['used_budget']) ? 'LKR ' . number_format((float)$budgetSummary['used_budget'], 0) : '—' ?></h3>
+                <p>Budget Used<?= isset($budgetSummary['used_percentage']) ? ' (' . (float)$budgetSummary['used_percentage'] . '%)' : '' ?></p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--warning), #e0a800);">
-                <h3>LKR 464,000</h3>
-                <p>Remaining (58%)</p>
+                <h3><?= isset($budgetSummary['remaining_budget']) ? 'LKR ' . number_format((float)$budgetSummary['remaining_budget'], 0) : '—' ?></h3>
+                <p>Remaining<?= isset($budgetSummary['remaining_percentage']) ? ' (' . (float)$budgetSummary['remaining_percentage'] . '%)' : '' ?></p>
             </div>
             <div class="stat-card" style="background: linear-gradient(135deg, var(--danger), #c82333);">
-                <h3>LKR 125,000</h3>
+                <h3><?= isset($budgetSummary['pending_payments']) ? 'LKR ' . number_format((float)$budgetSummary['pending_payments'], 0) : '—' ?></h3>
                 <p>Pending Payments</p>
             </div>
         </div>
@@ -157,66 +175,39 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 <span>Booked Services</span>
                             </h3>
                             <ul>
-                                <li>
-                                    <div>
-                                        <strong>Lighting Service - Bright Lights Co.</strong>
-                                        <div class="request-info">
-                                            Managed by: Priyantha Silva | Booking Date: 2024-12-05
+                                <?php if (!empty($services)): ?>
+                                    <?php foreach ($services as $service): ?>
+                                        <?php $serviceTitle = $getField($service, 'title', 'Service'); ?>
+                                        <?php $serviceManager = $getField($service, 'managed_by'); ?>
+                                        <?php $serviceDetails = $getField($service, 'details'); ?>
+                                        <?php $serviceStatus = $getField($service, 'status', 'Status Unknown'); ?>
+                                        <?php $servicePaymentStatus = $getField($service, 'payment_status'); ?>
+                                        <li>
+                                            <div>
+                                                <strong><?= esc($serviceTitle) ?></strong>
+                                                <?php if (!empty($serviceManager)): ?>
+                                                    <div class="request-info">Managed by: <?= esc($serviceManager) ?></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($serviceDetails)): ?>
+                                                    <div class="request-info"><?= esc($serviceDetails) ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div style="display: flex; gap: 8px; align-items: center;">
+                                                <span class="status-badge assigned"><?= esc($serviceStatus) ?></span>
+                                                <?php if (!empty($servicePaymentStatus)): ?>
+                                                    <span class="status-badge pending"><?= esc($servicePaymentStatus) ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <li>
+                                        <div>
+                                            <strong>No service records available</strong>
+                                            <div class="request-info">Production managers have not added service entries for this drama yet.</div>
                                         </div>
-                                        <div class="request-info">
-                                            Amount: LKR 85,000 | Service Date: 2024-12-30
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span class="status-badge assigned">Confirmed</span>
-                                        <span class="status-badge" style="background: #28a745; color: #fff;">Paid</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Sound System - Audio Pro Services</strong>
-                                        <div class="request-info">
-                                            Managed by: Malini Fernando | Booking Date: 2024-12-08
-                                        </div>
-                                        <div class="request-info">
-                                            Amount: LKR 65,000 | Service Date: 2024-12-30
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span class="status-badge assigned">Confirmed</span>
-                                        <span class="status-badge pending">Pending Payment</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Makeup & Costume - Glamour Studio</strong>
-                                        <div class="request-info">
-                                            Managed by: Malini Fernando | Booking Date: 2024-12-10
-                                        </div>
-                                        <div class="request-info">
-                                            Amount: LKR 120,000 | Service Date: 2024-12-29 - 2024-12-30
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span class="status-badge assigned">Confirmed</span>
-                                        <span class="status-badge" style="background: #28a745; color: #fff;">Paid</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Stage Props - Creative Props Ltd.</strong>
-                                        <div class="request-info">
-                                            Managed by: Priyantha Silva | Booking Date: 2024-12-12
-                                        </div>
-                                        <div class="request-info">
-                                            Amount: LKR 45,000 | Delivery: 2024-12-28
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span class="status-badge requested">Pending Confirmation</span>
-                                        <span class="status-badge unassigned">Not Paid</span>
-                                    </div>
-                                </li>
+                                    </li>
+                                <?php endif; ?>
                             </ul>
                         </div>
                     </div>
@@ -232,66 +223,37 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <div class="card-section">
                             <h3>Budget Breakdown</h3>
                             <ul>
-                                <li>
-                                    <div>
-                                        <strong>Lighting Service</strong>
-                                        <div class="request-info">
-                                            Category: Technical Services | Added by: Priyantha Silva | Date: 2024-12-05
+                                <?php if (!empty($budgetItems)): ?>
+                                    <?php foreach ($budgetItems as $item): ?>
+                                        <?php $itemTitle = $getField($item, 'title', 'Budget Item'); ?>
+                                        <?php $itemDetails = $getField($item, 'details'); ?>
+                                        <?php $itemAmount = $getField($item, 'amount'); ?>
+                                        <?php $itemStatus = $getField($item, 'status'); ?>
+                                        <li>
+                                            <div>
+                                                <strong><?= esc($itemTitle) ?></strong>
+                                                <?php if (!empty($itemDetails)): ?>
+                                                    <div class="request-info"><?= esc($itemDetails) ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div style="display: flex; gap: 8px; align-items: center;">
+                                                <span style="font-weight: 700; color: var(--brand);">
+                                                    <?= $itemAmount !== null ? 'LKR ' . number_format((float)$itemAmount, 0) : '—' ?>
+                                                </span>
+                                                <?php if (!empty($itemStatus)): ?>
+                                                    <span class="status-badge pending"><?= esc($itemStatus) ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <li>
+                                        <div>
+                                            <strong>No budget items available</strong>
+                                            <div class="request-info">Budget entries will appear here once they are added by production managers.</div>
                                         </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span style="font-weight: 700; color: var(--brand);">LKR 85,000</span>
-                                        <span class="status-badge" style="background: #28a745; color: #fff;">Paid</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Sound System</strong>
-                                        <div class="request-info">
-                                            Category: Technical Services | Added by: Malini Fernando | Date: 2024-12-08
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span style="font-weight: 700; color: var(--brand);">LKR 65,000</span>
-                                        <span class="status-badge pending">Pending</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Makeup & Costume Design</strong>
-                                        <div class="request-info">
-                                            Category: Artistic Services | Added by: Malini Fernando | Date: 2024-12-10
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span style="font-weight: 700; color: var(--brand);">LKR 120,000</span>
-                                        <span class="status-badge" style="background: #28a745; color: #fff;">Paid</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Stage Props</strong>
-                                        <div class="request-info">
-                                            Category: Stage Design | Added by: Priyantha Silva | Date: 2024-12-12
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span style="font-weight: 700; color: var(--brand);">LKR 45,000</span>
-                                        <span class="status-badge unassigned">Not Paid</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Transportation</strong>
-                                        <div class="request-info">
-                                            Category: Logistics | Added by: Priyantha Silva | Date: 2024-12-14
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span style="font-weight: 700; color: var(--brand);">LKR 21,000</span>
-                                        <span class="status-badge pending">Pending</span>
-                                    </div>
-                                </li>
+                                    </li>
+                                <?php endif; ?>
                             </ul>
                         </div>
 
@@ -299,22 +261,25 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <div class="card-section">
                             <h3>Budget by Category</h3>
                             <div class="drama-info">
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Technical Services</span>
-                                    <span class="service-info-value">LKR 150,000 (45%)</span>
-                                </div>
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Artistic Services</span>
-                                    <span class="service-info-value">LKR 120,000 (36%)</span>
-                                </div>
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Stage Design</span>
-                                    <span class="service-info-value">LKR 45,000 (13%)</span>
-                                </div>
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Logistics</span>
-                                    <span class="service-info-value">LKR 21,000 (6%)</span>
-                                </div>
+                                <?php if (!empty($budgetCategories)): ?>
+                                    <?php foreach ($budgetCategories as $category): ?>
+                                        <?php $categoryName = $getField($category, 'name', 'Category'); ?>
+                                        <?php $categoryAmount = $getField($category, 'amount'); ?>
+                                        <?php $categoryPercentage = $getField($category, 'percentage'); ?>
+                                        <div class="service-info-item">
+                                            <span class="service-info-label"><?= esc($categoryName) ?></span>
+                                            <span class="service-info-value">
+                                                <?= $categoryAmount !== null ? 'LKR ' . number_format((float)$categoryAmount, 0) : '—' ?>
+                                                <?= $categoryPercentage !== null ? ' (' . (float)$categoryPercentage . '%)' : '' ?>
+                                            </span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="service-info-item">
+                                        <span class="service-info-label">No category totals available</span>
+                                        <span class="service-info-value">—</span>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -330,42 +295,39 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <div class="card-section">
                             <h3>Theater Bookings</h3>
                             <ul>
-                                <li>
-                                    <div>
-                                        <strong>Lionel Wendt Theatre</strong>
-                                        <div class="request-info">
-                                            Performance Date: 2024-12-30 | Time: 7:00 PM - 10:00 PM
+                                <?php if (!empty($theaterBookings)): ?>
+                                    <?php foreach ($theaterBookings as $booking): ?>
+                                        <?php $bookingVenue = $getField($booking, 'venue', 'Theater'); ?>
+                                        <?php $bookingDetails = $getField($booking, 'details'); ?>
+                                        <?php $bookingFee = $getField($booking, 'booking_fee'); ?>
+                                        <?php $bookingStatus = $getField($booking, 'status', 'Status Unknown'); ?>
+                                        <?php $bookingPaymentStatus = $getField($booking, 'payment_status'); ?>
+                                        <li>
+                                            <div>
+                                                <strong><?= esc($bookingVenue) ?></strong>
+                                                <?php if (!empty($bookingDetails)): ?>
+                                                    <div class="request-info"><?= esc($bookingDetails) ?></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($bookingFee)): ?>
+                                                    <div class="request-info">Booking Fee: LKR <?= number_format((float)$bookingFee, 0) ?></div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div style="display: flex; gap: 8px; align-items: center;">
+                                                <span class="status-badge assigned"><?= esc($bookingStatus) ?></span>
+                                                <?php if (!empty($bookingPaymentStatus)): ?>
+                                                    <span class="status-badge pending"><?= esc($bookingPaymentStatus) ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <li>
+                                        <div>
+                                            <strong>No theater bookings available</strong>
+                                            <div class="request-info">Theater bookings will appear once they are scheduled by production managers.</div>
                                         </div>
-                                        <div class="request-info">
-                                            Booked by: Priyantha Silva | Booking Date: 2024-11-28
-                                        </div>
-                                        <div class="request-info">
-                                            Capacity: 500 seats | Booking Fee: LKR 150,000
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span class="status-badge assigned">Confirmed</span>
-                                        <span class="status-badge" style="background: #28a745; color: #fff;">Paid</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div>
-                                        <strong>Tower Hall Theatre - Rehearsal</strong>
-                                        <div class="request-info">
-                                            Rehearsal Date: 2024-12-25 | Time: 3:00 PM - 6:00 PM
-                                        </div>
-                                        <div class="request-info">
-                                            Booked by: Malini Fernando | Booking Date: 2024-12-15
-                                        </div>
-                                        <div class="request-info">
-                                            Booking Fee: LKR 25,000
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span class="status-badge assigned">Confirmed</span>
-                                        <span class="status-badge pending">Pending Payment</span>
-                                    </div>
-                                </li>
+                                    </li>
+                                <?php endif; ?>
                             </ul>
                         </div>
                     </div>
