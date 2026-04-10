@@ -193,7 +193,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                         <div class="artists-grid">
                             <?php foreach ($dramas_as_director as $drama): ?>
                                 <div class="artist-card">
-                                    <div class="artist-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">
+                                    <div class="artist-header" style="background:linear-gradient(135deg, #ba8e23, #a0781e);">
                                         <h3 class="artist-name"><?= esc($drama->drama_name ?? 'Registered Drama') ?></h3>
                                         <p class="artist-experience">Certificate <?= esc($drama->certificate_number ?? 'N/A') ?></p>
                                     </div>
@@ -476,7 +476,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                     </div>
                                     
                                     <div style="margin-top: 12px; padding: 10px; background: rgba(33, 150, 243, 0.08); border-radius: 6px;">
-                                        <p style="color: #1976d2; font-size: 13px; margin: 0;">
+                                        <p style="color:  #8a6d1a; font-size: 13px; margin: 0;">
                                             <i class="fas fa-info-circle"></i> <strong>About this role:</strong> 
                                             As Production Manager, you'll oversee services, budget management, and theater bookings for this drama.
                                         </p>
