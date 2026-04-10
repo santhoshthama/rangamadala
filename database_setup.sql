@@ -504,7 +504,7 @@ CREATE TABLE IF NOT EXISTS `payments` (
   `paid_to` int DEFAULT NULL COMMENT 'User receiving payment (Provider)',
   `paid_at` timestamp NULL DEFAULT NULL COMMENT 'When payment was completed',
   `gateway_order_id` varchar(100) DEFAULT NULL COMMENT 'PayHere order ID (unique reference)',
-  'reference_number' varchar(100) DEFAULT NULL COMMENT 'Unique reference number for this payment',
+  `reference_number` varchar(100) DEFAULT NULL COMMENT 'Unique reference number for this payment',
   `transaction_response` JSON DEFAULT NULL COMMENT 'PayHere response data',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

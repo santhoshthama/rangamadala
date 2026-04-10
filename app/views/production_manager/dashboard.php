@@ -51,12 +51,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-theater-masks"></i>
-                    <span>Theater Bookings</span>
-                </a>
-            </li>
-            <li>
                 <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-calendar-alt"></i>
                     <span>Service Schedule</span>
@@ -132,9 +126,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </a>
             <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-chart-bar"></i> Budget Management
-            </a>
-            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="fas fa-theater-masks"></i> Theater Bookings
             </a>
             <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
                 <i class="fas fa-calendar-alt"></i> Service Schedule
@@ -217,34 +208,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Theater Bookings Section -->
-                    <div class="card-section">
-                        <h3>
-                            <span>Upcoming Theater Bookings</span>
-                            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>" class="btn btn-success" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="fas fa-plus"></i>
-                                Book Theater
-                            </a>
-                        </h3>
-                        <?php if (isset($theaterBookings) && is_array($theaterBookings) && !empty($theaterBookings)): ?>
-                            <ul>
-                                <?php foreach ($theaterBookings as $booking): ?>
-                                    <li>
-                                        <div>
-                                            <strong><?= isset($booking->theater_name) ? esc($booking->theater_name) : 'Theater' ?></strong>
-                                            <div class="request-info">Date: <?= isset($booking->booking_date) ? date('M d, Y', strtotime($booking->booking_date)) : 'N/A' ?> | Time: <?= isset($booking->start_time) && isset($booking->end_time) ? esc($booking->start_time) . ' - ' . esc($booking->end_time) : 'N/A' ?> | Cost: LKR <?= isset($booking->cost) ? number_format($booking->cost) : '0' ?></div>
-                                        </div>
-                                        <span class="status-badge <?= $booking->status === 'confirmed' ? 'assigned' : ($booking->status === 'pending' ? 'pending' : 'requested') ?>"><?= isset($booking->status) ? ucfirst($booking->status) : 'Pending' ?></span>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 30px; color: var(--muted);">
-                                <p>No theater bookings yet. <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">Book a theater</a></p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
                     <!-- Service Schedule Section -->
                     <div class="card-section">
                         <h3>
@@ -281,10 +244,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                             <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="btn btn-success">
                                 <i class="fas fa-chart-bar"></i>
                                 Manage Budget
-                            </a>
-                            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>" class="btn btn-warning">
-                                <i class="fas fa-theater-masks"></i>
-                                Book Theater
                             </a>
                             <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="btn btn-secondary">
                                 <i class="fas fa-calendar-alt"></i>
