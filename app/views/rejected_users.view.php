@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -243,23 +243,23 @@
 <body>
     <div class="container">
         <a href="<?= ROOT ?>/Admindashboard" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+            <i class="bx bx-arrow-left"></i> Back to Admin Dashboard
         </a>
 
         <div class="header">
-            <h1><i class="fas fa-times-circle" style="color: #dc3545;"></i> Rejected Users</h1>
+            <h1><i class="bx bx-times-circle" style="color: #dc3545;"></i> Rejected Users</h1>
             <p>Artists and Service Providers whose registrations were rejected</p>
         </div>
 
         <div class="tabs">
             <a href="<?= ROOT ?>/UserVerification/pending" class="tab-btn">
-                <i class="fas fa-hourglass-half"></i> Pending
+                <i class="bx bx-hourglass-half"></i> Pending
             </a>
             <a href="<?= ROOT ?>/UserVerification/verified" class="tab-btn">
-                <i class="fas fa-check-circle"></i> Verified
+                <i class="bx bx-check-circle"></i> Verified
             </a>
             <a href="<?= ROOT ?>/UserVerification/rejected" class="tab-btn active">
-                <i class="fas fa-times-circle"></i> Rejected
+                <i class="bx bx-times-circle"></i> Rejected
             </a>
         </div>
 
@@ -272,7 +272,7 @@
                                 <?= htmlspecialchars($user->full_name) ?>
                                 <span class="role-badge <?= $user->role ?>"><?= ucfirst(str_replace('_', ' ', $user->role)) ?></span>
                             </h3>
-                            <p><i class="fas fa-<?= $user->role === 'artist' ? 'palette' : 'briefcase' ?>"></i> <?= ucfirst(str_replace('_', ' ', $user->role)) ?></p>
+                            <p><i class="bx bx-<?= $user->role === 'artist' ? 'palette' : 'briefcase' ?>"></i> <?= ucfirst(str_replace('_', ' ', $user->role)) ?></p>
                             <span class="status-badge status-rejected">Rejected</span>
                         </div>
                         <div class="user-card-body">
@@ -290,7 +290,7 @@
                             </div>
                             <div class="rejection-reason">
                                 <div class="user-info" style="margin-bottom: 0;">
-                                    <label><i class="fas fa-exclamation-triangle"></i> Rejection Reason</label>
+                                    <label><i class="bx bx-exclamation-triangle"></i> Rejection Reason</label>
                                     <value><?= htmlspecialchars($user->rejection_reason ?? 'No reason provided') ?></value>
                                 </div>
                             </div>
@@ -300,7 +300,7 @@
             </div>
         <?php else: ?>
             <div class="empty-state">
-                <i class="fas fa-times-circle"></i>
+                <i class="bx bx-times-circle"></i>
                 <h3>No Rejected Users</h3>
                 <p>Rejected registrations will appear here.</p>
             </div>

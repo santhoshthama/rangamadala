@@ -6,8 +6,8 @@
     <title>Browse Dramas - <?= APP_NAME ?></title>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css">
 </head>
 <body>
@@ -47,14 +47,14 @@
     <!-- Search & Filter -->
     <div class="search-filter-container">
         <form method="GET" class="search-form">
-            <div class="search-box">
+            <div class="search-box search-box-pro">
                 <i class='bx bx-search'></i>
-                <input type="text" name="search" placeholder="Search dramas..." value="<?= htmlspecialchars($data['search']) ?>">
+                <input type="text" name="search" placeholder="Search drama titles, venues, genres..." value="<?= htmlspecialchars($data['search']) ?>" aria-label="Search dramas">
             </div>
 
-            <div class="filter-box">
+            <div class="filter-box filter-box-category">
                 <i class='bx bx-filter'></i>
-                <select name="category">
+                <select name="category" aria-label="Choose category">
                     <option value="">All Categories</option>
                     <?php if (!empty($data['categories'])): ?>
                         <?php foreach ($data['categories'] as $category): ?>
@@ -146,7 +146,15 @@
                                 <i class='bx bx-purchase-tag'></i>
                                 <span>LKR <?= number_format($drama->ticket_price ?? 0, 2) ?></span>
                             </div>
-                            <a href="<?= ROOT ?>/BrowseDramas/view/<?= $drama->id ?>" class="btn-view">View Details</a>
+                            <?php if (!empty($drama->showing_prices)): ?>
+                                <div class="form-hint" style="margin: 6px 0 0; width: 100%; color: #666;">
+                                    Showing prices: <?= htmlspecialchars($drama->showing_prices) ?>
+                                </div>
+                            <?php endif; ?>
+                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+                                <a href="<?= ROOT ?>/BrowseDramas/bookShowings/<?= $drama->id ?>" class="btn-view" style="background:#1f7a8c;">Book Showings</a>
+                                <a href="<?= ROOT ?>/BrowseDramas/view/<?= $drama->id ?>" class="btn-view">View Details</a>
+                            </div>
                         </div>
                     </div>
                 </div>

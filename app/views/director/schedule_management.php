@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule Management - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -16,49 +16,49 @@
         <ul class="menu">
             <li>
                 <a href="dashboard.php?drama_id=1">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="drama_details.php?drama_id=1">
-                    <i class="fas fa-film"></i>
+                    <i class="bx bx-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
                 <a href="manage_roles.php?drama_id=1">
-                    <i class="fas fa-users"></i>
+                    <i class="bx bx-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
                 <a href="assign_managers.php?drama_id=1">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li class="active">
                 <a href="schedule_management.php?drama_id=1">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
                 <a href="view_services_budget.php?drama_id=1">
-                    <i class="fas fa-dollar-sign"></i>
+                    <i class="bx bx-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
                 <a href="../artist/profile.php">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
                 <a href="../../public/index.php">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -68,7 +68,7 @@
     <!-- Main Content -->
     <main class="main--content">
         <a href="dashboard.php?drama_id=1" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -80,11 +80,11 @@
             </div>
             <div class="header-controls">
                 <button class="btn btn-primary" onclick="openScheduleModal('rehearsal')">
-                    <i class="fas fa-theater-masks"></i>
+                    <i class="bx bx-theater-masks"></i>
                     Schedule Rehearsal
                 </button>
                 <button class="btn btn-success" onclick="openScheduleModal('interview')">
-                    <i class="fas fa-user-check"></i>
+                    <i class="bx bx-user-check"></i>
                     Schedule Interview
                 </button>
             </div>
@@ -120,15 +120,15 @@
         <!-- Tabs -->
         <div class="tabs">
             <button class="tab-button active" onclick="showScheduleTab('upcoming')">
-                <i class="fas fa-calendar-day"></i>
+                <i class="bx bx-calendar-day"></i>
                 Upcoming Events
             </button>
             <button class="tab-button" onclick="showScheduleTab('past')">
-                <i class="fas fa-history"></i>
+                <i class="bx bx-history"></i>
                 Past Events
             </button>
             <button class="tab-button" onclick="showScheduleTab('calendar')">
-                <i class="fas fa-calendar"></i>
+                <i class="bx bx-calendar"></i>
                 Calendar View
             </button>
         </div>
@@ -146,7 +146,7 @@
                             <ul>
                                 <li>
                                     <div>
-                                        <strong><i class="fas fa-theater-masks"></i> Rehearsal - Maname</strong>
+                                        <strong><i class="bx bx-theater-masks"></i> Rehearsal - Maname</strong>
                                         <div class="request-info">
                                             📅 December 22, 2024 | ⏰ 10:00 AM - 2:00 PM | 📍 NCPA Hall
                                         </div>
@@ -157,19 +157,19 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge assigned">Confirmed</span>
                                         <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewScheduleDetails(1)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="editSchedule(1)">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="bx bx-edit"></i>
                                         </button>
                                         <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="cancelSchedule(1)">
-                                            <i class="fas fa-times"></i>
+                                            <i class="bx bx-times"></i>
                                         </button>
                                     </div>
                                 </li>
                                 <li>
                                     <div>
-                                        <strong><i class="fas fa-user-check"></i> Interview - Sinhabahu</strong>
+                                        <strong><i class="bx bx-user-check"></i> Interview - Sinhabahu</strong>
                                         <div class="request-info">
                                             📅 December 23, 2024 | ⏰ 2:00 PM - 4:00 PM | 📍 Online (Zoom)
                                         </div>
@@ -180,19 +180,19 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge assigned">Confirmed</span>
                                         <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewScheduleDetails(2)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="editSchedule(2)">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="bx bx-edit"></i>
                                         </button>
                                         <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="cancelSchedule(2)">
-                                            <i class="fas fa-times"></i>
+                                            <i class="bx bx-times"></i>
                                         </button>
                                     </div>
                                 </li>
                                 <li>
                                     <div>
-                                        <strong><i class="fas fa-theater-masks"></i> Rehearsal - Sinhabahu</strong>
+                                        <strong><i class="bx bx-theater-masks"></i> Rehearsal - Sinhabahu</strong>
                                         <div class="request-info">
                                             📅 December 25, 2024 | ⏰ 3:00 PM - 6:00 PM | 📍 Tower Hall Theatre
                                         </div>
@@ -203,13 +203,13 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge pending">Pending</span>
                                         <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewScheduleDetails(3)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="editSchedule(3)">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="bx bx-edit"></i>
                                         </button>
                                         <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="cancelSchedule(3)">
-                                            <i class="fas fa-times"></i>
+                                            <i class="bx bx-times"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -223,7 +223,7 @@
                             <ul>
                                 <li>
                                     <div>
-                                        <strong><i class="fas fa-users"></i> Production Meeting - Maname</strong>
+                                        <strong><i class="bx bx-users"></i> Production Meeting - Maname</strong>
                                         <div class="request-info">
                                             📅 December 28, 2024 | ⏰ 9:00 AM - 11:00 AM | 📍 Office
                                         </div>
@@ -234,16 +234,16 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge assigned">Confirmed</span>
                                         <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewScheduleDetails(4)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="editSchedule(4)">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="bx bx-edit"></i>
                                         </button>
                                     </div>
                                 </li>
                                 <li>
                                     <div>
-                                        <strong><i class="fas fa-theater-masks"></i> Final Dress Rehearsal - Maname</strong>
+                                        <strong><i class="bx bx-theater-masks"></i> Final Dress Rehearsal - Maname</strong>
                                         <div class="request-info">
                                             📅 December 30, 2024 | ⏰ 5:00 PM - 9:00 PM | 📍 Lionel Wendt Theatre
                                         </div>
@@ -254,10 +254,10 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge assigned">Confirmed</span>
                                         <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewScheduleDetails(5)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="editSchedule(5)">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="bx bx-edit"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -278,7 +278,7 @@
                             <ul>
                                 <li>
                                     <div>
-                                        <strong><i class="fas fa-theater-masks"></i> Rehearsal - Maname</strong>
+                                        <strong><i class="bx bx-theater-masks"></i> Rehearsal - Maname</strong>
                                         <div class="request-info">
                                             📅 December 15, 2024 | ⏰ 10:00 AM - 1:00 PM | 📍 NCPA Hall
                                         </div>
@@ -289,13 +289,13 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge" style="background: #6c757d; color: #fff;">Completed</span>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewScheduleDetails(6)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                     </div>
                                 </li>
                                 <li>
                                     <div>
-                                        <strong><i class="fas fa-user-check"></i> Interview - Maname</strong>
+                                        <strong><i class="bx bx-user-check"></i> Interview - Maname</strong>
                                         <div class="request-info">
                                             📅 December 10, 2024 | ⏰ 2:00 PM - 5:00 PM | 📍 Online
                                         </div>
@@ -306,7 +306,7 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge" style="background: #6c757d; color: #fff;">Completed</span>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewScheduleDetails(7)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -325,11 +325,11 @@
                         <div class="card-section">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <button class="btn btn-secondary" onclick="previousMonth()">
-                                    <i class="fas fa-chevron-left"></i>
+                                    <i class="bx bx-chevron-left"></i>
                                 </button>
                                 <h3 id="calendarMonthYear" style="margin: 0;">December 2024</h3>
                                 <button class="btn btn-secondary" onclick="nextMonth()">
-                                    <i class="fas fa-chevron-right"></i>
+                                    <i class="bx bx-chevron-right"></i>
                                 </button>
                             </div>
                             
@@ -373,15 +373,15 @@
                             <!-- Action Buttons -->
                             <div style="margin-top: 30px; display: flex; gap: 10px;">
                                 <button class="btn btn-primary" onclick="exportToCalendar()">
-                                    <i class="fas fa-download"></i>
+                                    <i class="bx bx-download"></i>
                                     Export to Google Calendar
                                 </button>
                                 <button class="btn btn-secondary" onclick="printSchedule()">
-                                    <i class="fas fa-print"></i>
+                                    <i class="bx bx-print"></i>
                                     Print Schedule
                                 </button>
                                 <button class="btn btn-success" onclick="openScheduleModal()">
-                                    <i class="fas fa-plus"></i>
+                                    <i class="bx bx-plus"></i>
                                     Add Event
                                 </button>
                             </div>
@@ -396,7 +396,7 @@
     <div id="scheduleModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeScheduleModal()">&times;</span>
-            <h2 id="scheduleModalTitle"><i class="fas fa-calendar-plus"></i> Schedule Event</h2>
+            <h2 id="scheduleModalTitle"><i class="bx bx-calendar-plus"></i> Schedule Event</h2>
             <div class="modal-body">
                 <form id="scheduleForm">
                     <div class="form-group">
@@ -470,7 +470,7 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn-primary" onclick="submitSchedule()">
-                    <i class="fas fa-check"></i>
+                    <i class="bx bx-check"></i>
                     Create Schedule
                 </button>
                 <button class="btn btn-secondary" onclick="closeScheduleModal()">Cancel</button>
@@ -482,13 +482,13 @@
     <div id="scheduleDetailsModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeScheduleDetailsModal()">&times;</span>
-            <h2><i class="fas fa-calendar"></i> Schedule Details</h2>
+            <h2><i class="bx bx-calendar"></i> Schedule Details</h2>
             <div class="modal-body" id="scheduleDetailsBody">
                 <!-- Schedule details will be loaded here -->
             </div>
             <div class="modal-actions">
                 <button class="btn btn-primary" onclick="editScheduleFromDetails()">
-                    <i class="fas fa-edit"></i>
+                    <i class="bx bx-edit"></i>
                     Edit
                 </button>
                 <button class="btn btn-secondary" onclick="closeScheduleDetailsModal()">Close</button>

@@ -138,9 +138,6 @@ button {
   color: var(--color-primary);
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
-* {
-  scrollbar-color: var(--color-text-muted) transparent;
-}
 /* ===================================
    BUTTON COMPONENTS
    =================================== */
@@ -489,6 +486,7 @@ button {
   height: 40px;
   border-radius: var(--radius-lg);
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   transition: var(--transition);
   color: var(--color-text-secondary);
@@ -1147,6 +1145,7 @@ button {
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 

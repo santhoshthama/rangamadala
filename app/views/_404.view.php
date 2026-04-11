@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         :root {
             --primary-bg: #faf8f3;
             --secondary-bg: #f5f0e8;
@@ -317,21 +317,21 @@
 </head>
 <body>
     <!-- Decorative elements -->
-    <i class="fas fa-theater-masks decoration decoration-1"></i>
-    <i class="fas fa-masks-theater decoration decoration-2"></i>
-    <i class="fas fa-star decoration decoration-3"></i>
-    <i class="fas fa-sparkles decoration decoration-4"></i>
+    <i class="bx bx-theater-masks decoration decoration-1"></i>
+    <i class="bx bx-masks-theater decoration decoration-2"></i>
+    <i class="bx bx-star decoration decoration-3"></i>
+    <i class="bx bx-sparkles decoration decoration-4"></i>
 
     <div class="error-container">
         <div class="brand-logo">
-            <i class="fas fa-theater-masks"></i>
+            <i class="bx bx-theater-masks"></i>
             <span>Rangamadala</span>
         </div>
 
         <div class="error-illustration">
             <div class="error-code">404</div>
             <div class="lost-icon">
-                <i class="fas fa-compass"></i>
+                <i class="bx bx-compass"></i>
             </div>
         </div>
         
@@ -344,11 +344,11 @@
 
         <div class="error-actions">
             <a href="javascript:history.back()" class="error-btn btn-secondary">
-                <i class="fas fa-arrow-left"></i>
+                <i class="bx bx-arrow-left"></i>
                 Go Back
             </a>
             <a href="<?= defined('ROOT') ? ROOT : '/' ?>" class="error-btn btn-primary">
-                <i class="fas fa-home"></i>
+                <i class="bx bx-home"></i>
                 Back to Home
             </a>
         </div>
@@ -357,15 +357,15 @@
             <h3>You might be looking for:</h3>
             <div class="suggestions-list">
                 <a href="<?= defined('ROOT') ? ROOT : '/' ?>" class="suggestion-link">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     Home
                 </a>
                 <a href="<?= defined('ROOT') ? ROOT : '/' ?>/Login" class="suggestion-link">
-                    <i class="fas fa-sign-in-alt"></i>
+                    <i class="bx bx-sign-in-alt"></i>
                     Login
                 </a>
                 <a href="<?= defined('ROOT') ? ROOT : '/' ?>/Signup" class="suggestion-link">
-                    <i class="fas fa-user-plus"></i>
+                    <i class="bx bx-user-plus"></i>
                     Sign Up
                 </a>
             </div>

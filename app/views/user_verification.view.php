@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -378,7 +378,7 @@
 <body>
     <div class="container">
         <a href="<?= ROOT ?>/Admindashboard" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+            <i class="bx bx-arrow-left"></i> Back to Admin Dashboard
         </a>
 
         <div class="header">
@@ -388,13 +388,13 @@
 
         <div class="tabs">
             <a href="<?= ROOT ?>/UserVerification/pending" class="tab-btn <?= strpos($_SERVER['REQUEST_URI'], 'pending') !== false ? 'active' : '' ?>">
-                <i class="fas fa-hourglass-half"></i> Pending
+                <i class="bx bx-hourglass-half"></i> Pending
             </a>
             <a href="<?= ROOT ?>/UserVerification/verified" class="tab-btn <?= strpos($_SERVER['REQUEST_URI'], 'verified') !== false ? 'active' : '' ?>">
-                <i class="fas fa-check-circle"></i> Verified
+                <i class="bx bx-check-circle"></i> Verified
             </a>
             <a href="<?= ROOT ?>/UserVerification/rejected" class="tab-btn <?= strpos($_SERVER['REQUEST_URI'], 'rejected') !== false ? 'active' : '' ?>">
-                <i class="fas fa-times-circle"></i> Rejected
+                <i class="bx bx-times-circle"></i> Rejected
             </a>
         </div>
 
@@ -424,12 +424,12 @@
                                 <?php if (!empty($user->nic_photo)): ?>
                                     <img src="<?= ROOT ?>/<?= htmlspecialchars($user->nic_photo) ?>" alt="NIC Photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                     <div class="nic-image-placeholder" style="display: none;">
-                                        <i class="fas fa-id-card"></i><br>
+                                        <i class="bx bx-id-card"></i><br>
                                         Image Not Found
                                     </div>
                                 <?php else: ?>
                                     <div class="nic-image-placeholder">
-                                        <i class="fas fa-id-card"></i><br>
+                                        <i class="bx bx-id-card"></i><br>
                                         No NIC Image Uploaded
                                     </div>
                                 <?php endif; ?>
@@ -437,13 +437,13 @@
 
                             <div class="card-actions">
                                 <button class="btn btn-view" onclick="viewUserDetails(<?= $user->id ?>)">
-                                    <i class="fas fa-eye"></i> View
+                                    <i class="bx bx-eye"></i> View
                                 </button>
                                 <button class="btn btn-approve" onclick="approveUser(<?= $user->id ?>, '<?= htmlspecialchars($user->full_name) ?>')">
-                                    <i class="fas fa-check"></i> Approve
+                                    <i class="bx bx-check"></i> Approve
                                 </button>
                                 <button class="btn btn-reject" onclick="showRejectModal(<?= $user->id ?>, '<?= htmlspecialchars($user->full_name) ?>')">
-                                    <i class="fas fa-times"></i> Reject
+                                    <i class="bx bx-times"></i> Reject
                                 </button>
                             </div>
                         </div>
@@ -508,7 +508,7 @@
             </div>
         <?php else: ?>
             <div class="empty-state">
-                <i class="fas fa-inbox"></i>
+                <i class="bx bx-inbox"></i>
                 <h3>No Users Found</h3>
                 <p>There are no users to display in this section.</p>
             </div>

@@ -27,6 +27,12 @@
   </style>
 </head>
 <body>
+  <?php
+    $successMessage = $_SESSION['success_message'] ?? '';
+    $errorMessage = $_SESSION['error_message'] ?? '';
+    unset($_SESSION['success_message'], $_SESSION['error_message']);
+  ?>
+
   <div class="container">
     <div class="back-container">
       <a href="<?= ROOT ?>/BrowseDramas" class="back-link"><button class="back-btn" type="button"><i class='bx bx-arrow-back'></i> Back to Browse</button></a>
@@ -34,6 +40,17 @@
   </div>
 
   <div class="details-container">
+    <?php if (!empty($successMessage)): ?>
+      <div style="margin-bottom:12px; padding:12px 14px; border-radius:10px; border:1px solid rgba(27, 148, 79, .45); background:rgba(27, 148, 79, .16); color:#e8fbe8;">
+        <?= htmlspecialchars($successMessage) ?>
+      </div>
+    <?php endif; ?>
+    <?php if (!empty($errorMessage)): ?>
+      <div style="margin-bottom:12px; padding:12px 14px; border-radius:10px; border:1px solid rgba(220, 53, 69, .45); background:rgba(220, 53, 69, .16); color:#ffe8e8;">
+        <?= htmlspecialchars($errorMessage) ?>
+      </div>
+    <?php endif; ?>
+
     <?php if (!empty($data['drama'])): $d=$data['drama']; ?>
       <div class="details-card">
         <div class="details-hero">
@@ -52,6 +69,7 @@
               <div><i class='bx bx-time'></i><?= htmlspecialchars($d->event_time ?? 'TBA') ?></div>
               <div><i class='bx bx-map'></i><?= htmlspecialchars($d->venue ?? 'TBA') ?></div>
               <div><i class='bx bx-purchase-tag'></i>LKR <?= number_format($d->ticket_price ?? 0, 2) ?></div>
+              <?php if (!empty($d->showing_prices)): ?><div><i class='bx bx-list-ul'></i><?= htmlspecialchars($d->showing_prices) ?></div><?php endif; ?>
               <?php if (!empty($d->creator_name)): ?><div><i class='bx bx-user'></i>By <?= htmlspecialchars($d->creator_name) ?></div><?php endif; ?>
             </div>
             
@@ -71,9 +89,15 @@
             <?php endif; ?>
             
             <div class="details-actions">
-              <a class="btn btn-primary" href="#"><i class='bx bx-cart-add'></i> Book Ticket</a>
+              <a class="btn btn-primary" href="<?= ROOT ?>/BrowseDramas/bookShowings/<?= (int)$d->id ?>"><i class='bx bx-cart-add'></i> Buy Show Ticket</a>
+              <a class="btn btn-outline" href="<?= ROOT ?>/BrowseDramas/rateReview/<?= (int)$d->id ?>"><span class="material-symbols-rounded">reviews</span> Rate &amp; Review Page</a>
               <button class="btn btn-outline" id="rateBtn" type="button"><span class="material-symbols-rounded">star</span> Rate Drama</button>
             </div>
+            <?php if (isset($_GET['book']) && $_GET['book'] === '1'): ?>
+              <div style="margin-top:10px; padding:10px 12px; border:1px solid rgba(212,175,55,.35); border-radius:10px; color:#f5f0e8; background:rgba(212,175,55,.10);">
+                Showing selected. Confirm the schedule details below and proceed with booking steps.
+              </div>
+            <?php endif; ?>
           </div>
         </div>
         <div style="padding:0 24px 24px">

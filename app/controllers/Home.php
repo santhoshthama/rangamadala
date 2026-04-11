@@ -30,6 +30,14 @@ class Home
     }
 
     /**
+     * Learn more page for the project idea
+     */
+    public function learnMore()
+    {
+        $this->view('learn_more');
+    }
+
+    /**
      * Public drama details page - no login required
      * Anyone can view drama information
      */
@@ -47,7 +55,7 @@ class Home
                     FROM dramas d 
                     LEFT JOIN categories c ON d.category_id = c.id 
                     LEFT JOIN users u ON d.created_by = u.id
-                    WHERE d.id = :id");
+                    WHERE d.id = :id AND d.is_published = 1");
         $db->bind(':id', $drama_id);
         $drama = $db->single();
 

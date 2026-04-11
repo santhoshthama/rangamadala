@@ -2,6 +2,55 @@
 class Admindashboard {
     use Controller;
 
+    private function tableExists(Database $db, string $tableName): bool
+    {
+        $db->query("SELECT COUNT(*) AS cnt FROM information_schema.TABLES
+                    WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = :table_name");
+        $db->bind(':table_name', $tableName);
+        $row = $db->single();
+        return $row && (int)$row->cnt > 0;
+    }
+
+    private function columnExists(Database $db, string $tableName, string $columnName): bool
+    {
+        $db->query("SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = :table_name
+                    AND COLUMN_NAME = :column_name");
+        $db->bind(':table_name', $tableName);
+        $db->bind(':column_name', $columnName);
+        $row = $db->single();
+        return $row && (int)$row->cnt > 0;
+    }
+
+    /**
+     * Return available verification admin column in users table.
+     * Supports both old schema (`verified_by`) and newer (`verified_by_admin_id`).
+     */
+    private function getVerificationAdminColumn(Database $db): ?string
+    {
+        $db->query("SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = 'users'
+                    AND COLUMN_NAME = 'verified_by_admin_id'");
+        $hasNew = $db->single();
+        if ($hasNew && (int)$hasNew->cnt > 0) {
+            return 'verified_by_admin_id';
+        }
+
+        $db->query("SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = 'users'
+                    AND COLUMN_NAME = 'verified_by'");
+        $hasOld = $db->single();
+        if ($hasOld && (int)$hasOld->cnt > 0) {
+            return 'verified_by';
+        }
+
+        return null;
+    }
+
     public function index(){
         // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
@@ -16,6 +65,164 @@ class Admindashboard {
         }
 
         $this->view('admindashboard');
+    }
+
+    /**
+     * Get overview card statistics for admin dashboard
+     */
+    public function getOverviewStats()
+    {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $db = new Database();
+
+        $stats = [
+            'total_users' => 0,
+            'pending_user_approvals' => 0,
+            'active_dramas' => 0,
+            'pending_drama_approvals' => 0
+        ];
+
+        try {
+            $db->query("SELECT COUNT(*) AS total_users FROM users WHERE role != 'admin'");
+            $users = $db->single();
+            $stats['total_users'] = (int)($users->total_users ?? 0);
+
+            $db->query("SELECT COUNT(*) AS pending_user_approvals
+                        FROM users
+                        WHERE role IN ('artist', 'service_provider')
+                        AND is_verified = 0");
+            $pendingUsers = $db->single();
+            $stats['pending_user_approvals'] = (int)($pendingUsers->pending_user_approvals ?? 0);
+
+            if ($this->tableExists($db, 'dramas')) {
+                $hasStatus = $this->columnExists($db, 'dramas', 'status');
+                $hasPublished = $this->columnExists($db, 'dramas', 'is_published');
+
+                if ($hasStatus) {
+                    $db->query("SELECT COUNT(*) AS active_dramas FROM dramas WHERE status = 'active'");
+                } elseif ($hasPublished) {
+                    $db->query("SELECT COUNT(*) AS active_dramas FROM dramas WHERE is_published = 1");
+                } else {
+                    $db->query("SELECT COUNT(*) AS active_dramas FROM dramas");
+                }
+
+                $dramas = $db->single();
+                $stats['active_dramas'] = (int)($dramas->active_dramas ?? 0);
+            }
+
+            if ($this->tableExists($db, 'drama_creation_requests')) {
+                $db->query("SELECT COUNT(*) AS pending_drama_approvals
+                            FROM drama_creation_requests
+                            WHERE status = 'pending'");
+                $pendingDrama = $db->single();
+                $stats['pending_drama_approvals'] = (int)($pendingDrama->pending_drama_approvals ?? 0);
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'stats' => $stats]);
+            exit;
+        } catch (Throwable $e) {
+            error_log('Admindashboard::getOverviewStats error: ' . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Failed to load overview stats']);
+            exit;
+        }
+    }
+
+    /**
+     * Get overview chart data for admin dashboard
+     */
+    public function getOverviewChartData()
+    {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $db = new Database();
+
+        try {
+            // Last 6 months registration trend (excluding admins)
+            $db->query("SELECT DATE_FORMAT(created_at, '%Y-%m') AS month_key,
+                               DATE_FORMAT(created_at, '%b %Y') AS month_label,
+                               COUNT(*) AS total
+                        FROM users
+                        WHERE role != 'admin'
+                          AND created_at >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
+                        GROUP BY DATE_FORMAT(created_at, '%Y-%m'), DATE_FORMAT(created_at, '%b %Y')
+                        ORDER BY month_key ASC");
+            $trendRows = $db->resultSet();
+
+            $trendMap = [];
+            foreach ($trendRows as $row) {
+                $trendMap[$row->month_key] = [
+                    'label' => $row->month_label,
+                    'total' => (int)$row->total,
+                ];
+            }
+
+            $trendLabels = [];
+            $trendValues = [];
+            for ($i = 5; $i >= 0; $i--) {
+                $dt = new DateTime('first day of this month');
+                $dt->modify('-' . $i . ' month');
+                $key = $dt->format('Y-m');
+
+                if (isset($trendMap[$key])) {
+                    $trendLabels[] = $trendMap[$key]['label'];
+                    $trendValues[] = $trendMap[$key]['total'];
+                } else {
+                    $trendLabels[] = $dt->format('M Y');
+                    $trendValues[] = 0;
+                }
+            }
+
+            // Role distribution (excluding admins)
+            $db->query("SELECT role, COUNT(*) AS total
+                        FROM users
+                        WHERE role != 'admin'
+                        GROUP BY role");
+            $roleRows = $db->resultSet();
+
+            $roleMap = [];
+            foreach ($roleRows as $row) {
+                $roleMap[$row->role] = (int)$row->total;
+            }
+
+            $roleLabels = ['Artist', 'Audience', 'Service Provider'];
+            $roleValues = [
+                $roleMap['artist'] ?? 0,
+                $roleMap['audience'] ?? 0,
+                $roleMap['service_provider'] ?? 0,
+            ];
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'charts' => [
+                    'registration_trend' => [
+                        'labels' => $trendLabels,
+                        'values' => $trendValues,
+                    ],
+                    'role_distribution' => [
+                        'labels' => $roleLabels,
+                        'values' => $roleValues,
+                    ],
+                ],
+            ]);
+            exit;
+        } catch (Throwable $e) {
+            error_log('Admindashboard::getOverviewChartData error: ' . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Failed to load chart data']);
+            exit;
+        }
     }
 
     /**
@@ -60,6 +267,103 @@ class Admindashboard {
                 'created_at' => $reg->created_at
             ];
         }
+
+        header('Content-Type: application/json');
+        echo json_encode($result);
+        exit;
+    }
+
+    /**
+     * Get pending drama creation requests from artists
+     */
+    public function getPendingDramaRequests()
+    {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Unauthorized']);
+            exit;
+        }
+
+        $dramaModel = $this->getModel('M_drama');
+        $requests = $dramaModel ? $dramaModel->getPendingDramaRequests() : [];
+
+        $result = [];
+        foreach ($requests as $req) {
+            $result[] = [
+                'id' => (int)$req->id,
+                'drama_name' => $req->drama_name,
+                'certificate_number' => $req->certificate_number,
+                'owner_name' => $req->owner_name,
+                'description' => $req->description,
+                'certificate_image' => $req->certificate_image,
+                'requested_by' => (int)$req->requested_by,
+                'artist_name' => $req->artist_name,
+                'artist_email' => $req->artist_email,
+                'artist_phone' => $req->artist_phone,
+                'created_at' => $req->created_at
+            ];
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($result);
+        exit;
+    }
+
+    /**
+     * Approve drama creation request and auto-create drama
+     */
+    public function approveDramaRequest()
+    {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $requestId = isset($input['request_id']) ? (int)$input['request_id'] : 0;
+
+        if ($requestId <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Request ID is required']);
+            exit;
+        }
+
+        $dramaModel = $this->getModel('M_drama');
+        $result = $dramaModel
+            ? $dramaModel->approveDramaRequest($requestId, (int)$_SESSION['user_id'])
+            : ['success' => false, 'message' => 'Drama system is unavailable'];
+
+        header('Content-Type: application/json');
+        echo json_encode($result);
+        exit;
+    }
+
+    /**
+     * Reject drama creation request
+     */
+    public function rejectDramaRequest()
+    {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $requestId = isset($input['request_id']) ? (int)$input['request_id'] : 0;
+        $reason = trim($input['reason'] ?? '');
+
+        if ($requestId <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Request ID is required']);
+            exit;
+        }
+
+        $dramaModel = $this->getModel('M_drama');
+        $result = $dramaModel
+            ? $dramaModel->rejectDramaRequest($requestId, (int)$_SESSION['user_id'], $reason)
+            : ['success' => false, 'message' => 'Drama system is unavailable'];
 
         header('Content-Type: application/json');
         echo json_encode($result);
@@ -172,21 +476,31 @@ class Admindashboard {
 
         $db = new Database();
         $adminId = $_SESSION['user_id'];
-        
-        $db->query("UPDATE users 
-                SET 
-                    is_verified = 1,
-                    verification_status = 'approved',
-                    verified_by_admin_id = :admin_id,
-                    verified_at = CURRENT_TIMESTAMP,
-                    rejection_reason = NULL
-                WHERE id = :user_id 
-                AND role IN ('artist', 'service_provider')");
-        
-        $db->bind(':admin_id', $adminId);
-        $db->bind(':user_id', $userId);
-        
-        if ($db->execute()) {
+
+        try {
+            $adminColumn = $this->getVerificationAdminColumn($db);
+
+            $setAdmin = $adminColumn ? ", {$adminColumn} = :admin_id" : '';
+            $db->query("UPDATE users 
+                    SET 
+                        is_verified = 1,
+                        verification_status = 'approved'{$setAdmin},
+                        verified_at = CURRENT_TIMESTAMP,
+                        rejection_reason = NULL
+                    WHERE id = :user_id 
+                    AND role IN ('artist', 'service_provider')");
+
+            if ($adminColumn) {
+                $db->bind(':admin_id', $adminId);
+            }
+            $db->bind(':user_id', $userId);
+            $ok = $db->execute();
+        } catch (Throwable $e) {
+            error_log('Admindashboard::approveUser error: ' . $e->getMessage());
+            $ok = false;
+        }
+
+        if ($ok) {
             header('Content-Type: application/json');
             echo json_encode(['success' => true, 'message' => 'User approved successfully']);
         } else {
@@ -221,22 +535,32 @@ class Admindashboard {
 
         $db = new Database();
         $adminId = $_SESSION['user_id'];
-        
-        $db->query("UPDATE users 
-                SET 
-                    is_verified = 0,
-                    verification_status = 'rejected',
-                    rejection_reason = :reason,
-                    verified_by_admin_id = :admin_id,
-                    verified_at = CURRENT_TIMESTAMP
-                WHERE id = :user_id 
-                AND role IN ('artist', 'service_provider')");
-        
-        $db->bind(':reason', $reason);
-        $db->bind(':admin_id', $adminId);
-        $db->bind(':user_id', $userId);
-        
-        if ($db->execute()) {
+
+        try {
+            $adminColumn = $this->getVerificationAdminColumn($db);
+
+            $setAdmin = $adminColumn ? ", {$adminColumn} = :admin_id" : '';
+            $db->query("UPDATE users 
+                    SET 
+                        is_verified = 0,
+                        verification_status = 'rejected',
+                        rejection_reason = :reason{$setAdmin},
+                        verified_at = CURRENT_TIMESTAMP
+                    WHERE id = :user_id 
+                    AND role IN ('artist', 'service_provider')");
+
+            $db->bind(':reason', $reason);
+            if ($adminColumn) {
+                $db->bind(':admin_id', $adminId);
+            }
+            $db->bind(':user_id', $userId);
+            $ok = $db->execute();
+        } catch (Throwable $e) {
+            error_log('Admindashboard::rejectUser error: ' . $e->getMessage());
+            $ok = false;
+        }
+
+        if ($ok) {
             header('Content-Type: application/json');
             echo json_encode(['success' => true, 'message' => 'User rejected successfully']);
         } else {
@@ -361,19 +685,37 @@ class Admindashboard {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         // Users added by admin are automatically verified and approved
-        $db->query("INSERT INTO users 
-                    (full_name, email, password, phone, role, is_verified, verification_status, created_at, verified_at, verified_by_admin_id) 
-                    VALUES 
-                    (:full_name, :email, :password, :phone, :role, 1, 'approved', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :admin_id)");
-        
-        $db->bind(':full_name', $fullName);
-        $db->bind(':email', $email);
-        $db->bind(':password', $hashedPassword);
-        $db->bind(':phone', $phone);
-        $db->bind(':role', $role);
-        $db->bind(':admin_id', $_SESSION['user_id']);
+        try {
+            $adminColumn = $this->getVerificationAdminColumn($db);
 
-        if ($db->execute()) {
+            if ($adminColumn) {
+                $db->query("INSERT INTO users 
+                            (full_name, email, password, phone, role, is_verified, verification_status, created_at, verified_at, {$adminColumn}) 
+                            VALUES 
+                            (:full_name, :email, :password, :phone, :role, 1, 'approved', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :admin_id)");
+            } else {
+                $db->query("INSERT INTO users 
+                            (full_name, email, password, phone, role, is_verified, verification_status, created_at, verified_at) 
+                            VALUES 
+                            (:full_name, :email, :password, :phone, :role, 1, 'approved', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+            }
+
+            $db->bind(':full_name', $fullName);
+            $db->bind(':email', $email);
+            $db->bind(':password', $hashedPassword);
+            $db->bind(':phone', $phone);
+            $db->bind(':role', $role);
+            if ($adminColumn) {
+                $db->bind(':admin_id', $_SESSION['user_id']);
+            }
+
+            $ok = $db->execute();
+        } catch (Throwable $e) {
+            error_log('Admindashboard::addUser error: ' . $e->getMessage());
+            $ok = false;
+        }
+
+        if ($ok) {
             header('Content-Type: application/json');
             echo json_encode(['success' => true, 'message' => 'User added successfully']);
         } else {
@@ -720,7 +1062,10 @@ class Admindashboard {
         }
 
         $db = new Database();
-        $db->query("SELECT * FROM swiper_slides ORDER BY display_order ASC");
+        $db->query("SELECT s.*, d.drama_name AS linked_drama_name
+                FROM swiper_slides s
+                LEFT JOIN dramas d ON s.drama_id = d.id
+                ORDER BY s.display_order ASC");
         $slides = $db->resultSet();
 
         header('Content-Type: application/json');

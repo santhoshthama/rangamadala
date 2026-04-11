@@ -4,11 +4,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title><?= isset($pageTitle) ? $pageTitle : 'Reports' ?> - Rangamadala</title>
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-            crossorigin="anonymous" />
-        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
         <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_reports.css">
         <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     </head>
@@ -28,7 +25,7 @@
                             <p class="report-desc">Current month earnings breakdown</p>
                         </div>
                         <button class="btn-download-report" onclick="quickReport('revenue', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                            <i class="bx bx-bolt"></i> Quick Generate
                         </button>
                     </div>
                     <div class="productionCount--card report-card template-card">
@@ -37,7 +34,7 @@
                             <p class="report-desc">Last 30 days bookings</p>
                         </div>
                         <button class="btn-download-report" onclick="quickReport('bookings', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                            <i class="bx bx-bolt"></i> Quick Generate
                         </button>
                     </div>
                     <div class="productionCount--card report-card template-card">
@@ -46,7 +43,7 @@
                             <p class="report-desc">All ratings and feedback</p>
                         </div>
                         <button class="btn-download-report" onclick="quickReport('reviews', 'last_3_months')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                            <i class="bx bx-bolt"></i> Quick Generate
                         </button>
                     </div>
                     <div class="productionCount--card report-card template-card">
@@ -55,7 +52,7 @@
                             <p class="report-desc">Annual overview report</p>
                         </div>
                         <button class="btn-download-report" onclick="quickReport('performance', 'this_year')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                            <i class="bx bx-bolt"></i> Quick Generate
                         </button>
                     </div>
                 </div>
@@ -150,10 +147,10 @@
                             <!-- Generate Button -->
                             <div class="filter-actions">
                                 <button type="button" class="btn-reset" onclick="resetFilters()">
-                                    <i class="fas fa-undo"></i> Reset
+                                    <i class="bx bx-undo"></i> Reset
                                 </button>
                                 <button type="submit" class="btn-generate">
-                                    <i class="fas fa-chart-bar"></i> Generate Report
+                                    <i class="bx bx-chart-bar"></i> Generate Report
                                 </button>
                             </div>
                         </form>
@@ -173,7 +170,7 @@
                             <div class="activity-time">Generated on Dec 31, 2025</div>
                         </div>
                         <button class="btn-download-small">
-                            <i class="fas fa-download"></i> Download
+                            <i class="bx bx-download"></i> Download
                         </button>
                     </div>
                     <div class="activity-item">
@@ -182,7 +179,7 @@
                             <div class="activity-time">Generated on Dec 30, 2025</div>
                         </div>
                         <button class="btn-download-small">
-                            <i class="fas fa-download"></i> Download
+                            <i class="bx bx-download"></i> Download
                         </button>
                     </div>
                     <div class="activity-item">
@@ -191,7 +188,7 @@
                             <div class="activity-time">Generated on Nov 30, 2025</div>
                         </div>
                         <button class="btn-download-small">
-                            <i class="fas fa-download"></i> Download
+                            <i class="bx bx-download"></i> Download
                         </button>
                     </div>
                     <div class="activity-item">
@@ -200,7 +197,7 @@
                             <div class="activity-time">Generated on Oct 31, 2025</div>
                         </div>
                         <button class="btn-download-small">
-                            <i class="fas fa-download"></i> Download
+                            <i class="bx bx-download"></i> Download
                         </button>
                     </div>
                 </div>
@@ -264,7 +261,7 @@
                     // Show loading message
                     const btn = this.querySelector('.btn-generate');
                     const originalText = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                    btn.innerHTML = '<i class="bx bx-spinner bx-spin"></i> Generating...';
                     btn.disabled = true;
 
                     // Simulate report generation (replace with actual API call)

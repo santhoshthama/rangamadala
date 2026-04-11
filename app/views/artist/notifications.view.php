@@ -26,14 +26,14 @@ $allNotifications = isset($all_notifications) ? $all_notifications : [];
 
 // Notification type config
 $typeConfig = [
-    'role_assigned'         => ['icon' => 'fa-user-check',     'color' => '#28a745', 'label' => 'Role Assigned'],
-    'role_removed'          => ['icon' => 'fa-user-times',     'color' => '#dc3545', 'label' => 'Role Removed'],
-    'event_scheduled'       => ['icon' => 'fa-calendar-plus',  'color' => '#ba8e23', 'label' => 'Event Scheduled'],
-    'event_updated'         => ['icon' => 'fa-calendar-check', 'color' => '#17a2b8', 'label' => 'Event Updated'],
-    'event_cancelled'       => ['icon' => 'fa-calendar-times', 'color' => '#dc3545', 'label' => 'Event Cancelled'],
-    'application_accepted'  => ['icon' => 'fa-check-circle',   'color' => '#28a745', 'label' => 'Application Accepted'],
-    'application_rejected'  => ['icon' => 'fa-times-circle',   'color' => '#dc3545', 'label' => 'Application Rejected'],
-    'interview_scheduled'   => ['icon' => 'fa-user-clock',     'color' => '#ba8e23', 'label' => 'Interview Scheduled'],
+    'role_assigned'         => ['icon' => 'bx-user-check',     'color' => '#28a745', 'label' => 'Role Assigned'],
+    'role_removed'          => ['icon' => 'bx-user-times',     'color' => '#dc3545', 'label' => 'Role Removed'],
+    'event_scheduled'       => ['icon' => 'bx-calendar-plus',  'color' => '#ba8e23', 'label' => 'Event Scheduled'],
+    'event_updated'         => ['icon' => 'bx-calendar-check', 'color' => '#17a2b8', 'label' => 'Event Updated'],
+    'event_cancelled'       => ['icon' => 'bx-calendar-times', 'color' => '#dc3545', 'label' => 'Event Cancelled'],
+    'application_accepted'  => ['icon' => 'bx-check-circle',   'color' => '#28a745', 'label' => 'Application Accepted'],
+    'application_rejected'  => ['icon' => 'bx-times-circle',   'color' => '#dc3545', 'label' => 'Application Rejected'],
+    'interview_scheduled'   => ['icon' => 'bx-user-clock',     'color' => '#ba8e23', 'label' => 'Interview Scheduled'],
 ];
 ?>
 <!DOCTYPE html>
@@ -43,8 +43,51 @@ $typeConfig = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(212, 175, 55, 0.15);
+            color: #d4af37;
+            padding: 10px 18px;
+            border: 1.5px solid rgba(212, 175, 55, 0.4);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            margin-bottom: 18px;
+        }
+        .back-button:hover {
+            background: rgba(212, 175, 55, 0.25);
+            border-color: #d4af37;
+            color: #f5f0e8;
+            transform: translateX(-3px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        }
+        .back-button i {
+            font-size: 14px;
+        }
+
+        .stats-grid .stat-card {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            border: 1px solid #f0dfb4;
+            color: #4a3a14;
+            box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
+        }
+        .stats-grid .stat-card h3 {
+            color: #5a4415;
+        }
+        .stats-grid .stat-card p {
+            color: #7a6121;
+            font-weight: 700;
+        }
+
         .notification-item {
             display: flex;
             gap: 14px;
@@ -191,37 +234,37 @@ $typeConfig = [
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <h2><i class='bx bxs-theater'></i></h2>
         </div>
         <ul class="menu">
             <li>
                 <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/profile">
-                    <i class="fas fa-user"></i>
-                    <span>Profile</span>
+                <a href="<?= ROOT ?>/artistdashboard/browse_vacancies">
+                    <i class="bx bx-bullhorn"></i>
+                    <span>View All Vacancies</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?= ROOT ?>/artistdashboard/notifications">
-                    <i class="fas fa-bell"></i>
+                    <i class="bx bx-bell"></i>
                     <span>Notifications</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/artistdashboard/browse_vacancies">
-                    <i class="fas fa-bullhorn"></i>
-                    <span>View All Vacancies</span>
+                <a href="<?= ROOT ?>/artistdashboard/classes">
+                    <i class="bx bxs-graduation"></i>
+                    <span>Classes</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/browseDramas">
-                    <i class="fas fa-theater-masks"></i>
-                    <span>Browse Dramas</span>
+                <a href="<?= ROOT ?>/artistdashboard#my-showings">
+                    <i class="bx bx-calendar-event"></i>
+                    <span>Showings</span>
                 </a>
             </li>
         </ul>
@@ -230,7 +273,7 @@ $typeConfig = [
     <!-- Main Content -->
     <main class="main--content">
         <a href="<?= ROOT ?>/artistdashboard" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -243,12 +286,12 @@ $typeConfig = [
             <div class="user--info">
                 <?php if ($unreadCount > 0): ?>
                     <a href="<?= ROOT ?>/artistdashboard/mark_all_notifications_read" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
-                        <i class="fas fa-check-double"></i> Mark All Read
+                        <i class="bx bx-check-double"></i> Mark All Read
                     </a>
                 <?php endif; ?>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Artist Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
                 <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                 </a>
             </div>
         </div>
@@ -266,11 +309,11 @@ $typeConfig = [
                 <h3><?= count($allNotifications) ?></h3>
                 <p>Total Notifications</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, #28a745, #1e7e34);">
+            <div class="stat-card">
                 <h3><?= $unreadCount ?></h3>
                 <p>Unread</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, #6c757d, #545b62);">
+            <div class="stat-card">
                 <h3><?= count($grouped) ?></h3>
                 <p>Dramas</p>
             </div>
@@ -279,13 +322,13 @@ $typeConfig = [
         <!-- Tabs -->
         <div class="tab-buttons">
             <button class="tab-btn active" onclick="switchTab('all', this)">
-                <i class="fas fa-bell"></i> All Notifications
+                <i class="bx bx-bell"></i> All Notifications
             </button>
             <button class="tab-btn" onclick="switchTab('grouped', this)">
-                <i class="fas fa-film"></i> By Drama
+                <i class="bx bx-film"></i> By Drama
             </button>
             <button class="tab-btn" onclick="switchTab('unread', this)">
-                <i class="fas fa-circle" style="font-size: 8px; color: var(--brand);"></i> Unread Only
+                <i class="bx bx-circle" style="font-size: 8px; color: var(--brand);"></i> Unread Only
             </button>
         </div>
 
@@ -295,23 +338,23 @@ $typeConfig = [
                 <div class="profile-container" style="grid-template-columns: 1fr;">
                     <div class="details">
                         <div class="card-section">
-                            <h3><i class="fas fa-bell"></i> All Notifications</h3>
+                            <h3><i class="bx bx-bell"></i> All Notifications</h3>
                             <?php if (empty($allNotifications)): ?>
                                 <div class="empty-state">
-                                    <i class="fas fa-bell-slash"></i>
+                                    <i class="bx bx-bell-slash"></i>
                                     <h3>No Notifications Yet</h3>
                                     <p>You'll receive notifications when directors schedule events, assign roles, or update drama details.</p>
                                 </div>
                             <?php else: ?>
                                 <?php foreach ($allNotifications as $n): 
-                                    $tc = $typeConfig[$n->type] ?? ['icon' => 'fa-bell', 'color' => '#6c757d', 'label' => 'Notification'];
+                                    $tc = $typeConfig[$n->type] ?? ['icon' => 'bx-bell', 'color' => '#6c757d', 'label' => 'Notification'];
                                     $isUnread = !(int)$n->is_read;
                                     $timeAgo = timeAgoStr($n->created_at);
                                 ?>
                                 <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>" 
                                    class="notification-item <?= $isUnread ? 'unread' : '' ?>">
                                     <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
-                                        <i class="fas <?= $tc['icon'] ?>"></i>
+                                        <i class="bx <?= $tc['icon'] ?>"></i>
                                     </div>
                                     <div class="notification-body">
                                         <div class="notification-title">
@@ -320,15 +363,15 @@ $typeConfig = [
                                         </div>
                                         <div class="notification-message"><?= esc($n->message) ?></div>
                                         <div class="notification-time">
-                                            <i class="fas fa-clock"></i> <?= $timeAgo ?>
+                                            <i class="bx bx-clock"></i> <?= $timeAgo ?>
                                             <?php if ($n->drama_name): ?>
-                                                &nbsp;|&nbsp; <i class="fas fa-film"></i> <?= esc($n->drama_name) ?>
+                                                &nbsp;|&nbsp; <i class="bx bx-film"></i> <?= esc($n->drama_name) ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
                                     <div style="flex-shrink: 0;">
                                         <span class="notification-badge" style="background: <?= $tc['color'] ?>20; color: <?= $tc['color'] ?>;">
-                                            <i class="fas <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?>
+                                            <i class="bx <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?>
                                         </span>
                                     </div>
                                 </a>
@@ -348,7 +391,7 @@ $typeConfig = [
                         <?php if (empty($grouped)): ?>
                             <div class="card-section">
                                 <div class="empty-state">
-                                    <i class="fas fa-bell-slash"></i>
+                                    <i class="bx bx-bell-slash"></i>
                                     <h3>No Notifications Yet</h3>
                                     <p>Notifications will appear here grouped by drama.</p>
                                 </div>
@@ -358,7 +401,7 @@ $typeConfig = [
                                 <div class="card-section" style="margin-bottom: 16px;">
                                     <div class="drama-group-header">
                                         <h4>
-                                            <i class="fas fa-film"></i> <?= esc($group['drama_name']) ?>
+                                            <i class="bx bx-film"></i> <?= esc($group['drama_name']) ?>
                                         </h4>
                                         <?php if ($group['unread_count'] > 0): ?>
                                             <span style="background: rgba(255,255,255,0.25); color: #fff; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;">
@@ -367,14 +410,14 @@ $typeConfig = [
                                         <?php endif; ?>
                                     </div>
                                     <?php foreach ($group['notifications'] as $n): 
-                                        $tc = $typeConfig[$n->type] ?? ['icon' => 'fa-bell', 'color' => '#6c757d', 'label' => 'Notification'];
+                                        $tc = $typeConfig[$n->type] ?? ['icon' => 'bx-bell', 'color' => '#6c757d', 'label' => 'Notification'];
                                         $isUnread = !(int)$n->is_read;
                                         $timeAgo = timeAgoStr($n->created_at);
                                     ?>
                                     <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>" 
                                        class="notification-item <?= $isUnread ? 'unread' : '' ?>">
                                         <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
-                                            <i class="fas <?= $tc['icon'] ?>"></i>
+                                            <i class="bx <?= $tc['icon'] ?>"></i>
                                         </div>
                                         <div class="notification-body">
                                             <div class="notification-title">
@@ -383,12 +426,12 @@ $typeConfig = [
                                             </div>
                                             <div class="notification-message"><?= esc($n->message) ?></div>
                                             <div class="notification-time">
-                                                <i class="fas fa-clock"></i> <?= $timeAgo ?>
+                                                <i class="bx bx-clock"></i> <?= $timeAgo ?>
                                             </div>
                                         </div>
                                         <div style="flex-shrink: 0;">
                                             <span class="notification-badge" style="background: <?= $tc['color'] ?>20; color: <?= $tc['color'] ?>;">
-                                                <i class="fas <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?>
+                                                <i class="bx <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?>
                                             </span>
                                         </div>
                                     </a>
@@ -407,25 +450,25 @@ $typeConfig = [
                 <div class="profile-container" style="grid-template-columns: 1fr;">
                     <div class="details">
                         <div class="card-section">
-                            <h3><i class="fas fa-circle" style="font-size: 10px; color: var(--brand);"></i> Unread Notifications</h3>
+                            <h3><i class="bx bx-circle" style="font-size: 10px; color: var(--brand);"></i> Unread Notifications</h3>
                             <?php 
                             $unreadNotifications = array_filter($allNotifications, function($n) { return !(int)$n->is_read; });
                             ?>
                             <?php if (empty($unreadNotifications)): ?>
                                 <div class="empty-state">
-                                    <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                                    <i class="bx bx-check-circle" style="color: #28a745;"></i>
                                     <h3>All Caught Up!</h3>
                                     <p>You have no unread notifications.</p>
                                 </div>
                             <?php else: ?>
                                 <?php foreach ($unreadNotifications as $n): 
-                                    $tc = $typeConfig[$n->type] ?? ['icon' => 'fa-bell', 'color' => '#6c757d', 'label' => 'Notification'];
+                                    $tc = $typeConfig[$n->type] ?? ['icon' => 'bx-bell', 'color' => '#6c757d', 'label' => 'Notification'];
                                     $timeAgo = timeAgoStr($n->created_at);
                                 ?>
                                 <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>" 
                                    class="notification-item unread">
                                     <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
-                                        <i class="fas <?= $tc['icon'] ?>"></i>
+                                        <i class="bx <?= $tc['icon'] ?>"></i>
                                     </div>
                                     <div class="notification-body">
                                         <div class="notification-title">
@@ -433,15 +476,15 @@ $typeConfig = [
                                         </div>
                                         <div class="notification-message"><?= esc($n->message) ?></div>
                                         <div class="notification-time">
-                                            <i class="fas fa-clock"></i> <?= $timeAgo ?>
+                                            <i class="bx bx-clock"></i> <?= $timeAgo ?>
                                             <?php if ($n->drama_name): ?>
-                                                &nbsp;|&nbsp; <i class="fas fa-film"></i> <?= esc($n->drama_name) ?>
+                                                &nbsp;|&nbsp; <i class="bx bx-film"></i> <?= esc($n->drama_name) ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
                                     <div style="flex-shrink: 0;">
                                         <span class="notification-badge" style="background: <?= $tc['color'] ?>20; color: <?= $tc['color'] ?>;">
-                                            <i class="fas <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?>
+                                            <i class="bx <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?>
                                         </span>
                                     </div>
                                 </a>

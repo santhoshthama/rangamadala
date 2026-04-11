@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -427,18 +427,18 @@
 <body>
     <div class="container">
         <a href="<?= ROOT ?>/UserVerification/pending" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to Verification List
+            <i class="bx bx-arrow-left"></i> Back to Verification List
         </a>
 
         <?php if (!empty($user)): ?>
             <div class="user-detail-card">
                 <div class="user-detail-header">
                     <div class="user-avatar">
-                        <i class="fas fa-user"></i>
+                        <i class="bx bx-user"></i>
                     </div>
                     <h1><?= htmlspecialchars($user->full_name) ?></h1>
                     <span class="user-role-badge">
-                        <i class="fas fa-<?= $user->role === 'artist' ? 'palette' : 'briefcase' ?>"></i>
+                        <i class="bx bx-<?= $user->role === 'artist' ? 'palette' : 'briefcase' ?>"></i>
                         <?= htmlspecialchars(str_replace('_', ' ', $user->role)) ?>
                     </span>
                     <?php 
@@ -452,7 +452,7 @@
                 </div>
 
                 <div class="user-detail-body">
-                    <h3 class="section-title"><i class="fas fa-info-circle"></i> Basic Information</h3>
+                    <h3 class="section-title"><i class="bx bx-info-circle"></i> Basic Information</h3>
                     <div class="info-grid">
                         <div class="info-item">
                             <label>Full Name</label>
@@ -482,13 +482,13 @@
 
                     <?php if (!empty($user->rejection_reason)): ?>
                         <div class="rejection-reason-box">
-                            <h4><i class="fas fa-exclamation-triangle"></i> Rejection Reason</h4>
+                            <h4><i class="bx bx-exclamation-triangle"></i> Rejection Reason</h4>
                             <p><?= htmlspecialchars($user->rejection_reason) ?></p>
                         </div>
                     <?php endif; ?>
 
                     <div class="nic-section">
-                        <h3 class="section-title"><i class="fas fa-id-card"></i> NIC Verification Documents</h3>
+                        <h3 class="section-title"><i class="bx bx-id-card"></i> NIC Verification Documents</h3>
                         <div class="nic-images-grid">
                             <div class="nic-image-container">
                                 <h4>NIC Photo</h4>
@@ -497,7 +497,7 @@
                                         <img src="<?= ROOT ?>/<?= htmlspecialchars($user->nic_photo) ?>" alt="NIC Photo">
                                     <?php else: ?>
                                         <div class="nic-image-placeholder">
-                                            <i class="fas fa-id-card"></i>
+                                            <i class="bx bx-id-card"></i>
                                             No NIC Image Uploaded
                                         </div>
                                     <?php endif; ?>
@@ -512,10 +512,10 @@
                     <?php if ($showActions): ?>
                         <div class="action-buttons">
                             <button class="btn btn-approve" onclick="approveUser(<?= $user->id ?>, '<?= htmlspecialchars($user->full_name) ?>')">
-                                <i class="fas fa-check"></i> Approve User
+                                <i class="bx bx-check"></i> Approve User
                             </button>
                             <button class="btn btn-reject" onclick="showRejectModal(<?= $user->id ?>, '<?= htmlspecialchars($user->full_name) ?>')">
-                                <i class="fas fa-times"></i> Reject User
+                                <i class="bx bx-times"></i> Reject User
                             </button>
                         </div>
                     <?php endif; ?>
@@ -524,11 +524,11 @@
         <?php else: ?>
             <div class="user-detail-card">
                 <div class="user-detail-body" style="text-align: center; padding: 60px;">
-                    <i class="fas fa-user-slash" style="font-size: 48px; color: #d4af37; margin-bottom: 20px;"></i>
+                    <i class="bx bx-user-slash" style="font-size: 48px; color: #d4af37; margin-bottom: 20px;"></i>
                     <h2 style="color: #3d2817;">User Not Found</h2>
                     <p style="color: #8b7355;">The requested user could not be found or may have been deleted.</p>
                     <a href="<?= ROOT ?>/UserVerification/pending" class="btn btn-secondary" style="margin-top: 20px; display: inline-flex;">
-                        <i class="fas fa-arrow-left"></i> Go Back
+                        <i class="bx bx-arrow-left"></i> Go Back
                     </a>
                 </div>
             </div>

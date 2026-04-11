@@ -151,7 +151,7 @@ class M_user
     {
         $sql = "SELECT a.full_name as admin_name, a.email as admin_email, u.verified_at
                 FROM users u
-                LEFT JOIN users a ON u.verified_by = a.id
+                LEFT JOIN users a ON COALESCE(u.verified_by_admin_id, u.verified_by) = a.id
                 WHERE u.id = ?";
         
         return $this->db->query($sql, [$user_id])->fetch();

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Role Management - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -16,49 +16,49 @@
         <ul class="menu">
             <li>
                 <a href="dashboard.php">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="manage_dramas.php">
-                    <i class="fas fa-film"></i>
+                    <i class="bx bx-film"></i>
                     <span>My Dramas</span>
                 </a>
             </li>
             <li>
                 <a href="create_drama.php">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="bx bx-plus-circle"></i>
                     <span>Create Drama</span>
                 </a>
             </li>
             <li>
                 <a href="search_artists.php">
-                    <i class="fas fa-search"></i>
+                    <i class="bx bx-search"></i>
                     <span>Search Artists</span>
                 </a>
             </li>
             <li class="active">
                 <a href="role_management.php">
-                    <i class="fas fa-users"></i>
+                    <i class="bx bx-users"></i>
                     <span>Role Management</span>
                 </a>
             </li>
             <li>
                 <a href="schedule_management.php">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
                 <a href="assign_managers.php">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     <span>Assign Managers</span>
                 </a>
             </li>
             <li>
                 <a href="../../public/index.php">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -68,7 +68,7 @@
     <!-- Main Content -->
     <main class="main--content">
         <a href="dashboard.php" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -80,11 +80,11 @@
             </div>
             <div class="header-controls">
                 <button class="btn btn-primary" onclick="openCreateRoleModal()">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="bx bx-plus-circle"></i>
                     Create New Role
                 </button>
                 <button class="btn btn-success" onclick="openPublishVacancyModal()">
-                    <i class="fas fa-bullhorn"></i>
+                    <i class="bx bx-bullhorn"></i>
                     Publish Vacancy
                 </button>
             </div>
@@ -116,15 +116,15 @@
         <!-- Tabs for Different Views -->
         <div class="tabs">
             <button class="tab-button active" onclick="showTab('roles')">
-                <i class="fas fa-users"></i>
+                <i class="bx bx-users"></i>
                 All Roles
             </button>
             <button class="tab-button" onclick="showTab('applications')">
-                <i class="fas fa-envelope"></i>
+                <i class="bx bx-envelope"></i>
                 Pending Applications (8)
             </button>
             <button class="tab-button" onclick="showTab('requests')">
-                <i class="fas fa-paper-plane"></i>
+                <i class="bx bx-paper-plane"></i>
                 Sent Requests (5)
             </button>
         </div>
@@ -137,7 +137,7 @@
                         <!-- Drama: Maname -->
                         <div class="card-section">
                             <h3>
-                                <span><i class="fas fa-film"></i> Maname</span>
+                                <span><i class="bx bx-film"></i> Maname</span>
                                 <span class="status-badge assigned">Active</span>
                             </h3>
                             <ul>
@@ -149,10 +149,10 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge assigned">Kasun Perera</span>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewRoleDetails(1)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                         <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="removeArtist(1)">
-                                            <i class="fas fa-user-times"></i>
+                                            <i class="bx bx-user-times"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -164,10 +164,10 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge unassigned">Vacant</span>
                                         <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewApplications(2)">
-                                            <i class="fas fa-envelope"></i> 3 Applications
+                                            <i class="bx bx-envelope"></i> 3 Applications
                                         </button>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="editRole(2)">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="bx bx-edit"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -179,10 +179,10 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge assigned">Nimal Silva</span>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewRoleDetails(3)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                         <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="removeArtist(3)">
-                                            <i class="fas fa-user-times"></i>
+                                            <i class="bx bx-user-times"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -194,10 +194,10 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge unassigned">Vacant</span>
                                         <button class="btn btn-success" style="font-size: 11px; padding: 6px 12px;" onclick="searchArtistsForRole(4)">
-                                            <i class="fas fa-search"></i> Find Artist
+                                            <i class="bx bx-search"></i> Find Artist
                                         </button>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="editRole(4)">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="bx bx-edit"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -207,7 +207,7 @@
                         <!-- Drama: Sinhabahu -->
                         <div class="card-section">
                             <h3>
-                                <span><i class="fas fa-film"></i> Sinhabahu</span>
+                                <span><i class="bx bx-film"></i> Sinhabahu</span>
                                 <span class="status-badge assigned">Active</span>
                             </h3>
                             <ul>
@@ -219,7 +219,7 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge assigned">Tharaka Rathnayake</span>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewRoleDetails(5)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -231,7 +231,7 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge assigned">Dilini Wickramasinghe</span>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewRoleDetails(6)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -243,7 +243,7 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge requested">Awaiting Response</span>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewRoleDetails(7)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                     </div>
                                 </li>
@@ -269,15 +269,15 @@
                                     </div>
                                     <div style="display: flex; gap: 8px;">
                                         <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewApplication(1)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                             View
                                         </button>
                                         <button class="btn btn-success" style="font-size: 11px; padding: 6px 12px;" onclick="acceptApplication(1)">
-                                            <i class="fas fa-check"></i>
+                                            <i class="bx bx-check"></i>
                                             Accept
                                         </button>
                                         <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="rejectApplication(1)">
-                                            <i class="fas fa-times"></i>
+                                            <i class="bx bx-times"></i>
                                             Reject
                                         </button>
                                     </div>
@@ -289,15 +289,15 @@
                                     </div>
                                     <div style="display: flex; gap: 8px;">
                                         <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewApplication(2)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                             View
                                         </button>
                                         <button class="btn btn-success" style="font-size: 11px; padding: 6px 12px;" onclick="acceptApplication(2)">
-                                            <i class="fas fa-check"></i>
+                                            <i class="bx bx-check"></i>
                                             Accept
                                         </button>
                                         <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="rejectApplication(2)">
-                                            <i class="fas fa-times"></i>
+                                            <i class="bx bx-times"></i>
                                             Reject
                                         </button>
                                     </div>
@@ -325,10 +325,10 @@
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <span class="status-badge requested">Pending</span>
                                         <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="viewRequest(1)">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="bx bx-eye"></i>
                                         </button>
                                         <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="cancelRequest(1)">
-                                            <i class="fas fa-times"></i>
+                                            <i class="bx bx-times"></i>
                                             Cancel
                                         </button>
                                     </div>
@@ -345,7 +345,7 @@
     <div id="createRoleModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeCreateRoleModal()">&times;</span>
-            <h2><i class="fas fa-plus-circle"></i> Create New Role</h2>
+            <h2><i class="bx bx-plus-circle"></i> Create New Role</h2>
             <div class="modal-body">
                 <form id="createRoleForm">
                     <div class="form-group">
@@ -376,7 +376,7 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn-primary" onclick="submitCreateRole()">
-                    <i class="fas fa-check"></i>
+                    <i class="bx bx-check"></i>
                     Create Role
                 </button>
                 <button class="btn btn-secondary" onclick="closeCreateRoleModal()">Cancel</button>
@@ -388,10 +388,10 @@
     <div id="publishVacancyModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closePublishVacancyModal()">&times;</span>
-            <h2><i class="fas fa-bullhorn"></i> Publish Role Vacancy</h2>
+            <h2><i class="bx bx-bullhorn"></i> Publish Role Vacancy</h2>
             <div class="modal-body">
                 <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="bx bx-info-circle"></i>
                     Publishing a vacancy will make it visible to all artists on the platform.
                 </div>
                 <form id="publishVacancyForm">
@@ -421,7 +421,7 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn-success" onclick="submitPublishVacancy()">
-                    <i class="fas fa-bullhorn"></i>
+                    <i class="bx bx-bullhorn"></i>
                     Publish Vacancy
                 </button>
                 <button class="btn btn-secondary" onclick="closePublishVacancyModal()">Cancel</button>

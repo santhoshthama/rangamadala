@@ -32,6 +32,11 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeSubmitButton();
   initializeCloseButton();
   initializeHelpfulButtons();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('rate') === '1') {
+    openRatingModal();
+  }
 });
 
 /**
@@ -42,6 +47,15 @@ function initializeRatingModal() {
     rateBtn.addEventListener('click', function() {
       openRatingModal();
     });
+  }
+}
+
+/**
+ * Initialize Close Button
+ */
+function initializeCloseButton() {
+  if (closeRatingModal) {
+    closeRatingModal.addEventListener('click', closeRatingModalFunc);
   }
 }
 
@@ -78,10 +92,6 @@ function closeRatingModalFunc() {
 /**
  * Close button event
  */
-if (closeRatingModal) {
-  closeRatingModal.addEventListener('click', closeRatingModalFunc);
-}
-
 /**
  * Close modal on overlay click
  */

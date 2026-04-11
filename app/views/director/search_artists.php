@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Artists - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -16,49 +16,49 @@
         <ul class="menu">
             <li>
                 <a href="dashboard.php?drama_id=1">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="drama_details.php?drama_id=1">
-                    <i class="fas fa-film"></i>
+                    <i class="bx bx-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li class="active">
                 <a href="manage_roles.php?drama_id=1">
-                    <i class="fas fa-users"></i>
+                    <i class="bx bx-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
                 <a href="assign_managers.php?drama_id=1">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
                 <a href="schedule_management.php?drama_id=1">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
                 <a href="view_services_budget.php?drama_id=1">
-                    <i class="fas fa-dollar-sign"></i>
+                    <i class="bx bx-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
                 <a href="../artist/profile.php">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
                 <a href="../../public/index.php">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -68,7 +68,7 @@
     <!-- Main Content -->
     <main class="main--content">
         <a href="dashboard.php" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -83,7 +83,7 @@
         <!-- Search Section -->
         <div class="search-section">
             <h3 style="margin-bottom: 20px; color: var(--ink);">
-                <i class="fas fa-search"></i>
+                <i class="bx bx-search"></i>
                 Find Talent for Your Drama
             </h3>
             <div class="search-filters">
@@ -137,7 +137,7 @@
                 </div>
             </div>
             <button class="btn btn-primary search-button" onclick="searchArtists()">
-                <i class="fas fa-search"></i>
+                <i class="bx bx-search"></i>
                 Search Artists
             </button>
         </div>
@@ -180,11 +180,11 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-primary" style="flex: 1;" onclick="viewArtistProfile(1)">
-                        <i class="fas fa-user"></i>
+                        <i class="bx bx-user"></i>
                         View Profile
                     </button>
                     <button class="btn btn-success" onclick="sendRoleRequest(1)">
-                        <i class="fas fa-paper-plane"></i>
+                        <i class="bx bx-paper-plane"></i>
                         Request
                     </button>
                 </div>
@@ -221,11 +221,11 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-primary" style="flex: 1;" onclick="viewArtistProfile(2)">
-                        <i class="fas fa-user"></i>
+                        <i class="bx bx-user"></i>
                         View Profile
                     </button>
                     <button class="btn btn-success" onclick="sendRoleRequest(2)">
-                        <i class="fas fa-paper-plane"></i>
+                        <i class="bx bx-paper-plane"></i>
                         Request
                     </button>
                 </div>
@@ -262,11 +262,11 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-primary" style="flex: 1;" onclick="viewArtistProfile(3)">
-                        <i class="fas fa-user"></i>
+                        <i class="bx bx-user"></i>
                         View Profile
                     </button>
                     <button class="btn btn-success" onclick="sendRoleRequest(3)">
-                        <i class="fas fa-paper-plane"></i>
+                        <i class="bx bx-paper-plane"></i>
                         Request
                     </button>
                 </div>
@@ -303,11 +303,11 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-primary" style="flex: 1;" onclick="viewArtistProfile(4)">
-                        <i class="fas fa-user"></i>
+                        <i class="bx bx-user"></i>
                         View Profile
                     </button>
                     <button class="btn btn-success" onclick="sendRoleRequest(4)">
-                        <i class="fas fa-paper-plane"></i>
+                        <i class="bx bx-paper-plane"></i>
                         Request
                     </button>
                 </div>
@@ -344,11 +344,11 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-primary" style="flex: 1;" onclick="viewArtistProfile(5)">
-                        <i class="fas fa-user"></i>
+                        <i class="bx bx-user"></i>
                         View Profile
                     </button>
                     <button class="btn btn-success" onclick="sendRoleRequest(5)">
-                        <i class="fas fa-paper-plane"></i>
+                        <i class="bx bx-paper-plane"></i>
                         Request
                     </button>
                 </div>
@@ -385,11 +385,11 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-primary" style="flex: 1;" onclick="viewArtistProfile(6)">
-                        <i class="fas fa-user"></i>
+                        <i class="bx bx-user"></i>
                         View Profile
                     </button>
                     <button class="btn btn-success" onclick="sendRoleRequest(6)">
-                        <i class="fas fa-paper-plane"></i>
+                        <i class="bx bx-paper-plane"></i>
                         Request
                     </button>
                 </div>
@@ -398,7 +398,7 @@
 
         <!-- No Results (hidden by default) -->
         <div class="no-results" style="display: none;" id="noResults">
-            <i class="fas fa-user-slash"></i>
+            <i class="bx bx-user-slash"></i>
             <h3>No Artists Found</h3>
             <p>Try adjusting your search filters</p>
         </div>
@@ -408,7 +408,7 @@
     <div id="roleRequestModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeRoleRequestModal()">&times;</span>
-            <h2><i class="fas fa-paper-plane"></i> Send Role Request</h2>
+            <h2><i class="bx bx-paper-plane"></i> Send Role Request</h2>
             <div class="modal-body">
                 <form id="roleRequestForm">
                     <div class="form-group">
@@ -444,7 +444,7 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn-primary" onclick="submitRoleRequest()">
-                    <i class="fas fa-paper-plane"></i>
+                    <i class="bx bx-paper-plane"></i>
                     Send Request
                 </button>
                 <button class="btn btn-secondary" onclick="closeRoleRequestModal()">Cancel</button>
@@ -456,13 +456,13 @@
     <div id="artistProfileModal" class="modal">
         <div class="modal-content" style="max-width: 800px;">
             <span class="close" onclick="closeArtistProfileModal()">&times;</span>
-            <h2><i class="fas fa-user"></i> Artist Profile</h2>
+            <h2><i class="bx bx-user"></i> Artist Profile</h2>
             <div class="modal-body" id="artistProfileBody">
                 <!-- Artist profile details will be loaded here -->
             </div>
             <div class="modal-actions">
                 <button class="btn btn-success" onclick="sendRoleRequestFromProfile()">
-                    <i class="fas fa-paper-plane"></i>
+                    <i class="bx bx-paper-plane"></i>
                     Send Role Request
                 </button>
                 <button class="btn btn-secondary" onclick="closeArtistProfileModal()">Close</button>

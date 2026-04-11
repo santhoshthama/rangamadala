@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assign Service Provider - Rangamadala</title>
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         .provider-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -158,37 +158,37 @@
         <ul class="menu">
             <li>
                 <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $drama->id ?>">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $drama->id ?>">
-                    <i class="fas fa-briefcase"></i>
+                    <i class="bx bx-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $drama->id ?>">
-                    <i class="fas fa-chart-bar"></i>
+                    <i class="bx bx-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $drama->id ?>">
-                    <i class="fas fa-theater-masks"></i>
+                    <i class="bx bx-theater-masks"></i>
                     <span>Theater Bookings</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -201,7 +201,7 @@
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $drama->id ?>" style="color: var(--muted); font-size: 20px;">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                 </a>
                 <div>
                     <h1 style="margin: 0; font-size: 24px; color: var(--ink);">Assign Service Provider</h1>
@@ -221,7 +221,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h3 style="margin: 0 0 8px 0; font-size: 20px;">
-                        <i class="fas fa-briefcase"></i> <?= esc($service->service_type) ?>
+                        <i class="bx bx-briefcase"></i> <?= esc($service->service_type) ?>
                     </h3>
                     <p style="margin: 0; opacity: 0.9;">
                         Select a service provider and send them a request for this service
@@ -243,7 +243,7 @@
             <!-- Filter Sidebar -->
             <aside class="filter-sidebar">
                 <h3 style="margin: 0 0 20px 0; color: var(--ink);">
-                    <i class="fas fa-filter"></i> Filters
+                    <i class="bx bx-filter"></i> Filters
                 </h3>
                 
                 <form method="GET" action="<?= ROOT ?>/production_manager/browse_providers">
@@ -253,7 +253,7 @@
                     
                     <!-- Location Filter -->
                     <div class="filter-group">
-                        <label><i class="fas fa-map-marker-alt"></i> Location</label>
+                        <label><i class="bx bx-map-marker-alt"></i> Location</label>
                         <select name="location" class="filter-input">
                             <option value="">All Locations</option>
                             <?php if (!empty($locations)): ?>
@@ -269,7 +269,7 @@
 
                     <!-- Rate Range Filter -->
                     <div class="filter-group">
-                        <label><i class="fas fa-dollar-sign"></i> Hourly Rate (Rs)</label>
+                        <label><i class="bx bx-dollar-sign"></i> Hourly Rate (Rs)</label>
                         <div style="display: grid; gap: 8px;">
                             <input type="number" name="min_rate" placeholder="Min" class="filter-input" 
                                 value="<?= htmlspecialchars($filters['min_rate'] ?? '') ?>">
@@ -283,12 +283,12 @@
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: normal;">
                             <input type="checkbox" name="availability" value="1" 
                                 <?= !empty($filters['availability']) ? 'checked' : '' ?>>
-                            <span><i class="fas fa-calendar-check"></i> Available Now Only</span>
+                            <span><i class="bx bx-calendar-check"></i> Available Now Only</span>
                         </label>
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">
-                        <i class="fas fa-search"></i> Apply Filters
+                        <i class="bx bx-search"></i> Apply Filters
                     </button>
                     
                     <a href="<?= ROOT ?>/production_manager/browse_providers?drama_id=<?= $drama->id ?>&service_id=<?= $serviceId ?>&service_type=<?= urlencode($serviceType) ?>" 
@@ -301,7 +301,7 @@
             <!-- Providers Grid -->
             <div>
                 <div style="margin-bottom: 20px; color: var(--muted);">
-                    <i class="fas fa-user-tie"></i> 
+                    <i class="bx bx-user-tie"></i> 
                     <?= count($providers) ?> service provider<?= count($providers) !== 1 ? 's' : '' ?> found
                 </div>
 
@@ -318,7 +318,7 @@
                                         <p><?= esc($provider->professional_title ?? 'Service Provider') ?></p>
                                         <?php if (!empty($provider->location)): ?>
                                             <p style="margin-top: 4px;">
-                                                <i class="fas fa-map-marker-alt"></i> <?= esc($provider->location) ?>
+                                                <i class="bx bx-map-marker-alt"></i> <?= esc($provider->location) ?>
                                             </p>
                                         <?php endif; ?>
                                     </div>
@@ -365,10 +365,10 @@
 
                                 <div style="margin-top: 16px; display: flex; gap: 8px;">
                                     <button class="btn btn-secondary" style="flex: 1;" onclick="viewProviderProfile(<?= $provider->user_id ?>)">
-                                        <i class="fas fa-eye"></i> View Profile
+                                        <i class="bx bx-eye"></i> View Profile
                                     </button>
                                     <button class="btn btn-primary" style="flex: 1;" onclick="sendServiceRequest(<?= $provider->user_id ?>, '<?= esc($provider->full_name) ?>')">
-                                        <i class="fas fa-paper-plane"></i> Send Request
+                                        <i class="bx bx-paper-plane"></i> Send Request
                                     </button>
                                 </div>
                             </div>
@@ -376,7 +376,7 @@
                     </div>
                 <?php else: ?>
                     <div style="text-align: center; padding: 80px 20px; background: white; border-radius: 12px;">
-                        <i class="fas fa-users-slash" style="font-size: 64px; color: var(--muted); opacity: 0.3; margin-bottom: 20px;"></i>
+                        <i class="bx bx-users-slash" style="font-size: 64px; color: var(--muted); opacity: 0.3; margin-bottom: 20px;"></i>
                         <h3 style="color: var(--ink); margin-bottom: 8px;">No Service Providers Found</h3>
                         <p style="color: var(--muted); margin-bottom: 24px;">
                             Try adjusting your filters or search criteria

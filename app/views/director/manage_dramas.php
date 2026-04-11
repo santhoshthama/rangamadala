@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Dramas - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -16,49 +16,49 @@
         <ul class="menu">
             <li>
                 <a href="dashboard.php">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
                 <a href="manage_dramas.php">
-                    <i class="fas fa-film"></i>
+                    <i class="bx bx-film"></i>
                     <span>My Dramas</span>
                 </a>
             </li>
             <li>
                 <a href="create_drama.php">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="bx bx-plus-circle"></i>
                     <span>Create Drama</span>
                 </a>
             </li>
             <li>
                 <a href="search_artists.php">
-                    <i class="fas fa-search"></i>
+                    <i class="bx bx-search"></i>
                     <span>Search Artists</span>
                 </a>
             </li>
             <li>
                 <a href="role_management.php">
-                    <i class="fas fa-users"></i>
+                    <i class="bx bx-users"></i>
                     <span>Role Management</span>
                 </a>
             </li>
             <li>
                 <a href="schedule_management.php">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
                 <a href="assign_managers.php">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     <span>Assign Managers</span>
                 </a>
             </li>
             <li>
                 <a href="../../public/index.php">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -68,7 +68,7 @@
     <!-- Main Content -->
     <main class="main--content">
         <a href="dashboard.php" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -80,7 +80,7 @@
             </div>
             <div class="header-controls">
                 <a href="create_drama.php" class="btn btn-primary">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="bx bx-plus-circle"></i>
                     Create New Drama
                 </a>
             </div>
@@ -89,7 +89,7 @@
         <!-- Filter Section -->
         <div class="search-section">
             <h3 style="margin-bottom: 20px; color: var(--ink);">
-                <i class="fas fa-filter"></i>
+                <i class="bx bx-filter"></i>
                 Filter Dramas
             </h3>
             <div class="search-filters">
@@ -120,7 +120,7 @@
                 </div>
             </div>
             <button class="btn btn-primary search-button">
-                <i class="fas fa-search"></i>
+                <i class="bx bx-search"></i>
                 Apply Filters
             </button>
         </div>
@@ -161,11 +161,11 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-primary" style="flex: 1;" onclick="viewDramaDetails(1)">
-                        <i class="fas fa-eye"></i>
+                        <i class="bx bx-eye"></i>
                         View Details
                     </button>
                     <button class="btn btn-secondary" onclick="editDrama(1)">
-                        <i class="fas fa-edit"></i>
+                        <i class="bx bx-edit"></i>
                     </button>
                 </div>
             </div>
@@ -204,11 +204,11 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-primary" style="flex: 1;" onclick="viewDramaDetails(2)">
-                        <i class="fas fa-eye"></i>
+                        <i class="bx bx-eye"></i>
                         View Details
                     </button>
                     <button class="btn btn-secondary" onclick="editDrama(2)">
-                        <i class="fas fa-edit"></i>
+                        <i class="bx bx-edit"></i>
                     </button>
                 </div>
             </div>
@@ -243,11 +243,11 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-secondary" style="flex: 1;" onclick="viewDramaDetails(3)">
-                        <i class="fas fa-eye"></i>
+                        <i class="bx bx-eye"></i>
                         View Details
                     </button>
                     <button class="btn btn-danger" onclick="deleteDrama(3)">
-                        <i class="fas fa-trash"></i>
+                        <i class="bx bx-trash"></i>
                     </button>
                 </div>
             </div>
@@ -282,7 +282,7 @@
                 </div>
                 <div class="artist-footer">
                     <button class="btn btn-secondary" style="flex: 1;" onclick="viewDramaDetails(4)">
-                        <i class="fas fa-eye"></i>
+                        <i class="bx bx-eye"></i>
                         View Details
                     </button>
                 </div>
@@ -291,7 +291,7 @@
 
         <!-- No Results Message (hidden by default) -->
         <div class="no-results" style="display: none;" id="noResults">
-            <i class="fas fa-film"></i>
+            <i class="bx bx-film"></i>
             <h3>No Dramas Found</h3>
             <p>Try adjusting your filters or create a new drama</p>
         </div>
@@ -301,7 +301,7 @@
     <div id="dramaDetailsModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2><i class="fas fa-film"></i> Drama Details</h2>
+            <h2><i class="bx bx-film"></i> Drama Details</h2>
             <div class="modal-body" id="modalBody">
                 <!-- Drama details will be loaded here dynamically -->
             </div>

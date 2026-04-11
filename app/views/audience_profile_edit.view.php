@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile - <?= APP_NAME ?></title>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/edit_profile.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/edit_profile.css">
     <style>
         .message-box {
             padding: 15px;
@@ -64,7 +64,7 @@
     <div class="back-container">
         <a href="<?= ROOT ?>/AudienceProfile" class="back-link">
             <button class="back-btn" type="button">
-                <i class="fas fa-arrow-left"></i> Back to Profile
+                <i class="bx bx-arrow-left"></i> Back to Profile
             </button>
         </a>
     </div>
@@ -124,7 +124,7 @@
                         <?php if (!empty($data['profile_image'])): ?>
                             <img src="<?= ROOT ?>/uploads/profile_images/<?= htmlspecialchars($data['profile_image']) ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                         <?php else: ?>
-                            <i class="fas fa-user"></i>
+                            <i class="bx bx-user"></i>
                         <?php endif; ?>
                     </div>
 

@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/Home.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
-    <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,11 +45,10 @@
             <a href="#"><img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo"></a>
             <div class="nav-links">
                 <ul>
-                    <li><a href="index.html">HOME</a></li>
                     <li><a href="#about">ABOUT US</a></li>
-                    <li><a href="#drama-class">DRAMA CLASS</a></li>
-                    <li><a href="#blog">BLOG</a></li>
-                    <li><a href="#contact">CONTACT US</a></li>
+                    <li><a href="#stage-highlights">STAGE HIGHLIGHTS</a></li>
+                    <li><a href="#member-comments">COMMENTS</a></li>
+                    <li><a href="#contact-bottom">CONTACT US</a></li>
                     <li><a href="<?= ROOT ?>/Login" class="btn login-btn">Log In</a></li>
                     <li><a href="<?= ROOT ?>/Signup" class="btn signup-btn">Sign Up</a></li>
                 </ul>
@@ -59,8 +58,7 @@
         <div class="text-box">
             <h1>RANGAMADALA</h1>
             <h1>Drama Connectivity Platform</h1>
-            <p>Connecting Sri Lankaâ€™s Drama Talent in One Place</p>
-            <a href="<?= ROOT ?>/Audiencedashboard" class="hero-btn">Visit Us To Know More</a>
+            <p>Connecting Sri Lanka’s Drama Talent in One Place</p>
         </div>
 
         <!-- Swiper Section -->
@@ -76,7 +74,7 @@
                                         <h3 class="slide-title"><?= htmlspecialchars($slide->title ?? 'Drama') ?></h3>
                                         <?php if (!empty($slide->drama_id)): ?>
                                             <a href="<?= ROOT ?>/Home/drama/<?= $slide->drama_id ?>" class="view-more-btn">
-                                                <i class="fas fa-play-circle"></i> View More
+                                                <i class="bx bx-play-circle"></i> View More
                                             </a>
                                         <?php endif; ?>
                                     </div>
@@ -101,10 +99,10 @@
         <div class="about-container">
             <h2>About Rangamadala</h2>
             <p>
-                Rangamadala is Sri Lankaâ€™s first all-in-one drama connectivity platform that brings together artists, directors, audiences, and production teams. 
+                Rangamadala is Sri Lanka’s first all-in-one drama connectivity platform that brings together artists, directors, audiences, and production teams. 
                 Our goal is to build a thriving community where creativity meets opportunity from performing on stage to managing behind the curtain.
             </p>
-            <a href="<?= ROOT ?>/Admindashboard" class="about-btn">Learn More</a>
+            <a href="<?= ROOT ?>/Home/learnMore" class="about-btn">Learn More</a>
         </div>
     </section>
 
@@ -113,17 +111,17 @@
         <h2>Join Our Drama Community</h2>
         <div class="community-grid">
             <div class="community-card">
-                <i class="fas fa-masks-theater"></i>
+                <i class="bx bx-masks-theater"></i>
                 <h3>Weekly Acting Workshops</h3>
                 <p>Improve your acting and stage presence with our hands-on training sessions.</p>
             </div>
             <div class="community-card">
-                <i class="fas fa-lightbulb"></i>
+                <i class="bx bx-lightbulb"></i>
                 <h3>Creative Collaboration</h3>
                 <p>Directors and artists can collaborate on new scripts and live performances.</p>
             </div>
             <div class="community-card">
-                <i class="fas fa-handshake"></i>
+                <i class="bx bx-handshake"></i>
                 <h3>Networking Events</h3>
                 <p>Connect with producers, costume designers, and stage service providers.</p>
             </div>
@@ -131,7 +129,7 @@
     </section>
 
     <!-- Gallery Section -->
-    <section class="gallery-section" id="gallery">
+    <section class="gallery-section" id="stage-highlights">
         <h2>Stage Highlights</h2>
         <div class="gallery-grid">
             <?php if (!empty($galleryImages)): ?>
@@ -148,7 +146,7 @@
     </section>
 
         <!-- Testimonials Section -->
-    <section class="testimonials-section">
+    <section class="testimonials-section" id="member-comments">
         <h2 class="testimonials-title">What Our Members Say</h2>
         <div class="testimonials-container">
             <?php if (!empty($testimonials)): ?>
@@ -200,7 +198,9 @@
     </section>
 
     <!-- Footer -->
-    <?php require APPROOT."/views/includes/footer.php"?>
+    <div id="contact-bottom">
+        <?php require APPROOT."/views/includes/footer.php"?>
+    </div>
 
     <!-- Swiper JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>

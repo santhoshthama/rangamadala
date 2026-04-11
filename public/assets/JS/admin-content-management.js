@@ -74,12 +74,27 @@ function renderSwiperSlides(slides) {
   }
 
   grid.innerHTML = slides.map(slide => `
+    ${(() => {
+      const isActive = slide.is_active == 1;
+      const isDramaSubmission = !!slide.drama_id;
+      const moderationLabel = isDramaSubmission
+        ? (isActive ? 'Visible on Home' : 'Pending Admin Approval')
+        : (isActive ? 'Active' : 'Hidden');
+      const moderationBadgeClass = isActive ? 'success' : 'warning';
+      const toggleIcon = isActive ? 'visibility_off' : 'visibility';
+      const toggleTitle = isActive ? 'Hide from Home' : 'Show on Home';
+      const cardTitle = slide.title || slide.linked_drama_name || 'Untitled Slide';
+      const sourceLine = isDramaSubmission
+        ? `<div class="content-card-subtitle">From drama: ${escapeHtml(slide.linked_drama_name || 'Artist submission')}</div>`
+        : '';
+
+      return `
     <div class="content-card ${slide.is_active == 1 ? '' : 'inactive'}" data-id="${slide.id}">
       <div class="content-card-image">
         <img src="${ROOT}/${slide.image_path}" alt="${slide.title || 'Slide'}">
         <div class="content-card-overlay">
-          <button class="btn btn-sm" onclick="toggleStatus('swiper', ${slide.id}, ${slide.is_active == 1 ? 0 : 1})" title="${slide.is_active == 1 ? 'Hide' : 'Show'}">
-            <span class="material-symbols-rounded">${slide.is_active == 1 ? 'visibility_off' : 'visibility'}</span>
+          <button class="btn btn-sm" onclick="toggleStatus('swiper', ${slide.id}, ${slide.is_active == 1 ? 0 : 1})" title="${toggleTitle}">
+            <span class="material-symbols-rounded">${toggleIcon}</span>
           </button>
           <button class="btn btn-sm btn-danger" onclick="deleteSwiper(${slide.id})" title="Delete">
             <span class="material-symbols-rounded">delete</span>
@@ -87,10 +102,13 @@ function renderSwiperSlides(slides) {
         </div>
       </div>
       <div class="content-card-info">
-        <h4>${slide.title || 'Untitled Slide'}</h4>
-        <span class="status-badge ${slide.is_active == 1 ? 'success' : 'warning'}">${slide.is_active == 1 ? 'Active' : 'Hidden'}</span>
+        <h4>${escapeHtml(cardTitle)}</h4>
+        ${sourceLine}
+        <span class="status-badge ${moderationBadgeClass}">${moderationLabel}</span>
       </div>
     </div>
+      `;
+    })()}
   `).join('');
 }
 
@@ -574,7 +592,11 @@ function toggleStatus(type, id, isActive) {
       if (type === 'swiper') loadSwiperSlides();
       else if (type === 'gallery') loadGalleryImages();
       else if (type === 'testimonial') loadTestimonials();
-      showToast('Status updated!', 'success');
+      if (type === 'swiper') {
+        showToast(isActive == 1 ? 'Slide is now visible on home page.' : 'Slide hidden from home page.', 'success');
+      } else {
+        showToast('Status updated!', 'success');
+      }
     } else {
       alert(data.message || 'Failed to update');
     }

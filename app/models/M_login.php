@@ -38,6 +38,21 @@ class M_login {
     }
 
     /**
+     * Get minimal verification status by email (used before password auth)
+     *
+     * @param string $email
+     * @return object|false
+     */
+    public function getVerificationSnapshotByEmail($email) {
+        $this->db->query("SELECT id, role, is_verified, verification_status, rejection_reason
+                          FROM users
+                          WHERE email = :email
+                          LIMIT 1");
+        $this->db->bind(":email", $email);
+        return $this->db->single();
+    }
+
+    /**
      * Check if email exists in database
      * 
      * @param string $email User's email

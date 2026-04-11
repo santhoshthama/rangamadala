@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initSidebar();
   initUserMenu();
   initNavigation();
+  initViewFromHash();
   initSearch();
   initCharts();
 });
@@ -113,13 +114,24 @@ function switchView(viewId) {
 function updatePageTitle(viewId) {
   const titles = {
     overview: "Overview",
-    projects: "Projects",
-    tasks: "Tasks",
-    reports: "Reports",
+    browse: "Browse Dramas",
+    "my-showings": "My Showings",
+    classes: "Classes",
+    payments: "Payment History",
     settings: "Settings",
   };
   if (dashboardTitle) {
     dashboardTitle.textContent = titles[viewId] || "Dashboard";
+  }
+}
+
+function initViewFromHash() {
+  const hash = (window.location.hash || "").replace("#", "").trim();
+  if (!hash) return;
+
+  const targetExists = document.getElementById(hash);
+  if (targetExists) {
+    switchView(hash);
   }
 }
 // ===================================
@@ -296,13 +308,14 @@ document.addEventListener("DOMContentLoaded", function () {
   dramaSearch.addEventListener("input", filterDramas);
   categoryFilter.addEventListener("change", filterDramas);
 
-  // Book button handlers
+  // Drama card action handlers
   const bookButtons = document.querySelectorAll(".btn-book");
   bookButtons.forEach((btn) => {
     btn.addEventListener("click", function () {
-      const dramaId = this.getAttribute("data-drama-id");
-      toastInfo('Booking functionality coming soon!');
-      // TODO: Implement actual booking functionality
+      const href = this.getAttribute("href");
+      if (href) {
+        window.location.href = href;
+      }
     });
   });
 });

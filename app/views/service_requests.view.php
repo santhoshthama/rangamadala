@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($pageTitle) ? $pageTitle : 'Service Requests' ?> - Rangamadala</title>
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        crossorigin="anonymous" />
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_requests.css">
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
@@ -114,7 +111,7 @@
                             <button class="btn btn-details" onclick="openViewResponseModal(<?= htmlspecialchars(json_encode($req->service_details_json ? json_decode($req->service_details_json, true)['provider_response'] ?? [] : []), ENT_QUOTES, 'UTF-8') ?>)">
                                 View Response
                             </button>
-                            <span style="color: #f39c12; font-style: italic; font-size: 13px;"><i class="fas fa-clock"></i> Awaiting PM Confirmation</span>
+                            <span style="color: #f39c12; font-style: italic; font-size: 13px;"><i class="bx bx-clock"></i> Awaiting PM Confirmation</span>
                         <?php elseif ($status === 'confirmed'): ?>
                             <?php
                             // Check if payment needs confirmation (only for cash/bank)
@@ -567,7 +564,7 @@
                                 return `
                                     <p style="margin: 6px 0; font-size: 12px;">
                                         <a href="${'<?= ROOT ?>'}/${fileInfo.relative_path}" target="_blank" style="color: #007bff; text-decoration: none;">
-                                            <i class="fas fa-link"></i> View reference (${fieldName}${fileInfo.original_name ? ' - ' + fileInfo.original_name : ''})
+                                            <i class="bx bx-link"></i> View reference (${fieldName}${fileInfo.original_name ? ' - ' + fileInfo.original_name : ''})
                                         </a>
                                     </p>
                                 `;

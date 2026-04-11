@@ -11,12 +11,47 @@
     <!-- Google Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- CSS -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<!-- CSS -->
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css" />
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css" />
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      /* Match audience dashboard stat-card color style on admin overview */
+      #overview .stat-card {
+        background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+        border: 1px solid #f0dfb4;
+        color: #4a3a14;
+        text-align: left;
+        box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
+      }
+
+      #overview .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(186, 142, 35, 0.2);
+      }
+
+      #overview .stat-card-title {
+        color: #7a6121;
+      }
+
+      #overview .stat-card-icon.primary,
+      #overview .stat-card-icon.info,
+      #overview .stat-card-icon.success,
+      #overview .stat-card-icon.warning {
+        background: rgba(186, 142, 35, 0.14);
+        color: var(--brand);
+      }
+
+      #overview .stat-card-value {
+        color: #5a4415;
+      }
+
+      #overview .stat-card-change {
+        color: #8a6a1f;
+      }
+    </style>
     <link rel="shortcut icon" href="<?php echo ROOT;?>/assets/images/Rangamadala logo.png" type="image/x-icon">
   </head>
   <body>
@@ -61,9 +96,9 @@
               <span class="nav-icon material-symbols-rounded">app_registration</span>
               <span class="nav-label">Registrations</span>
             </a>
-            <a href="#" class="dashboard-nav-item" data-view="permissions">
-              <span class="nav-icon material-symbols-rounded">security</span>
-              <span class="nav-label">Permissions</span>
+            <a href="#" class="dashboard-nav-item" data-view="drama-approvals">
+              <span class="nav-icon material-symbols-rounded">approval</span>
+              <span class="nav-label">Drama Approvals</span>
             </a>
             <a href="#" class="dashboard-nav-item" data-view="content">
               <span class="nav-icon material-symbols-rounded">article</span>
@@ -151,10 +186,10 @@
                     <span class="material-symbols-rounded">people</span>
                   </div>
                 </div>
-                <div class="stat-card-value">156</div>
-                <div class="stat-card-change positive">
-                  <span class="material-symbols-rounded">trending_up</span>
-                  <span>+12 this month</span>
+                <div class="stat-card-value" id="statTotalUsers">0</div>
+                <div class="stat-card-change">
+                  <span class="material-symbols-rounded">groups</span>
+                  <span>Registered non-admin users</span>
                 </div>
               </div>
               <div class="stat-card">
@@ -164,20 +199,20 @@
                     <span class="material-symbols-rounded">theater_comedy</span>
                   </div>
                 </div>
-                <div class="stat-card-value">24</div>
-                <div class="stat-card-change positive">
-                  <span class="material-symbols-rounded">trending_up</span>
-                  <span>+3 this week</span>
+                <div class="stat-card-value" id="statActiveDramas">0</div>
+                <div class="stat-card-change">
+                  <span class="material-symbols-rounded">event_available</span>
+                  <span>Currently active drama records</span>
                 </div>
               </div>
               <div class="stat-card">
                 <div class="stat-card-header">
-                  <div class="stat-card-title">Pending Registrations</div>
+                  <div class="stat-card-title">Pending User Approvals</div>
                   <div class="stat-card-icon warning">
                     <span class="material-symbols-rounded">pending_actions</span>
                   </div>
                 </div>
-                <div class="stat-card-value">8</div>
+                <div class="stat-card-value" id="statPendingUserApprovals">0</div>
                 <div class="stat-card-change negative">
                   <span class="material-symbols-rounded">schedule</span>
                   <span>Awaiting approval</span>
@@ -185,15 +220,15 @@
               </div>
               <div class="stat-card">
                 <div class="stat-card-header">
-                  <div class="stat-card-title">Active Roles</div>
+                  <div class="stat-card-title">Pending Drama Approvals</div>
                   <div class="stat-card-icon info">
-                    <span class="material-symbols-rounded">assignment</span>
+                    <span class="material-symbols-rounded">approval</span>
                   </div>
                 </div>
-                <div class="stat-card-value">5</div>
-                <div class="stat-card-change positive">
-                  <span class="material-symbols-rounded">check_circle</span>
-                  <span>Configured</span>
+                <div class="stat-card-value" id="statPendingDramaApprovals">0</div>
+                <div class="stat-card-change negative">
+                  <span class="material-symbols-rounded">hourglass_top</span>
+                  <span>Waiting for admin review</span>
                 </div>
               </div>
             </div>
@@ -390,14 +425,37 @@
               </div>
             </div>
           </div>
-          <!-- Reports View -->
-          <div class="dashboard-view" id="permissions">
-            <div class="empty-state">
-              <div class="empty-state-icon">
-                <span class="material-symbols-rounded">security</span>
+          <div class="dashboard-view" id="drama-approvals">
+            <div class="dashboard-table-container">
+              <div class="dashboard-table-header">
+                <h2 class="dashboard-table-title">Pending Drama Creation Requests</h2>
               </div>
-              <h3 class="empty-state-title">Permissions Management</h3>
-              <p class="empty-state-description">Configure user roles and permissions. Manage access levels for different user types.</p>
+
+              <div class="loading-state" id="dramaRequestsLoading">
+                <span class="material-symbols-rounded spinning">progress_activity</span>
+                <p>Loading drama requests...</p>
+              </div>
+
+              <div class="empty-state" id="dramaRequestsEmpty" style="display: none;">
+                <div class="empty-state-icon">
+                  <span class="material-symbols-rounded">task_alt</span>
+                </div>
+                <h3 class="empty-state-title">No Pending Drama Requests</h3>
+                <p class="empty-state-description">All drama creation requests have been processed.</p>
+              </div>
+
+              <table class="dashboard-table" id="dramaRequestsTable" style="display: none;">
+                <thead>
+                  <tr>
+                    <th>Drama</th>
+                    <th>Artist</th>
+                    <th>Certificate No.</th>
+                    <th>Requested Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="dramaRequestsTableBody"></tbody>
+              </table>
             </div>
           </div>
           <!-- Settings View -->

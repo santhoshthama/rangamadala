@@ -6,8 +6,8 @@
     <title><?= htmlspecialchars($data['drama']->title ?? 'Drama Details') ?> - <?= APP_NAME ?></title>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
-    <!-- Google Fonts -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -367,10 +367,10 @@
         </a>
         <div class="header-actions">
             <a href="<?= ROOT ?>/Login" class="btn btn-outline">
-                <i class="fas fa-sign-in-alt"></i> Log In
+                <i class="bx bx-sign-in-alt"></i> Log In
             </a>
             <a href="<?= ROOT ?>/Signup" class="btn btn-primary">
-                <i class="fas fa-user-plus"></i> Sign Up
+                <i class="bx bx-user-plus"></i> Sign Up
             </a>
         </div>
     </header>
@@ -378,7 +378,7 @@
     <!-- Main Content -->
     <div class="container">
         <a href="<?= ROOT ?>/Home" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Back to Home
+            <i class="bx bx-arrow-left"></i> Back to Home
         </a>
 
         <?php if (!empty($data['drama'])): $d = $data['drama']; ?>
@@ -389,7 +389,7 @@
                             <img class="drama-image" src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($d->image) ?>" alt="<?= htmlspecialchars($d->title) ?>">
                         <?php else: ?>
                             <div class="placeholder-image">
-                                <i class="fas fa-theater-masks"></i>
+                                <i class="bx bx-theater-masks"></i>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -401,28 +401,28 @@
                         <div class="drama-meta">
                             <?php if (!empty($d->event_date)): ?>
                                 <div class="meta-item">
-                                    <i class="fas fa-calendar-alt"></i>
+                                    <i class="bx bx-calendar-alt"></i>
                                     <span><?= date('F d, Y', strtotime($d->event_date)) ?></span>
                                 </div>
                             <?php endif; ?>
                             
                             <?php if (!empty($d->event_time)): ?>
                                 <div class="meta-item">
-                                    <i class="fas fa-clock"></i>
+                                    <i class="bx bx-clock"></i>
                                     <span><?= htmlspecialchars($d->event_time) ?></span>
                                 </div>
                             <?php endif; ?>
                             
                             <?php if (!empty($d->venue)): ?>
                                 <div class="meta-item">
-                                    <i class="fas fa-map-marker-alt"></i>
+                                    <i class="bx bx-map-marker-alt"></i>
                                     <span><?= htmlspecialchars($d->venue) ?></span>
                                 </div>
                             <?php endif; ?>
                             
                             <?php if (!empty($d->creator_name)): ?>
                                 <div class="meta-item">
-                                    <i class="fas fa-user"></i>
+                                    <i class="bx bx-user"></i>
                                     <span>By <?= htmlspecialchars($d->creator_name) ?></span>
                                 </div>
                             <?php endif; ?>
@@ -430,7 +430,7 @@
                         
                         <?php if (!empty($data['rating_summary']) && $data['rating_summary']->total_ratings > 0): ?>
                             <div class="rating-display">
-                                <span class="rating-stars"><i class="fas fa-star"></i></span>
+                                <span class="rating-stars"><i class="bx bx-star"></i></span>
                                 <span class="rating-value"><?= number_format($data['rating_summary']->average_rating, 1) ?></span>
                                 <span class="rating-count">(<?= $data['rating_summary']->total_ratings ?> <?= $data['rating_summary']->total_ratings == 1 ? 'rating' : 'ratings' ?>)</span>
                             </div>
@@ -440,13 +440,18 @@
                             LKR <?= number_format($d->ticket_price ?? 0, 2) ?>
                             <span>/ ticket</span>
                         </div>
+                        <?php if (!empty($d->showing_prices)): ?>
+                            <div class="form-hint" style="margin-top: 8px; color: var(--text-light);">
+                                Showing prices: <?= htmlspecialchars($d->showing_prices) ?>
+                            </div>
+                        <?php endif; ?>
                         
                         <div class="drama-actions">
                             <a href="<?= ROOT ?>/Login" class="btn btn-primary">
-                                <i class="fas fa-ticket-alt"></i> Book Tickets
+                                <i class="bx bx-ticket-alt"></i> Book Tickets
                             </a>
                             <a href="<?= ROOT ?>/Signup" class="btn btn-outline">
-                                <i class="fas fa-user-plus"></i> Create Account
+                                <i class="bx bx-user-plus"></i> Create Account
                             </a>
                         </div>
                     </div>
@@ -466,20 +471,20 @@
                 <p>Create a free account to book tickets, rate dramas, and connect with Sri Lanka's drama community!</p>
                 <div class="cta-buttons">
                     <a href="<?= ROOT ?>/Signup" class="btn btn-primary">
-                        <i class="fas fa-user-plus"></i> Sign Up Free
+                        <i class="bx bx-user-plus"></i> Sign Up Free
                     </a>
                     <a href="<?= ROOT ?>/Login" class="btn btn-outline">
-                        <i class="fas fa-sign-in-alt"></i> Already Have Account? Log In
+                        <i class="bx bx-sign-in-alt"></i> Already Have Account? Log In
                     </a>
                 </div>
             </div>
         <?php else: ?>
             <div class="drama-card" style="padding: 60px; text-align: center;">
-                <i class="fas fa-theater-masks" style="font-size: 60px; color: var(--accent-light); margin-bottom: 20px;"></i>
+                <i class="bx bx-theater-masks" style="font-size: 60px; color: var(--accent-light); margin-bottom: 20px;"></i>
                 <h2 style="color: var(--text-dark); margin-bottom: 15px;">Drama Not Found</h2>
                 <p style="color: var(--text-light); margin-bottom: 25px;">The drama you're looking for doesn't exist or has been removed.</p>
                 <a href="<?= ROOT ?>/Home" class="btn btn-primary">
-                    <i class="fas fa-home"></i> Back to Home
+                    <i class="bx bx-home"></i> Back to Home
                 </a>
             </div>
         <?php endif; ?>

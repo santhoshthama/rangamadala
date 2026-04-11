@@ -6,45 +6,68 @@
 }
 
 /* Background */
-body{
-display: flex;
-justify-content: center;
-align-items: center;
-min-height: 100vh;
-background: url(../images/lightingSetup.png) no-repeat;
-background-position: center;
-background-size: cover;
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: url(../images/Signup.png) no-repeat;
+    background-position: center;
+    background-size: cover;
+    background-attachment: fixed;
+    position: relative;
+    padding: 24px;
+}
 
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(26, 20, 16, 0.3);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
 }
 
 /* Back Button */
 .back-container {
-    text-align: center;
-    margin-top: 20px;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 20;
 }
 
 .back-link {
     text-decoration: none;
+    display: inline-block;
 }
 
 .back-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background-color: transparent;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(212, 175, 55, 0.15);
     color: #d4af37;
-    padding: 8px 14px;
-    border: 2px solid #d4af37;
-    border-radius: 6px;
-    font-size: 16px;
+    padding: 10px 18px;
+    border: 1.5px solid rgba(212, 175, 55, 0.4);
+    border-radius: 8px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: 0.3s ease;
+    transition: all 0.3s ease;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }
 
 .back-btn:hover {
-    background-color: #d4af37;
-    color: #1a1410;
+    background: rgba(212, 175, 55, 0.25);
+    border-color: #d4af37;
+    color: #f5f0e8;
+    transform: translateX(-3px);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
 }
 
 .back-btn i {
@@ -53,11 +76,31 @@ background-size: cover;
 
 /* Page Layout */
 .main-wrapper {
+    position: relative;
+    z-index: 10;
     width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+    max-width: 1120px;
+    margin: 0;
+    padding: 42px 36px;
     text-align: center;
+    background: rgba(26, 20, 16, 0.75);
+    border: 2px solid rgba(212, 175, 55, 0.4);
+    border-radius: 15px;
+    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
+    box-shadow: 0 8px 40px rgba(212, 175, 55, 0.25), 0 0 60px rgba(0, 0, 0, 0.4);
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Header */
@@ -65,41 +108,46 @@ background-size: cover;
     font-size: 36px;
     color: #d4af37;
     margin-bottom: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .header-section p {
-    font-size: 16px;
-    color: #c9b896;
+    font-size: 14px;
+    color: #a89968;
+    margin-bottom: 10px;
 }
 
 /* Role Selection Cards */
 .role-selection-container {
     display: flex;
-    gap: 30px;
+    gap: 22px;
     justify-content: center;
     flex-wrap: wrap;
-    margin-top: 50px;
+    margin-top: 34px;
 }
 
 .role-card {
-    width: 300px;
-    background: rgba(26, 20, 16, 0.85);
+    width: 310px;
+    background: rgba(245, 240, 232, 0.04);
     border: 2px solid rgba(212, 175, 55, 0.3);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+    border-radius: 12px;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     color: #f5f0e8;
-    border-radius: 10px;
-    padding: 30px;
+    padding: 28px 24px;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     text-decoration: none;
 }
 
 .role-card:hover {
-    border-color: rgba(212, 175, 55, 0.6);
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(212, 175, 55, 0.2);
+    border-color: #d4af37;
+    transform: translateY(-3px);
+    background: rgba(212, 175, 55, 0.12);
+    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
 }
 
 .role-card i {
@@ -116,36 +164,51 @@ background-size: cover;
 
 .role-card p {
     font-size: 14px;
-    color: #c9b896;
+    color: #a89968;
     line-height: 1.5;
 }
 
-.wrapper .register-link{
+.main-wrapper .register-link {
     font-size: 14.5px;
     text-align: center;
-    margin: 20px 0 15px;
+    margin: 32px 0 0;
+    color: #a89968;
 }
-.register-link p a{
+
+.register-link p a {
     color: #d4af37;
     text-decoration: none;
     font-weight: 600;
 }
-.register-link p a:hover{
+
+.register-link p a:hover {
+    color: #f5f0e8;
     text-decoration: underline;
 }
-.wrapper form .btn{
-    background: linear-gradient(135deg, #d4af37, #aa8c2c);
-    color: #1a1410;
-    padding: 10px 25px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 600;
-    transition: 0.3s ease;
-}
-.wrapper form .btn:hover {
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-    transform: translateY(-2px);
+
+@media (max-width: 768px) {
+    body {
+        align-items: flex-start;
+        padding: 16px;
+    }
+
+    .main-wrapper {
+        padding: 72px 18px 26px;
+    }
+
+    .back-container {
+        top: 12px;
+        left: 12px;
+    }
+
+    .back-btn {
+        padding: 9px 14px;
+        font-size: 13px;
+    }
+
+    .role-card {
+        width: 100%;
+        max-width: 420px;
+    }
 }
 

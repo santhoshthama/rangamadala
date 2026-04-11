@@ -3,6 +3,8 @@
 // ===================================
 // REGISTRATIONS VIEW FUNCTIONALITY
 // ===================================
+let pendingDramaRequests = [];
+
 function initRegistrationsView() {
   // Filter buttons
   const filterButtons = document.querySelectorAll('.filter-btn');
@@ -20,11 +22,22 @@ function initRegistrationsView() {
   if (registrationsNav) {
     registrationsNav.addEventListener('click', loadRegistrations);
   }
+
+  // Load pending drama approvals when dedicated view is accessed
+  const dramaApprovalsNav = document.querySelector('[data-view="drama-approvals"]');
+  if (dramaApprovalsNav) {
+    dramaApprovalsNav.addEventListener('click', loadDramaRequests);
+  }
   
   // Also load immediately if the registrations view is already visible
   const registrationsView = document.getElementById('registrations');
   if (registrationsView && registrationsView.classList.contains('active')) {
     loadRegistrations();
+  }
+
+  const dramaApprovalsView = document.getElementById('drama-approvals');
+  if (dramaApprovalsView && dramaApprovalsView.classList.contains('active')) {
+    loadDramaRequests();
   }
 }
 
@@ -58,6 +71,365 @@ function loadRegistrations() {
       loading.style.display = 'none';
       empty.style.display = 'block';
     });
+
+}
+
+function loadDramaRequests() {
+  const loading = document.getElementById('dramaRequestsLoading');
+  const empty = document.getElementById('dramaRequestsEmpty');
+  const table = document.getElementById('dramaRequestsTable');
+
+  if (!loading || !empty || !table) {
+    return;
+  }
+
+  loading.style.display = 'block';
+  empty.style.display = 'none';
+  table.style.display = 'none';
+
+  fetch(ROOT + '/admindashboard/getPendingDramaRequests')
+    .then(response => response.json())
+    .then(data => {
+      pendingDramaRequests = Array.isArray(data) ? data : [];
+      loading.style.display = 'none';
+
+      if (!Array.isArray(data) || data.length === 0) {
+        empty.style.display = 'block';
+      } else {
+        table.style.display = 'table';
+        renderDramaRequests(data);
+      }
+    })
+    .catch(error => {
+      console.error('Error loading drama requests:', error);
+      loading.style.display = 'none';
+      empty.style.display = 'block';
+    });
+}
+
+function renderDramaRequests(requests) {
+  const tbody = document.getElementById('dramaRequestsTableBody');
+  if (!tbody) {
+    return;
+  }
+
+  tbody.innerHTML = '';
+
+  requests.forEach(req => {
+    const tr = document.createElement('tr');
+    const formattedDate = new Date(req.created_at).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    const certificateLink = req.certificate_image
+      ? `<a href="${ROOT}/uploads/certificates/${encodeURIComponent(req.certificate_image)}" target="_blank" rel="noopener">View file</a>`
+      : 'N/A';
+
+    tr.innerHTML = `
+      <td>
+        <div class="user-info">
+          <h4>${escapeHtml(req.drama_name)}</h4>
+          <p>${escapeHtml(req.owner_name || 'N/A')}</p>
+        </div>
+      </td>
+      <td>
+        <div class="user-info">
+          <h4>${escapeHtml(req.artist_name || 'N/A')}</h4>
+          <p>${escapeHtml(req.artist_email || 'N/A')}</p>
+        </div>
+      </td>
+      <td>
+        <div>${escapeHtml(req.certificate_number || 'N/A')}</div>
+        <small>${certificateLink}</small>
+      </td>
+      <td>${formattedDate}</td>
+      <td>
+        <div class="action-buttons">
+          <button class="btn btn-secondary" onclick="showDramaRequestDetails(${req.id})">
+            <span class="material-symbols-rounded">visibility</span>
+            View
+          </button>
+          <button class="btn btn-approve" onclick="approveDramaRequest(${req.id}, '${escapeJsString(req.drama_name)}')">
+            <span class="material-symbols-rounded">check_circle</span>
+            Approve
+          </button>
+          <button class="btn btn-reject" onclick="showRejectDramaModal(${req.id}, '${escapeJsString(req.drama_name)}')">
+            <span class="material-symbols-rounded">cancel</span>
+            Reject
+          </button>
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+function showDramaRequestDetails(requestId) {
+  const request = pendingDramaRequests.find(req => Number(req.id) === Number(requestId));
+
+  if (!request) {
+    toastError('Unable to load drama request details.');
+    return;
+  }
+
+  const requestDate = request.created_at
+    ? new Date(request.created_at).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : 'N/A';
+
+  const hasCertificateFile = Boolean(request.certificate_image);
+  const encodedCertificateFile = hasCertificateFile
+    ? encodeURIComponent(request.certificate_image)
+    : '';
+  const certificateUrl = hasCertificateFile
+    ? `${ROOT}/uploads/certificates/${encodedCertificateFile}`
+    : '';
+  const fileExtension = hasCertificateFile
+    ? String(request.certificate_image).split('.').pop().toLowerCase()
+    : '';
+  const isImageFile = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
+
+  const certificatePreview = hasCertificateFile
+    ? isImageFile
+      ? `<img src="${certificateUrl}" alt="Certificate Image" class="nic-image" />`
+      : `<div class="certificate-file-box">
+           <span class="material-symbols-rounded">description</span>
+           <p>Certificate document uploaded</p>
+         </div>`
+    : '<em>No certificate file uploaded</em>';
+
+  const modalHTML = `
+    <div class="modal-overlay active" id="dramaRequestDetailModal">
+      <div class="modal-content user-form-modal drama-request-modal">
+        <div class="modal-header">
+          <h3>Drama Request Details</h3>
+          <button class="modal-close" onclick="closeDramaRequestDetailsModal()">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="details-section-header">
+            <span class="material-symbols-rounded">theater_comedy</span>
+            <span>Drama Information</span>
+          </div>
+
+          <div class="input-box readonly">
+            <input type="text" value="${escapeHtml(request.drama_name || 'N/A')}" readonly />
+            <i class="material-symbols-rounded">movie</i>
+            <label>Drama Name</label>
+          </div>
+
+          <div class="input-box readonly">
+            <input type="text" value="${escapeHtml(request.owner_name || 'N/A')}" readonly />
+            <i class="material-symbols-rounded">person</i>
+            <label>Owner Name</label>
+          </div>
+
+          <div class="input-box readonly">
+            <input type="text" value="${escapeHtml(request.certificate_number || 'N/A')}" readonly />
+            <i class="material-symbols-rounded">badge</i>
+            <label>Certificate Number</label>
+          </div>
+
+          <div class="form-group drama-description-group">
+            <label>Drama Description</label>
+            <textarea readonly>${escapeHtml(request.description || 'No description provided')}</textarea>
+          </div>
+
+          <div class="details-section-header">
+            <span class="material-symbols-rounded">person</span>
+            <span>Artist Information</span>
+          </div>
+
+          <div class="input-box readonly">
+            <input type="text" value="${escapeHtml(request.artist_name || 'N/A')}" readonly />
+            <i class="material-symbols-rounded">account_circle</i>
+            <label>Artist Name</label>
+          </div>
+
+          <div class="input-box readonly">
+            <input type="text" value="${escapeHtml(request.artist_email || 'N/A')}" readonly />
+            <i class="material-symbols-rounded">mail</i>
+            <label>Artist Email</label>
+          </div>
+
+          <div class="input-box readonly">
+            <input type="text" value="${escapeHtml(request.artist_phone || 'N/A')}" readonly />
+            <i class="material-symbols-rounded">phone</i>
+            <label>Artist Phone</label>
+          </div>
+
+          <div class="input-box readonly">
+            <input type="text" value="${escapeHtml(requestDate)}" readonly />
+            <i class="material-symbols-rounded">schedule</i>
+            <label>Requested At</label>
+          </div>
+
+          <div class="details-section-header">
+            <span class="material-symbols-rounded">image</span>
+            <span>Certificate File</span>
+          </div>
+
+          <div class="nic-images-row">
+            <div class="nic-image-box">
+              ${certificatePreview}
+              ${hasCertificateFile ? `<a href="${certificateUrl}" target="_blank" rel="noopener" class="certificate-file-link">Open Uploaded File</a>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeDramaRequestDetailsModal()">
+            Close
+          </button>
+          <button class="btn btn-approve" onclick="closeDramaRequestDetailsModal(); approveDramaRequest(${request.id}, '${escapeJsString(request.drama_name || 'this drama')}')">
+            <span class="material-symbols-rounded">check_circle</span>
+            Approve
+          </button>
+          <button class="btn btn-reject" onclick="closeDramaRequestDetailsModal(); showRejectDramaModal(${request.id}, '${escapeJsString(request.drama_name || 'this drama')}')">
+            <span class="material-symbols-rounded">cancel</span>
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const existingModal = document.getElementById('dramaRequestDetailModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeDramaRequestDetailsModal() {
+  const modal = document.getElementById('dramaRequestDetailModal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+async function approveDramaRequest(requestId, dramaName) {
+  const confirmed = await showConfirm(
+    `Approve drama request for ${dramaName}? This will create the drama automatically.`,
+    { title: 'Approve Drama Request', confirmText: 'Approve', type: 'success' }
+  );
+  if (!confirmed) return;
+
+  fetch(ROOT + '/admindashboard/approveDramaRequest', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ request_id: requestId })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        toastSuccess(data.message || 'Drama request approved successfully.');
+        if (typeof loadOverviewStats === 'function') {
+          loadOverviewStats();
+        }
+        loadDramaRequests();
+      } else {
+        toastError(data.message || 'Failed to approve drama request');
+      }
+    })
+    .catch(error => {
+      console.error('Error approving drama request:', error);
+      toastError('An error occurred while approving drama request');
+    });
+}
+
+function showRejectDramaModal(requestId, dramaName) {
+  const modalHTML = `
+    <div class="modal-overlay active" id="rejectDramaModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Reject Drama Request</h3>
+          <button class="modal-close" onclick="closeRejectDramaModal()">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to reject <strong>${escapeHtml(dramaName)}</strong>?</p>
+          <div class="form-group">
+            <label for="dramaRejectionReason">Reason for Rejection (optional)</label>
+            <textarea id="dramaRejectionReason" placeholder="Enter reason for rejection..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeRejectDramaModal()">Cancel</button>
+          <button class="btn btn-reject" onclick="rejectDramaRequest(${requestId})">Confirm Reject</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const existingModal = document.getElementById('rejectDramaModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeRejectDramaModal() {
+  const modal = document.getElementById('rejectDramaModal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+function rejectDramaRequest(requestId) {
+  const reason = document.getElementById('dramaRejectionReason')?.value || '';
+
+  fetch(ROOT + '/admindashboard/rejectDramaRequest', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ request_id: requestId, reason })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        closeRejectDramaModal();
+        toastSuccess(data.message || 'Drama request has been rejected');
+        if (typeof loadOverviewStats === 'function') {
+          loadOverviewStats();
+        }
+        loadDramaRequests();
+      } else {
+        toastError(data.message || 'Failed to reject drama request');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      toastError('An error occurred while rejecting drama request');
+    });
+}
+
+function escapeHtml(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function escapeJsString(value) {
+  return String(value ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, ' ')
+    .replace(/\r/g, ' ');
 }
 
 function renderRegistrations(registrations) {
@@ -307,6 +679,9 @@ async function approveUser(userId, userName) {
   .then(data => {
     if (data.success) {
       toastSuccess('User approved successfully!');
+      if (typeof loadOverviewStats === 'function') {
+        loadOverviewStats();
+      }
       loadRegistrations(); // Reload the list
     } else {
       toastError(data.message || 'Failed to approve user');
@@ -379,6 +754,9 @@ function rejectUser(userId) {
     if (data.success) {
       closeRejectModal();
       toastSuccess('User has been rejected');
+      if (typeof loadOverviewStats === 'function') {
+        loadOverviewStats();
+      }
       loadRegistrations(); // Reload the list
     } else {
       toastError(data.message || 'Failed to reject user');
@@ -397,3 +775,9 @@ window.closeRejectModal = closeRejectModal;
 window.rejectUser = rejectUser;
 window.showUserDetails = showUserDetails;
 window.closeUserDetailsModal = closeUserDetailsModal;
+window.approveDramaRequest = approveDramaRequest;
+window.showRejectDramaModal = showRejectDramaModal;
+window.closeRejectDramaModal = closeRejectDramaModal;
+window.rejectDramaRequest = rejectDramaRequest;
+window.showDramaRequestDetails = showDramaRequestDetails;
+window.closeDramaRequestDetailsModal = closeDramaRequestDetailsModal;

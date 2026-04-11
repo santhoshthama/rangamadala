@@ -25,15 +25,15 @@ body::before {
   right: 0;
   bottom: 0;
   background: rgba(26, 20, 16, 0.3);
+  -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
 }
 
 .back-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 25px;
-  position: relative;
-  z-index: 10;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 20;
 }
 
 .back-link {
@@ -55,6 +55,7 @@ body::before {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -69,6 +70,19 @@ body::before {
 .back-btn i {
   font-size: 14px;
 }
+
+@media (max-width: 768px) {
+  .back-container {
+    top: 12px;
+    left: 12px;
+  }
+
+  .back-btn {
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+}
+
 .wrapper {
   position: relative;
   z-index: 10;
@@ -76,6 +90,7 @@ body::before {
   max-width: 450px;
   background: rgba(26, 20, 16, 0.75);
   border: 2px solid rgba(212, 175, 55, 0.4);
+  -webkit-backdrop-filter: blur(25px);
   backdrop-filter: blur(25px);
   box-shadow: 0 8px 40px rgba(212, 175, 55, 0.25), 0 0 60px rgba(0, 0, 0, 0.4);
   color: #f5f0e8;
@@ -151,6 +166,7 @@ body::before {
   color: #d4af37;
   cursor: pointer;
   transition: all 0.3s ease;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -172,6 +188,7 @@ body::before {
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   transition: all 0.3s ease;
 }

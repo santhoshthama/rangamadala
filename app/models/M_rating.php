@@ -4,10 +4,25 @@ class M_rating
 {
     protected $db;
     protected $table = 'drama_ratings';
+    protected $tableReady = false;
 
     public function __construct()
     {
         $this->db = new Database();
+        $this->tableReady = true;
+    }
+
+    private function canUseTable()
+    {
+        return $this->tableReady;
+    }
+
+    private function isMissingRatingsTableError($e)
+    {
+        $message = $e instanceof Throwable ? $e->getMessage() : (string)$e;
+        return stripos($message, '42S02') !== false
+            || stripos($message, '1146') !== false
+            || stripos($message, 'drama_ratings') !== false;
     }
 
     /**
@@ -20,31 +35,44 @@ class M_rating
      */
     public function submitRating($drama_id, $user_id, $rating, $comment = null)
     {
+        if (!$this->canUseTable()) {
+            return false;
+        }
+
         // Validate inputs
         if (empty($drama_id) || !is_numeric($drama_id)) return false;
         if (empty($user_id) || !is_numeric($user_id)) return false;
         if (empty($rating) || $rating < 1 || $rating > 5) return false;
 
         // Check if user already rated this drama
-        $this->db->query("SELECT id FROM {$this->table} WHERE drama_id = :drama_id AND user_id = :user_id");
-        $this->db->bind(':drama_id', $drama_id);
-        $this->db->bind(':user_id', $user_id);
-        $existing = $this->db->single();
+        try {
+            $this->db->query("SELECT id FROM {$this->table} WHERE drama_id = :drama_id AND user_id = :user_id");
+            $this->db->bind(':drama_id', $drama_id);
+            $this->db->bind(':user_id', $user_id);
+            $existing = $this->db->single();
 
-        if ($existing) {
-            // Update existing rating
-            $this->db->query("UPDATE {$this->table} SET rating = :rating, comment = :comment, updated_at = NOW() WHERE drama_id = :drama_id AND user_id = :user_id");
-        } else {
-            // Insert new rating
-            $this->db->query("INSERT INTO {$this->table} (drama_id, user_id, rating, comment, created_at, updated_at) VALUES (:drama_id, :user_id, :rating, :comment, NOW(), NOW())");
+            if ($existing) {
+                // Update existing rating
+                $this->db->query("UPDATE {$this->table} SET rating = :rating, comment = :comment, updated_at = NOW() WHERE drama_id = :drama_id AND user_id = :user_id");
+            } else {
+                // Insert new rating
+                $this->db->query("INSERT INTO {$this->table} (drama_id, user_id, rating, comment, created_at, updated_at) VALUES (:drama_id, :user_id, :rating, :comment, NOW(), NOW())");
+            }
+
+            $this->db->bind(':drama_id', $drama_id);
+            $this->db->bind(':user_id', $user_id);
+            $this->db->bind(':rating', $rating);
+            $this->db->bind(':comment', $comment);
+
+            return $this->db->execute();
+        } catch (Throwable $e) {
+            if ($this->isMissingRatingsTableError($e)) {
+                $this->tableReady = false;
+                error_log('M_rating::submitRating skipped because drama_ratings table is missing.');
+                return false;
+            }
+            throw $e;
         }
-
-        $this->db->bind(':drama_id', $drama_id);
-        $this->db->bind(':user_id', $user_id);
-        $this->db->bind(':rating', $rating);
-        $this->db->bind(':comment', $comment);
-
-        return $this->db->execute();
     }
 
     /**
@@ -54,20 +82,48 @@ class M_rating
      */
     public function getDramaRatingSummary($drama_id)
     {
-        $this->db->query("
-            SELECT 
-                COUNT(id) as total_ratings,
-                ROUND(AVG(rating), 2) as average_rating,
-                COUNT(CASE WHEN rating = 5 THEN 1 END) as five_star_count,
-                COUNT(CASE WHEN rating = 4 THEN 1 END) as four_star_count,
-                COUNT(CASE WHEN rating = 3 THEN 1 END) as three_star_count,
-                COUNT(CASE WHEN rating = 2 THEN 1 END) as two_star_count,
-                COUNT(CASE WHEN rating = 1 THEN 1 END) as one_star_count
-            FROM {$this->table}
-            WHERE drama_id = :drama_id
-        ");
-        $this->db->bind(':drama_id', $drama_id);
-        return $this->db->single();
+        if (!$this->canUseTable()) {
+            return (object)[
+                'total_ratings' => 0,
+                'average_rating' => null,
+                'five_star_count' => 0,
+                'four_star_count' => 0,
+                'three_star_count' => 0,
+                'two_star_count' => 0,
+                'one_star_count' => 0,
+            ];
+        }
+
+        try {
+            $this->db->query("
+                SELECT 
+                    COUNT(id) as total_ratings,
+                    ROUND(AVG(rating), 2) as average_rating,
+                    COUNT(CASE WHEN rating = 5 THEN 1 END) as five_star_count,
+                    COUNT(CASE WHEN rating = 4 THEN 1 END) as four_star_count,
+                    COUNT(CASE WHEN rating = 3 THEN 1 END) as three_star_count,
+                    COUNT(CASE WHEN rating = 2 THEN 1 END) as two_star_count,
+                    COUNT(CASE WHEN rating = 1 THEN 1 END) as one_star_count
+                FROM {$this->table}
+                WHERE drama_id = :drama_id
+            ");
+            $this->db->bind(':drama_id', $drama_id);
+            return $this->db->single();
+        } catch (Throwable $e) {
+            if ($this->isMissingRatingsTableError($e)) {
+                $this->tableReady = false;
+                return (object)[
+                    'total_ratings' => 0,
+                    'average_rating' => null,
+                    'five_star_count' => 0,
+                    'four_star_count' => 0,
+                    'three_star_count' => 0,
+                    'two_star_count' => 0,
+                    'one_star_count' => 0,
+                ];
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -79,34 +135,46 @@ class M_rating
      */
     public function getDramaRatings($drama_id, $limit = 10, $offset = 0)
     {
-        $this->db->query("
-            SELECT 
-                dr.id,
-                dr.drama_id,
-                dr.user_id,
-                dr.rating,
-                dr.comment,
-                dr.helpful_count,
-                dr.created_at,
-                u.full_name,
-                u.email
-            FROM {$this->table} dr
-            JOIN users u ON dr.user_id = u.id
-            WHERE dr.drama_id = :drama_id
-            ORDER BY dr.created_at DESC
-            LIMIT :limit OFFSET :offset
-        ");
-        $this->db->bind(':drama_id', $drama_id);
-        $this->db->bind(':limit', (int)$limit);
-        $this->db->bind(':offset', (int)$offset);
-        
-        $results = $this->db->resultSet();
-        // Convert to array format
-        $ratings = [];
-        foreach ($results as $row) {
-            $ratings[] = (array)$row;
+        if (!$this->canUseTable()) {
+            return [];
         }
-        return $ratings;
+
+        try {
+            $this->db->query("
+                SELECT 
+                    dr.id,
+                    dr.drama_id,
+                    dr.user_id,
+                    dr.rating,
+                    dr.comment,
+                    dr.helpful_count,
+                    dr.created_at,
+                    u.full_name,
+                    u.email
+                FROM {$this->table} dr
+                JOIN users u ON dr.user_id = u.id
+                WHERE dr.drama_id = :drama_id
+                ORDER BY dr.created_at DESC
+                LIMIT :limit OFFSET :offset
+            ");
+            $this->db->bind(':drama_id', $drama_id);
+            $this->db->bind(':limit', (int)$limit);
+            $this->db->bind(':offset', (int)$offset);
+            
+            $results = $this->db->resultSet();
+            // Convert to array format
+            $ratings = [];
+            foreach ($results as $row) {
+                $ratings[] = (array)$row;
+            }
+            return $ratings;
+        } catch (Throwable $e) {
+            if ($this->isMissingRatingsTableError($e)) {
+                $this->tableReady = false;
+                return [];
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -117,10 +185,22 @@ class M_rating
      */
     public function getUserDramaRating($drama_id, $user_id)
     {
-        $this->db->query("SELECT * FROM {$this->table} WHERE drama_id = :drama_id AND user_id = :user_id");
-        $this->db->bind(':drama_id', $drama_id);
-        $this->db->bind(':user_id', $user_id);
-        return $this->db->single();
+        if (!$this->canUseTable()) {
+            return null;
+        }
+
+        try {
+            $this->db->query("SELECT * FROM {$this->table} WHERE drama_id = :drama_id AND user_id = :user_id");
+            $this->db->bind(':drama_id', $drama_id);
+            $this->db->bind(':user_id', $user_id);
+            return $this->db->single();
+        } catch (Throwable $e) {
+            if ($this->isMissingRatingsTableError($e)) {
+                $this->tableReady = false;
+                return null;
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -131,6 +211,10 @@ class M_rating
      */
     public function hasUserRated($drama_id, $user_id)
     {
+        if (!$this->canUseTable()) {
+            return false;
+        }
+
         $this->db->query("SELECT COUNT(*) as count FROM {$this->table} WHERE drama_id = :drama_id AND user_id = :user_id");
         $this->db->bind(':drama_id', $drama_id);
         $this->db->bind(':user_id', $user_id);
@@ -145,6 +229,10 @@ class M_rating
      */
     public function markAsHelpful($rating_id)
     {
+        if (!$this->canUseTable()) {
+            return false;
+        }
+
         $this->db->query("UPDATE {$this->table} SET helpful_count = helpful_count + 1, is_helpful = 1 WHERE id = :id");
         $this->db->bind(':id', $rating_id);
         return $this->db->execute();
@@ -158,6 +246,10 @@ class M_rating
      */
     public function deleteRating($rating_id, $user_id)
     {
+        if (!$this->canUseTable()) {
+            return false;
+        }
+
         $this->db->query("DELETE FROM {$this->table} WHERE id = :id AND user_id = :user_id");
         $this->db->bind(':id', $rating_id);
         $this->db->bind(':user_id', $user_id);
@@ -171,6 +263,10 @@ class M_rating
      */
     public function getTopRatedDramas($limit = 10)
     {
+        if (!$this->canUseTable()) {
+            return [];
+        }
+
         $this->db->query("
             SELECT 
                 d.id,
@@ -197,6 +293,19 @@ class M_rating
      */
     public function getRatingStatistics()
     {
+        if (!$this->canUseTable()) {
+            return (object)[
+                'total_dramas_rated' => 0,
+                'total_ratings' => 0,
+                'overall_average' => null,
+                'total_five_star' => 0,
+                'total_four_star' => 0,
+                'total_three_star' => 0,
+                'total_two_star' => 0,
+                'total_one_star' => 0,
+            ];
+        }
+
         $this->db->query("
             SELECT 
                 COUNT(DISTINCT drama_id) as total_dramas_rated,
@@ -219,6 +328,10 @@ class M_rating
      */
     public function getRecentRatings($limit = 20)
     {
+        if (!$this->canUseTable()) {
+            return [];
+        }
+
         $this->db->query("
             SELECT 
                 dr.id,
@@ -246,10 +359,22 @@ class M_rating
      */
     public function countDramaRatings($drama_id)
     {
-        $this->db->query("SELECT COUNT(*) as count FROM {$this->table} WHERE drama_id = :drama_id");
-        $this->db->bind(':drama_id', $drama_id);
-        $row = $this->db->single();
-        return $row ? (int)$row->count : 0;
+        if (!$this->canUseTable()) {
+            return 0;
+        }
+
+        try {
+            $this->db->query("SELECT COUNT(*) as count FROM {$this->table} WHERE drama_id = :drama_id");
+            $this->db->bind(':drama_id', $drama_id);
+            $row = $this->db->single();
+            return $row ? (int)$row->count : 0;
+        } catch (Throwable $e) {
+            if ($this->isMissingRatingsTableError($e)) {
+                $this->tableReady = false;
+                return 0;
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -259,6 +384,17 @@ class M_rating
      */
     public function getRatingDistribution($drama_id)
     {
+        if (!$this->canUseTable()) {
+            return (object)[
+                'one_star' => 0,
+                'two_star' => 0,
+                'three_star' => 0,
+                'four_star' => 0,
+                'five_star' => 0,
+                'total' => 0,
+            ];
+        }
+
         $this->db->query("
             SELECT 
                 COUNT(CASE WHEN rating = 1 THEN 1 END) as one_star,
@@ -285,6 +421,10 @@ class M_rating
      */
     public function searchRatings($drama_id, $min_rating = null, $max_rating = null, $has_comment = null, $limit = 20)
     {
+        if (!$this->canUseTable()) {
+            return [];
+        }
+
         $sql = "
             SELECT 
                 dr.*,

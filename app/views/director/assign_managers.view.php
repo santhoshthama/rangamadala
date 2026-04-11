@@ -33,7 +33,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Production Manager - <?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?> - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -44,43 +44,43 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <ul class="menu">
             <li>
                 <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($drama_id) ?>">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($drama_id) ?>">
-                    <i class="fas fa-film"></i>
+                    <i class="bx bx-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($drama_id) ?>">
-                    <i class="fas fa-users"></i>
+                    <i class="bx bx-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($drama_id) ?>">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($drama_id) ?>">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($drama_id) ?>">
-                    <i class="fas fa-dollar-sign"></i>
+                    <i class="bx bx-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
@@ -90,7 +90,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <!-- Main Content -->
     <main class="main--content">
         <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $drama_id ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -102,18 +102,18 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
             <div class="user--info">
                 <div class="role-badge">
-                    <i class="fas fa-video"></i> Director
+                    <i class="bx bx-video"></i> Director
                 </div>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
                 <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                 </a>
             </div>
         </div>
 
         <?php if (isset($_SESSION['message'])): ?>
             <div class="alert alert-<?= $_SESSION['message_type'] ?? 'info' ?>">
-                <i class="fas fa-<?= $_SESSION['message_type'] === 'success' ? 'check-circle' : 'exclamation-circle' ?>"></i>
+                <i class="bx bx-<?= $_SESSION['message_type'] === 'success' ? 'check-circle' : 'exclamation-circle' ?>"></i>
                 <?= esc($_SESSION['message']) ?>
             </div>
             <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
@@ -121,7 +121,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
         <!-- Info Box -->
         <div class="info-box" style="margin-bottom: 30px;">
-            <i class="fas fa-info-circle"></i>
+            <i class="bx bx-info-circle"></i>
             <strong>About Production Managers:</strong> The Production Manager oversees services, budget, and theater bookings for this drama. You can assign one PM at a time.
         </div>
 
@@ -132,15 +132,15 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <!-- Current Manager Section -->
                     <div class="card-section">
                         <h3>
-                            <span><i class="fas fa-user-tie"></i> Current Production Manager</span>
+                            <span><i class="bx bx-user-tie"></i> Current Production Manager</span>
                             <?php if ($currentManager): ?>
                                 <button class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px; cursor: not-allowed; opacity: 0.7;" title="Remove the current PM before assigning a new one" disabled>
-                                    <i class="fas fa-exchange-alt"></i>
+                                    <i class="bx bx-exchange-alt"></i>
                                     Change Manager
                                 </button>
                             <?php else: ?>
                                 <a href="<?= ROOT ?>/director/search_managers?drama_id=<?= $drama_id ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
-                                    <i class="fas fa-user-plus"></i>
+                                    <i class="bx bx-user-plus"></i>
                                     Assign Manager
                                 </a>
                             <?php endif; ?>
@@ -162,7 +162,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                         <form method="POST" action="<?= ROOT ?>/director/remove_manager?drama_id=<?= $drama_id ?>" 
                                               style="display: inline;" onsubmit="return confirm('Are you sure you want to remove this Production Manager?');">
                                             <button type="submit" class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;">
-                                                <i class="fas fa-user-times"></i>
+                                                <i class="bx bx-user-times"></i>
                                                 Remove
                                             </button>
                                         </form>
@@ -170,7 +170,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 </li>
                             <?php else: ?>
                                 <li style="text-align: center; padding: 40px 20px; color: var(--muted);">
-                                    <i class="fas fa-user-slash" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
+                                    <i class="bx bx-user-slash" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
                                     <strong>No Production Manager Assigned</strong>
                                     <p style="margin: 10px 0 0 0;">Click "Assign Manager" button above to assign one.</p>
                                 </li>
@@ -181,7 +181,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <!-- Manager Permissions (if assigned) -->
                     <?php if ($currentManager): ?>
                         <div class="card-section">
-                            <h3><i class="fas fa-key"></i> Manager Permissions</h3>
+                            <h3><i class="bx bx-key"></i> Manager Permissions</h3>
                             <div class="drama-info">
                                 <div class="service-info-item">
                                     <span class="service-info-label">Services Management</span>
@@ -206,7 +206,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <!-- Pending Requests Section -->
                     <?php if (!empty($pendingRequests)): ?>
                         <div class="card-section">
-                            <h3><i class="fas fa-clock"></i> Pending Manager Requests (<?= count($pendingRequests) ?>)</h3>
+                            <h3><i class="bx bx-clock"></i> Pending Manager Requests (<?= count($pendingRequests) ?>)</h3>
                             <ul>
                                 <?php foreach ($pendingRequests as $request): ?>
                                     <li>

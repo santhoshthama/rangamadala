@@ -83,8 +83,8 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($role->role_name ?? 'Role') ?> - Role Details - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         .card { background: #fff; border-radius: 18px; padding: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-sm, 0 6px 18px rgba(15, 23, 42, .08)); margin-bottom: 24px; }
         .grid-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
         .list-item { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #fff; }
@@ -110,18 +110,18 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <aside class="sidebar">
         <div class="logo"><h2>🎭</h2></div>
         <ul class="menu">
-            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-film"></i><span>Drama Details</span></a></li>
-            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-users"></i><span>Artist Roles</span></a></li>
-            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-user-tie"></i><span>Production Manager</span></a></li>
-            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
-            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-dollar-sign"></i><span>Services & Budget</span></a></li>
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
+            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
+            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-film"></i><span>Drama Details</span></a></li>
+            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-users"></i><span>Artist Roles</span></a></li>
+            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-user-tie"></i><span>Production Manager</span></a></li>
+            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-calendar-alt"></i><span>Schedule</span></a></li>
+            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-dollar-sign"></i><span>Services & Budget</span></a></li>
+            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bx-arrow-left"></i><span>Back to Profile</span></a></li>
         </ul>
     </aside>
 
     <main class="main--content">
-        <a class="back-button" href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-arrow-left"></i>Back to Manage Roles</a>
+        <a class="back-button" href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-arrow-left"></i>Back to Manage Roles</a>
 
         <div class="header--wrapper">
             <div class="header--title">
@@ -130,11 +130,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
             <div class="user--info">
                 <div class="role-badge">
-                    <i class="fas fa-video"></i> Director
+                    <i class="bx bx-video"></i> Director
                 </div>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
                 <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                 </a>
             </div>
         </div>
@@ -162,20 +162,20 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <div class="actions-inline">
                     <?php $isRoleFull = (int)($role->positions_filled ?? 0) >= (int)($role->positions_available ?? 0); ?>
                     <?php if ($isRoleFull): ?>
-                        <button class="btn btn-secondary" disabled title="All positions filled"><i class="fas fa-user-slash"></i>Role Full</button>
+                        <button class="btn btn-secondary" disabled title="All positions filled"><i class="bx bx-user-slash"></i>Role Full</button>
                     <?php else: ?>
-                        <a class="btn btn-secondary" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>"><i class="fas fa-user-search"></i>Find Artists</a>
+                        <a class="btn btn-secondary" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>"><i class="bx bx-user-search"></i>Find Artists</a>
                     <?php endif; ?>
                     <?php if ((int)($role->is_published ?? 0) === 1): ?>
                         <form class="js-role-action" data-action="unpublish" action="<?= ROOT ?>/director/unpublish_vacancy?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Unpublish this vacancy?">
                             <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
-                            <button type="submit" class="btn btn-secondary"><i class="fas fa-eye-slash"></i>Unpublish</button>
+                            <button type="submit" class="btn btn-secondary"><i class="bx bx-eye-slash"></i>Unpublish</button>
                         </form>
                     <?php else: ?>
                         <form class="js-role-action" data-action="publish" action="<?= ROOT ?>/director/publish_vacancy?drama_id=<?= esc($dramaId) ?>" method="POST">
                             <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
                             <input type="hidden" name="message" value="">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-bullhorn"></i>Publish Vacancy</button>
+                            <button type="submit" class="btn btn-primary"><i class="bx bx-bullhorn"></i>Publish Vacancy</button>
                         </form>
                     <?php endif; ?>
                 </div>
@@ -191,7 +191,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             <?php endif; ?>
             <?php if ($isRoleFull): ?>
                 <div style="margin-top: 16px; padding: 12px 16px; background: rgba(255,193,7,0.1); border-left: 4px solid #ffc107; border-radius: 8px; font-size: 14px;">
-                    <i class="fas fa-info-circle" style="color: #f57c00; margin-right: 8px;"></i>
+                    <i class="bx bx-info-circle" style="color: #f57c00; margin-right: 8px;"></i>
                     <strong>All positions filled.</strong> To assign a new artist, you must first remove a currently assigned artist from this role.
                 </div>
             <?php endif; ?>
@@ -246,7 +246,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <?php endif; ?>
                 </div>
                 <div style="grid-column: 1 / -1;">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>Save Changes</button>
+                    <button type="submit" class="btn btn-primary"><i class="bx bx-save"></i>Save Changes</button>
                 </div>
             </form>
         </section>
@@ -255,7 +255,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             <h3 style="margin-top: 0;">Assigned Artists (<?= count($assignments) ?>)</h3>
             <?php if ($isRoleFull): ?>
                 <div style="padding: 10px 14px; margin-bottom: 16px; background: rgba(76,175,80,0.1); border-left: 4px solid #4caf50; border-radius: 6px; font-size: 13px; color: #256029;">
-                    <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+                    <i class="bx bx-check-circle" style="margin-right: 8px;"></i>
                     <strong>All positions filled.</strong> To assign different artists, remove one of the current assignments first.
                 </div>
             <?php endif; ?>
@@ -272,19 +272,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 </div>
                                 <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
                                     <?php if (!empty($assignment->artist_email)): ?>
-                                        <div><i class="fas fa-envelope" style="width: 16px; margin-right: 6px;"></i><?= esc($assignment->artist_email) ?></div>
+                                        <div><i class="bx bx-envelope" style="width: 16px; margin-right: 6px;"></i><?= esc($assignment->artist_email) ?></div>
                                     <?php endif; ?>
                                     <?php if (!empty($assignment->artist_phone)): ?>
-                                        <div><i class="fas fa-phone" style="width: 16px; margin-right: 6px;"></i><?= esc($assignment->artist_phone) ?></div>
+                                        <div><i class="bx bx-phone" style="width: 16px; margin-right: 6px;"></i><?= esc($assignment->artist_phone) ?></div>
                                     <?php endif; ?>
-                                    <div><i class="fas fa-calendar" style="width: 16px; margin-right: 6px;"></i>Assigned on <?= esc(date('M d, Y', strtotime($assignment->assigned_at ?? 'now'))) ?></div>
+                                    <div><i class="bx bx-calendar" style="width: 16px; margin-right: 6px;"></i>Assigned on <?= esc(date('M d, Y', strtotime($assignment->assigned_at ?? 'now'))) ?></div>
                                 </div>
                             </div>
                             <form action="<?= ROOT ?>/director/remove_assignment?drama_id=<?= esc($dramaId) ?>" method="POST" class="js-role-action" data-action="remove" data-confirm="Remove <?= esc($assignment->artist_name ?? 'this artist') ?> from this role?">
                                 <input type="hidden" name="assignment_id" value="<?= esc($assignment->id ?? 0) ?>">
                                 <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
                                 <input type="hidden" name="return_to" value="role_details">
-                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-user-times"></i>Remove</button>
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="bx bx-user-times"></i>Remove</button>
                             </form>
                         </div>
                     </div>
@@ -336,7 +336,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 <div style="font-size: 13px; color: var(--muted);">Applied <?= esc(date('Y-m-d H:i', strtotime($application->applied_at ?? 'now'))) ?></div>
                                 <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
                                     <span class="status-chip <?= $interviewScheduled ? 'ready' : 'pending' ?>">
-                                        <i class="fas fa-calendar-alt"></i>
+                                        <i class="bx bx-calendar-alt"></i>
                                         <?= $interviewScheduled ? 'Interview Scheduled' : 'Interview Pending' ?>
                                     </span>
                                 </div>
@@ -345,7 +345,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 <?php endif; ?>
                                 <?php if ($interviewScheduled): ?>
                                     <div class="interview-summary">
-                                        <i class="fas fa-video"></i>
+                                        <i class="bx bx-video"></i>
                                         Scheduled for <?= esc(date('Y-m-d H:i', strtotime($application->interview_at))) ?>
                                         <strong style="text-transform: capitalize;"><?= esc($interviewStatus === '' ? 'pending' : $interviewStatus) ?></strong>
                                     </div>
@@ -354,7 +354,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                     <div class="interview-confirmation" style="margin-top: 10px; padding: 10px; border-left: 4px solid <?= $confirmationColor ?>; background: <?= $confirmationBackground ?>; border-radius: 6px;">
                                         <div style="display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center;">
                                             <strong style="color: <?= $confirmationColor ?>;">
-                                                <i class="fas <?= $confirmationStatus === 'confirmed' ? 'fa-user-check' : 'fa-user-times' ?>"></i>
+                                                <i class="bx <?= $confirmationStatus === 'confirmed' ? 'bx-user-check' : 'bx-user-times' ?>"></i>
                                                 <?= $confirmationStatus === 'confirmed' ? 'Artist confirmed attendance' : 'Artist declined the interview' ?>
                                             </strong>
                                             <?php if (!$confirmationSeen): ?>
@@ -376,17 +376,17 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 </span>
                                 <div class="application-actions">
                                     <a class="btn btn-secondary btn-sm" href="<?= ROOT ?>/director/application_profile?drama_id=<?= esc($dramaId) ?>&application_id=<?= esc($application->id) ?>">
-                                        <i class="fas fa-id-card"></i>View Profile
+                                        <i class="bx bx-id-card"></i>View Profile
                                     </a>
                                     <?php if ($applicationStatus === 'pending'): ?>
                                         <div class="actions-inline" style="justify-content: flex-end;">
                                             <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
                                                 <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i>Accept</button>
+                                                <button type="submit" class="btn btn-success btn-sm"><i class="bx bx-check"></i>Accept</button>
                                             </form>
                                             <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
                                                 <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i>Reject</button>
+                                                <button type="submit" class="btn btn-danger btn-sm"><i class="bx bx-times"></i>Reject</button>
                                             </form>
                                         </div>
                                     <?php endif; ?>
