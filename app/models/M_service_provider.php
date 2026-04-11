@@ -2,6 +2,8 @@
 
 class M_service_provider extends M_signup {
 
+    private $tableExistsCache = [];
+
     public function __construct() {
         parent::__construct();
     }
@@ -209,21 +211,26 @@ class M_service_provider extends M_signup {
         // Prefer the declared service_type if present
         if (isset($map[$key])) {
             $table = $map[$key];
-            $this->db->query("SELECT * FROM {$table} WHERE service_id = :service_id");
-            $this->db->bind(':service_id', $service_id);
-            $detail = $this->db->single();
-            if ($detail) {
-                // For 'other' service type, preserve the user-entered service_type from database
-                // For other types, set the category name
-                if ($key !== 'other') {
-                    $detail->service_type = $service_type ?: ucfirst($key);
+            if ($this->tableExists($table)) {
+                $this->db->query("SELECT * FROM {$table} WHERE service_id = :service_id");
+                $this->db->bind(':service_id', $service_id);
+                $detail = $this->db->single();
+                if ($detail) {
+                    // For 'other' service type, preserve the user-entered service_type from database
+                    // For other types, set the category name
+                    if ($key !== 'other') {
+                        $detail->service_type = $service_type ?: ucfirst($key);
+                    }
+                    return $detail;
                 }
-                return $detail;
             }
         }
 
         // Fallback: detect by scanning all detail tables (handles older rows without service_type)
         foreach ($map as $label => $table) {
+            if (!$this->tableExists($table)) {
+                continue;
+            }
             $this->db->query("SELECT * FROM {$table} WHERE service_id = :service_id");
             $this->db->bind(':service_id', $service_id);
             $detail = $this->db->single();
@@ -426,6 +433,11 @@ class M_service_provider extends M_signup {
             return;
         }
 
+        if (!$this->tableExists($detail['table'])) {
+            error_log('insertServiceDetail skipped. Missing table: ' . $detail['table']);
+            return;
+        }
+
         $columns = array_keys($detail['data']);
         $columnsSql = empty($columns) ? '' : ',' . implode(',', $columns);
         $placeholders = empty($columns) ? '' : ',:' . implode(',:', $columns);
@@ -441,6 +453,11 @@ class M_service_provider extends M_signup {
 
     private function upsertServiceDetail(int $serviceId, array $detail): void {
         if (empty($detail['table']) || !isset($detail['data'])) {
+            return;
+        }
+
+        if (!$this->tableExists($detail['table'])) {
+            error_log('upsertServiceDetail skipped. Missing table: ' . $detail['table']);
             return;
         }
 
@@ -600,13 +617,42 @@ class M_service_provider extends M_signup {
 
     // Browse/Search Methods for Production Managers
     public function getAllProvidersWithServices($filters = []) {
+        $detailTableMap = [
+            ['table' => 'service_theater_details', 'alias' => 'std', 'service_type' => 'Theater Production'],
+            ['table' => 'service_lighting_details', 'alias' => 'sld', 'service_type' => 'Lighting Design'],
+            ['table' => 'service_sound_details', 'alias' => 'ssd', 'service_type' => 'Sound Systems'],
+            ['table' => 'service_video_details', 'alias' => 'svd', 'service_type' => 'Video Production'],
+            ['table' => 'service_set_details', 'alias' => 'ssetd', 'service_type' => 'Set Design'],
+            ['table' => 'service_costume_details', 'alias' => 'scd', 'service_type' => 'Costume Design'],
+            ['table' => 'service_makeup_details', 'alias' => 'smd', 'service_type' => 'Makeup & Hair'],
+            ['table' => 'service_other_details', 'alias' => 'sod', 'service_type' => 'Other'],
+        ];
+
+        $ratePerHourParts = [];
+        $rateTypeParts = [];
+        $dynamicJoins = '';
+
+        foreach ($detailTableMap as $def) {
+            if (!$this->tableExists($def['table'])) {
+                continue;
+            }
+            $alias = $def['alias'];
+            $serviceType = addslashes($def['service_type']);
+            $dynamicJoins .= "\n                LEFT JOIN {$def['table']} {$alias} ON s.id = {$alias}.service_id AND st.service_type = '{$serviceType}'";
+            $ratePerHourParts[] = "{$alias}.rate_per_hour";
+            $rateTypeParts[] = "{$alias}.rate_type";
+        }
+
+        $rateExpr = !empty($ratePerHourParts) ? ('COALESCE(' . implode(', ', $ratePerHourParts) . ')') : 'NULL';
+        $rateTypeExpr = !empty($rateTypeParts) ? ('COALESCE(' . implode(', ', $rateTypeParts) . ')') : "'hourly'";
+
         $sql = "SELECT DISTINCT sp.*, 
                 GROUP_CONCAT(DISTINCT st.service_type SEPARATOR ', ') as services,
-                GROUP_CONCAT(DISTINCT CONCAT(std.rate_per_hour, '|', std.rate_type) ORDER BY std.rate_per_hour SEPARATOR ', ') as rates
+                GROUP_CONCAT(DISTINCT CONCAT({$rateExpr}, '|', {$rateTypeExpr}) ORDER BY {$rateExpr} SEPARATOR ', ') as rates
                 FROM serviceprovider sp
                 LEFT JOIN services s ON sp.user_id = s.provider_id
                 LEFT JOIN service_types st ON s.service_type_id = st.service_type_id
-                LEFT JOIN service_theater_details std ON s.id = std.service_id AND st.service_type = 'Theater Production'
+                {$dynamicJoins}
                 WHERE 1=1";
 
         // Apply filters
@@ -620,12 +666,12 @@ class M_service_provider extends M_signup {
             $sql .= " AND sp.availability = :availability";
         }
         if (!empty($filters['min_rate']) || !empty($filters['max_rate'])) {
-            $sql .= " AND std.rate_per_hour IS NOT NULL";
+            $sql .= " AND {$rateExpr} IS NOT NULL";
             if (!empty($filters['min_rate'])) {
-                $sql .= " AND std.rate_per_hour >= :min_rate";
+                $sql .= " AND {$rateExpr} >= :min_rate";
             }
             if (!empty($filters['max_rate'])) {
-                $sql .= " AND std.rate_per_hour <= :max_rate";
+                $sql .= " AND {$rateExpr} <= :max_rate";
             }
         }
 
@@ -652,6 +698,22 @@ class M_service_provider extends M_signup {
         return $this->db->resultSet();
     }
 
+    private function tableExists(string $tableName): bool {
+        if (isset($this->tableExistsCache[$tableName])) {
+            return $this->tableExistsCache[$tableName];
+        }
+
+        $this->db->query("SELECT COUNT(*) AS cnt
+                          FROM information_schema.tables
+                          WHERE table_schema = DATABASE() AND table_name = :table_name");
+        $this->db->bind(':table_name', $tableName);
+        $row = $this->db->single();
+
+        $exists = $row && isset($row->cnt) && (int)$row->cnt > 0;
+        $this->tableExistsCache[$tableName] = $exists;
+        return $exists;
+    }
+
     public function getAllLocations() {
         $this->db->query("SELECT DISTINCT location FROM serviceprovider WHERE location IS NOT NULL ORDER BY location ASC");
         return $this->db->resultSet();
@@ -671,4 +733,5 @@ class M_service_provider extends M_signup {
         $this->db->query("SELECT * FROM projects WHERE provider_id = :provider_id ORDER BY year DESC");
         $this->db->bind(':provider_id', $provider_id);
         return $this->db->resultSet();
-    }}
+    }
+}
