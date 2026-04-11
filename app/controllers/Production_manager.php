@@ -30,7 +30,11 @@ class Production_manager{
         // Calculate budget statistics
         $totalBudget = 0;
         $budgetUsed = 0;
-        // TODO: Fetch from budget tracking model
+        $budgetModel = $this->getModel('M_budget');
+        if ($budgetModel) {
+            $totalBudget = $budgetModel->getTotalBudget($drama->id);
+            $budgetUsed = $budgetModel->getTotalSpent($drama->id);
+        }
         
         $data = [
             'drama' => $drama,
@@ -170,6 +174,240 @@ class Production_manager{
         ];
         
         $this->view('production_manager/manage_budget', $data);
+    }
+
+    public function get_budget_items()
+    {
+        header('Content-Type: application/json');
+        $drama = $this->authorizeDrama();
+
+        $budgetModel = $this->getModel('M_budget');
+        if (!$budgetModel) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Budget model not found']);
+            return;
+        }
+
+        $items = $budgetModel->getBudgetByDrama($drama->id);
+        $totalBudget = $budgetModel->getTotalBudget($drama->id);
+        $totalSpent = $budgetModel->getTotalSpent($drama->id);
+        $remainingBudget = $totalBudget - $totalSpent;
+        $categorySummary = $budgetModel->getBudgetSummaryByCategory($drama->id);
+
+        echo json_encode([
+            'success' => true,
+            'items' => $items,
+            'summary' => [
+                'totalBudget' => $totalBudget,
+                'totalSpent' => $totalSpent,
+                'remainingBudget' => $remainingBudget,
+                'percentSpent' => $totalBudget > 0 ? round(($totalSpent / $totalBudget) * 100) : 0,
+                'categorySummary' => $categorySummary,
+            ],
+        ]);
+    }
+
+    public function get_budget_item()
+    {
+        header('Content-Type: application/json');
+        $drama = $this->authorizeDrama();
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid budget item id']);
+            return;
+        }
+
+        $budgetModel = $this->getModel('M_budget');
+        if (!$budgetModel) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Budget model not found']);
+            return;
+        }
+
+        $item = $budgetModel->getBudgetItemById($id);
+        if (!$item || (int)$item->drama_id !== (int)$drama->id) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Budget item not found']);
+            return;
+        }
+
+        echo json_encode(['success' => true, 'item' => $item]);
+    }
+
+    public function save_budget_item()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+        $budgetModel = $this->getModel('M_budget');
+        if (!$budgetModel) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Budget model not found']);
+            return;
+        }
+
+        $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int)$_POST['id'] : null;
+        $itemName = trim((string)($_POST['item_name'] ?? ''));
+        $category = trim((string)($_POST['category'] ?? ''));
+        $allocatedAmount = isset($_POST['allocated_amount']) ? (float)$_POST['allocated_amount'] : null;
+        $spentAmount = isset($_POST['spent_amount']) && $_POST['spent_amount'] !== '' ? (float)$_POST['spent_amount'] : 0.0;
+        $status = trim((string)($_POST['status'] ?? 'pending'));
+        $notes = trim((string)($_POST['notes'] ?? ''));
+
+        $allowedCategories = ['venue', 'technical', 'costume', 'marketing', 'other'];
+        $allowedStatuses = ['pending', 'approved', 'completed', 'cancelled'];
+
+        if ($itemName === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Item name is required']);
+            return;
+        }
+
+        if (!in_array($category, $allowedCategories, true)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid category']);
+            return;
+        }
+
+        if ($allocatedAmount === null || $allocatedAmount < 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Allocated amount must be a valid non-negative number']);
+            return;
+        }
+
+        if ($spentAmount < 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Spent amount must be non-negative']);
+            return;
+        }
+
+        if ($spentAmount > $allocatedAmount) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Spent amount cannot exceed allocated amount']);
+            return;
+        }
+
+        if (!in_array($status, $allowedStatuses, true)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid status']);
+            return;
+        }
+
+        $payload = [
+            'drama_id' => (int)$drama->id,
+            'item_name' => $itemName,
+            'category' => $category,
+            'allocated_amount' => $allocatedAmount,
+            'spent_amount' => $spentAmount,
+            'status' => $status,
+            'notes' => $notes !== '' ? $notes : null,
+            'created_by' => $_SESSION['user_id'] ?? null,
+        ];
+
+        if ($id) {
+            $existing = $budgetModel->getBudgetItemById($id);
+            if (!$existing || (int)$existing->drama_id !== (int)$drama->id) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Budget item not found']);
+                return;
+            }
+
+            $ok = $budgetModel->updateBudgetItem($id, $payload);
+            echo json_encode([
+                'success' => (bool)$ok,
+                'message' => $ok ? 'Budget item updated successfully' : 'Failed to update budget item'
+            ]);
+            return;
+        }
+
+        $ok = $budgetModel->createBudgetItem($payload);
+        echo json_encode([
+            'success' => (bool)$ok,
+            'message' => $ok ? 'Budget item created successfully' : 'Failed to create budget item'
+        ]);
+    }
+
+    public function delete_budget_item()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+        $budgetModel = $this->getModel('M_budget');
+        if (!$budgetModel) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Budget model not found']);
+            return;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid budget item id']);
+            return;
+        }
+
+        $existing = $budgetModel->getBudgetItemById($id);
+        if (!$existing || (int)$existing->drama_id !== (int)$drama->id) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Budget item not found']);
+            return;
+        }
+
+        $ok = $budgetModel->deleteBudgetItem($id);
+        echo json_encode([
+            'success' => (bool)$ok,
+            'message' => $ok ? 'Budget item deleted successfully' : 'Failed to delete budget item'
+        ]);
+    }
+
+    public function export_budget_report()
+    {
+        $drama = $this->authorizeDrama();
+        $budgetModel = $this->getModel('M_budget');
+
+        if (!$budgetModel) {
+            http_response_code(500);
+            echo 'Budget model not found';
+            return;
+        }
+
+        $items = $budgetModel->getBudgetByDrama($drama->id);
+        $filename = 'budget_report_drama_' . (int)$drama->id . '_' . date('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Item Name', 'Category', 'Allocated Amount', 'Spent Amount', 'Status', 'Notes', 'Created At']);
+
+        foreach ($items as $item) {
+            fputcsv($output, [
+                $item->item_name ?? '',
+                $item->category ?? '',
+                $item->allocated_amount ?? 0,
+                $item->spent_amount ?? 0,
+                $item->status ?? '',
+                $item->notes ?? '',
+                $item->created_at ?? '',
+            ]);
+        }
+
+        fclose($output);
+        exit;
     }
 
     public function book_theater()

@@ -94,13 +94,13 @@ class M_budget
         $this->db->query("
             SELECT 
                 category,
-                SUM(allocated_amount) as allocated,
-                SUM(spent_amount) as spent,
+                    SUM(allocated_amount) as total_allocated,
+                    SUM(spent_amount) as total_spent,
                 COUNT(*) as item_count
             FROM drama_budgets 
             WHERE drama_id = :drama_id
             GROUP BY category
-            ORDER BY allocated DESC
+                ORDER BY total_allocated DESC
         ");
         $this->db->bind(':drama_id', $drama_id);
         return $this->db->resultSet() ?: [];

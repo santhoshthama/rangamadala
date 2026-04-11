@@ -162,10 +162,10 @@
                                     $statusText = ucfirst($item->status ?? 'pending');
                                     
                                     if (isset($item->status)) {
-                                        if ($item->status === 'paid') {
+                                        if ($item->status === 'approved' || $item->status === 'completed') {
                                             $statusClass = 'assigned';
-                                        } elseif ($item->status === 'approved') {
-                                            $statusClass = 'assigned';
+                                        } elseif ($item->status === 'cancelled') {
+                                            $statusClass = 'rejected';
                                         }
                                     }
                                 ?>
@@ -204,6 +204,8 @@
         <div class="modal-content">
             <span class="close" onclick="closeBudgetModal()">&times;</span>
             <h2><i class="fas fa-plus"></i> Add Budget Item</h2>
+
+            <input type="hidden" id="budgetItemId" value="">
             
             <div class="form-group">
                 <label for="itemName">Item Name</label>
@@ -228,11 +230,17 @@
             </div>
 
             <div class="form-group">
-                <label for="paymentStatus">Payment Status</label>
+                <label for="spentAmount">Spent Amount (LKR)</label>
+                <input type="number" id="spentAmount" placeholder="Enter spent amount" min="0" step="1000" value="0">
+            </div>
+
+            <div class="form-group">
+                <label for="paymentStatus">Status</label>
                 <select id="paymentStatus">
-                    <option value="pending">Pending Payment</option>
-                    <option value="paid">Paid</option>
-                    <option value="partial">Partial Payment</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
                 </select>
             </div>
 
@@ -248,6 +256,9 @@
         </div>
     </div>
 
+    <script>
+        window.PM_BUDGET_API_BASE = '<?= ROOT ?>/production_manager';
+    </script>
     <script src="/Rangamadala/public/assets/JS/manage-budget.js"></script>
 </body>
 </html>

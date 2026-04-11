@@ -223,6 +223,7 @@ CREATE TABLE IF NOT EXISTS `drama_budgets` (
   `allocated_amount` decimal(10,2) NOT NULL,
   `spent_amount` decimal(10,2) DEFAULT 0,
   `status` enum('pending','approved','completed','cancelled') DEFAULT 'pending',
+  `notes` text DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

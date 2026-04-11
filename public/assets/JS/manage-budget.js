@@ -2,6 +2,8 @@
 
 const urlParams = new URLSearchParams(window.location.search);
 const dramaId = urlParams.get('drama_id') || 1;
+const apiBase = window.PM_BUDGET_API_BASE || `${window.location.origin}/Rangamadala/public/production_manager`;
+let editingBudgetId = null;
 
 console.log('Budget Management initialized for Drama ID:', dramaId);
 
@@ -10,6 +12,7 @@ function openAddBudgetModal() {
     const modal = document.getElementById('budgetModal');
     modal.style.display = 'block';
     document.getElementById('budgetModal').querySelector('h2').innerHTML = '<i class="fas fa-plus"></i> Add Budget Item';
+    editingBudgetId = null;
     
     // Clear form
     clearBudgetForm();
@@ -26,18 +29,25 @@ function closeBudgetModal() {
 
 // Clear budget form
 function clearBudgetForm() {
+    const idField = document.getElementById('budgetItemId');
+    if (idField) idField.value = '';
     document.getElementById('itemName').value = '';
     document.getElementById('itemCategory').value = '';
     document.getElementById('itemAmount').value = '';
+    const spentInput = document.getElementById('spentAmount');
+    if (spentInput) spentInput.value = '0';
     document.getElementById('paymentStatus').value = 'pending';
     document.getElementById('notes').value = '';
 }
 
 // Save budget item
 function saveBudgetItem() {
+    const idField = document.getElementById('budgetItemId');
     const itemName = document.getElementById('itemName').value;
     const itemCategory = document.getElementById('itemCategory').value;
     const itemAmount = document.getElementById('itemAmount').value;
+    const spentAmountField = document.getElementById('spentAmount');
+    const spentAmount = spentAmountField ? spentAmountField.value : '0';
     const paymentStatus = document.getElementById('paymentStatus').value;
     const notes = document.getElementById('notes').value;
 
@@ -47,56 +57,125 @@ function saveBudgetItem() {
         return;
     }
 
-    console.log('Saving budget item:', {
-        itemName,
-        itemCategory,
-        itemAmount,
-        paymentStatus,
-        notes,
-        drama_id: dramaId
+    const payload = new URLSearchParams({
+        item_name: itemName,
+        category: itemCategory,
+        allocated_amount: itemAmount,
+        spent_amount: spentAmount || '0',
+        status: paymentStatus,
+        notes: notes || ''
     });
 
-    // TODO: Send to backend API to save budget item
-    alert(`Budget item "${itemName}" has been added successfully!`);
-    closeBudgetModal();
-    
-    // Reload the table
-    loadBudgetItems();
+    if (editingBudgetId) {
+        payload.append('id', String(editingBudgetId));
+    }
+
+    fetch(`${apiBase}/save_budget_item?drama_id=${encodeURIComponent(dramaId)}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: payload.toString(),
+    })
+    .then((res) => res.json())
+    .then((json) => {
+        if (json.success) {
+            alert(json.message || 'Budget item saved successfully');
+            closeBudgetModal();
+            window.location.reload();
+            return;
+        }
+
+        alert(json.error || json.message || 'Failed to save budget item');
+    })
+    .catch((error) => {
+        console.error('saveBudgetItem error:', error);
+        alert('Network error while saving budget item.');
+    });
 }
 
 // Edit budget item
 function editBudgetItem(itemId) {
-    console.log('Editing budget item:', itemId);
-    const modal = document.getElementById('budgetModal');
-    document.getElementById('budgetModal').querySelector('h2').innerHTML = '<i class="fas fa-pencil-alt"></i> Edit Budget Item';
-    
-    // TODO: Load item data from backend and populate form
-    modal.style.display = 'block';
+    if (!itemId) {
+        alert('Invalid budget item');
+        return;
+    }
+
+    fetch(`${apiBase}/get_budget_item?drama_id=${encodeURIComponent(dramaId)}&id=${encodeURIComponent(itemId)}`)
+        .then((res) => res.json())
+        .then((json) => {
+            if (!json.success || !json.item) {
+                alert(json.error || 'Budget item not found');
+                return;
+            }
+
+            const item = json.item;
+            editingBudgetId = item.id;
+
+            const modal = document.getElementById('budgetModal');
+            document.getElementById('budgetModal').querySelector('h2').innerHTML = '<i class="fas fa-pencil-alt"></i> Edit Budget Item';
+
+            const idField = document.getElementById('budgetItemId');
+            if (idField) idField.value = item.id || '';
+            document.getElementById('itemName').value = item.item_name || '';
+            document.getElementById('itemCategory').value = item.category || '';
+            document.getElementById('itemAmount').value = item.allocated_amount || '';
+
+            const spentInput = document.getElementById('spentAmount');
+            if (spentInput) spentInput.value = item.spent_amount || '0';
+
+            document.getElementById('paymentStatus').value = item.status || 'pending';
+            document.getElementById('notes').value = item.notes || '';
+            modal.style.display = 'block';
+        })
+        .catch((error) => {
+            console.error('editBudgetItem error:', error);
+            alert('Failed to load budget item for editing');
+        });
 }
 
 // Delete budget item
 function deleteBudgetItem(itemId) {
+    if (!itemId) {
+        alert('Invalid budget item');
+        return;
+    }
+
     if (confirm('Are you sure you want to delete this budget item?')) {
-        console.log('Deleting budget item:', itemId);
-        // TODO: Send delete request to backend API
-        alert('Budget item has been deleted');
-        loadBudgetItems();
+        const payload = new URLSearchParams({ id: String(itemId) });
+        fetch(`${apiBase}/delete_budget_item?drama_id=${encodeURIComponent(dramaId)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: payload.toString(),
+        })
+        .then((res) => res.json())
+        .then((json) => {
+            if (json.success) {
+                alert(json.message || 'Budget item deleted');
+                window.location.reload();
+                return;
+            }
+
+            alert(json.error || json.message || 'Failed to delete budget item');
+        })
+        .catch((error) => {
+            console.error('deleteBudgetItem error:', error);
+            alert('Network error while deleting budget item.');
+        });
     }
 }
 
 // Load budget items from backend
 function loadBudgetItems() {
     console.log('Loading budget items for drama_id:', dramaId);
-    // TODO: Fetch budget items from backend API
-    // Update table with fetched data
 }
 
 // Export budget report
 function exportBudgetReport() {
     console.log('Exporting budget report for drama_id:', dramaId);
-    // TODO: Generate and download budget report as PDF or CSV
-    alert('Budget report generated and ready for download');
-    // window.open(`../../controllers/BudgetController.php?action=export&drama_id=${dramaId}`);
+    window.open(`${apiBase}/export_budget_report?drama_id=${encodeURIComponent(dramaId)}`, '_blank');
 }
 
 // Initialize on page load
