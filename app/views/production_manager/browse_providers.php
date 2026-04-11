@@ -246,7 +246,7 @@
                     <i class="fas fa-filter"></i> Filters
                 </h3>
                 
-                <form method="GET" action="<?= ROOT ?>/production_manager/browse_providers">
+                <form method="GET" action="<?= ROOT ?>/BrowseServiceProviders">
                     <input type="hidden" name="drama_id" value="<?= $drama->id ?>">
                     <input type="hidden" name="service_id" value="<?= $serviceId ?>">
                     <input type="hidden" name="service_type" value="<?= esc($serviceType) ?>">
@@ -291,7 +291,7 @@
                         <i class="fas fa-search"></i> Apply Filters
                     </button>
                     
-                    <a href="<?= ROOT ?>/production_manager/browse_providers?drama_id=<?= $drama->id ?>&service_id=<?= $serviceId ?>&service_type=<?= urlencode($serviceType) ?>" 
+                    <a href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= $drama->id ?>&service_id=<?= $serviceId ?>&service_type=<?= urlencode($serviceType) ?>" 
                        class="btn btn-secondary" style="width: 100%; text-align: center; display: block; text-decoration: none;">
                         Clear All
                     </a>
@@ -400,7 +400,7 @@
                 return;
             }
 
-            fetch('/Rangamadala/public/production_manager/send_service_request', {
+            fetch('<?= ROOT ?>/production_manager/send_service_request', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

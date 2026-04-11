@@ -73,7 +73,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="../artist/profile.php" class="back-button">
+        <a href="<?= ROOT ?>/artistdashboard" class="back-button">
             <i class="fas fa-arrow-left"></i>
             Back to Profile
         </a>

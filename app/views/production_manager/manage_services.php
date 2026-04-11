@@ -41,13 +41,13 @@
                 </a>
             </li>
             <li>
-                <a href="../artist/profile.php">
+                <a href="<?= ROOT ?>/artistdashboard">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
-                <a href="../../public/index.php">
+                <a href="<?= ROOT ?>/logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
