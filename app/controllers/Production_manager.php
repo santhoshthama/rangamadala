@@ -24,9 +24,6 @@ class Production_manager{
         $serviceModel = $this->getModel('M_service_request');
         $allServices = $serviceModel ? $serviceModel->getServicesByDrama($drama->id) : [];
         
-        // Get theater bookings for this drama
-        $theaterBookings = []; // TODO: Implement theater bookings model
-        
         // Get service schedule for this drama
         $schedules = []; // TODO: Implement service schedule model
         
@@ -38,7 +35,6 @@ class Production_manager{
         $data = [
             'drama' => $drama,
             'services' => $allServices,
-            'theaterBookings' => $theaterBookings,
             'schedules' => $schedules,
             'totalBudget' => $totalBudget,
             'budgetUsed' => $budgetUsed,
@@ -179,41 +175,10 @@ class Production_manager{
     public function book_theater()
     {
         $drama = $this->authorizeDrama();
-        
-        // Get theater bookings for this drama
-        $theaterModel = $this->getModel('M_theater_booking');
-        $bookings = [];
-        $confirmedCount = 0;
-        $pendingCount = 0;
-        $totalCost = 0;
-        
-        if ($theaterModel) {
-            $bookings = $theaterModel->getBookingsByDrama($drama->id);
-            $totalCost = $theaterModel->getTotalCost($drama->id);
-            
-            if (is_array($bookings)) {
-                foreach ($bookings as $booking) {
-                    if (isset($booking->status)) {
-                        if ($booking->status === 'confirmed') {
-                            $confirmedCount++;
-                        } elseif ($booking->status === 'pending') {
-                            $pendingCount++;
-                        }
-                    }
-                }
-            }
-        }
-        
-        $data = [
-            'drama' => $drama,
-            'theaterBookings' => $bookings,
-            'confirmedCount' => $confirmedCount,
-            'pendingCount' => $pendingCount,
-            'totalBookings' => count($bookings),
-            'totalCost' => $totalCost,
-        ];
-        
-        $this->view('production_manager/book_theater', $data);
+        $_SESSION['message'] = 'Theater booking page has been removed from Production Manager module.';
+        $_SESSION['message_type'] = 'info';
+        header('Location: ' . ROOT . '/production_manager/dashboard?drama_id=' . (int)$drama->id);
+        exit;
     }
 
     public function manage_schedule()

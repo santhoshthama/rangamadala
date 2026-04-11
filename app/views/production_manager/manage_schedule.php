@@ -418,12 +418,6 @@
                     <span>Budget Management</span>
                 </a>
             </li>
-            <li>
-                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-theater-masks"></i>
-                    <span>Theater Bookings</span>
-                </a>
-            </li>
             <li class="active">
                 <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-calendar-alt"></i>
@@ -483,10 +477,6 @@
                     <div class="legend-dot" style="background: #007bff;"></div>
                     <span>Paid</span>
                 </div>
-                <div class="legend-item">
-                    <div class="legend-dot" style="background: #6f42c1;"></div>
-                    <span>Theater Booking</span>
-                </div>
             </div>
 
             <!-- Filter Section -->
@@ -503,10 +493,6 @@
                 <button class="filter-btn" onclick="filterByStatus('paid')">
                     <i class="fas fa-credit-card"></i>
                     Paid
-                </button>
-                <button class="filter-btn" onclick="filterByStatus('theater')">
-                    <i class="fas fa-theater-masks"></i>
-                    Theater Bookings
                 </button>
             </div>
 

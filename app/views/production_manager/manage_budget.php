@@ -34,12 +34,6 @@
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-theater-masks"></i>
-                    <span>Theater Bookings</span>
-                </a>
-            </li>
-            <li>
                 <a href="<?= ROOT ?>/artistdashboard">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Profile</span>

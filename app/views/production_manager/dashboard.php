@@ -110,10 +110,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <h3><?= isset($services) && is_array($services) ? count($services) : '0' ?></h3>
                 <p>Active Service Requests</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--brand), var(--brand-strong));">
-                <h3><?= isset($theaterBookings) && is_array($theaterBookings) ? count($theaterBookings) : '0' ?></h3>
-                <p>Theater Bookings</p>
-            </div>
         </div>
 
         <!-- Navigation Tab Bar -->
