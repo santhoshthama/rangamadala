@@ -873,33 +873,33 @@
 
     <!-- Accept Confirm Modal - Multi-booking Decision -->
     <div id="acceptConfirmModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
-        <div style="background-color: #fefefe; padding: 0; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 8px 16px rgba(0,0,0,0.2);">
-            <div style="padding: 24px; border-bottom: 1px solid #e5e7eb; background: linear-gradient(135deg, #28a745, #20c997);">
+        <div style="background-color: #fefefe; padding: 0; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border: 1px solid #eadfb9;">
+            <div style="padding: 24px; border-bottom: 1px solid #e8dcb5; background: linear-gradient(135deg, #d4af37, #aa8c2c);">
                 <h3 style="margin: 0; font-size: 20px; color: white; font-weight: 600;">Accept Booking Request</h3>
             </div>
             <div style="padding: 24px;">
-                <div style="margin-bottom: 20px; padding: 16px; background: #f0f9ff; border-left: 4px solid #0084ff; border-radius: 4px;">
-                    <p style="margin: 0 0 8px 0; color: #1f2937; font-size: 14px;">
+                <div style="margin-bottom: 20px; padding: 16px; background: #fdf8e8; border-left: 4px solid #d4af37; border-radius: 4px; border: 1px solid #f0e4be;">
+                    <p style="margin: 0 0 8px 0; color: #3f3312; font-size: 14px;">
                         <strong>Booking Dates:</strong> <span id="acceptConfirmDateRange">-</span>
                     </p>
                 </div>
 
-                <div id="existingBookingsInfo" style="display: none; margin-bottom: 20px; padding: 14px; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; color: #92400e; font-size: 13px;"></div>
+                <div id="existingBookingsInfo" style="display: none; margin-bottom: 20px; padding: 14px; background: #fff8e7; border: 1px solid #e5c774; border-radius: 6px; color: #5f4a16; font-size: 13px;"></div>
 
                 <div style="margin-bottom: 24px;">
-                    <p style="margin: 0 0 16px 0; color: #374151; font-size: 14px; font-weight: 500;">Do you want to allow other production managers to also book on these dates?</p>
+                    <p style="margin: 0 0 16px 0; color: #4c3d16; font-size: 14px; font-weight: 500;">Do you want to allow other production managers to also book on these dates?</p>
                     
                     <div style="display: flex; gap: 12px; flex-direction: column;">
                         <button onclick="confirmAcceptWithDecision(1)" style="padding: 12px 20px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">
-                            ✓ Allow More Bookings (Green in Calendar)
+                            Yes. Allow More Bookings
                         </button>
                         <button onclick="confirmAcceptWithDecision(0)" style="padding: 12px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">
-                            ✗ Block Date (Red in Calendar)
+                            No
                         </button>
                     </div>
                 </div>
 
-                <div style="padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <div style="padding-top: 12px; border-top: 1px solid #efe4c1;">
                     <button onclick="closeAcceptConfirmModal()" style="width: 100%; padding: 10px 20px; background: #e5e7eb; color: #374151; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 13px;">
                         Cancel
                     </button>
