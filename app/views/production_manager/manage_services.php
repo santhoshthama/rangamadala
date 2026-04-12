@@ -6,7 +6,7 @@
     <title>Manage Services - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/production_manager/manage_services.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <?php $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1); ?>
@@ -18,19 +18,19 @@
         <ul class="menu">
             <li>
                 <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-briefcase"></i>
+                    <i class="bx bx-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-chart-bar"></i>
+                    <i class="bx bx-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
@@ -52,7 +52,7 @@
     <!-- Main Content -->
     <main class="main--content">
         <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -71,11 +71,11 @@
             </div>
             <div class="header-controls">
                 <a class="btn btn-primary" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= isset($drama->id) ? $drama->id : ($_GET['drama_id'] ?? 0) ?>">
-                    <i class="fas fa-plus"></i>
+                    <i class="bx bx-plus"></i>
                     Browse Service
                 </a>
                 <button type="button" class="btn btn-secondary" onclick="openAddServiceModal()">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="bx bx-plus-circle"></i>
                     Add Service
                 </button>
             </div>

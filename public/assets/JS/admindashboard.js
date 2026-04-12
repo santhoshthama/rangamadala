@@ -12,9 +12,14 @@ const searchContainer = document.getElementById("searchContainer");
 const searchInput = document.getElementById("searchInput");
 const searchClose = document.getElementById("searchClose");
 const mobileSearchBtn = document.getElementById("mobileSearchBtn");
+const adminProfileMenuItem = document.getElementById("adminProfileMenuItem");
+
 // State
 let sidebarCollapsed = false;
 let currentView = "overview";
+let pendingRegistrations = [];
+let userTrendChartInstance = null;
+let roleDistributionChartInstance = null;
 // ===================================
 // INITIALIZATION
 // ===================================
@@ -25,8 +30,35 @@ document.addEventListener("DOMContentLoaded", function () {
   initUserMenu();
   initNavigation();
   initSearch();
+  loadOverviewStats();
   initCharts();
+  initRegistrationsView();
+  initAdminProfile();
 });
+
+function loadOverviewStats() {
+  fetch(ROOT + "/admindashboard/getOverviewStats")
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success || !data.stats) {
+        return;
+      }
+
+      const stats = data.stats;
+      const totalUsersEl = document.getElementById("statTotalUsers");
+      const activeDramasEl = document.getElementById("statActiveDramas");
+      const pendingUsersEl = document.getElementById("statPendingUserApprovals");
+      const pendingDramaEl = document.getElementById("statPendingDramaApprovals");
+
+      if (totalUsersEl) totalUsersEl.textContent = Number(stats.total_users || 0).toLocaleString();
+      if (activeDramasEl) activeDramasEl.textContent = Number(stats.active_dramas || 0).toLocaleString();
+      if (pendingUsersEl) pendingUsersEl.textContent = Number(stats.pending_user_approvals || 0).toLocaleString();
+      if (pendingDramaEl) pendingDramaEl.textContent = Number(stats.pending_drama_approvals || 0).toLocaleString();
+    })
+    .catch((error) => {
+      console.error("Error loading overview stats:", error);
+    });
+}
 // ===================================
 // SIDEBAR FUNCTIONALITY
 // ===================================
@@ -106,6 +138,9 @@ function switchView(viewId) {
     targetView.classList.add("active");
     currentView = viewId;
     updatePageTitle(viewId);
+    if (viewId === "overview") {
+      loadOverviewStats();
+    }
   }
   // Close sidebar on mobile after navigation
   if (window.innerWidth <= 1024) closeSidebar();
@@ -113,14 +148,193 @@ function switchView(viewId) {
 function updatePageTitle(viewId) {
   const titles = {
     overview: "Overview",
-    projects: "Projects",
-    tasks: "Tasks",
-    reports: "Reports",
-    settings: "Settings",
+    users: "User Management",
+    registrations: "Registrations",
+    "drama-approvals": "Drama Approvals",
+    content: "Content",
   };
   if (dashboardTitle) {
     dashboardTitle.textContent = titles[viewId] || "Dashboard";
   }
+}
+
+// ===================================
+// ADMIN PROFILE FUNCTIONALITY
+// ===================================
+function initAdminProfile() {
+  if (!adminProfileMenuItem) return;
+
+  adminProfileMenuItem.addEventListener("click", (e) => {
+    e.preventDefault();
+    openAdminProfileModal();
+    userMenu?.classList.remove("active");
+  });
+}
+
+function openAdminProfileModal() {
+  const existingModal = document.getElementById("adminProfileModal");
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modalHtml = `
+    <div class="modal-overlay active" id="adminProfileModal">
+      <div class="modal-content user-form-modal">
+        <div class="modal-header">
+          <h3>Edit Profile</h3>
+          <button class="modal-close" onclick="closeAdminProfileModal()">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="adminProfileForm">
+            <div class="input-box">
+              <input type="text" id="adminProfileName" placeholder="Full Name" required />
+              <i class="material-symbols-rounded">person</i>
+            </div>
+            <div class="input-box">
+              <input type="email" id="adminProfileEmail" placeholder="Email Address" required />
+              <i class="material-symbols-rounded">mail</i>
+            </div>
+            <div class="input-box">
+              <input type="tel" id="adminProfilePhone" placeholder="Phone Number" />
+              <i class="material-symbols-rounded">phone</i>
+            </div>
+            <div class="input-box">
+              <input type="password" id="adminProfileNewPassword" placeholder="New Password (optional)" minlength="6" />
+              <i class="material-symbols-rounded">lock</i>
+            </div>
+            <div class="input-box">
+              <input type="password" id="adminProfileConfirmPassword" placeholder="Confirm New Password" minlength="6" />
+              <i class="material-symbols-rounded">lock_reset</i>
+            </div>
+            <p class="form-note">
+              <span class="material-symbols-rounded">info</span>
+              Leave password fields empty if you do not want to change the password.
+            </p>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeAdminProfileModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitAdminProfile()">
+            <span class="material-symbols-rounded">save</span>
+            Save Profile
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+  loadAdminProfile();
+}
+
+function closeAdminProfileModal() {
+  const modal = document.getElementById("adminProfileModal");
+  if (modal) {
+    modal.remove();
+  }
+}
+
+function loadAdminProfile() {
+  fetch(ROOT + "/Admindashboard/getAdminProfile")
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success || !data.admin) {
+        if (typeof toastError === "function") {
+          toastError(data.message || "Failed to load profile");
+        }
+        return;
+      }
+
+      document.getElementById("adminProfileName").value = data.admin.full_name || "";
+      document.getElementById("adminProfileEmail").value = data.admin.email || "";
+      document.getElementById("adminProfilePhone").value = data.admin.phone || "";
+    })
+    .catch((error) => {
+      console.error("Error loading admin profile:", error);
+      if (typeof toastError === "function") {
+        toastError("An error occurred while loading profile details");
+      }
+    });
+}
+
+function submitAdminProfile() {
+  const fullName = document.getElementById("adminProfileName").value.trim();
+  const email = document.getElementById("adminProfileEmail").value.trim();
+  const phone = document.getElementById("adminProfilePhone").value.trim();
+  const newPassword = document.getElementById("adminProfileNewPassword").value;
+  const confirmPassword = document.getElementById("adminProfileConfirmPassword").value;
+
+  if (!fullName || !email) {
+    if (typeof toastError === "function") {
+      toastError("Full name and email are required");
+    }
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    if (typeof toastError === "function") {
+      toastError("Please enter a valid email address");
+    }
+    return;
+  }
+
+  if (newPassword || confirmPassword) {
+    if (newPassword.length < 6) {
+      if (typeof toastError === "function") {
+        toastError("New password must be at least 6 characters");
+      }
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      if (typeof toastError === "function") {
+        toastError("New password and confirm password do not match");
+      }
+      return;
+    }
+  }
+
+  fetch(ROOT + "/Admindashboard/updateAdminProfile", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      full_name: fullName,
+      email,
+      phone,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success) {
+        if (typeof toastError === "function") {
+          toastError(data.message || "Failed to update profile");
+        }
+        return;
+      }
+
+      const avatarText = document.querySelector(".user-avatar-small span");
+      if (avatarText) {
+        avatarText.textContent = (fullName.charAt(0) || "A").toUpperCase();
+      }
+
+      if (typeof toastSuccess === "function") {
+        toastSuccess(data.message || "Profile saved successfully");
+      }
+      closeAdminProfileModal();
+    })
+    .catch((error) => {
+      console.error("Error updating admin profile:", error);
+      if (typeof toastError === "function") {
+        toastError("An error occurred while updating profile");
+      }
+    });
 }
 // ===================================
 // THEME FUNCTIONALITY
@@ -169,54 +383,88 @@ function initSearch() {
 // CHART INITIALIZATION
 // ===================================
 function initCharts() {
-  initProgressChart();
-  initCategoryChart();
+  fetch(ROOT + "/admindashboard/getOverviewChartData")
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success || !data.charts) {
+        return;
+      }
+
+      const trend = data.charts.registration_trend || { labels: [], values: [] };
+      const role = data.charts.role_distribution || { labels: [], values: [] };
+
+      renderUserTrendChart(trend.labels, trend.values);
+      renderRoleDistributionChart(role.labels, role.values);
+    })
+    .catch((error) => {
+      console.error("Error loading chart data:", error);
+      renderUserTrendChart([], []);
+      renderRoleDistributionChart([], []);
+    });
 }
-function initProgressChart() {
-  const ctx = document.getElementById("progressChart");
+
+function renderUserTrendChart(labels, values) {
+  const ctx = document.getElementById("userTrendChart");
   if (!ctx) return;
-  new Chart(ctx, {
+
+  if (userTrendChartInstance) {
+    userTrendChartInstance.destroy();
+  }
+
+  userTrendChartInstance = new Chart(ctx, {
     type: "line",
     data: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      labels,
       datasets: [
         {
-          label: "Project Progress",
-          data: [20, 35, 45, 60, 70, 85],
-          borderColor: "#8b5cf6",
-          backgroundColor: "rgba(139, 92, 246, 0.1)",
-          borderWidth: 2,
+          label: "New Registrations",
+          data: values,
+          borderColor: "#ba8e23",
+          backgroundColor: "rgba(186, 142, 35, 0.15)",
+          borderWidth: 3,
           fill: true,
-          tension: 0.4,
+          tension: 0.35,
+          pointRadius: 4,
+          pointHoverRadius: 6,
         },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+      },
       scales: {
         y: {
           beginAtZero: true,
-          max: 100,
-          ticks: { callback: (value) => value + "%" },
+          ticks: {
+            precision: 0,
+          },
         },
       },
     },
   });
 }
-function initCategoryChart() {
-  const ctx = document.getElementById("categoryChart");
+
+function renderRoleDistributionChart(labels, values) {
+  const ctx = document.getElementById("roleDistributionChart");
   if (!ctx) return;
-  new Chart(ctx, {
+
+  if (roleDistributionChartInstance) {
+    roleDistributionChartInstance.destroy();
+  }
+
+  roleDistributionChartInstance = new Chart(ctx, {
     type: "doughnut",
     data: {
-      labels: ["Frontend", "Backend", "Mobile", "DevOps"],
+      labels,
       datasets: [
         {
-          data: [35, 25, 20, 20],
-          backgroundColor: ["#8b5cf6", "#10b981", "#f59e0b", "#ef4444"],
+          data: values,
+          backgroundColor: ["#ba8e23", "#10b981", "#3b82f6"],
           borderWidth: 0,
+          hoverOffset: 8,
         },
       ],
     },
@@ -227,7 +475,7 @@ function initCategoryChart() {
         legend: {
           position: "bottom",
           labels: {
-            padding: 20,
+            padding: 16,
             usePointStyle: true,
           },
         },
@@ -235,3 +483,8 @@ function initCategoryChart() {
     },
   });
 }
+
+window.openAdminProfileModal = openAdminProfileModal;
+window.closeAdminProfileModal = closeAdminProfileModal;
+window.submitAdminProfile = submitAdminProfile;
+window.loadOverviewStats = loadOverviewStats;

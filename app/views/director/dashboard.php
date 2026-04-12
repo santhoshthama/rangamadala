@@ -32,7 +32,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Director Dashboard - <?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?> - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -43,43 +43,43 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <ul class="menu">
             <li class="active">
                 <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-film"></i>
+                    <i class="bx bx-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-users"></i>
+                    <i class="bx bx-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-dollar-sign"></i>
+                    <i class="bx bx-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
@@ -89,7 +89,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <!-- Main Content -->
     <main class="main--content">
         <a href="<?= ROOT ?>/artistdashboard" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Profile
         </a>
 
@@ -104,12 +104,12 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
             <div class="user--info">
                 <div class="role-badge">
-                    <i class="fas fa-video"></i>
+                    <i class="bx bx-video"></i>
                     Director
                 </div>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
                 <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                 </a>
             </div>
         </div>
@@ -137,22 +137,22 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <!-- Navigation Tab Bar -->
         <div class="nav-tabs-bar">
             <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="nav-tab-btn active">
-                <i class="fas fa-home"></i> Dashboard
+                <i class="bx bx-home"></i> Dashboard
             </a>
             <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
-                <i class="fas fa-film"></i>  Drama Details
+                <i class="bx bx-film"></i>  Drama Details
             </a>
             <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="fas fa-users"></i> Artist Roles
+                <i class="bx bx-users"></i> Artist Roles
             </a>
             <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="fas fa-user-tie"></i> Production Manager
+                <i class="bx bx-user-tie"></i> Production Manager
             </a>
             <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="fas fa-calendar-alt"></i> Schedule
+                <i class="bx bx-calendar-alt"></i> Schedule
             </a>
             <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="fas fa-dollar-sign"></i> Services & Budget
+                <i class="bx bx-dollar-sign"></i> Services & Budget
             </a>
         </div>
 
@@ -165,11 +165,21 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <h3>
                             <span>Drama Overview</span>
                             <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="fas fa-eye"></i>
+                                <i class="bx bx-eye"></i>
                                 View Details
                             </a>
                         </h3>
                         <div class="drama-info">
+                            <div class="service-info-item">
+                                <span class="service-info-label">Public Status</span>
+                                <span class="service-info-value">
+                                    <?php if (!empty($drama->is_published)): ?>
+                                        <span class="status-badge assigned">Published</span>
+                                    <?php else: ?>
+                                        <span class="status-badge pending">Not Published</span>
+                                    <?php endif; ?>
+                                </span>
+                            </div>
                             <div class="service-info-item">
                                 <span class="service-info-label">Owner</span>
                                 <span class="service-info-value"><?= isset($drama->owner_name) ? esc($drama->owner_name) : 'N/A' ?></span>
@@ -200,6 +210,18 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 <span class="service-info-label">Last Updated</span>
                                 <span class="service-info-value"><?= isset($drama->updated_at) ? esc(date('Y-m-d H:i', strtotime($drama->updated_at))) : 'N/A' ?></span>
                             </div>
+                            <?php if (!empty($drama->published_at)): ?>
+                                <div class="service-info-item">
+                                    <span class="service-info-label">Published On</span>
+                                    <span class="service-info-value"><?= esc(date('Y-m-d H:i', strtotime($drama->published_at))) ?></span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                        <div style="margin-top:14px;">
+                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>#publish-section" class="btn btn-primary" style="font-size:12px; padding:8px 16px;">
+                                <i class="bx bx-bullhorn"></i>
+                                <?= !empty($drama->is_published) ? 'Update Publish Details' : 'Publish Drama' ?>
+                            </a>
                         </div>
                             <?php if (isset($productionManager) && $productionManager): ?>
                                 <div class="service-info-item">
@@ -216,7 +238,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                             <h3>
                                 <span>Assigned Artists (<?= count($assignedArtists) ?>)</span>
                                 <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
-                                    <i class="fas fa-users"></i>
+                                    <i class="bx bx-users"></i>
                                     Manage Roles
                                 </a>
                             </h3>
@@ -246,7 +268,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                             <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">View Details</a>
                         </h3>
                         <div class="view-only-notice" style="margin-top: 15px;">
-                            <i class="fas fa-info-circle"></i>
+                            <i class="bx bx-info-circle"></i>
                             Budget is managed by Production Managers. You have view-only access.
                         </div>
                     </div>

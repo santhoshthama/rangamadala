@@ -25,8 +25,8 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Role Vacancies - Rangamadala</title>
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         .alert {
             padding: 15px 20px;
             border-radius: 8px;
@@ -566,43 +566,105 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Match inner fields/cards with artist dashboard tab styling */
+        .card-section {
+            background: linear-gradient(180deg, #fffefb 0%, #fff7e7 100%);
+            border: 1px solid #efdcb0;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(186, 142, 35, 0.12);
+        }
+
+        .form-group label {
+            color: #6f5a2e;
+            font-weight: 600;
+        }
+
+        .form-input,
+        .form-group input,
+        .form-group select {
+            background: #fffdf8;
+            border: 1px solid #e6cf97;
+            color: #3f2f12;
+            border-radius: 10px;
+        }
+
+        .form-input:focus,
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ba8e23;
+            box-shadow: 0 0 0 3px rgba(186, 142, 35, 0.16);
+        }
+
+        .vacancy-card {
+            background: linear-gradient(180deg, #fffefb 0%, #fff7e7 100%);
+            border: 1px solid #efdcb0;
+            border-left: 4px solid #ba8e23;
+            box-shadow: 0 8px 20px rgba(186, 142, 35, 0.12);
+        }
+
+        .vacancy-card:hover {
+            box-shadow: 0 14px 26px rgba(186, 142, 35, 0.2);
+        }
+
+        .vacancy-meta {
+            background: #fff9ec;
+            border: 1px solid #efdcb0;
+        }
+
+        .role-type-badge {
+            background: #f4e3be;
+            color: #8f6717;
+        }
+
+        .btn-apply {
+            background: linear-gradient(135deg, #ba8e23, #9b761d);
+            color: #fff;
+            border: 1px solid #8f6a17;
+            box-shadow: 0 6px 14px rgba(186, 142, 35, 0.24);
+        }
+
+        .btn-apply:hover {
+            background: linear-gradient(135deg, #c79a29, #a67d1e);
+        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <h2><i class='bx bxs-theater'></i></h2>
         </div>
         <ul class="menu">
             <li>
                 <a href="<?=ROOT?>/artistdashboard">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?=ROOT?>/profile">
-                    <i class="fas fa-user"></i>
-                    <span>Profile</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?=ROOT?>/artistdashboard/browse_vacancies">
-                    <i class="fas fa-bullhorn"></i>
+                    <i class="bx bx-bullhorn"></i>
                     <span>View All Vacancies</span>
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/browseDramas">
-                    <i class="fas fa-theater-masks"></i>
-                    <span>Browse Dramas</span>
+                <a href="<?=ROOT?>/artistdashboard/notifications">
+                    <i class="bx bx-bell"></i>
+                    <span>Notifications</span>
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class="fas fa-bell"></i>
-                    <span>Notifications</span>
+                <a href="<?=ROOT?>/artistdashboard/classes">
+                    <i class='bx bxs-graduation'></i>
+                    <span>Classes</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?=ROOT?>/artistdashboard#my-showings">
+                    <i class='bx bx-calendar-event'></i>
+                    <span>Showings</span>
                 </a>
             </li>
         </ul>
@@ -612,7 +674,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <main class="main--content">
         <?php if (isset($_SESSION['message'])): ?>
             <div class="alert alert-<?= $_SESSION['message_type'] ?? 'info' ?>">
-                <i class="fas fa-<?= ($_SESSION['message_type'] ?? 'info') === 'success' ? 'check-circle' : 'info-circle' ?>"></i>
+                <i class="bx bx-<?= ($_SESSION['message_type'] ?? 'info') === 'success' ? 'check-circle' : 'info-circle' ?>"></i>
                 <?= htmlspecialchars($_SESSION['message']) ?>
             </div>
             <?php 
@@ -629,11 +691,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
             <div class="user--info">
                 <div class="role-badge">
-                    <i class="fas fa-star"></i> Artist
+                    <i class="bx bx-star"></i> Artist
                 </div>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
                 <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                 </a>
             </div>
         </div>
@@ -642,14 +704,14 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             <!-- Banner -->
             <div class="vacancy-banner">
                 <div class="banner-content">
-                    <h3><i class="fas fa-theater-masks"></i> Discover Exciting Opportunities</h3>
+                    <h3><i class="bx bx-theater-masks"></i> Discover Exciting Opportunities</h3>
                     <p>Find and apply for roles that showcase your talent</p>
                 </div>
             </div>
 
             <!-- Filters Section -->
             <div class="card-section">
-                <h3><span><i class="fas fa-filter"></i> Filters</span></h3>
+                <h3><span><i class="bx bx-filter"></i> Filters</span></h3>
                 <form method="GET" action="<?=ROOT?>/artistdashboard/browse_vacancies" class="form-container">
                     <div class="form-row">
                         <div class="form-group">
@@ -683,7 +745,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                     <div style="margin-top: 15px;">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-filter"></i> Apply Filters
+                            <i class="bx bx-filter"></i> Apply Filters
                         </button>
                     </div>
                 </form>
@@ -692,7 +754,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             <!-- Results Count -->
             <div class="card-section">
                 <div style="display: flex; align-items: center; gap: 10px; color: var(--muted);">
-                    <i class="fas fa-list"></i>
+                    <i class="bx bx-list"></i>
                     <span><?= $total_vacancies ?> <?= $total_vacancies === 1 ? 'vacancy' : 'vacancies' ?> found</span>
                 </div>
             </div>
@@ -710,8 +772,8 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                             </div>
 
                             <div class="drama-info">
-                                <span class="drama-name"><i class="fas fa-film"></i> <?= htmlspecialchars($vacancy->drama_name) ?></span>
-                                <span><i class="fas fa-user-tie"></i> Director: <?= htmlspecialchars($vacancy->director_name) ?></span>
+                                <span class="drama-name"><i class="bx bx-film"></i> <?= htmlspecialchars($vacancy->drama_name) ?></span>
+                                <span><i class="bx bx-user-tie"></i> Director: <?= htmlspecialchars($vacancy->director_name) ?></span>
                             </div>
 
                             <?php if (!empty($vacancy->role_description)): ?>
@@ -722,19 +784,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                             <div class="vacancy-meta">
                                 <div class="meta-item">
-                                    <i class="fas fa-money-bill-wave"></i>
+                                    <i class="bx bx-money-bill-wave"></i>
                                     <span class="meta-value">LKR <?= isset($vacancy->salary) && $vacancy->salary !== null ? number_format($vacancy->salary) : '0' ?></span>
                                 </div>
                                 <div class="meta-item">
-                                    <i class="fas fa-users"></i>
+                                    <i class="bx bx-users"></i>
                                     <span class="meta-value"><?= $vacancy->positions_remaining ?> opening<?= $vacancy->positions_remaining > 1 ? 's' : '' ?></span>
                                 </div>
                                 <div class="meta-item">
-                                    <i class="fas fa-calendar-alt"></i>
+                                    <i class="bx bx-calendar-alt"></i>
                                     <span><?= date('M d, Y', strtotime($vacancy->published_at)) ?></span>
                                 </div>
                                 <div class="meta-item">
-                                    <i class="fas fa-info-circle"></i>
+                                    <i class="bx bx-info-circle"></i>
                                     <span class="meta-value"><?= ucfirst(htmlspecialchars($vacancy->status)) ?></span>
                                 </div>
                             </div>
@@ -742,11 +804,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                             <div class="vacancy-footer">
                                 <?php if (in_array($vacancy->id, $applied_role_ids ?? [])): ?>
                                     <span class="applied-badge">
-                                        <i class="fas fa-check-circle"></i> Already Applied
+                                        <i class="bx bx-check-circle"></i> Already Applied
                                     </span>
                                 <?php else: ?>
                                     <a href="<?= ROOT ?>/artistdashboard/apply_for_role?role_id=<?= $vacancy->id ?>" class="btn-apply">
-                                        <i class="fas fa-paper-plane"></i> Apply Now
+                                        <i class="bx bx-paper-plane"></i> Apply Now
                                     </a>
                                 <?php endif; ?>
                             </div>
@@ -755,7 +817,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 </div>
             <?php else: ?>
                 <div class="card-section" style="text-align: center; padding: 60px 20px;">
-                    <i class="fas fa-search" style="font-size: 64px; color: var(--muted); margin-bottom: 20px;"></i>
+                    <i class="bx bx-search" style="font-size: 64px; color: var(--muted); margin-bottom: 20px;"></i>
                     <h3>No Vacancies Found</h3>
                     <p style="color: var(--muted);">Try adjusting your search filters or check back later for new opportunities.</p>
                 </div>

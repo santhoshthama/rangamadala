@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Bank Slip - <?= APP_NAME ?></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/payment/bank_transfer.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/payment/bank_transfer.css">
 </head>
 <body class="payment-bank-upload">
     <div class="payment-card">
         <div class="payment-header">
-            <h1><i class="fas fa-university"></i> Bank Transfer Payment</h1>
+            <h1><i class="bx bx-university"></i> Bank Transfer Payment</h1>
             <p>Upload your bank slip evidence for provider verification.</p>
         </div>
         <div class="payment-body">
@@ -61,7 +61,7 @@
                         Cancel
                     </a>
                     <button type="submit" class="payment-btn payment-btn-primary">
-                        <i class="fas fa-upload"></i> Upload Evidence
+                        <i class="bx bx-upload"></i> Upload Evidence
                     </button>
                 </div>
             </form>

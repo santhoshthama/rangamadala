@@ -5,7 +5,7 @@
     </div>
     <div class="user--info">
         <div class="search--box">
-            <i class="fa-solid fa-search"></i>
+            <i class="bx-solid bx-search"></i>
             <input type="text" placeholder="Search">
         </div>
         <a href="<?= ROOT ?>/ServiceProviderProfile" style="cursor: pointer;">

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+           <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <link rel="stylesheet" href="<?= ROOT ?>/assets/css/Footer.css">
     <title>Document</title>
 </head>
@@ -34,10 +34,10 @@
 <div class="footer-content">
   <h3>Follow us</h3>
   <ul class="social-icons">
-    <li><a href="#"><i class="fab fa-facebook"></i></a></li>
-    <li><a href="#"><i class="fab fa-instagram"></i></a></li>
-    <li><a href="#"><i class="fab fa-twitter"></i></a></li>
-    <li><a href="#"><i class="fab fa-youtube"></i></a></li>
+    <li><a href="#"><i class="bx bx-facebook"></i></a></li>
+    <li><a href="#"><i class="bx bx-instagram"></i></a></li>
+    <li><a href="#"><i class="bx bx-twitter"></i></a></li>
+    <li><a href="#"><i class="bx bx-youtube"></i></a></li>
   </ul>
 </div>
 

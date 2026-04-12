@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Checkout - <?= APP_NAME ?></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- PayHere Payment Gateway Script -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<!-- PayHere Payment Gateway Script -->
     <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
     
     <style>
@@ -407,11 +406,11 @@
         <!-- Header -->
         <div class="checkout-header">
             <h1>
-                <i class="fas fa-lock"></i>
+                <i class="bx bx-lock"></i>
                 Secure Checkout
             </h1>
             <div class="secure-badge">
-                <i class="fas fa-shield-alt"></i>
+                <i class="bx bx-shield-alt"></i>
                 SSL Encrypted
             </div>
         </div>
@@ -421,7 +420,7 @@
             <div class="steps">
                 <div class="step completed">
                     <div class="step-circle">
-                        <i class="fas fa-check"></i>
+                        <i class="bx bx-check"></i>
                     </div>
                     <div class="step-label">Service Confirmed</div>
                 </div>
@@ -441,7 +440,7 @@
             <!-- Payment Section -->
             <div class="payment-section">
                 <h2 class="section-title">
-                    <i class="fas fa-credit-card"></i>
+                    <i class="bx bx-credit-card"></i>
                     Payment Method
                 </h2>
 
@@ -481,7 +480,7 @@
                     <div class="method-header">
                         <div class="method-info">
                             <div class="method-icon">
-                                <i class="fas fa-credit-card" style="color: #d4af37;"></i>
+                                <i class="bx bx-credit-card" style="color: #d4af37;"></i>
                             </div>
                             <div>
                                 <div class="method-name">PayHere</div>
@@ -496,7 +495,7 @@
                     <div class="method-header">
                         <div class="method-info">
                             <div class="method-icon">
-                                <i class="fas fa-university" style="color: #6b7280;"></i>
+                                <i class="bx bx-university" style="color: #6b7280;"></i>
                             </div>
                             <div>
                                 <div class="method-name">Bank Transfer</div>
@@ -511,7 +510,7 @@
                     <div class="method-header">
                         <div class="method-info">
                             <div class="method-icon">
-                                <i class="fas fa-money-bill-wave" style="color: #16a34a;"></i>
+                                <i class="bx bx-money-bill-wave" style="color: #16a34a;"></i>
                             </div>
                             <div>
                                 <div class="method-name">Cash Payment</div>
@@ -532,7 +531,7 @@
 
                 <!-- Security Info -->
                 <div class="security-info">
-                    <i class="fas fa-lock"></i>
+                    <i class="bx bx-lock"></i>
                     <div>
                         Your payment information is encrypted and secure. We never store your card details.
                     </div>
@@ -542,7 +541,7 @@
             <!-- Order Summary -->
             <div class="order-summary">
                 <h2 class="section-title">
-                    <i class="fas fa-file-invoice-dollar"></i>
+                    <i class="bx bx-file-invoice-dollar"></i>
                     Order Summary
                 </h2>
 
@@ -581,11 +580,11 @@
                 <!-- Action Buttons -->
                 <div style="margin-top: 24px;">
                     <button type="button" class="btn btn-primary" id="proceedPaymentBtn" onclick="proceedToPayment()">
-                        <i class="fas fa-lock"></i>
+                        <i class="bx bx-lock"></i>
                         Proceed to Payment
                     </button>
                     <a href="<?= ROOT ?>/Production_manager/manage_services?drama_id=<?= $request->drama_id ?>" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i>
+                        <i class="bx bx-arrow-left"></i>
                         Back to Services
                     </a>
                 </div>
@@ -596,7 +595,7 @@
                     <div style="font-weight: 600; color: #1f2937;"><?= htmlspecialchars($request->provider_name ?? 'Service Provider') ?></div>
                     <?php if (!empty($request->provider_email)): ?>
                     <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                        <i class="fas fa-envelope"></i> <?= htmlspecialchars($request->provider_email) ?>
+                        <i class="bx bx-envelope"></i> <?= htmlspecialchars($request->provider_email) ?>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -627,7 +626,7 @@
 
             const btn = document.getElementById('proceedPaymentBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.innerHTML = '<i class="bx bx-spinner bx-spin"></i> Processing...';
 
             if (selectedMethod === 'payhere') {
                 initiatePayHerePayment();
@@ -647,7 +646,7 @@
             } else {
                 alert('Invalid payment method selected.');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
+                btn.innerHTML = '<i class="bx bx-lock"></i> Proceed to Payment';
             }
         }
 
@@ -658,7 +657,7 @@
                 console.error('PayHere script not loaded');
                 const btn = document.getElementById('proceedPaymentBtn');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
+                btn.innerHTML = '<i class="bx bx-lock"></i> Proceed to Payment';
                 return;
             }
             
@@ -682,7 +681,7 @@
                     alert(data.error || 'Failed to initialize payment');
                     const btn = document.getElementById('proceedPaymentBtn');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
+                    btn.innerHTML = '<i class="bx bx-lock"></i> Proceed to Payment';
                     return;
                 }
                 
@@ -729,7 +728,7 @@
                     console.error("PayHere Error: " + error);
                     const btn = document.getElementById('proceedPaymentBtn');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
+                    btn.innerHTML = '<i class="bx bx-lock"></i> Proceed to Payment';
                     alert('Payment error: ' + error);
                 };
 
@@ -742,7 +741,7 @@
                 alert('Failed to initialize payment. Please try again.');
                 const btn = document.getElementById('proceedPaymentBtn');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-lock"></i> Proceed to Payment';
+                btn.innerHTML = '<i class="bx bx-lock"></i> Proceed to Payment';
             });
         }
     </script>
