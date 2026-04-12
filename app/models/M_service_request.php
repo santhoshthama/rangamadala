@@ -509,4 +509,218 @@ class M_service_request
     {
         return $this->updateRequestStatus($request_id, $status);
     }
+
+    /**
+     * Bookings Report - Detailed list of all bookings
+     */
+    public function getBookingsReport($provider_id, $startDate = null, $endDate = null)
+    {
+        $sql = "SELECT 
+                sr.id,
+                sr.drama_name,
+                sr.service_type,
+                sr.budget,
+                sr.status,
+                sr.start_date,
+                sr.end_date,
+                sr.requester_name,
+                sr.created_at,
+                COALESCE(SUM(CASE WHEN p.payment_status IN ('completed', 'success') THEN p.amount ELSE 0 END), 0) as amount_paid,
+                CASE 
+                    WHEN pf.id IS NOT NULL THEN 'fully_paid'
+                    WHEN (pa.id IS NOT NULL OR pr.id IS NOT NULL) THEN 'partially_paid'
+                    WHEN p.id IS NOT NULL THEN 'pending'
+                    ELSE 'unpaid'
+                END as payment_status
+            FROM service_requests sr
+            LEFT JOIN payments p ON sr.id = p.service_request_id
+            LEFT JOIN payments pf ON sr.id = pf.service_request_id AND pf.payment_type = 'full' AND pf.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pa ON sr.id = pa.service_request_id AND pa.payment_type = 'advance' AND pa.payment_status IN ('completed', 'success')
+            LEFT JOIN payments pr ON sr.id = pr.service_request_id AND pr.payment_type = 'remaining' AND pr.payment_status IN ('completed', 'success')
+            WHERE sr.provider_id = :provider_id";
+        
+        if ($startDate && $endDate) {
+            $sql .= " AND sr.created_at BETWEEN :startDate AND :endDate";
+        }
+        
+        $sql .= " GROUP BY sr.id ORDER BY sr.created_at DESC";
+        
+        $this->db->query($sql);
+        $this->db->bind(':provider_id', $provider_id);
+        if ($startDate && $endDate) {
+            $this->db->bind(':startDate', $startDate);
+            $this->db->bind(':endDate', $endDate);
+        }
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Service Performance Report - Detailed service requests
+     */
+    public function getServicePerformance($provider_id, $startDate = null, $endDate = null)
+    {
+        $sql = "SELECT 
+                sr.id,
+                sr.drama_name,
+                sr.service_type,
+                sr.budget,
+                sr.status,
+                sr.start_date,
+                sr.end_date,
+                sr.requester_name,
+                sr.created_at,
+                sr.completed_at,
+                CASE WHEN sr.status = 'completed' THEN 1 ELSE 0 END as is_completed,
+                COALESCE(SUM(CASE WHEN p.payment_status IN ('completed', 'success') THEN p.amount ELSE 0 END), 0) as amount,
+                COALESCE(SUM(CASE WHEN p.payment_status IN ('completed', 'success') THEN p.amount ELSE 0 END), 0) as amount_paid
+            FROM service_requests sr
+            LEFT JOIN payments p ON sr.id = p.service_request_id
+            WHERE sr.provider_id = :provider_id AND sr.service_type IS NOT NULL";
+        
+        if ($startDate && $endDate) {
+            $sql .= " AND sr.created_at BETWEEN :startDate AND :endDate";
+        }
+        
+        $sql .= " GROUP BY sr.id ORDER BY sr.created_at DESC";
+        
+        $this->db->query($sql);
+        $this->db->bind(':provider_id', $provider_id);
+        if ($startDate && $endDate) {
+            $this->db->bind(':startDate', $startDate);
+            $this->db->bind(':endDate', $endDate);
+        }
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Cancellation / Rejection Report - Detailed cancelled/rejected requests
+     */
+    public function getCancellationReport($provider_id, $startDate = null, $endDate = null)
+    {
+        $sql = "SELECT 
+                sr.id,
+                sr.drama_name,
+                sr.service_type,
+                sr.budget,
+                sr.status,
+                sr.rejection_reason,
+                sr.requester_name,
+                sr.created_at,
+                sr.start_date,
+                sr.end_date,
+                COALESCE(SUM(CASE WHEN p.payment_status IN ('completed', 'success') THEN p.amount ELSE 0 END), 0) as amount_paid
+            FROM service_requests sr
+            LEFT JOIN payments p ON sr.id = p.service_request_id
+            WHERE sr.provider_id = :provider_id 
+            AND sr.status IN ('rejected', 'cancelled')";
+        
+        if ($startDate && $endDate) {
+            $sql .= " AND sr.created_at BETWEEN :startDate AND :endDate";
+        }
+        
+        $sql .= " GROUP BY sr.id ORDER BY sr.created_at DESC";
+        
+        $this->db->query($sql);
+        $this->db->bind(':provider_id', $provider_id);
+        if ($startDate && $endDate) {
+            $this->db->bind(':startDate', $startDate);
+            $this->db->bind(':endDate', $endDate);
+        }
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Dashboard overview counts for a provider
+     */
+    public function getDashboardCounts($provider_id, $startDate = null, $endDate = null)
+    {
+        $sql = "SELECT
+                    COUNT(*) AS total_bookings,
+                    SUM(CASE WHEN status IN ('completed', 'completed_paid') THEN 1 ELSE 0 END) AS completed_services,
+                    SUM(CASE WHEN status IN ('pending', 'provider_responded', 'confirmed', 'accepted') THEN 1 ELSE 0 END) AS active_services
+                FROM service_requests
+                WHERE provider_id = :provider_id";
+
+        if ($startDate && $endDate) {
+            $sql .= " AND created_at BETWEEN :startDate AND :endDate";
+        }
+
+        $this->db->query($sql);
+        $this->db->bind(':provider_id', $provider_id);
+        if ($startDate && $endDate) {
+            $this->db->bind(':startDate', $startDate);
+            $this->db->bind(':endDate', $endDate);
+        }
+
+        return $this->db->single();
+    }
+
+    /**
+     * Service distribution by booking count
+     */
+    public function getServiceDistribution($provider_id, $limit = 6)
+    {
+        $limit = max(1, (int)$limit);
+
+        $this->db->query("SELECT
+                            service_type,
+                            COUNT(*) AS booking_count
+                          FROM service_requests
+                          WHERE provider_id = :provider_id
+                            AND service_type IS NOT NULL
+                            AND service_type != ''
+                          GROUP BY service_type
+                          ORDER BY booking_count DESC
+                          LIMIT " . $limit);
+        $this->db->bind(':provider_id', $provider_id);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Latest ongoing services for dashboard list
+     */
+    public function getOngoingServices($provider_id, $limit = 6)
+    {
+        $limit = max(1, (int)$limit);
+
+        $this->db->query("SELECT
+                            sr.id,
+                            sr.drama_name,
+                            sr.service_type,
+                            sr.status,
+                            sr.updated_at,
+                            sr.requester_name,
+                            COALESCE(SUM(CASE WHEN p.payment_status IN ('completed', 'success') THEN p.amount ELSE 0 END), 0) AS amount_paid
+                          FROM service_requests sr
+                          LEFT JOIN payments p ON sr.id = p.service_request_id
+                          WHERE sr.provider_id = :provider_id
+                            AND sr.status IN ('pending', 'provider_responded', 'confirmed', 'accepted')
+                          GROUP BY sr.id
+                          ORDER BY sr.updated_at DESC
+                          LIMIT " . $limit);
+        $this->db->bind(':provider_id', $provider_id);
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Top clients by total paid amount
+     */
+    public function getTopClients($provider_id, $limit = 3)
+    {
+        $limit = max(1, (int)$limit);
+
+        $this->db->query("SELECT
+                            sr.requester_name,
+                            COUNT(DISTINCT sr.id) AS booking_count,
+                            COALESCE(SUM(CASE WHEN p.payment_status IN ('completed', 'success') THEN p.amount ELSE 0 END), 0) AS total_spent,
+                            MAX(sr.created_at) AS last_booking
+                          FROM service_requests sr
+                          LEFT JOIN payments p ON sr.id = p.service_request_id
+                          WHERE sr.provider_id = :provider_id
+                          GROUP BY sr.requester_name
+                          ORDER BY total_spent DESC, booking_count DESC
+                          LIMIT " . $limit);
+        $this->db->bind(':provider_id', $provider_id);
+        return $this->db->resultSet();
+    }
 }

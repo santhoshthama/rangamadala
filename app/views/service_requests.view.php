@@ -74,7 +74,8 @@
                     } elseif (!empty($req->start_date) || !empty($req->end_date)) {
                         $dateLabel = 'Schedule: ' . htmlspecialchars($req->start_date) . ' to ' . htmlspecialchars($req->end_date);
                     }
-                    $title = (isset($req->drama_name) ? htmlspecialchars($req->drama_name) : '') . ' — ' . (isset($req->service_type) ? htmlspecialchars($req->service_type) : '');
+                    $requestNo = 'REQ-' . str_pad((int)($req->id ?? 0), 5, '0', STR_PAD_LEFT);
+                    $title = $requestNo . ' — ' . (isset($req->drama_name) ? htmlspecialchars($req->drama_name) : '') . ' — ' . (isset($req->service_type) ? htmlspecialchars($req->service_type) : '');
                     $requester = (isset($req->requester_name) ? htmlspecialchars($req->requester_name) : '') . (isset($req->requester_phone) ? ' • ' . htmlspecialchars($req->requester_phone) : '');
                     $needsPaymentVerification = isset($req->payment_gateway, $req->advance_payment_status)
                         && in_array($req->payment_gateway, ['cash', 'bank_transfer'])

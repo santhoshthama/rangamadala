@@ -82,9 +82,9 @@
         </div>
 
         <?php if ($serviceMissing): ?>
-            <div style="margin:16px 0; padding:12px 14px; border-radius:8px; background:#fff5e6; color:#8a5500; border:1px solid #f4d7a6;">
+            <div class="service-alert service-alert-warning">
                 <strong>Service should be add before request.</strong>
-                <span style="margin-left:8px;">Select the service type below and add it to continue.</span>
+                <span>Select the service type below and add it to continue.</span>
             </div>
         <?php endif; ?>
 
@@ -94,15 +94,15 @@
                 <h3><?= isset($totalCount) ? $totalCount : '0' ?></h3>
                 <p>Total Services Requested</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--success), #1f9b3b);">
+            <div class="stat-card stat-card--confirmed">
                 <h3><?= isset($confirmedCount) ? $confirmedCount : '0' ?></h3>
                 <p>Confirmed Services</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--warning), #e0a800);">
+            <div class="stat-card stat-card--pending">
                 <h3><?= isset($pendingCount) ? $pendingCount : '0' ?></h3>
                 <p>Pending Responses</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--info), #138496);">
+            <div class="stat-card stat-card--estimated">
                 <h3>-</h3>
                 <p>Estimated Service Costs</p>
             </div>
@@ -166,19 +166,19 @@
                 ?>
 
                 <?php foreach ($grouped as $type => $items): ?>
-                    <div class="service-group-card" style="background:#fff;border:1px solid #eee;border-radius:10px;margin-bottom:20px;overflow:hidden;">
+                    <div class="service-group-card">
                         <?php $rawType = html_entity_decode($type, ENT_QUOTES, 'UTF-8'); $canRemove = in_array($rawType, array_map(function($s){ return $s->service_type; }, $dramaServices ?? [])); ?>
-                        <div style="padding:16px 20px;background:linear-gradient(135deg,#f7f3e9,#efe3c6);border-bottom:1px solid #e7d8af;display:flex;align-items:center;justify-content:space-between;">
-                            <h3 style="margin:0; font-size:18px; color:#5a4515;"><?= htmlspecialchars($type) ?></h3>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <span style="font-size:12px;color:#8a7a4e;"><?= count($items) ?> request(s)</span>
-                                <a class="btn btn-primary" style="padding:6px 10px; font-size:12px;" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= (int)$dramaId ?>&service_type=<?= urlencode($rawType) ?>">
+                        <div class="service-group-card__header">
+                            <h3 class="service-group-card__title"><?= htmlspecialchars($type) ?></h3>
+                            <div class="service-group-card__actions">
+                                <span class="service-group-card__count"><?= count($items) ?> request(s)</span>
+                                <a class="btn btn-primary service-group-card__browse-button" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= (int)$dramaId ?>&service_type=<?= urlencode($rawType) ?>">
                                     <i class="fas fa-search"></i> Browse Service
                                 </a>
                                 <?php if ($canRemove): ?>
-                                    <form method="POST" action="<?= ROOT ?>/production_manager/save_required_services?drama_id=<?= (int)$dramaId ?>" style="margin:0;">
+                                    <form method="POST" action="<?= ROOT ?>/production_manager/save_required_services?drama_id=<?= (int)$dramaId ?>" class="service-group-card__remove-form">
                                         <input type="hidden" name="remove_service_type" value="<?= htmlspecialchars($rawType) ?>">
-                                        <button type="submit" class="btn btn-secondary" style="padding:6px 10px; font-size:12px; background:#d9534f; border-color:#d9534f; color:#fff;">
+                                        <button type="submit" class="btn btn-secondary service-group-card__remove-button">
                                             <i class="fas fa-trash"></i> Remove
                                         </button>
                                     </form>
@@ -186,7 +186,7 @@
                             </div>
                         </div>
                         <?php if (isset($serviceMetaMap[$rawType])): $meta = $serviceMetaMap[$rawType]; ?>
-                            <div style="padding:10px 20px; border-bottom:1px solid #f1e7c9; background:#fffdf7; display:flex; gap:20px; font-size:13px; color:#5a4515;">
+                            <div class="service-group-card__meta">
                                 <?php if (!empty($meta['budget'])): ?>
                                     <div><strong>Budget:</strong> Rs <?= htmlspecialchars($meta['budget']) ?></div>
                                 <?php endif; ?>
@@ -195,12 +195,12 @@
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
-                        <div style="padding: 12px 20px;">
+                        <div class="service-group-card__body">
                             <?php foreach ($items as $service): ?>
                                 <?php 
                                     $status = isset($service->status) ? strtolower($service->status) : 'pending';
                                     $statusText = ucfirst($status);
-                                    $statusStyle = '';
+                                    $statusClass = 'status-badge status-' . htmlspecialchars($status);
                                     $hideGenericBadge = false;
                                     
                                     // Check if payment date is overdue for provider_responded status
@@ -218,7 +218,7 @@
                                             
                                             if ($dueDate < $today) {
                                                 $statusText = 'Payment date overdue';
-                                                $statusStyle = 'background: rgba(220, 20, 60, 0.15); color: #DC143C; border: 1px solid rgba(220, 20, 60, 0.3);';
+                                                $statusClass .= ' status-overdue';
                                             }
                                         }
                                     }
@@ -257,7 +257,7 @@
                                         <?php if (!empty($service->service_required)): ?><div class="request-snippet" style="margin-top: 8px; font-size: 13px; color: #555; line-height: 1.4;"><?= htmlspecialchars(substr($service->service_required, 0, 100)) ?><?= strlen($service->service_required) > 100 ? '...' : '' ?></div><?php endif; ?>
                                     </div>
                                     <div class="request-actions">
-                                        <?php if (!$hideGenericBadge): ?><span class="status-badge status-<?= htmlspecialchars($status) ?>" style="<?= $statusStyle ?>"><?= htmlspecialchars($statusText) ?></span><?php endif; ?>
+                                        <?php if (!$hideGenericBadge): ?><span class="<?= $statusClass ?>"><?= htmlspecialchars($statusText) ?></span><?php endif; ?>
                                         <?php if ($budget !== null): ?><span class="price">Rs <?= $budget ?></span><?php endif; ?>
                                         
                                         <?php if ($status === 'provider_responded'): ?>
@@ -275,12 +275,12 @@
                                             <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
                                                 View Details
                                             </button>
-                                            <div style="font-style: italic; color: #666; font-size: 13px; margin-left: auto; text-align: right;">⏱️ Awaiting Provider Acceptance</div>
+                                            <div class="service-group-card__status-row">⏱️ Awaiting Provider Acceptance</div>
                                         <?php elseif ($status === 'accepted'): ?>
                                             <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
                                                 View Details
                                             </button>
-                                            <div style="font-style: italic; color: #666; font-size: 13px; margin-left: auto; text-align: right;">🟢 In Progress</div>
+                                            <div class="service-group-card__status-row service-group-card__status-row--success">🟢 In Progress</div>
                                         <?php elseif ($status === 'completed'): ?>
                                             <?php
                                                 $serviceDetailsForPayment = $service->service_details_json ? json_decode($service->service_details_json, true) : [];
@@ -306,33 +306,33 @@
                                             ?>
                                             <?php if ($hasPendingCashBankPayment): ?>
                                                 <?php if ($providerVerificationRejected): ?>
-                                                    <span class="status-badge" style="background: rgba(220, 20, 60, 0.15); color: #DC143C; border: 1px solid rgba(220, 20, 60, 0.3);">Verification Failed</span>
+                                                    <span class="status-badge status-verification-failed">Verification Failed</span>
                                                 <?php else: ?>
-                                                    <span class="status-badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;">Fully Paid</span>
+                                                    <span class="status-badge status-fully-paid">Fully Paid</span>
                                                 <?php endif; ?>
                                                 <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
                                                     View Details
                                                 </button>
                                                 <?php if ($providerVerificationRejected): ?>
-                                                    <button class="btn-details" style="background: #dc2626; color: white; box-shadow: 0 3px 10px rgba(220, 38, 38, 0.35);" 
+                                                    <button class="btn-details btn-details--danger" 
                                                         onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= urlencode(number_format($remainingAmount, 2, '.', '')) ?>&type=remaining'">
                                                         Re-submit Payment
                                                     </button>
-                                                    <div style="font-style: italic; color: #DC143C; font-size: 13px; margin-left: auto; text-align: right;">
+                                                    <div class="service-group-card__status-row service-group-card__status-row--danger">
                                                         ⚠️ Provider could not verify<?= $providerVerificationReason !== '' ? ': ' . htmlspecialchars($providerVerificationReason) : '' ?>
                                                     </div>
                                                 <?php else: ?>
-                                                    <div style="font-style: italic; color: #666; font-size: 13px; margin-left: auto; text-align: right;">⏳ Awaiting provider's payment confirmation</div>
+                                                    <div class="service-group-card__status-row">⏳ Awaiting provider's payment confirmation</div>
                                                 <?php endif; ?>
                                             <?php elseif ($paymentStatus === 'partially_paid' && $remainingAmount > 0): ?>
-                                                <button class="btn-details" style="background: #16a34a; box-shadow: 0 3px 10px rgba(22, 163, 74, 0.35);" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($remainingAmount, 2, '.', '') ?>&type=remaining'">
+                                                <button class="btn-details btn-details--success" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($remainingAmount, 2, '.', '') ?>&type=remaining'">
                                                     Pay Remaining (Rs <?= number_format($remainingAmount, 2) ?>)
                                                 </button>
                                                 <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
                                                     View Details
                                                 </button>
                                             <?php else: ?>
-                                                <button class="btn-details" style="background: #16a34a; box-shadow: 0 3px 10px rgba(22, 163, 74, 0.35);" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($quoteAmount, 2, '.', '') ?>&type=full'">
+                                                <button class="btn-details btn-details--success" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($quoteAmount, 2, '.', '') ?>&type=full'">
                                                     Pay Full Amount (Rs <?= number_format($quoteAmount, 2) ?>)
                                                 </button>
                                                 <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
@@ -358,14 +358,14 @@
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div style="text-align: center; padding: 60px 30px; color: var(--muted, #999);">
-                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
-                    <p style="margin-bottom: 30px; font-size: 16px;">No service requests yet. Start by adding service and request service by existing providers.</p>
-                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-secondary" onclick="openAddServiceModal()" style="padding: 12px 24px; font-size: 14px;">
+                <div class="service-empty-state">
+                    <i class="fas fa-inbox service-empty-state__icon"></i>
+                    <p class="service-empty-state__text">No service requests yet. Start by adding service and request service by existing providers.</p>
+                    <div class="service-empty-state__actions">
+                        <button type="button" class="btn btn-secondary service-empty-state__button" onclick="openAddServiceModal()">
                             <i class="fas fa-plus-circle"></i> Add Service Type
                         </button>
-                        <a class="btn btn-primary" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= isset($drama->id) ? $drama->id : ($_GET['drama_id'] ?? 0) ?>" style="padding: 12px 24px; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <a class="btn btn-primary service-empty-state__link" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= isset($drama->id) ? $drama->id : ($_GET['drama_id'] ?? 0) ?>">
                             <i class="fas fa-search"></i> Browse Service
                         </a>
                     </div>
@@ -375,19 +375,19 @@
     </main>
 
     <!-- Request Details Modal -->
-    <div id="detailsModal" style="display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center;">
-        <div style="background-color: #fefefe; padding: 0; border-radius: 8px; width: 90%; max-width: 700px; box-shadow: 0 4px 6px rgba(0,0,0,0.15);" id="detailsContent">
+    <div id="detailsModal" class="modal-overlay">
+        <div class="modal-dialog modal-dialog--details" id="detailsContent">
         </div>
     </div>
 
     <!-- Add Service Modal -->
-    <div id="addServiceModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.4); align-items:center; justify-content:center;">
-        <div style="background:#fff; border-radius:8px; width:90%; max-width:520px; box-shadow:0 4px 6px rgba(0,0,0,0.15);">
-            <div style="padding:16px 20px; border-bottom:1px solid #eee; display:flex; align-items:center; justify-content:space-between;">
-                <h3 style="margin:0; font-size:18px;">Add Service Type</h3>
-                <button type="button" onclick="closeAddServiceModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+    <div id="addServiceModal" class="modal-overlay modal-overlay--add">
+        <div class="modal-dialog modal-dialog--add">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Service Type</h3>
+                <button type="button" onclick="closeAddServiceModal()" class="modal-close">&times;</button>
             </div>
-            <div style="padding:16px 20px;">
+            <div class="modal-body">
                 <?php
                     $allTypes = [
                         'Theater Production',
@@ -402,32 +402,32 @@
                     $existingServices = isset($dramaServices) ? array_map(function($s){ return $s->service_type; }, $dramaServices) : [];
                     $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
                 ?>
-                <form method="POST" action="<?= ROOT ?>/production_manager/save_required_services?drama_id=<?= $dramaId ?>" style="display:flex; flex-direction:column; gap:12px;">
+                <form method="POST" action="<?= ROOT ?>/production_manager/save_required_services?drama_id=<?= $dramaId ?>" class="form-stack">
                     <?php if (!empty($returnUrl)): ?>
                         <input type="hidden" name="return_url" value="<?= htmlspecialchars($returnUrl) ?>">
                     <?php endif; ?>
-                    <label style="font-size:14px; color:#444;">Select service types to add</label>
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px;">
+                    <label class="form-stack__label">Select service types to add</label>
+                    <div class="form-grid">
                         <?php foreach ($allTypes as $t): 
                             $isExisting = in_array($t, $existingServices);
                         ?>
-                            <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid #eee; border-radius:6px; background:#fafafa; color:#333; cursor: <?= $isExisting ? 'not-allowed; opacity: 0.6;' : 'pointer;' ?>">
+                            <label class="form-option <?= $isExisting ? 'form-option--disabled' : '' ?>">
                                 <input type="checkbox" name="required_services[]" value="<?= htmlspecialchars($t) ?>" <?= $isExisting ? 'checked disabled' : '' ?>>
                                 <span><?= htmlspecialchars($t) ?><?= $isExisting ? ' (added)' : '' ?></span>
                             </label>
                         <?php endforeach; ?>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
-                        <label style="font-size:14px; color:#444;">Budget (optional)</label>
-                        <input type="text" name="service_budget" placeholder="Enter budget" style="padding:10px; border:1px solid #ddd; border-radius:6px;">
+                    <div class="form-field form-field--mt10">
+                        <label class="form-stack__label">Budget (optional)</label>
+                        <input type="text" name="service_budget" placeholder="Enter budget" class="form-input">
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <label style="font-size:14px; color:#444;">Description (optional)</label>
-                        <textarea name="service_description" rows="3" placeholder="Add a short description" style="padding:10px; border:1px solid #ddd; border-radius:6px;"></textarea>
+                    <div class="form-field">
+                        <label class="form-stack__label">Description (optional)</label>
+                        <textarea name="service_description" rows="3" placeholder="Add a short description" class="form-textarea"></textarea>
                     </div>
-                    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
-                        <button type="button" class="btn" onclick="closeAddServiceModal()">Cancel</button>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+                    <div class="form-actions">
+                        <button type="button" class="btn modal-button modal-button--secondary" onclick="closeAddServiceModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary modal-button modal-button--primary"><i class="fas fa-plus"></i> Add</button>
                     </div>
                 </form>
             </div>
@@ -471,38 +471,38 @@
             const requestData = JSON.parse(button.getAttribute('data-request'));
             const detailsContent = document.getElementById('detailsContent');
             
-            let html = '<div style="padding: 24px;">';
-            html += '<h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1f2937;">Request Details</h3>';
+            let html = '<div class="details-summary">';
+            html += '<h3 class="details-summary__title">Request Details</h3>';
             
-            html += '<div style="background: #f9fafb; padding: 16px; border-radius: 6px; border: 1px solid #e5e7eb; margin-bottom: 20px;">';
+            html += '<div class="details-summary__box">';
             
             if (requestData.provider_name) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Provider Name</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.provider_name || '-') + '</div></div>';
+                html += '<div class="details-summary__row"><label class="details-summary__label">Provider Name</label><div class="details-summary__value">' + (requestData.provider_name || '-') + '</div></div>';
             }
             
             if (requestData.service_required) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Service Required</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.service_required || '-') + '</div></div>';
+                html += '<div class="details-summary__row"><label class="details-summary__label">Service Required</label><div class="details-summary__value">' + (requestData.service_required || '-') + '</div></div>';
             }
             
             if (requestData.budget) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Budget</label><div style="font-size: 14px; color: #1f2937;">Rs ' + (requestData.budget || '-') + '</div></div>';
+                html += '<div class="details-summary__row"><label class="details-summary__label">Budget</label><div class="details-summary__value">Rs ' + (requestData.budget || '-') + '</div></div>';
             }
             
             if (requestData.service_date) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Service Date</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.service_date || '-') + '</div></div>';
+                html += '<div class="details-summary__row"><label class="details-summary__label">Service Date</label><div class="details-summary__value">' + (requestData.service_date || '-') + '</div></div>';
             }
             
             if (requestData.start_date || requestData.end_date) {
-                html += '<div style="margin-bottom: 12px;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Duration</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.start_date || '-') + ' to ' + (requestData.end_date || '-') + '</div></div>';
+                html += '<div class="details-summary__row"><label class="details-summary__label">Duration</label><div class="details-summary__value">' + (requestData.start_date || '-') + ' to ' + (requestData.end_date || '-') + '</div></div>';
             }
             
             if (requestData.status) {
-                html += '<div style="margin-bottom: 0;"><label style="font-size: 12px; font-weight: 600; color: #6b7280;">Status</label><div style="font-size: 14px; color: #1f2937;">' + (requestData.status || '-') + '</div></div>';
+                html += '<div class="details-summary__row"><label class="details-summary__label">Status</label><div class="details-summary__value">' + (requestData.status || '-') + '</div></div>';
             }
             
             html += '</div>';
-            html += '<div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;">';
-            html += '<button onclick="closeDetailsModal()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: #6b7280; color: #fff;">Close</button>';
+            html += '<div class="details-summary__footer">';
+            html += '<button onclick="closeDetailsModal()" class="details-summary__close">Close</button>';
             html += '</div>';
             html += '</div>';
             
@@ -552,46 +552,46 @@
     </script>
 
     <!-- Provider Response View -->
-    <div id="confirmModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center; flex-direction: column;">
-        <div style="background: #fff; border-radius: 8px; width: 90%; max-width: 550px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;">
-            <div style="padding: 20px; border-bottom: 1px solid #ddd; background: linear-gradient(135deg, #d4af37, #aa8c2c); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0;">
-                <h3 style="margin: 0; font-size: 18px; color: #1a1410;">Provider Response</h3>
-                <button onclick="closeConfirmModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #1a1410; padding: 0; width: 30px; height: 30px;">&times;</button>
+    <div id="confirmModal" class="modal-overlay modal-overlay--confirm">
+        <div class="modal-dialog modal-dialog--confirm">
+            <div class="modal-header modal-header--confirm">
+                <h3 class="modal-title">Provider Response</h3>
+                <button onclick="closeConfirmModal()" class="modal-close">&times;</button>
             </div>
-            <div style="padding: 24px;">
-                <div style="background: #f9fafb; padding: 16px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
-                    <h4 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 600; color: #1f2937;">Quotation Details</h4>
+            <div class="modal-dialog--confirm-content">
+                <div class="modal-section">
+                    <h4 class="modal-section__title">Quotation Details</h4>
                     
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Quotation Amount</label>
-                        <div style="font-size: 15px; font-weight: 500; color: #1f2937;">Rs <span id="review_quote_amount">-</span></div>
+                    <div class="modal-field">
+                        <label class="modal-label">Quotation Amount</label>
+                        <div class="modal-value modal-value--strong">Rs <span id="review_quote_amount">-</span></div>
                     </div>
 
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Advance Payment Required</label>
-                        <div style="font-size: 15px; font-weight: 500; color: #1f2937;"><span id="review_advance_status">No</span></div>
+                    <div class="modal-field">
+                        <label class="modal-label">Advance Payment Required</label>
+                        <div class="modal-value modal-value--strong"><span id="review_advance_status">No</span></div>
                     </div>
 
-                    <div id="advanceDetailsRow" style="display: none; background: #fffdf7; padding: 12px; border: 1px solid #f0e4c6; border-radius: 6px; margin-bottom: 16px;">
-                        <div style="font-size: 12px; font-weight: 600; color: #1f2937; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">Advance Payment Details</div>
-                        <div style="margin-bottom: 12px;">
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Advance Amount</label>
-                            <div style="font-size: 15px; font-weight: 500; color: #1f2937;">Rs <span id="review_advance_amount">-</span></div>
+                    <div id="advanceDetailsRow" class="modal-section modal-section--subtle" style="display: none;">
+                        <div class="modal-section__title" style="padding-bottom: 8px; border-bottom: 1px solid #e5e7eb; margin-bottom: 12px;">Advance Payment Details</div>
+                        <div class="modal-field">
+                            <label class="modal-label">Advance Amount</label>
+                            <div class="modal-value modal-value--strong">Rs <span id="review_advance_amount">-</span></div>
                         </div>
-                        <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Advance Due Date</label>
-                            <div style="font-size: 15px; font-weight: 500; color: #1f2937;"><span id="review_advance_due_date">-</span></div>
+                        <div class="modal-field">
+                            <label class="modal-label">Advance Due Date</label>
+                            <div class="modal-value modal-value--strong"><span id="review_advance_due_date">-</span></div>
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px;">Final Payment Due Date</label>
-                        <div style="font-size: 15px; font-weight: 500; color: #1f2937;"><span id="review_final_payment_due">-</span></div>
+                    <div class="modal-field">
+                        <label class="modal-label">Final Payment Due Date</label>
+                        <div class="modal-value modal-value--strong"><span id="review_final_payment_due">-</span></div>
                     </div>
 
-                    <div id="providerNoteRow" style="display: none; background: #f3f4f6; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 6px;">Provider Notes</label>
-                        <div style="font-size: 13px; color: #374151; font-style: italic;" id="review_provider_note"></div>
+                    <div id="providerNoteRow" class="modal-section modal-section--note" style="display: none;">
+                        <label class="modal-label" style="margin-bottom: 6px;">Provider Notes</label>
+                        <div class="modal-value modal-value--muted" id="review_provider_note"></div>
                     </div>
                 </div>
 
@@ -600,19 +600,19 @@
                 <input type="hidden" id="confirm_needs_advance">
 
                 <!-- Note about advance payment (informational only) -->
-                <div id="advanceInfoSection" style="display: none; background: #ecfdf5; padding: 14px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #10b981;">
-                    <p style="margin: 0; font-size: 13px; color: #065f46;">
+                <div id="advanceInfoSection" class="modal-section modal-section--success" style="display: none;">
+                    <p class="modal-info">
                         <strong>💳 Payment Required:</strong> After confirming, you'll be redirected to pay the advance amount of <strong>Rs <span id="advance_info_amount">0</span></strong>.
                     </p>
                 </div>
 
                 <!-- Action Buttons (single set) -->
-                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                    <button onclick="closeConfirmModal()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: #6b7280; color: #fff; transition: background 0.2s;">Close</button>
-                    <button onclick="rejectProviderResponse()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: #ef4444; color: #fff; transition: background 0.2s;">
+                <div class="modal-actions modal-actions--confirm">
+                    <button onclick="closeConfirmModal()" class="modal-button modal-button--secondary">Close</button>
+                    <button onclick="rejectProviderResponse()" class="modal-button modal-button--danger">
                         Reject
                     </button>
-                    <button id="confirmBtn" onclick="acceptProviderResponse()" style="padding: 10px 20px; font-size: 14px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; background: linear-gradient(135deg, #d4af37, #aa8c2c); color: #1a1410; transition: background 0.2s;">
+                    <button id="confirmBtn" onclick="acceptProviderResponse()" class="modal-button modal-button--primary">
                         Confirm
                     </button>
                 </div>
@@ -766,21 +766,7 @@
         function showMessage(text, type) {
             const message = document.createElement('div');
             message.textContent = text;
-            message.style.position = 'fixed';
-            message.style.top = '20px';
-            message.style.right = '20px';
-            message.style.padding = '12px 20px';
-            message.style.borderRadius = '6px';
-            message.style.zIndex = '1001';
-            message.style.fontWeight = '500';
-            
-            if (type === 'success') {
-                message.style.background = '#28a745';
-                message.style.color = 'white';
-            } else if (type === 'error') {
-                message.style.background = '#dc3545';
-                message.style.color = 'white';
-            }
+            message.className = 'toast-message ' + (type === 'success' ? 'toast-message--success' : 'toast-message--error');
             
             document.body.appendChild(message);
             
@@ -1067,7 +1053,7 @@
     </script>
 
     <!-- PM Request Details Modal -->
-    <div id="pmDetailsModal" style="display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center;">
-        <div style="background-color: #fefefe; padding: 0; border-radius: 8px; width: 90%; max-width: 700px; box-shadow: 0 4px 6px rgba(0,0,0,0.15);" id="pmDetailsContent">
+    <div id="pmDetailsModal" class="modal-overlay">
+        <div class="modal-dialog modal-dialog--details modal-content--details" id="pmDetailsContent">
         </div>
     </div>
