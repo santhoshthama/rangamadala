@@ -230,7 +230,7 @@ function showDramaRequestDetails(requestId) {
           <div class="input-box readonly">
             <input type="text" value="${escapeHtml(request.owner_name || 'N/A')}" readonly />
             <i class="material-symbols-rounded">person</i>
-            <label>Owner Name</label>
+            <label>Producer Name</label>
           </div>
 
           <div class="input-box readonly">
@@ -319,7 +319,7 @@ function closeDramaRequestDetailsModal() {
 
 async function approveDramaRequest(requestId, dramaName) {
   const confirmed = await showConfirm(
-    `Approve drama request for ${dramaName}? This will create the drama automatically.`,
+    `Approve drama request for ${dramaName}? This creates the drama draft only; artist must publish it to audience later.`,
     { title: 'Approve Drama Request', confirmText: 'Approve', type: 'success' }
   );
   if (!confirmed) return;

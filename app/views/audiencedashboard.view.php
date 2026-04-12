@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
 
   <!-- Material Design Icons -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -986,7 +987,7 @@
                           <?php endif; ?>
                         </div>
                         <div class="drama-footer">
-                          <form method="POST" action="<?= ROOT ?>/audiencedashboard/enroll_class" style="width: 100%;">
+                          <form method="POST" action="<?= ROOT ?>/audiencedashboard/start_class_payment" class="class-enroll-payment-form" style="width: 100%;">
                             <input type="hidden" name="class_id" value="<?= (int)$class->id ?>">
                             <button type="submit" class="btn btn-book" style="width: 100%; display: inline-flex; justify-content: center; align-items: center;">
                               <span class="material-symbols-rounded">school</span>
@@ -1204,6 +1205,100 @@
 
   <script src="<?= ROOT ?>/assets/JS/audiencedashboard.js"></script>
   <script>
+    function initAudienceClassPayments() {
+      const enrollForms = document.querySelectorAll('.class-enroll-payment-form');
+      if (!enrollForms.length) {
+        return;
+      }
+
+      enrollForms.forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+
+          if (typeof payhere === 'undefined') {
+            alert('PayHere is not available right now. Please refresh and try again.');
+            return;
+          }
+
+          const submitBtn = form.querySelector('button[type="submit"]');
+          const classIdInput = form.querySelector('input[name="class_id"]');
+          if (!classIdInput || !classIdInput.value) {
+            alert('Invalid class selected.');
+            return;
+          }
+
+          if (submitBtn) {
+            submitBtn.disabled = true;
+          }
+
+          fetch(form.getAttribute('action'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'class_id=' + encodeURIComponent(classIdInput.value)
+          })
+            .then(function (response) {
+              return response.json();
+            })
+            .then(function (data) {
+              if (!data.success) {
+                alert(data.error || 'Unable to initialize class payment.');
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                }
+                return;
+              }
+
+              const payment = {
+                sandbox: !!data.sandbox,
+                merchant_id: data.merchant_id,
+                return_url: data.return_url,
+                cancel_url: data.cancel_url,
+                notify_url: data.notify_url,
+                order_id: data.order_id,
+                items: data.title || 'Drama Class',
+                amount: data.amount,
+                currency: 'LKR',
+                hash: data.hash,
+                first_name: 'Audience',
+                last_name: 'User',
+                email: 'audience@example.com',
+                phone: '0770000000',
+                address: 'Sri Lanka',
+                city: 'Colombo',
+                country: 'Sri Lanka'
+              };
+
+              payhere.onCompleted = function () {
+                window.location.href = data.return_url;
+              };
+
+              payhere.onDismissed = function () {
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                }
+              };
+
+              payhere.onError = function (error) {
+                alert('Payment error: ' + error);
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                }
+              };
+
+              payhere.startPayment(payment);
+            })
+            .catch(function () {
+              alert('Payment initialization failed. Please try again.');
+              if (submitBtn) {
+                submitBtn.disabled = false;
+              }
+            });
+        });
+      });
+    }
+
     function initAudienceClassesTabs() {
       const classesView = document.getElementById('classes');
       if (!classesView) {
@@ -1217,6 +1312,7 @@
         return;
       }
 
+            initAudienceClassPayments();
       buttons.forEach((button) => {
         button.addEventListener('click', function () {
           const target = button.getAttribute('data-classes-tab');

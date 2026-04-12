@@ -48,6 +48,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/toast.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
 <style>
         .header--wrapper .user--info {
             gap: 16px;
@@ -555,7 +556,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                     </div>
                                 </div>
                                 <div class="artist-footer">
-                                    <form method="POST" action="<?= ROOT ?>/artistdashboard/enroll_class" style="width: 100%;">
+                                    <form method="POST" action="<?= ROOT ?>/artistdashboard/start_class_payment" class="class-enroll-payment-form" style="width: 100%;">
                                         <input type="hidden" name="class_id" value="<?= (int)$class->id ?>">
                                         <button type="submit" class="btn btn-primary" style="width: 100%;">
                                             <i class="bx bx-user-plus"></i> Enroll Now
@@ -615,6 +616,100 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     </main>
 
     <script>
+        function initArtistClassPayments() {
+            const enrollForms = document.querySelectorAll('.class-enroll-payment-form');
+            if (!enrollForms.length) {
+                return;
+            }
+
+            enrollForms.forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+
+                    if (typeof payhere === 'undefined') {
+                        alert('PayHere is not available right now. Please refresh and try again.');
+                        return;
+                    }
+
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const classIdInput = form.querySelector('input[name="class_id"]');
+                    if (!classIdInput || !classIdInput.value) {
+                        alert('Invalid class selected.');
+                        return;
+                    }
+
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                    }
+
+                    fetch(form.getAttribute('action'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'class_id=' + encodeURIComponent(classIdInput.value)
+                    })
+                        .then(function (response) {
+                            return response.json();
+                        })
+                        .then(function (data) {
+                            if (!data.success) {
+                                alert(data.error || 'Unable to initialize class payment.');
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                }
+                                return;
+                            }
+
+                            const payment = {
+                                sandbox: !!data.sandbox,
+                                merchant_id: data.merchant_id,
+                                return_url: data.return_url,
+                                cancel_url: data.cancel_url,
+                                notify_url: data.notify_url,
+                                order_id: data.order_id,
+                                items: data.title || 'Drama Class',
+                                amount: data.amount,
+                                currency: 'LKR',
+                                hash: data.hash,
+                                first_name: 'Artist',
+                                last_name: 'User',
+                                email: 'artist@example.com',
+                                phone: '0770000000',
+                                address: 'Sri Lanka',
+                                city: 'Colombo',
+                                country: 'Sri Lanka'
+                            };
+
+                            payhere.onCompleted = function () {
+                                window.location.href = data.return_url;
+                            };
+
+                            payhere.onDismissed = function () {
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                }
+                            };
+
+                            payhere.onError = function (error) {
+                                alert('Payment error: ' + error);
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                }
+                            };
+
+                            payhere.startPayment(payment);
+                        })
+                        .catch(function () {
+                            alert('Payment initialization failed. Please try again.');
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                            }
+                        });
+                });
+            });
+        }
+
         function openClassesTab(evt, tabId) {
             evt.preventDefault();
 
@@ -647,6 +742,8 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                 }
             });
         }
+
+        initArtistClassPayments();
     </script>
 </body>
 </html>

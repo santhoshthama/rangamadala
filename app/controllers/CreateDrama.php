@@ -116,7 +116,7 @@ class CreateDrama
         $result = $drama_model->createDramaRequest($drama_data);
 
         if (($result['success'] ?? false) === true) {
-            $_SESSION['message'] = "Drama request submitted successfully. The drama will be created automatically after admin approval.";
+            $_SESSION['message'] = "Drama request submitted successfully. After admin approval, publish it from your dashboard to show in audience view.";
             $_SESSION['message_type'] = 'success';
             header("Location: " . ROOT . "/artistdashboard");
             exit;

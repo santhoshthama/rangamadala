@@ -47,8 +47,149 @@ class M_class
                 CONSTRAINT fk_class_enrollments_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             $this->db->execute();
+
+            $this->db->query("CREATE TABLE IF NOT EXISTS class_enrollment_payments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                order_id VARCHAR(120) NOT NULL,
+                class_id INT NOT NULL,
+                user_id INT NOT NULL,
+                user_role VARCHAR(20) NOT NULL,
+                amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                status ENUM('initiated', 'completed', 'failed') NOT NULL DEFAULT 'initiated',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                paid_at DATETIME NULL,
+                UNIQUE KEY uniq_class_payment_order_id (order_id),
+                KEY idx_class_payment_class_user (class_id, user_id),
+                KEY idx_class_payment_status (status),
+                CONSTRAINT fk_class_payment_class_id FOREIGN KEY (class_id) REFERENCES drama_classes(id) ON DELETE CASCADE,
+                CONSTRAINT fk_class_payment_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            $this->db->execute();
         } catch (Exception $e) {
             error_log('M_class::ensureSchema failed: ' . $e->getMessage());
+        }
+    }
+
+    public function validateEnrollmentEligibility($classId, $userId, $allowOwnClass = true)
+    {
+        try {
+            $this->db->query("SELECT dc.*,
+                    (SELECT COUNT(*)
+                     FROM class_enrollments ce
+                     WHERE ce.class_id = dc.id AND ce.status = 'enrolled') AS enrolled_count
+                FROM drama_classes dc
+                WHERE dc.id = :class_id AND dc.is_published = 1
+                LIMIT 1");
+            $this->db->bind(':class_id', (int)$classId);
+            $class = $this->db->single();
+
+            if (!$class) {
+                return ['success' => false, 'message' => 'Class not found or not published.'];
+            }
+
+            if (!$allowOwnClass && (int)$class->created_by === (int)$userId) {
+                return ['success' => false, 'message' => 'You cannot enroll in your own class.'];
+            }
+
+            $this->db->query("SELECT id FROM class_enrollments WHERE class_id = :class_id AND user_id = :user_id LIMIT 1");
+            $this->db->bind(':class_id', (int)$classId);
+            $this->db->bind(':user_id', (int)$userId);
+            if ($this->db->single()) {
+                return ['success' => false, 'message' => 'You are already enrolled in this class.'];
+            }
+
+            $capacity = (int)($class->capacity ?? 0);
+            $enrolled = (int)($class->enrolled_count ?? 0);
+            if ($capacity > 0 && $enrolled >= $capacity) {
+                return ['success' => false, 'message' => 'This class is already full.'];
+            }
+
+            return ['success' => true, 'class' => $class];
+        } catch (Exception $e) {
+            error_log('M_class::validateEnrollmentEligibility error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to validate class enrollment right now.'];
+        }
+    }
+
+    public function createEnrollmentPaymentOrder($classId, $userId, $userRole, $allowOwnClass = true)
+    {
+        $eligibility = $this->validateEnrollmentEligibility($classId, $userId, $allowOwnClass);
+        if (!$eligibility['success']) {
+            return $eligibility;
+        }
+
+        $class = $eligibility['class'];
+        $amount = number_format((float)($class->fee ?? 0), 2, '.', '');
+        if ((float)$amount <= 0) {
+            return ['success' => false, 'message' => 'Class fee is not configured for payment yet.'];
+        }
+
+        try {
+            $orderId = 'CLASS-' . (int)$classId . '-' . (int)$userId . '-' . time();
+
+            $this->db->query("INSERT INTO class_enrollment_payments
+                (order_id, class_id, user_id, user_role, amount, status)
+                VALUES (:order_id, :class_id, :user_id, :user_role, :amount, 'initiated')");
+            $this->db->bind(':order_id', $orderId);
+            $this->db->bind(':class_id', (int)$classId);
+            $this->db->bind(':user_id', (int)$userId);
+            $this->db->bind(':user_role', strtolower(trim((string)$userRole)));
+            $this->db->bind(':amount', $amount);
+
+            if (!$this->db->execute()) {
+                return ['success' => false, 'message' => 'Unable to initialize class payment.'];
+            }
+
+            return [
+                'success' => true,
+                'order_id' => $orderId,
+                'amount' => $amount,
+                'class' => $class,
+            ];
+        } catch (Exception $e) {
+            error_log('M_class::createEnrollmentPaymentOrder error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to initialize class payment.'];
+        }
+    }
+
+    public function completeEnrollmentPayment($orderId, $userId, $userRole, $allowOwnClass = true)
+    {
+        try {
+            $this->db->query("SELECT *
+                FROM class_enrollment_payments
+                WHERE order_id = :order_id
+                  AND user_id = :user_id
+                  AND user_role = :user_role
+                LIMIT 1");
+            $this->db->bind(':order_id', $orderId);
+            $this->db->bind(':user_id', (int)$userId);
+            $this->db->bind(':user_role', strtolower(trim((string)$userRole)));
+            $payment = $this->db->single();
+
+            if (!$payment) {
+                return ['success' => false, 'message' => 'Class payment order not found.'];
+            }
+
+            if (strtolower((string)$payment->status) === 'completed') {
+                return ['success' => true, 'message' => 'Payment already confirmed. You are enrolled in this class.'];
+            }
+
+            $enrollment = $this->enrollUser((int)$payment->class_id, (int)$userId, $allowOwnClass);
+            if (!$enrollment['success'] && stripos((string)$enrollment['message'], 'already enrolled') === false) {
+                return $enrollment;
+            }
+
+            $this->db->query("UPDATE class_enrollment_payments
+                SET status = 'completed',
+                    paid_at = NOW()
+                WHERE id = :id");
+            $this->db->bind(':id', (int)$payment->id);
+            $this->db->execute();
+
+            return ['success' => true, 'message' => 'Payment successful. You are now enrolled in this class.'];
+        } catch (Exception $e) {
+            error_log('M_class::completeEnrollmentPayment error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to complete enrollment after payment.'];
         }
     }
 
@@ -163,35 +304,9 @@ class M_class
     public function enrollUser($classId, $userId, $allowOwnClass = true)
     {
         try {
-            $this->db->query("SELECT dc.*,
-                    (SELECT COUNT(*)
-                     FROM class_enrollments ce
-                     WHERE ce.class_id = dc.id AND ce.status = 'enrolled') AS enrolled_count
-                FROM drama_classes dc
-                WHERE dc.id = :class_id AND dc.is_published = 1
-                LIMIT 1");
-            $this->db->bind(':class_id', (int)$classId);
-            $class = $this->db->single();
-
-            if (!$class) {
-                return ['success' => false, 'message' => 'Class not found or not published.'];
-            }
-
-            if (!$allowOwnClass && (int)$class->created_by === (int)$userId) {
-                return ['success' => false, 'message' => 'You cannot enroll in your own class.'];
-            }
-
-            $this->db->query("SELECT id FROM class_enrollments WHERE class_id = :class_id AND user_id = :user_id LIMIT 1");
-            $this->db->bind(':class_id', (int)$classId);
-            $this->db->bind(':user_id', (int)$userId);
-            if ($this->db->single()) {
-                return ['success' => false, 'message' => 'You are already enrolled in this class.'];
-            }
-
-            $capacity = (int)($class->capacity ?? 0);
-            $enrolled = (int)($class->enrolled_count ?? 0);
-            if ($capacity > 0 && $enrolled >= $capacity) {
-                return ['success' => false, 'message' => 'This class is already full.'];
+            $eligibility = $this->validateEnrollmentEligibility($classId, $userId, $allowOwnClass);
+            if (!$eligibility['success']) {
+                return $eligibility;
             }
 
             $this->db->query("INSERT INTO class_enrollments (class_id, user_id, status) VALUES (:class_id, :user_id, 'enrolled')");

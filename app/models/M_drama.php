@@ -243,7 +243,7 @@ class M_drama {
             $this->db->query("INSERT INTO dramas
                 (drama_name, certificate_number, owner_name, description, public_description, certificate_image, created_by, creator_artist_id, is_published, published_at, published_by)
                 VALUES
-                (:drama_name, :certificate_number, :owner_name, :description, :public_description, :certificate_image, :created_by, :creator_artist_id, 1, CURRENT_TIMESTAMP, :published_by)");
+                (:drama_name, :certificate_number, :owner_name, :description, :public_description, :certificate_image, :created_by, :creator_artist_id, 0, NULL, NULL)");
             $this->db->bind(':drama_name', $request->drama_name);
             $this->db->bind(':certificate_number', $request->certificate_number);
             $this->db->bind(':owner_name', $request->owner_name);
@@ -252,7 +252,6 @@ class M_drama {
             $this->db->bind(':certificate_image', $request->certificate_image);
             $this->db->bind(':created_by', (int)$request->requested_by);
             $this->db->bind(':creator_artist_id', (int)$request->requested_by);
-            $this->db->bind(':published_by', (int)$admin_id);
 
             if (!$this->db->execute()) {
                 $this->db->rollBack();
@@ -278,7 +277,7 @@ class M_drama {
             }
 
             $this->db->commit();
-            return ['success' => true, 'message' => 'Drama approved and created successfully.'];
+            return ['success' => true, 'message' => 'Drama approved successfully. Artist must publish it before it appears to audience.'];
         } catch (Exception $e) {
             if ($this->db) {
                 try {
