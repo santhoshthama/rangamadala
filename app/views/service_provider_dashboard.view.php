@@ -150,7 +150,6 @@
                                         <?= htmlspecialchars(ucwords(str_replace('_', ' ', $service->status ?? 'pending'))) ?> | Updated: <?= date('d M Y', strtotime($service->updated_at ?? 'now')) ?>
                                     </div>
                                 </div>
-                                <div class="activity-amount">Rs. <?= number_format($service->amount_paid ?? 0, 2) ?></div>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>

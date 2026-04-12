@@ -118,6 +118,26 @@ body {
     align-items: center;
     gap:1rem;
 }
+
+.header-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #9a6a00;
+    text-decoration: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.header-logout:hover {
+    background: transparent;
+    color: #7d5300;
+}
 .search--box{
     background: rgba(237,237,237);
     border-radius: 15px;

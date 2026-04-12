@@ -56,12 +56,6 @@ $activePage = $activePage ?? '';
                     <span>Profile</span>
                 </a>
             </li>
-            <li>
-                <a href="<?= ROOT ?>/Logout">
-                    <i class="fas fa-right-from-bracket"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
         </ul>
     </div>
 </div>
