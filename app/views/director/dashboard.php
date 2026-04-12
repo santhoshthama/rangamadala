@@ -8,6 +8,13 @@ if (!isset($drama) && isset($data['drama'])) {
 }
 
 $dramaId = isset($drama->id) ? (int)$drama->id : (isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0);
+$dashboardStats = isset($dashboardStats) && is_array($dashboardStats) ? $dashboardStats : [];
+
+$totalRoles = (int)($dashboardStats['total_roles'] ?? 0);
+$totalPositions = (int)($dashboardStats['total_positions'] ?? 0);
+$filledPositions = (int)($dashboardStats['filled_positions'] ?? 0);
+$productionManagersCount = (int)($dashboardStats['production_managers'] ?? 0);
+$pendingApplicationsCount = (int)($dashboardStats['pending_applications'] ?? 0);
 
 // Get current user profile image
 $userModel = new M_universal_profile();
@@ -117,19 +124,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <!-- Statistics Cards for THIS Drama -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3 id="totalRoles">15</h3>
+                <h3 id="totalRoles"><?= $totalRoles ?></h3>
                 <p>Total Roles</p>
             </div>
             <div class="stat-card">
-                <h3 id="filledRoles">12/15</h3>
+                <h3 id="filledRoles"><?= $filledPositions . '/' . $totalPositions ?></h3>
                 <p>Filled Roles</p>
             </div>
             <div class="stat-card">
-                <h3 id="productionManagers">1</h3>
+                <h3 id="productionManagers"><?= $productionManagersCount ?></h3>
                 <p>Production Manager</p>
             </div>
             <div class="stat-card">
-                <h3 id="pendingApplications">8</h3>
+                <h3 id="pendingApplications"><?= $pendingApplicationsCount ?></h3>
                 <p>Pending Applications</p>
             </div>
         </div>

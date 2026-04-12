@@ -165,7 +165,7 @@
 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="edit_role_salary">Salary (LKR)</label>
+                                        <label for="edit_role_salary">Salary (LKR) (Per session)</label>
                                         <input type="number" step="0.01" min="0" id="edit_role_salary" name="salary" class="form-control" value="<?= esc($updateValues['salary']) ?>">
                                         <?php if (isset($updateErrors['salary'])): ?>
                                             <div class="form-error"><?= esc($updateErrors['salary']) ?></div>
@@ -248,7 +248,7 @@
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="create_role_salary">Salary (LKR)</label>
+                                    <label for="create_role_salary">Salary (LKR) (Per session)</label>
                                     <input type="number" step="0.01" min="0" id="create_role_salary" name="salary" class="form-control" value="<?= esc($createValues['salary']) ?>">
                                     <?php if (isset($createErrors['salary'])): ?>
                                         <div class="form-error"><?= esc($createErrors['salary']) ?></div>
@@ -326,7 +326,7 @@
                                                 <span><strong>Positions:</strong> <?= esc($positionsFilled) ?> / <?= esc($positionsAvailable) ?> filled</span>
                                                 <span><strong>Open Slots:</strong> <?= esc($openSlots) ?></span>
                                                 <?php if ($salaryDisplay): ?>
-                                                    <span><strong>Salary:</strong> <?= esc($salaryDisplay) ?></span>
+                                                    <span><strong>Salary (LKR) (Per session):</strong> <?= esc($salaryDisplay) ?></span>
                                                 <?php endif; ?>
                                             </div>
                                         </div>

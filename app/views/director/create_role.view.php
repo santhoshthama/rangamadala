@@ -9,9 +9,6 @@ $formErrors = isset($formErrors) && is_array($formErrors) ? $formErrors : [];
 $roleTypes = [
     'lead' => 'Lead',
     'supporting' => 'Supporting',
-    'ensemble' => 'Ensemble',
-    'dancer' => 'Dancer',
-    'musician' => 'Musician',
     'other' => 'Other',
 ];
 
@@ -119,7 +116,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="salary">Salary (LKR)</label>
+                        <label for="salary">Salary (LKR) (Per session)</label>
                         <input type="number" step="0.01" min="0" id="salary" name="salary" class="form-control" value="<?= esc($formData['salary'] ?? '') ?>">
                         <?php if (isset($formErrors['salary'])): ?><div class="form-error"><?= esc($formErrors['salary']) ?></div><?php endif; ?>
                     </div>

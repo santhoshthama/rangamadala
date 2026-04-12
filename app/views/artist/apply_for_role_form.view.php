@@ -111,7 +111,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 <span class="service-info-value"><?= ucfirst(htmlspecialchars($data['role']->role_type ?? 'N/A')) ?></span>
                             </div>
                             <div class="service-info-item">
-                                <span class="service-info-label"><i class="fas fa-money-bill-wave"></i> Salary</span>
+                                <span class="service-info-label"><i class="fas fa-money-bill-wave"></i> Salary (LKR) (Per session)</span>
                                 <span class="service-info-value">LKR <?= isset($data['role']->salary) && $data['role']->salary ? number_format($data['role']->salary) : 'Negotiable' ?></span>
                             </div>
                             <div class="service-info-item">

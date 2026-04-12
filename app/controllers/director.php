@@ -33,6 +33,8 @@ class Director{
             
             // Get all roles for this drama
             $roles = $this->roleModel ? $this->roleModel->getRolesByDrama((int)$drama->id) : [];
+            $roleStats = $this->roleModel ? $this->roleModel->getRoleStats((int)$drama->id) : null;
+            $pendingApplications = $this->roleModel ? $this->roleModel->getPendingApplications((int)$drama->id) : [];
             
             // Get assigned artists for each role
             $assignedArtists = [];
@@ -49,10 +51,23 @@ class Director{
                     }
                 }
             }
+
+            $totalRoles = (int)($roleStats->total_roles ?? 0);
+            $totalPositions = (int)($roleStats->total_positions ?? 0);
+            $filledPositions = (int)($roleStats->filled_positions ?? 0);
+            $hasProductionManager = $productionManager ? 1 : 0;
+            $pendingApplicationsCount = is_array($pendingApplications) ? count($pendingApplications) : 0;
             
             return [
                 'productionManager' => $productionManager,
                 'assignedArtists' => $assignedArtists,
+                'dashboardStats' => [
+                    'total_roles' => $totalRoles,
+                    'total_positions' => $totalPositions,
+                    'filled_positions' => $filledPositions,
+                    'production_managers' => $hasProductionManager,
+                    'pending_applications' => $pendingApplicationsCount,
+                ],
             ];
         });
     }
@@ -1610,7 +1625,7 @@ class Director{
     protected function validateRoleInput(array $data, string $mode = 'create'): array
     {
         $errors = [];
-        $allowedTypes = ['lead', 'supporting', 'ensemble', 'dancer', 'musician', 'other'];
+        $allowedTypes = ['lead', 'supporting', 'other'];
         $allowedStatuses = ['open', 'filled', 'closed'];
 
         $roleName = trim($data['role_name'] ?? '');

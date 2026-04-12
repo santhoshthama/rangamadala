@@ -12,9 +12,6 @@ $publishedRoles = isset($publishedRoles) && is_array($publishedRoles) ? $publish
 $roleTypes = [
     'lead' => 'Lead',
     'supporting' => 'Supporting',
-    'ensemble' => 'Ensemble',
-    'dancer' => 'Dancer',
-    'musician' => 'Musician',
     'other' => 'Other',
 ];
 
@@ -253,7 +250,7 @@ $publishedRoleIds = array_map(function ($role) {
                                             <span class="status-badge unassigned">Not Published</span>
                                         <?php endif; ?>
                                         <?php if ($salaryDisplay): ?>
-                                            <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Salary: <?= esc($salaryDisplay) ?></div>
+                                            <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Salary (Per session): <?= esc($salaryDisplay) ?></div>
                                         <?php endif; ?>
                                     </td>
                                     <td data-label="Actions">

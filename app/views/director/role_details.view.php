@@ -16,9 +16,6 @@ $assignments = isset($assignments) && is_array($assignments) ? $assignments : []
 $roleTypes = [
     'lead' => 'Lead',
     'supporting' => 'Supporting',
-    'ensemble' => 'Ensemble',
-    'dancer' => 'Dancer',
-    'musician' => 'Musician',
     'other' => 'Other',
 ];
 
@@ -220,7 +217,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <?php if (isset($updateErrors['role_description'])): ?><div class="form-error"><?= esc($updateErrors['role_description']) ?></div><?php endif; ?>
                 </div>
                 <div class="form-group">
-                    <label for="edit_salary">Salary per Show (LKR)<?php if ($isRoleFull): ?> <span style="color: var(--muted); font-weight: normal; font-size: 12px;">(Locked - role filled)</span><?php endif; ?></label>
+                    <label for="edit_salary">Salary (LKR) (Per session)<?php if ($isRoleFull): ?> <span style="color: var(--muted); font-weight: normal; font-size: 12px;">(Locked - role filled)</span><?php endif; ?></label>
                     <input type="number" step="0.01" min="0" id="edit_salary" name="salary" class="form-control" value="<?= esc($updateValues['salary']) ?>" <?= $isRoleFull ? 'disabled' : '' ?>>
                     <?php if (isset($updateErrors['salary'])): ?><div class="form-error"><?= esc($updateErrors['salary']) ?></div><?php endif; ?>
                 </div>
