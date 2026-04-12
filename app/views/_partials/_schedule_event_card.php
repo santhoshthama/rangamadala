@@ -15,7 +15,7 @@ $badgeStyle = statusBadgeStyle($evt->status);
     <div class="event-header">
         <div style="flex: 1;">
             <strong style="font-size: 15px;">
-                <i class="fas <?= $typeIcon ?>"></i>
+                <i class="bx <?= $typeIcon ?>"></i>
                 <?= esc($evt->event_title) ?>
             </strong>
             <div class="event-meta">
@@ -23,7 +23,7 @@ $badgeStyle = statusBadgeStyle($evt->status);
             </div>
             <?php if (!empty($evt->role_name)): ?>
                 <div class="event-meta" style="margin-top: 4px;">
-                    <i class="fas fa-user-tag"></i> Role: <strong><?= esc($evt->role_name) ?></strong>
+                    <i class="bx bx-user-tag"></i> Role: <strong><?= esc($evt->role_name) ?></strong>
                 </div>
             <?php endif; ?>
             <?php if (!empty($evt->event_description)): ?>
@@ -33,7 +33,7 @@ $badgeStyle = statusBadgeStyle($evt->status);
             <?php endif; ?>
             <?php if (!empty($evt->notes)): ?>
                 <div class="event-meta" style="margin-top: 4px; font-style: italic;">
-                    <i class="fas fa-sticky-note"></i> <?= esc($evt->notes) ?>
+                    <i class="bx bx-sticky-note"></i> <?= esc($evt->notes) ?>
                 </div>
             <?php endif; ?>
         </div>
@@ -42,18 +42,18 @@ $badgeStyle = statusBadgeStyle($evt->status);
                 <?= esc(ucfirst($evt->status)) ?>
             </span>
             <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewEventDetails(<?= (int)$evt->id ?>)" title="View Details">
-                <i class="fas fa-eye"></i>
+                <i class="bx bx-eye"></i>
             </button>
             <?php if (!$isPastEvent && $evt->status !== 'cancelled'): ?>
                 <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="openEditModal(<?= (int)$evt->id ?>)" title="Edit">
-                    <i class="fas fa-edit"></i>
+                    <i class="bx bx-edit"></i>
                 </button>
                 <?php if ($evt->status === 'scheduled'): ?>
                     <form method="POST" action="<?= ROOT ?>/director/update_schedule_status?drama_id=<?= $dramaId ?>" style="display: inline;">
                         <input type="hidden" name="event_id" value="<?= (int)$evt->id ?>">
                         <input type="hidden" name="status" value="confirmed">
                         <button type="submit" class="btn btn-success" style="font-size: 11px; padding: 6px 12px;" title="Confirm">
-                            <i class="fas fa-check"></i>
+                            <i class="bx bx-check"></i>
                         </button>
                     </form>
                 <?php endif; ?>
@@ -62,14 +62,14 @@ $badgeStyle = statusBadgeStyle($evt->status);
                         <input type="hidden" name="event_id" value="<?= (int)$evt->id ?>">
                         <input type="hidden" name="status" value="cancelled">
                         <button type="submit" class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" title="Cancel">
-                            <i class="fas fa-times"></i>
+                            <i class="bx bx-times"></i>
                         </button>
                     </form>
                 <?php endif; ?>
                 <form method="POST" action="<?= ROOT ?>/director/delete_schedule?drama_id=<?= $dramaId ?>" style="display: inline;" onsubmit="return confirm('Permanently delete this event?');">
                     <input type="hidden" name="event_id" value="<?= (int)$evt->id ?>">
                     <button type="submit" class="btn btn-danger" style="font-size: 11px; padding: 6px 12px; background: #343a40;" title="Delete">
-                        <i class="fas fa-trash"></i>
+                        <i class="bx bx-trash"></i>
                     </button>
                 </form>
             <?php endif; ?>

@@ -9,6 +9,7 @@
             }
         }
     </style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -19,49 +20,49 @@
         <ul class="menu">
             <li>
                 <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaIdForLinks) ?>">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaIdForLinks) ?>">
-                    <i class="fas fa-film"></i>
+                    <i class="bx bx-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaIdForLinks) ?>">
-                    <i class="fas fa-users"></i>
+                    <i class="bx bx-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaIdForLinks) ?>">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaIdForLinks) ?>">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaIdForLinks) ?>">
-                    <i class="fas fa-dollar-sign"></i>
+                    <i class="bx bx-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -71,7 +72,7 @@
     <!-- Main Content -->
     <main class="main--content">
         <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaIdForLinks) ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -86,11 +87,11 @@
             </div>
             <div class="header-controls">
                 <a href="#create-role" class="btn btn-primary">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="bx bx-plus-circle"></i>
                     New Role
                 </a>
                 <a href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaIdForLinks) ?>" class="btn btn-success">
-                    <i class="fas fa-search"></i>
+                    <i class="bx bx-search"></i>
                     Search Artists
                 </a>
             </div>
@@ -98,7 +99,7 @@
 
         <?php if (isset($_SESSION['message'])): ?>
             <div class="message <?= $_SESSION['message_type'] ?? 'info' ?>">
-                <i class="fas fa-<?= ($_SESSION['message_type'] ?? '') === 'success' ? 'check-circle' : (($_SESSION['message_type'] ?? '') === 'error' ? 'exclamation-circle' : 'info-circle') ?>"></i>
+                <i class="bx bx-<?= ($_SESSION['message_type'] ?? '') === 'success' ? 'check-circle' : (($_SESSION['message_type'] ?? '') === 'error' ? 'exclamation-circle' : 'info-circle') ?>"></i>
                 <?= esc($_SESSION['message']) ?>
             </div>
             <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
@@ -131,7 +132,7 @@
                     <?php if ($editingRole && $updateValues): ?>
                         <div class="card-section" id="edit-role" style="margin-bottom: 30px;">
                             <h3 class="form-section-title">
-                                <i class="fas fa-edit"></i>
+                                <i class="bx bx-edit"></i>
                                 Edit Role &mdash; <?= esc($editingRole->role_name ?? '') ?>
                             </h3>
                             <form action="<?= ROOT ?>/director/update_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($editingRole->id) ?>" method="POST">
@@ -200,11 +201,11 @@
 
                                 <div class="form-footer">
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i>
+                                        <i class="bx bx-save"></i>
                                         Save Changes
                                     </button>
                                     <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>" class="btn btn-secondary">
-                                        <i class="fas fa-times"></i>
+                                        <i class="bx bx-times"></i>
                                         Cancel
                                     </a>
                                 </div>
@@ -214,7 +215,7 @@
 
                     <div class="card-section" id="create-role" style="margin-bottom: 30px;">
                         <h3 class="form-section-title">
-                            <i class="fas fa-plus-circle"></i>
+                            <i class="bx bx-plus-circle"></i>
                             Create New Role
                         </h3>
                         <form action="<?= ROOT ?>/director/create_role?drama_id=<?= esc($dramaId) ?>" method="POST">
@@ -271,11 +272,11 @@
 
                             <div class="form-footer">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-check-circle"></i>
+                                    <i class="bx bx-check-circle"></i>
                                     Create Role
                                 </button>
                                 <a href="#roles-list" class="btn btn-secondary">
-                                    <i class="fas fa-list"></i>
+                                    <i class="bx bx-list"></i>
                                     View Roles
                                 </a>
                             </div>
@@ -284,13 +285,13 @@
 
                     <div class="card-section" id="roles-list">
                         <h3 class="form-section-title">
-                            <i class="fas fa-users"></i>
+                            <i class="bx bx-users"></i>
                             Existing Roles
                         </h3>
 
                         <?php if (empty($roles)): ?>
                             <div class="info-box" style="display: flex; align-items: center; gap: 10px; padding: 16px; border-radius: 10px; background: var(--brand-soft, rgba(186, 142, 35, 0.12)); color: var(--brand-strong, #a0781e);">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="bx bx-info-circle"></i>
                                 No roles have been created for this drama yet. Use the form above to add your first role.
                             </div>
                         <?php else: ?>
@@ -361,12 +362,12 @@
 
                                     <div class="role-card__actions">
                                         <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="bx bx-edit"></i>
                                             Edit
                                         </a>
                                         <form action="<?= ROOT ?>/director/delete_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>" method="POST" data-confirm="Are you sure you want to remove the role '<?= esc($role->role_name ?? 'Role') ?>'?">
                                             <button type="submit" class="btn btn-danger" style="font-size: 13px; padding: 8px 16px;">
-                                                <i class="fas fa-trash-alt"></i>
+                                                <i class="bx bx-trash-alt"></i>
                                                 Delete
                                             </button>
                                         </form>

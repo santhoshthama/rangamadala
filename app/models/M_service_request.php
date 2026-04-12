@@ -147,6 +147,37 @@ class M_service_request
         return $results;
     }
 
+    /**
+     * Get existing accepted/completed bookings that overlap a given date range.
+     */
+    public function getOverlappingBookingsForProvider($provider_id, $start_date, $end_date, $exclude_request_id = null)
+    {
+        $sql = "SELECT id, requester_name, requester_email, requester_phone, drama_name,
+                   service_type, service_required, start_date, end_date, budget,
+                   notes, service_details_json, status
+                FROM service_requests
+                WHERE provider_id = :provider_id
+                  AND status IN ('accepted', 'completed', 'completed_paid')
+                  AND NOT (end_date < :start_date OR start_date > :end_date)";
+
+        if (!empty($exclude_request_id)) {
+            $sql .= " AND id != :exclude_request_id";
+        }
+
+        $sql .= " ORDER BY start_date ASC, id ASC";
+
+        $this->db->query($sql);
+        $this->db->bind(':provider_id', $provider_id);
+        $this->db->bind(':start_date', $start_date);
+        $this->db->bind(':end_date', $end_date);
+
+        if (!empty($exclude_request_id)) {
+            $this->db->bind(':exclude_request_id', $exclude_request_id);
+        }
+
+        return $this->db->resultSet();
+    }
+
     public function updateRequestStatus($request_id, $status)
     {
         $this->db->query("UPDATE service_requests SET status = :status WHERE id = :id");
@@ -268,9 +299,10 @@ class M_service_request
     }
 
     /**
-     * Mark dates as booked when request is accepted
+     * Mark dates as booked with provider decision.
+     * allow_more: 1 = still available to others, 0 = fully blocked.
      */
-    private function markDatesAsBooked($request_id)
+    private function markDatesAsBooked($request_id, $allow_more = 1)
     {
         try {
             // Get request details
@@ -279,10 +311,9 @@ class M_service_request
                 return false;
             }
 
-            // Use the unified addAvailableDate method
             $availabilityModel = new M_provider_availability();
             
-            // Mark all dates from start_date to end_date as booked
+            // Mark all dates from start_date to end_date with the provider's decision
             $start = strtotime($request->start_date);
             $end = strtotime($request->end_date);
             
@@ -290,20 +321,17 @@ class M_service_request
                 return false;
             }
 
-            $booked_for = (isset($request->requester_name) ? $request->requester_name : 'Unknown') . ' - ' . (isset($request->drama_name) ? $request->drama_name : '');
-            $booking_details = 'Service: ' . (isset($request->service_required) ? $request->service_required : '') . ' | Notes: ' . (isset($request->notes) ? $request->notes : '');
-
             for ($current = $start; $current <= $end; $current += 86400) { // 86400 = 1 day in seconds
                 $date = date('Y-m-d', $current);
-                // Use the unified addAvailableDate method directly
                 $availabilityModel->addAvailableDate(
                     $request->provider_id,
                     $date,
-                    $booking_details,
+                    'Service request booking',
                     'booked',
-                    $booked_for,
-                    $booking_details,
-                    $request_id
+                    $request->requester_name ?? 'Production Manager Request',
+                    'Booked from accepted request #' . $request_id,
+                    $request_id,
+                    $allow_more ? 1 : 0
                 );
             }
 
@@ -326,10 +354,10 @@ class M_service_request
                 return false;
             }
 
-            // Load availability model and unmark dates
+            // Load availability model and unmark booking dates
             $availabilityModel = new M_provider_availability();
             
-            // Unmark all dates from start_date to end_date
+            // Remove booking from all dates for this request
             $start = strtotime($request->start_date);
             $end = strtotime($request->end_date);
 
@@ -472,9 +500,17 @@ class M_service_request
     }
 
     /**
-     * Provider accepts the PM-confirmed terms
+     * Provider accepts the PM-confirmed terms (legacy - keep for backward compatibility)
      */
     public function acceptConfirmed($request_id, $provider_id)
+    {
+        return $this->acceptConfirmedWithDecision($request_id, $provider_id, 0);
+    }
+
+    /**
+     * Provider accepts the PM-confirmed terms with allow/block decision.
+     */
+    public function acceptConfirmedWithDecision($request_id, $provider_id, $allow_more = 0)
     {
         try {
             // Verify the request belongs to this provider
@@ -488,15 +524,28 @@ class M_service_request
                 return ['success' => false, 'error' => 'Cannot accept this request'];
             }
 
-            // Update status to accepted and mark availability
-            $result = $this->updateStatusDetailed($request_id, 'accepted', null, $provider_id);
+            // Update status to accepted 
+            $this->db->query("UPDATE service_requests SET status = 'accepted', accepted_at = NOW(), rejection_reason = NULL WHERE id = :id AND provider_id = :provider_id");
+            $this->db->bind(':id', $request_id);
+            $this->db->bind(':provider_id', $provider_id);
+            
+            $result = $this->db->execute();
+            
+            // If accepted, mark the dates with the allow_more decision
+            if ($result) {
+                try {
+                    $this->markDatesAsBooked($request_id, $allow_more ? 1 : 0);
+                } catch (Exception $e) {
+                    error_log("Error marking dates as booked: " . $e->getMessage());
+                }
+            }
             
             if ($result) {
                 return ['success' => true];
             }
             return ['success' => false, 'error' => 'Database update failed'];
         } catch (Exception $e) {
-            error_log("acceptConfirmed error: " . $e->getMessage());
+            error_log("acceptConfirmedWithDecision error: " . $e->getMessage());
             return ['success' => false, 'error' => 'Server error'];
         }
     }

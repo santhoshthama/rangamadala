@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assign Production Managers - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -16,49 +16,49 @@
         <ul class="menu">
             <li>
                 <a href="dashboard.php?drama_id=1">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="drama_details.php?drama_id=1">
-                    <i class="fas fa-film"></i>
+                    <i class="bx bx-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
                 <a href="manage_roles.php?drama_id=1">
-                    <i class="fas fa-users"></i>
+                    <i class="bx bx-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li class="active">
                 <a href="assign_managers.php?drama_id=1">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
                 <a href="schedule_management.php?drama_id=1">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li>
                 <a href="view_services_budget.php?drama_id=1">
-                    <i class="fas fa-dollar-sign"></i>
+                    <i class="bx bx-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
                 <a href="../artist/profile.php">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
                 <a href="../../public/index.php">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -68,7 +68,7 @@
     <!-- Main Content -->
     <main class="main--content">
         <a href="dashboard.php?drama_id=1" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -82,7 +82,7 @@
 
         <!-- Info Box -->
         <div class="info-box" style="margin-bottom: 30px;">
-            <i class="fas fa-info-circle"></i>
+            <i class="bx bx-info-circle"></i>
             <strong>Note:</strong> Each drama has one Production Manager who manages services, budget, and theater bookings. You can assign or change the manager below.
         </div>
 
@@ -93,9 +93,9 @@
                     <!-- Current Manager -->
                     <div class="card-section">
                         <h3>
-                            <span><i class="fas fa-user-tie"></i> Current Production Manager</span>
+                            <span><i class="bx bx-user-tie"></i> Current Production Manager</span>
                             <button class="btn btn-success" style="font-size: 12px; padding: 8px 16px;" onclick="openAssignManagerModal()">
-                                <i class="fas fa-user-plus"></i>
+                                <i class="bx bx-user-plus"></i>
                                 Change Manager
                             </button>
                         </h3>
@@ -113,11 +113,11 @@
                                 <div style="display: flex; gap: 8px; align-items: center;">
                                     <span class="status-badge assigned">Active</span>
                                     <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewManagerDetails()">
-                                        <i class="fas fa-eye"></i>
+                                        <i class="bx bx-eye"></i>
                                         View Profile
                                     </button>
                                     <button class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" onclick="removeManager()">
-                                        <i class="fas fa-user-times"></i>
+                                        <i class="bx bx-user-times"></i>
                                         Remove
                                     </button>
                                 </div>
@@ -127,7 +127,7 @@
 
                     <!-- Manager Activity -->
                     <div class="card-section">
-                        <h3><i class="fas fa-chart-line"></i> Recent Activity</h3>
+                        <h3><i class="bx bx-chart-line"></i> Recent Activity</h3>
                         <ul>
                             <li>
                                 <div>
@@ -162,7 +162,7 @@
 
                     <!-- Permissions & Access -->
                     <div class="card-section">
-                        <h3><i class="fas fa-key"></i> Manager Permissions</h3>
+                        <h3><i class="bx bx-key"></i> Manager Permissions</h3>
                         <div class="drama-info">
                             <div class="service-info-item">
                                 <span class="service-info-label">Services Management</span>
@@ -191,10 +191,10 @@
     <div id="assignManagerModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAssignManagerModal()">&times;</span>
-            <h2><i class="fas fa-user-plus"></i> Assign Production Manager</h2>
+            <h2><i class="bx bx-user-plus"></i> Assign Production Manager</h2>
             <div class="modal-body">
                 <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="bx bx-info-circle"></i>
                     Only verified artists can be assigned as Production Manager. This will replace the current manager.
                 </div>
                 <form id="assignManagerForm">
@@ -222,7 +222,7 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn-primary" onclick="submitAssignManager()">
-                    <i class="fas fa-check"></i>
+                    <i class="bx bx-check"></i>
                     Assign Manager
                 </button>
                 <button class="btn btn-secondary" onclick="closeAssignManagerModal()">Cancel</button>
@@ -234,7 +234,7 @@
     <div id="managerDetailsModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeManagerDetailsModal()">&times;</span>
-            <h2><i class="fas fa-user-tie"></i> Manager Details</h2>
+            <h2><i class="bx bx-user-tie"></i> Manager Details</h2>
             <div class="modal-body" id="managerDetailsBody">
                 <!-- Manager details will be loaded here -->
             </div>

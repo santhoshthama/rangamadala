@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Management - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <?php $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1); ?>
@@ -63,11 +63,11 @@
             </div>
             <div class="header-controls">
                 <button class="btn btn-primary" onclick="openAddBudgetModal()">
-                    <i class="fas fa-plus"></i>
+                    <i class="bx bx-plus"></i>
                     Add Budget Item
                 </button>
                 <button class="btn btn-secondary" onclick="exportBudgetReport()">
-                    <i class="fas fa-download"></i>
+                    <i class="bx bx-download"></i>
                     Export Report
                 </button>
             </div>
@@ -177,10 +177,10 @@
                                     <td style="padding: 14px;"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
                                     <td style="padding: 14px; text-align: center;">
                                         <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="editBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
-                                            <i class="fas fa-pencil-alt"></i>
+                                            <i class="bx bx-pencil-alt"></i>
                                         </button>
                                         <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="bx bx-trash"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -188,7 +188,7 @@
                         <?php else: ?>
                             <tr style="border-bottom: 1px solid var(--border);">
                                 <td colspan="6" style="padding: 30px; text-align: center; color: var(--muted);">
-                                    <i class="fas fa-file-invoice-dollar" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
+                                    <i class="bx bx-file-invoice-dollar" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
                                     <p>No budget items yet. Add your first budget item to get started.</p>
                                 </td>
                             </tr>

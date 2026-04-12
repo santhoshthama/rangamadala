@@ -6,9 +6,29 @@
     <title>Browse Dramas - <?= APP_NAME ?></title>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css">
 </head>
 <body>
+    <!-- Toast Notification Script -->
+    <script src="<?= ROOT ?>/assets/JS/toast.js"></script>
+    <?php if (!empty($_SESSION['success_message'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            toastSuccess('<?= addslashes($_SESSION['success_message']); ?>');
+        });
+    </script>
+    <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+    <?php if (!empty($_SESSION['error_message'])): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            toastError('<?= addslashes($_SESSION['error_message']); ?>');
+        });
+    </script>
+    <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
 
 <div class="container">
     <!-- Header -->
@@ -27,9 +47,23 @@
     <!-- Search & Filter -->
     <div class="search-filter-container">
         <form method="GET" class="search-form">
-            <div class="search-box">
+            <div class="search-box search-box-pro">
                 <i class='bx bx-search'></i>
-                <input type="text" name="search" placeholder="Search dramas..." value="<?= htmlspecialchars($data['search']) ?>">
+                <input type="text" name="search" placeholder="Search drama titles, venues, genres..." value="<?= htmlspecialchars($data['search']) ?>" aria-label="Search dramas">
+            </div>
+
+            <div class="filter-box filter-box-category">
+                <i class='bx bx-filter'></i>
+                <select name="category" aria-label="Choose category">
+                    <option value="">All Categories</option>
+                    <?php if (!empty($data['categories'])): ?>
+                        <?php foreach ($data['categories'] as $category): ?>
+                            <option value="<?= $category->id ?>" <?= $data['category_filter'] == $category->id ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($category->name) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
             </div>
 
             <div class="filter-box">
@@ -37,8 +71,12 @@
                 <select name="sort">
                     <?php $sort = $data['sort'] ?? 'latest'; ?>
                     <option value="latest" <?= $sort==='latest'?'selected':'' ?>>Latest</option>
-                    <option value="name_asc" <?= $sort==='name_asc'?'selected':'' ?>>Name: A → Z</option>
-                    <option value="name_desc" <?= $sort==='name_desc'?'selected':'' ?>>Name: Z → A</option>
+                    <option value="date_asc" <?= $sort==='date_asc'?'selected':'' ?>>Date: Soonest</option>
+                    <option value="date_desc" <?= $sort==='date_desc'?'selected':'' ?>>Date: Latest</option>
+                    <option value="price_asc" <?= $sort==='price_asc'?'selected':'' ?>>Price: Low to High</option>
+                    <option value="price_desc" <?= $sort==='price_desc'?'selected':'' ?>>Price: High to Low</option>
+                    <option value="title_asc" <?= $sort==='title_asc'?'selected':'' ?>>Title: A → Z</option>
+                    <option value="title_desc" <?= $sort==='title_desc'?'selected':'' ?>>Title: Z → A</option>
                 </select>
             </div>
 
@@ -68,46 +106,55 @@
             <?php foreach ($data['dramas'] as $drama): ?>
                 <div class="drama-card">
                     <div class="drama-image">
-                        <?php 
-                            $certificateFile = $drama->certificate_image ?? '';
-                            $extension = strtolower(pathinfo($certificateFile, PATHINFO_EXTENSION));
-                            $isImage = !empty($certificateFile) && in_array($extension, ['jpg','jpeg','png','gif','webp']);
-                        ?>
-                        <?php if ($isImage): ?>
-                            <img src="<?= ROOT ?>/uploads/certificates/<?= htmlspecialchars(rawurlencode($certificateFile)) ?>" alt="Certificate for <?= htmlspecialchars($drama->drama_name ?? 'Drama') ?>" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'placeholder-image\'><i class=\'bx bx-id-card\'></i></div>';">
+                        <?php if (!empty($drama->image)): ?>
+                            <img src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($drama->image) ?>" alt="<?= htmlspecialchars($drama->title) ?>" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'placeholder-image\'><i class=\'bx bx-movie-play\'></i></div>';">
                         <?php else: ?>
                             <div class="placeholder-image">
-                                <i class='bx bx-id-card'></i>
+                                <i class='bx bx-movie-play'></i>
                             </div>
                         <?php endif; ?>
-                        <div class="category-badge"><?= htmlspecialchars($drama->certificate_number ?? 'No Certificate') ?></div>
+                        <div class="category-badge"><?= htmlspecialchars($drama->category_name ?? 'Uncategorized') ?></div>
                     </div>
 
                     <div class="drama-content">
-                        <h3 class="drama-title"><?= htmlspecialchars($drama->drama_name ?? 'Registered Drama') ?></h3>
-                        <p class="drama-description">Owner: <?= htmlspecialchars($drama->owner_name ?? 'Not recorded') ?></p>
+                        <h3 class="drama-title"><?= htmlspecialchars($drama->title) ?></h3>
+                        <p class="drama-description"><?= htmlspecialchars(substr($drama->description ?? '', 0, 120)) ?>...</p>
 
-                        <div class="drama-info">
+                                                <div class="drama-info">
                             <div class="info-item">
                                 <i class='bx bx-calendar'></i>
-                                <span><?= !empty($drama->created_at) ? date('M d, Y', strtotime($drama->created_at)) : 'N/A' ?></span>
+                                                                <span>
+                                                                    <?php if (!empty($drama->event_date)): ?>
+                                                                        <?= date('M d, Y', strtotime($drama->event_date)) ?>
+                                                                    <?php else: ?>
+                                                                        TBA
+                                                                    <?php endif; ?>
+                                                                </span>
                             </div>
                             <div class="info-item">
-                                <i class='bx bx-file'></i>
-                                <span><?= htmlspecialchars($drama->certificate_number ?? 'Pending') ?></span>
+                                <i class='bx bx-time'></i>
+                                <span><?= htmlspecialchars($drama->event_time ?? 'TBA') ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class='bx bx-map'></i>
+                                <span><?= htmlspecialchars($drama->venue ?? 'TBA') ?></span>
                             </div>
                         </div>
 
                         <div class="drama-footer">
                             <div class="price">
-                                <i class='bx bx-user'></i>
-                                <span><?= htmlspecialchars($drama->owner_name ?? 'Not recorded') ?></span>
+                                <i class='bx bx-purchase-tag'></i>
+                                <span>LKR <?= number_format($drama->ticket_price ?? 0, 2) ?></span>
                             </div>
-                            <?php if (!empty($certificateFile)): ?>
-                                <a href="<?= ROOT ?>/uploads/certificates/<?= htmlspecialchars(rawurlencode($certificateFile)) ?>" class="btn-view" target="_blank" rel="noopener">View Certificate</a>
-                            <?php else: ?>
-                                <span class="btn-view" style="pointer-events: none; opacity: 0.6;">Certificate Pending</span>
+                            <?php if (!empty($drama->showing_prices)): ?>
+                                <div class="form-hint" style="margin: 6px 0 0; width: 100%; color: #666;">
+                                    Showing prices: <?= htmlspecialchars($drama->showing_prices) ?>
+                                </div>
                             <?php endif; ?>
+                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+                                <a href="<?= ROOT ?>/BrowseDramas/bookShowings/<?= $drama->id ?>" class="btn-view" style="background:#1f7a8c;">Book Showings</a>
+                                <a href="<?= ROOT ?>/BrowseDramas/view/<?= $drama->id ?>" class="btn-view">View Details</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -130,6 +177,7 @@
                     $totalPages = (int)$data['total_pages'];
                     $queryBase = [];
                     if (!empty($data['search'])) $queryBase['search'] = $data['search'];
+                    if (!empty($data['category_filter'])) $queryBase['category'] = $data['category_filter'];
                     if (!empty($data['sort'])) $queryBase['sort'] = $data['sort'];
                     $queryBase['per_page'] = $per;
                     if (!function_exists('buildUrl')) {

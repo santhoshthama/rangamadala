@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($pageTitle) ? $pageTitle : 'Service Requests' ?> - Rangamadala</title>
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        crossorigin="anonymous" />
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_requests.css">
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
@@ -115,7 +112,7 @@
                             <button class="btn btn-details" onclick="openViewResponseModal(<?= htmlspecialchars(json_encode($req->service_details_json ? json_decode($req->service_details_json, true)['provider_response'] ?? [] : []), ENT_QUOTES, 'UTF-8') ?>)">
                                 View Response
                             </button>
-                            <span style="color: #f39c12; font-style: italic; font-size: 13px;"><i class="fas fa-clock"></i> Awaiting PM Confirmation</span>
+                            <span style="color: #f39c12; font-style: italic; font-size: 13px;"><i class="bx bx-clock"></i> Awaiting PM Confirmation</span>
                         <?php elseif ($status === 'confirmed'): ?>
                             <?php
                             // Check if payment needs confirmation (only for cash/bank)
@@ -131,6 +128,7 @@
                                 class="btn btn-accept" 
                                 onclick="<?= $needsConfirmation ? 'return false;' : 'acceptConfirmedRequest(this)' ?>" 
                                 data-id="<?= (int)$req->id ?>"
+                                data-request="<?= htmlspecialchars(json_encode((array)$req), ENT_QUOTES, 'UTF-8') ?>"
                                 <?= $needsConfirmation ? 'disabled style="opacity: 0.4; cursor: not-allowed;"' : '' ?>
                                 <?= $needsConfirmation ? 'title="Confirm ' . ($req->payment_gateway === 'cash' ? 'cash payment' : 'bank transfer') . ' in View Details first"' : '' ?>
                             >Accept</button>
@@ -152,6 +150,7 @@
             updateStatus: '<?= ROOT ?>/ServiceRequests/updateStatus',
             respond: '<?= ROOT ?>/ServiceProviderRequest/respond',
             acceptConfirmed: '<?= ROOT ?>/ServiceProviderRequest/acceptConfirmed',
+            getOverlappingBookings: '<?= ROOT ?>/ServiceProviderRequest/getOverlappingBookings',
             rejectConfirmed: '<?= ROOT ?>/ServiceProviderRequest/rejectConfirmed',
             confirmCashPayment: '<?= ROOT ?>/Payment/confirmCashPayment',
             confirmBankPayment: '<?= ROOT ?>/Payment/confirmBankPayment',
@@ -568,7 +567,7 @@
                                 return `
                                     <p style="margin: 6px 0; font-size: 12px;">
                                         <a href="${'<?= ROOT ?>'}/${fileInfo.relative_path}" target="_blank" style="color: #007bff; text-decoration: none;">
-                                            <i class="fas fa-link"></i> View reference (${fieldName}${fileInfo.original_name ? ' - ' + fileInfo.original_name : ''})
+                                            <i class="bx bx-link"></i> View reference (${fieldName}${fileInfo.original_name ? ' - ' + fileInfo.original_name : ''})
                                         </a>
                                     </p>
                                 `;
@@ -620,13 +619,84 @@
 
         async function acceptConfirmedRequest(button) {
             const id = button.getAttribute('data-id');
-            if (!confirm('Accept these terms? Your calendar will be booked for the confirmed dates.')) return;
+            const reqData = button.getAttribute('data-request');
+            
+            if (!reqData) {
+                showMessage('Request data not found', 'error');
+                return;
+            }
+            
+            try {
+                const req = JSON.parse(reqData);
+                // Open modal to ask about allowing more bookings
+                openAcceptConfirmModal(id, req);
+            } catch (e) {
+                showMessage('Error parsing request data: ' + e.message, 'error');
+            }
+        }
+
+        function openAcceptConfirmModal(requestId, reqData) {
+            document.getElementById('acceptConfirmRequestId').value = requestId;
+            
+            // Get date range - handle both individual and range dates
+            const startDate = reqData.start_date || reqData.service_date || '-';
+            const endDate = reqData.end_date || reqData.service_date || '-';
+            
+            if (!startDate || startDate === '-') {
+                showMessage('Request dates not found', 'error');
+                return;
+            }
+            
+            document.getElementById('acceptConfirmDateRange').textContent = startDate + ' to ' + endDate;
+            const existingBookingsDiv = document.getElementById('existingBookingsInfo');
+            existingBookingsDiv.innerHTML = '<span style="color: #666;">Loading existing bookings...</span>';
+            existingBookingsDiv.style.display = 'block';
+
+            fetch(ENDPOINTS.getOverlappingBookings, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    request_id: requestId,
+                    start_date: startDate,
+                    end_date: endDate
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.bookings) && data.bookings.length > 0) {
+                    let html = '<strong>Existing bookings in this date range:</strong><ul style="margin-top: 8px; padding-left: 20px;">';
+                    data.bookings.forEach(booking => {
+                        html += '<li style="margin: 4px 0;">'
+                            + (booking.requester_name || 'Unknown')
+                            + ' - ' + (booking.drama_name || '-')
+                            + ' (' + (booking.start_date || '-') + ' to ' + (booking.end_date || '-') + ')'
+                            + '</li>';
+                    });
+                    html += '</ul>';
+                    existingBookingsDiv.innerHTML = html;
+                } else {
+                    existingBookingsDiv.innerHTML = '<span style="color: #666;">No existing bookings in this date range.</span>';
+                }
+            })
+            .catch(() => {
+                existingBookingsDiv.innerHTML = '<span style="color: #666;">Could not load existing bookings.</span>';
+            });
+            
+            document.getElementById('acceptConfirmModal').style.display = 'flex';
+        }
+
+        function closeAcceptConfirmModal() {
+            document.getElementById('acceptConfirmModal').style.display = 'none';
+        }
+
+        async function confirmAcceptWithDecision(allowMore) {
+            const requestId = document.getElementById('acceptConfirmRequestId').value;
             
             try {
                 const res = await fetch(ENDPOINTS.acceptConfirmed, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ request_id: id }),
+                    body: new URLSearchParams({ request_id: requestId, allow_more: allowMore ? 1 : 0 }),
                 });
                 const raw = await res.text();
                 let json = null;
@@ -636,7 +706,8 @@
                     throw new Error(raw || 'Invalid server response');
                 }
                 if (json.success) {
-                    showMessage('Request accepted! Dates have been booked.', 'success');
+                    const allowText = allowMore ? 'Dates booked (allowing additional bookings)' : 'Dates booked (fully blocked)';
+                    showMessage('Request accepted! ' + allowText, 'success');
                     setTimeout(() => location.reload(), 1500);
                 } else {
                     showMessage(json.error || 'Failed to accept', 'error');
@@ -644,6 +715,7 @@
             } catch (e) {
                 showMessage((e && e.message) ? e.message : 'Network error while accepting', 'error');
             }
+            closeAcceptConfirmModal();
         }
 
         async function rejectConfirmedRequest(button) {
@@ -795,6 +867,44 @@
     </script>
 
     <?php include 'respond_form.view.php'; ?>
+
+    <!-- Accept Confirm Modal - Multi-booking Decision -->
+    <div id="acceptConfirmModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+        <div style="background-color: #fefefe; padding: 0; border-radius: 12px; width: 90%; max-width: 550px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border: 1px solid #eadfb9;">
+            <div style="padding: 24px; border-bottom: 1px solid #e8dcb5; background: linear-gradient(135deg, #d4af37, #aa8c2c);">
+                <h3 style="margin: 0; font-size: 20px; color: white; font-weight: 600;">Accept Booking Request</h3>
+            </div>
+            <div style="padding: 24px;">
+                <div style="margin-bottom: 20px; padding: 16px; background: #fdf8e8; border-left: 4px solid #d4af37; border-radius: 4px; border: 1px solid #f0e4be;">
+                    <p style="margin: 0 0 8px 0; color: #3f3312; font-size: 14px;">
+                        <strong>Booking Dates:</strong> <span id="acceptConfirmDateRange">-</span>
+                    </p>
+                </div>
+
+                <div id="existingBookingsInfo" style="display: none; margin-bottom: 20px; padding: 14px; background: #fff8e7; border: 1px solid #e5c774; border-radius: 6px; color: #5f4a16; font-size: 13px;"></div>
+
+                <div style="margin-bottom: 24px;">
+                    <p style="margin: 0 0 16px 0; color: #4c3d16; font-size: 14px; font-weight: 500;">Do you want to allow other production managers to also book on these dates?</p>
+                    
+                    <div style="display: flex; gap: 12px; flex-direction: column;">
+                        <button onclick="confirmAcceptWithDecision(1)" style="padding: 12px 20px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                            Yes. Allow More Bookings
+                        </button>
+                        <button onclick="confirmAcceptWithDecision(0)" style="padding: 12px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                            No
+                        </button>
+                    </div>
+                </div>
+
+                <div style="padding-top: 12px; border-top: 1px solid #efe4c1;">
+                    <button onclick="closeAcceptConfirmModal()" style="width: 100%; padding: 10px 20px; background: #e5e7eb; color: #374151; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 13px;">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" id="acceptConfirmRequestId">
+    </div>
     </div>
 </body>
 </html>

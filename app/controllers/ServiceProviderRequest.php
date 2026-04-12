@@ -244,6 +244,7 @@ class ServiceProviderRequest
         }
 
         $request_id = $_POST['request_id'] ?? null;
+        $allow_more = isset($_POST['allow_more']) ? (int)$_POST['allow_more'] : 0;
 
         if (!$request_id) {
             http_response_code(400);
@@ -253,7 +254,7 @@ class ServiceProviderRequest
 
         try {
             $serviceModel = $this->getModel('M_service_request');
-            $result = $serviceModel->acceptConfirmed((int)$request_id, $_SESSION['user_id']);
+            $result = $serviceModel->acceptConfirmedWithDecision((int)$request_id, $_SESSION['user_id'], $allow_more);
 
             if ($result['success']) {
                 echo json_encode(['success' => true, 'message' => 'Request accepted successfully']);
@@ -263,6 +264,79 @@ class ServiceProviderRequest
             }
         } catch (Exception $e) {
             error_log("Error in acceptConfirmed: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Server error']);
+        }
+    }
+
+    /**
+     * Get overlapping bookings for the provider when deciding whether to allow more bookings.
+     */
+    public function getOverlappingBookings()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            return;
+        }
+
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Not authenticated']);
+            return;
+        }
+
+        $start_date = $_POST['start_date'] ?? null;
+        $end_date = $_POST['end_date'] ?? null;
+        $exclude_request_id = $_POST['request_id'] ?? null;
+
+        if (!$start_date || !$end_date) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Missing date range']);
+            return;
+        }
+
+        try {
+            $serviceModel = $this->getModel('M_service_request');
+            $rows = $serviceModel->getOverlappingBookingsForProvider(
+                (int)$_SESSION['user_id'],
+                $start_date,
+                $end_date,
+                $exclude_request_id ? (int)$exclude_request_id : null
+            );
+
+            $bookings = [];
+            foreach ($rows as $row) {
+                $serviceDetails = [];
+                if (!empty($row->service_details_json)) {
+                    $decoded = json_decode($row->service_details_json, true);
+                    if (is_array($decoded)) {
+                        $serviceDetails = $decoded;
+                    }
+                }
+
+                $bookings[] = [
+                    'id' => (int)$row->id,
+                    'requester_name' => $row->requester_name ?? 'Unknown',
+                    'requester_email' => $row->requester_email ?? 'N/A',
+                    'requester_phone' => $row->requester_phone ?? 'N/A',
+                    'drama_name' => $row->drama_name ?? '-',
+                    'service_type' => $row->service_type ?? '-',
+                    'service_required' => $row->service_required ?? null,
+                    'start_date' => $row->start_date ?? '-',
+                    'end_date' => $row->end_date ?? '-',
+                    'budget' => $row->budget ?? null,
+                    'notes' => $row->notes ?? null,
+                    'service_details' => $serviceDetails,
+                    'status' => $row->status ?? '-',
+                ];
+            }
+
+            echo json_encode(['success' => true, 'bookings' => $bookings]);
+        } catch (Exception $e) {
+            error_log('Error in getOverlappingBookings: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'error' => 'Server error']);
         }

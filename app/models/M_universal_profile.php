@@ -1,19 +1,21 @@
 <?php
 
-class M_universal_profile extends M_signup {
-    
-    public function getUserById($user_id) {
+class M_universal_profile extends M_signup
+{
+    public function getUserById($userId)
+    {
         try {
-            $this->db->query("SELECT * FROM users WHERE id = :user_id");
-            $this->db->bind(':user_id', $user_id);
+            $this->db->query('SELECT * FROM users WHERE id = :user_id');
+            $this->db->bind(':user_id', $userId);
             return $this->db->single();
         } catch (Exception $e) {
-            error_log("Error in getUserById: " . $e->getMessage());
+            error_log('Error in getUserById: ' . $e->getMessage());
             return null;
         }
     }
 
-    public function updateProfile($user_id, array $fields) {
+    public function updateProfile($userId, array $fields)
+    {
         if (empty($fields)) {
             return false;
         }
@@ -26,6 +28,7 @@ class M_universal_profile extends M_signup {
             if (!in_array($column, $allowed, true)) {
                 continue;
             }
+
             $setParts[] = "$column = :$column";
             $bindValues[":$column"] = $value;
         }
@@ -35,15 +38,14 @@ class M_universal_profile extends M_signup {
         }
 
         try {
-            $sql = 'UPDATE users SET ' . implode(', ', $setParts) . " WHERE id = :user_id";
-            
+            $sql = 'UPDATE users SET ' . implode(', ', $setParts) . ' WHERE id = :user_id';
             $this->db->query($sql);
 
             foreach ($bindValues as $param => $value) {
                 $this->db->bind($param, $value);
             }
-            $this->db->bind(':user_id', $user_id);
 
+            $this->db->bind(':user_id', $userId);
             return $this->db->execute();
         } catch (Exception $e) {
             error_log('Error in updateProfile: ' . $e->getMessage());

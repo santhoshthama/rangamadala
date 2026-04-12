@@ -27,7 +27,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($drama->drama_name ?? 'Drama Details') ?> - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -38,25 +38,25 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <ul class="menu">
             <li>
                 <a href="<?=ROOT?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Dashboard</span>
                 </a>
             </li>
             <li class="active">
                 <a href="#">
-                    <i class="fas fa-film"></i>
+                    <i class="bx bx-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
                 <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class="fas fa-bell"></i>
+                    <i class="bx bx-bell"></i>
                     <span>Notifications</span>
                 </a>
             </li>
             <li>
                 <a href="<?=ROOT?>/profile">
-                    <i class="fas fa-user"></i>
+                    <i class="bx bx-user"></i>
                     <span>Profile</span>
                 </a>
             </li>
@@ -66,7 +66,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <!-- Main Content -->
     <main class="main--content">
         <a href="<?=ROOT?>/artistdashboard" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -81,11 +81,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
             <div class="user--info">
                 <div class="role-badge">
-                    <i class="fas fa-user-tie"></i> Actor
+                    <i class="bx bx-user-tie"></i> Actor
                 </div>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Artist Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
                 <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                 </a>
             </div>
         </div>
@@ -103,7 +103,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                 <div style="flex: 1;">
                     <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700; color: #fff;">
-                        <i class="fas fa-star"></i> Your Role: <?= esc($my_role->role_name) ?>
+                        <i class="bx bx-star"></i> Your Role: <?= esc($my_role->role_name) ?>
                     </h2>
                     <p style="margin: 0; font-size: 16px; line-height: 1.5; color: #fff;">
                         <strong>Type:</strong> <?= esc(ucfirst($my_role->role_type)) ?>
@@ -127,7 +127,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <div class="details">
                     <!-- Drama Information -->
                     <div class="card-section">
-                        <h3><i class="fas fa-film"></i> Drama Information</h3>
+                        <h3><i class="bx bx-film"></i> Drama Information</h3>
                         
                         <div class="drama-info">
                             <div class="service-info-item">
@@ -175,12 +175,12 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <!-- All Roles in Drama -->
                     <div class="card-section" style="margin-top: 30px;">
                         <h3>
-                            <span><i class="fas fa-users"></i> All Roles in This Drama</span>
+                            <span><i class="bx bx-users"></i> All Roles in This Drama</span>
                         </h3>
                         
                         <?php if (empty($roles)): ?>
                             <div class="no-results">
-                                <i class="fas fa-user-times"></i>
+                                <i class="bx bx-user-times"></i>
                                 <h3>No Roles Added Yet</h3>
                                 <p>The director hasn't added any roles to this drama yet.</p>
                             </div>
@@ -192,7 +192,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                             <strong style="color: <?= isset($my_role) && $my_role->id == $role->id ? 'var(--brand)' : 'var(--ink)' ?>;">
                                                 <?= esc($role->role_name) ?>
                                                 <?php if (isset($my_role) && $my_role->id == $role->id): ?>
-                                                    <i class="fas fa-star" style="margin-left: 8px; color: var(--brand);"></i>
+                                                    <i class="bx bx-star" style="margin-left: 8px; color: var(--brand);"></i>
                                                 <?php endif; ?>
                                             </strong>
                                             <div class="request-info">
@@ -208,7 +208,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                         <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
                                             <?php if ($role->is_filled): ?>
                                                 <span class="status-badge assigned">
-                                                    <i class="fas fa-user-check"></i> Filled
+                                                    <i class="bx bx-user-check"></i> Filled
                                                 </span>
                                                 <?php if (!empty($role->assigned_artist_name)): ?>
                                                     <span style="font-size: 12px; color: var(--muted);">
@@ -221,7 +221,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                                 <?php endif; ?>
                                             <?php else: ?>
                                                 <span class="status-badge pending">
-                                                    <i class="fas fa-hourglass-half"></i> Vacant
+                                                    <i class="bx bx-hourglass-half"></i> Vacant
                                                 </span>
                                             <?php endif; ?>
                                         </div>
@@ -234,7 +234,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <!-- Schedule/Rehearsal Information -->
                     <div class="card-section" style="margin-top: 30px;">
                         <h3>
-                            <span><i class="fas fa-calendar-alt"></i> Upcoming Schedule & Rehearsals</span>
+                            <span><i class="bx bx-calendar-alt"></i> Upcoming Schedule & Rehearsals</span>
                         </h3>
 
                         <?php
@@ -271,7 +271,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                         <?php if (empty($schedules) && empty($my_interviews)): ?>
                             <div class="view-only-notice" style="margin-top: 15px;">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="bx bx-info-circle"></i>
                                 No upcoming rehearsals or events scheduled yet.
                             </div>
                         <?php else: ?>
@@ -279,21 +279,21 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                             <!-- Upcoming Interview (if any) -->
                             <?php if (!empty($my_interviews)): ?>
                             <h4 style="margin: 16px 0 10px; color: var(--brand); font-size: 15px;">
-                                <i class="fas fa-user-check"></i> Your Interviews
+                                <i class="bx bx-user-check"></i> Your Interviews
                             </h4>
                             <ul>
                                 <?php foreach ($my_interviews as $interview): ?>
                                 <li>
                                     <div>
                                         <strong style="color: #28a745;">
-                                            <i class="fas fa-user-check"></i> 
+                                            <i class="bx bx-user-check"></i> 
                                             Interview for: <?= esc($interview->role_name) ?>
                                         </strong>
                                         <div class="request-info">
-                                            <i class="fas fa-clock"></i> 
+                                            <i class="bx bx-clock"></i> 
                                             <?= date('M d, Y \a\t h:i A', strtotime($interview->interview_at)) ?>
                                             <?php if (!empty($interview->interview_notes)): ?>
-                                                <br><i class="fas fa-sticky-note"></i> <?= esc($interview->interview_notes) ?>
+                                                <br><i class="bx bx-sticky-note"></i> <?= esc($interview->interview_notes) ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -310,7 +310,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                             <!-- Upcoming Rehearsals / Performances / Meetings -->
                             <?php if (!empty($schedules)): ?>
                             <h4 style="margin: 16px 0 10px; color: var(--ink); font-size: 15px;">
-                                <i class="fas fa-calendar-day"></i> Upcoming Events
+                                <i class="bx bx-calendar-day"></i> Upcoming Events
                             </h4>
                             <ul>
                                 <?php foreach ($schedules as $schedule): ?>
@@ -320,33 +320,33 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                             <?php
                                             // Event type icon
                                             $typeIcons = [
-                                                'rehearsal' => 'fa-theater-masks',
-                                                'performance' => 'fa-star',
-                                                'meeting' => 'fa-users',
+                                                'rehearsal' => 'bx-theater-masks',
+                                                'performance' => 'bx-star',
+                                                'meeting' => 'bx-users',
                                             ];
-                                            $icon = $typeIcons[$schedule->event_type] ?? 'fa-calendar';
+                                            $icon = $typeIcons[$schedule->event_type] ?? 'bx-calendar';
                                             ?>
-                                            <i class="fas <?= $icon ?>"></i> 
+                                            <i class="bx <?= $icon ?>"></i> 
                                             <?= esc($schedule->event_title) ?>
                                         </strong>
                                         <div class="request-info">
-                                            <i class="fas fa-calendar"></i> 
+                                            <i class="bx bx-calendar"></i> 
                                             <?= date('M d, Y (l)', strtotime($schedule->scheduled_date)) ?>
                                             &nbsp;|&nbsp;
-                                            <i class="fas fa-clock"></i> 
+                                            <i class="bx bx-clock"></i> 
                                             <?= date('h:i A', strtotime($schedule->start_time)) ?> 
                                             - <?= date('h:i A', strtotime($schedule->end_time)) ?>
                                             <br>
-                                            <i class="fas fa-map-marker-alt"></i> 
+                                            <i class="bx bx-map-marker-alt"></i> 
                                             <strong>Venue:</strong> <?= esc($schedule->venue) ?>
                                             <?php if (!empty($schedule->event_description)): ?>
-                                                <br><i class="fas fa-info-circle"></i> <?= esc($schedule->event_description) ?>
+                                                <br><i class="bx bx-info-circle"></i> <?= esc($schedule->event_description) ?>
                                             <?php endif; ?>
                                             <?php if (!empty($schedule->notes)): ?>
-                                                <br><i class="fas fa-sticky-note"></i> <?= esc($schedule->notes) ?>
+                                                <br><i class="bx bx-sticky-note"></i> <?= esc($schedule->notes) ?>
                                             <?php endif; ?>
                                             <?php if (!empty($schedule->role_name)): ?>
-                                                <br><i class="fas fa-user-tag"></i> Role: <?= esc($schedule->role_name) ?>
+                                                <br><i class="bx bx-user-tag"></i> Role: <?= esc($schedule->role_name) ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -372,7 +372,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                         <a href="<?= ROOT ?>/artistdashboard/event_detail?event_id=<?= (int)$schedule->id ?>&drama_id=<?= (int)$drama->id ?>" 
                                            class="btn btn-primary" 
                                            style="font-size: 13px; padding: 8px 18px; border-radius: 8px; text-decoration: none; margin-top: 4px; font-weight: 700; letter-spacing: 0.3px;">
-                                            <i class="fas fa-eye"></i> View Details
+                                            <i class="bx bx-eye"></i> View Details
                                         </a>
                                     </div>
                                 </li>
@@ -386,7 +386,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <?php if (!empty($past_schedules)): ?>
                     <div class="card-section" style="margin-top: 30px;">
                         <h3>
-                            <span><i class="fas fa-history"></i> Past Events</span>
+                            <span><i class="bx bx-history"></i> Past Events</span>
                         </h3>
                         <ul>
                             <?php foreach ($past_schedules as $pastEvt): ?>
@@ -395,23 +395,23 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                     <strong>
                                         <?php
                                         $pIcon = [
-                                            'rehearsal' => 'fa-theater-masks',
-                                            'performance' => 'fa-star',
-                                            'meeting' => 'fa-users',
+                                            'rehearsal' => 'bx-theater-masks',
+                                            'performance' => 'bx-star',
+                                            'meeting' => 'bx-users',
                                         ];
                                         ?>
-                                        <i class="fas <?= $pIcon[$pastEvt->event_type] ?? 'fa-calendar' ?>"></i>
+                                        <i class="bx <?= $pIcon[$pastEvt->event_type] ?? 'bx-calendar' ?>"></i>
                                         <?= esc($pastEvt->event_title) ?>
                                     </strong>
                                     <div class="request-info">
-                                        <i class="fas fa-calendar"></i> 
+                                        <i class="bx bx-calendar"></i> 
                                         <?= date('M d, Y', strtotime($pastEvt->scheduled_date)) ?>
                                         &nbsp;|&nbsp;
-                                        <i class="fas fa-clock"></i> 
+                                        <i class="bx bx-clock"></i> 
                                         <?= date('h:i A', strtotime($pastEvt->start_time)) ?> 
                                         - <?= date('h:i A', strtotime($pastEvt->end_time)) ?>
                                         <br>
-                                        <i class="fas fa-map-marker-alt"></i> <?= esc($pastEvt->venue) ?>
+                                        <i class="bx bx-map-marker-alt"></i> <?= esc($pastEvt->venue) ?>
                                     </div>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
@@ -426,7 +426,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                     <a href="<?= ROOT ?>/artistdashboard/event_detail?event_id=<?= (int)$pastEvt->id ?>&drama_id=<?= (int)$drama->id ?>" 
                                        class="btn btn-secondary" 
                                        style="font-size: 13px; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 700; letter-spacing: 0.3px;">
-                                        <i class="fas fa-eye"></i> Details
+                                        <i class="bx bx-eye"></i> Details
                                     </a>
                                 </div>
                             </li>
