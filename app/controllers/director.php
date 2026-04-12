@@ -1027,6 +1027,49 @@ class Director{
         ]);
     }
 
+    public function remove_role_request()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $this->respondWithRedirect(false, 'Role management is currently unavailable.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $requestId = (int)($_POST['request_id'] ?? 0);
+        if ($requestId <= 0) {
+            $this->respondWithRedirect(false, 'Invalid request selected.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $removed = $this->roleModel->cancelRoleRequestByDirector(
+            $requestId,
+            (int)$_SESSION['user_id'],
+            (int)$drama->id
+        );
+
+        if ($removed) {
+            $this->respondWithRedirect(true, 'Role request removed successfully.', (int)$drama->id, [
+                'route' => 'manage',
+            ], 'success');
+        }
+
+        $this->respondWithRedirect(false, 'Unable to remove request. It may already be handled.', (int)$drama->id, [
+            'route' => 'manage',
+        ]);
+    }
+
     public function publish_vacancy()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

@@ -439,7 +439,13 @@ $publishedRoleIds = array_map(function ($role) {
                                     <span><strong>Requested:</strong> <?= esc(date('Y-m-d H:i', strtotime($request->requested_at ?? 'now'))) ?></span>
                                 </div>
                             </div>
-                            <a class="btn btn-secondary" href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($request->role_id) ?>"><i class="fas fa-eye"></i>View Role</a>
+                            <div class="actions-inline">
+                                <a class="btn btn-secondary" href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($request->role_id) ?>"><i class="fas fa-eye"></i>View Role</a>
+                                <form class="js-role-action" action="<?= ROOT ?>/director/remove_role_request?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Remove this artist request?">
+                                    <input type="hidden" name="request_id" value="<?= esc($request->id) ?>">
+                                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i>Remove</button>
+                                </form>
+                            </div>
                         </div>
                         <?php if (!empty($request->note)): ?>
                             <div style="margin-top: 10px; white-space: pre-wrap;"><?= nl2br(esc($request->note)) ?></div>

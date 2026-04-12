@@ -723,6 +723,53 @@ class M_role {
         }
     }
 
+    public function cancelRoleRequestByDirector(int $request_id, int $director_id, int $drama_id): bool {
+        try {
+            $this->db->beginTransaction();
+
+            $this->db->query("SELECT rr.id, rr.status
+                              FROM role_requests rr
+                              INNER JOIN drama_roles r ON rr.role_id = r.id
+                              WHERE rr.id = :request_id
+                                AND rr.director_id = :director_id
+                                AND r.drama_id = :drama_id
+                              FOR UPDATE");
+            $this->db->bind(':request_id', $request_id);
+            $this->db->bind(':director_id', $director_id);
+            $this->db->bind(':drama_id', $drama_id);
+            $request = $this->db->single();
+
+            if (!$request) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $status = strtolower((string)($request->status ?? ''));
+            if (!in_array($status, ['pending', 'interview'], true)) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $this->db->query("UPDATE role_requests
+                              SET status = 'cancelled', responded_at = NOW()
+                              WHERE id = :request_id");
+            $this->db->bind(':request_id', $request_id);
+            $ok = $this->db->execute();
+
+            if (!$ok) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in cancelRoleRequestByDirector: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function assignArtistFromRequest($request_id, int $director_id) {
         try {
             $this->db->beginTransaction();
