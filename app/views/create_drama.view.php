@@ -265,7 +265,7 @@ if(isset($data) && is_array($data)) {
 
         <div class="header">
             <h1><i class="bx bx-certificate"></i> Register Drama with Certificate</h1>
-            <p>Submit your drama for admin review using the Public Performance Board Certificate</p>
+            <p>Step 1: Submit certificate details for admin approval. Step 2: Publish to audience from your dashboard.</p>
         </div>
 
         <?php if (isset($_SESSION['message'])): ?>
@@ -312,17 +312,17 @@ if(isset($data) && is_array($data)) {
                 </div>
 
                 <div class="form-group">
-                    <label for="owner_name">Owner's Name <span class="required">*</span></label>
+                    <label for="owner_name">Producer Name <span class="required">*</span></label>
                     <input 
                         type="text" 
                         id="owner_name" 
                         name="owner_name" 
                         class="form-control" 
-                        placeholder="Enter the owner's full name"
+                        placeholder="Enter the producer's full name"
                         value="<?= isset($form_data['owner_name']) ? esc($form_data['owner_name']) : '' ?>"
                         required
                     >
-                    <div class="form-hint">Enter the name of the drama production owner</div>
+                    <div class="form-hint">Enter the name of the drama producer</div>
                 </div>
 
                 <div class="form-group">

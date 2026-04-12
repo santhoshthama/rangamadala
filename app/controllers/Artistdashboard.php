@@ -3,6 +3,17 @@
 class Artistdashboard
 {
     use Controller;
+    protected $payHereHelper = null;
+
+    public function __construct()
+    {
+        try {
+            $this->payHereHelper = new PayHereHelper();
+        } catch (Throwable $e) {
+            $this->payHereHelper = null;
+            error_log('Artistdashboard PayHereHelper init failed: ' . $e->getMessage());
+        }
+    }
 
     public function index()
     {
@@ -687,27 +698,90 @@ class Artistdashboard
             exit;
         }
 
-        $class_id = isset($_POST['class_id']) ? (int)$_POST['class_id'] : 0;
-        if ($class_id <= 0) {
-            $_SESSION['message'] = 'Invalid class selected.';
+        $_SESSION['message'] = 'Complete class payment first to enroll.';
+        $_SESSION['message_type'] = 'error';
+
+        header('Location: ' . ROOT . '/artistdashboard/classes');
+        exit;
+    }
+
+    public function start_class_payment()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+
+        $classId = isset($_POST['class_id']) ? (int)$_POST['class_id'] : 0;
+        $classModel = $this->getModel('M_class');
+        if ($classId <= 0 || !$classModel || !$this->payHereHelper) {
+            echo json_encode(['success' => false, 'error' => 'Invalid class payment request']);
+            exit;
+        }
+
+        $paymentOrder = $classModel->createEnrollmentPaymentOrder($classId, (int)$_SESSION['user_id'], 'artist', false);
+        if (!$paymentOrder['success']) {
+            echo json_encode(['success' => false, 'error' => $paymentOrder['message'] ?? 'Unable to initialize class payment']);
+            exit;
+        }
+
+        $orderId = (string)$paymentOrder['order_id'];
+        $amount = number_format((float)($paymentOrder['amount'] ?? 0), 2, '.', '');
+        $hash = $this->payHereHelper->generateHash($orderId, $amount);
+        $class = $paymentOrder['class'] ?? null;
+
+        echo json_encode([
+            'success' => true,
+            'order_id' => $orderId,
+            'amount' => $amount,
+            'hash' => $hash,
+            'title' => $class->title ?? 'Drama Class',
+            'merchant_id' => $this->payHereHelper->getConfig('merchant_id'),
+            'sandbox' => (bool)$this->payHereHelper->getConfig('sandbox', false),
+            'return_url' => ROOT . '/artistdashboard/class_payment_return?order_id=' . rawurlencode($orderId),
+            'cancel_url' => ROOT . '/artistdashboard/classes',
+            'notify_url' => ROOT . '/artistdashboard/class_payment_notify',
+        ]);
+        exit;
+    }
+
+    public function class_payment_return()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header('Location: ' . ROOT . '/login');
+            exit;
+        }
+
+        $orderId = trim((string)($_GET['order_id'] ?? ''));
+        $classModel = $this->getModel('M_class');
+        if ($orderId === '' || !$classModel) {
+            $_SESSION['message'] = 'Invalid class payment return details.';
             $_SESSION['message_type'] = 'error';
             header('Location: ' . ROOT . '/artistdashboard/classes');
             exit;
         }
 
-        $class_model = $this->getModel('M_class');
-        if (!$class_model) {
-            $_SESSION['message'] = 'Class system is unavailable right now.';
-            $_SESSION['message_type'] = 'error';
-            header('Location: ' . ROOT . '/artistdashboard/classes');
-            exit;
-        }
-
-        $result = $class_model->enrollUser($class_id, (int)$_SESSION['user_id'], false);
+        $result = $classModel->completeEnrollmentPayment($orderId, (int)$_SESSION['user_id'], 'artist', false);
         $_SESSION['message'] = $result['message'];
         $_SESSION['message_type'] = $result['success'] ? 'success' : 'error';
 
         header('Location: ' . ROOT . '/artistdashboard/classes');
+        exit;
+    }
+
+    public function class_payment_notify()
+    {
+        http_response_code(200);
+        echo 'OK';
         exit;
     }
 
