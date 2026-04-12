@@ -603,6 +603,15 @@ class Production_manager{
             // Update status to cancelled (no payment logic here)
             $ok = $serviceModel->updateStatusDetailed((int)$id, 'cancelled');
             if ($ok) {
+                $this->notifyProviderAction(
+                    (int)$request->provider_id,
+                    (int)$request->drama_id,
+                    'service_request_cancelled_by_pm',
+                    'Service Request Cancelled',
+                    'Production manager cancelled the service request for "' . ($request->service_type ?? 'service') . '" in "' . ($request->drama_name ?? 'your drama') . '".',
+                    ROOT . '/ServiceRequests'
+                );
+
                 echo json_encode(['success' => true, 'status' => 'cancelled']);
             } else {
                 http_response_code(500);
@@ -642,6 +651,14 @@ class Production_manager{
 
         try {
             $serviceModel = $this->getModel('M_service_request');
+            $request = $serviceModel->getRequestById((int)$request_id);
+
+            if (!$request) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Request not found']);
+                return;
+            }
+
             $result = $serviceModel->confirmByPM(
                 (int)$request_id,
                 $_SESSION['user_id'],
@@ -654,6 +671,15 @@ class Production_manager{
             );
 
             if ($result['success']) {
+                $this->notifyProviderAction(
+                    (int)$request->provider_id,
+                    (int)$request->drama_id,
+                    'provider_quote_confirmed_by_pm',
+                    'Quotation Confirmed by PM',
+                    'Production manager confirmed your quotation for "' . ($request->service_type ?? 'service') . '" in "' . ($request->drama_name ?? 'the drama') . '". Please review and accept to continue.',
+                    ROOT . '/ServiceRequests'
+                );
+
                 echo json_encode(['success' => true, 'message' => 'Provider response confirmed']);
             } else {
                 http_response_code(400);
@@ -708,6 +734,15 @@ class Production_manager{
 
             $ok = $serviceModel->updateStatusDetailed((int)$request_id, 'rejected', $reason);
             if ($ok) {
+                $this->notifyProviderAction(
+                    (int)$request->provider_id,
+                    (int)$request->drama_id,
+                    'provider_quote_rejected_by_pm',
+                    'Quotation Rejected by PM',
+                    'Production manager rejected your quotation for "' . ($request->service_type ?? 'service') . '". Reason: ' . $reason,
+                    ROOT . '/ServiceRequests'
+                );
+
                 echo json_encode(['success' => true, 'message' => 'Provider response rejected']);
             } else {
                 http_response_code(500);
@@ -717,6 +752,27 @@ class Production_manager{
             error_log("Error in rejectProviderResponse: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'error' => 'Server error']);
+        }
+    }
+
+    private function notifyProviderAction($providerId, $dramaId, $type, $title, $message, $link = null)
+    {
+        try {
+            $notificationModel = $this->getModel('M_notification');
+            if (!$notificationModel || !$providerId) {
+                return;
+            }
+
+            $notificationModel->createNotification([
+                'user_id' => (int)$providerId,
+                'drama_id' => $dramaId ? (int)$dramaId : null,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'link' => $link,
+            ]);
+        } catch (Exception $e) {
+            error_log('Production_manager notification error: ' . $e->getMessage());
         }
     }
 }

@@ -147,6 +147,18 @@ class ServiceProviderRequest
         $saved = $model->createRequest($request);
 
         if ($saved) {
+            if (!empty($request['drama_id']) && !empty($request['provider_id'])) {
+                $requesterName = trim((string)($request['requester_name'] ?? 'Production Manager'));
+                $this->notifyProviderAction(
+                    (int)$request['provider_id'],
+                    (int)$request['drama_id'],
+                    'service_request_created_pm',
+                    'Service Request from ' . $requesterName,
+                    $requesterName . ' sent a new service request for "' . $request['service_type'] . '" in "' . $request['drama_name'] . '".',
+                    ROOT . '/ServiceRequests'
+                );
+            }
+
             // Success - redirect with success message
             $_SESSION['request_success'] = 'Service request submitted successfully! The provider will contact you soon.';
             // If drama_id provided (production manager flow), take user to the manage_services page so counts update
@@ -212,6 +224,18 @@ class ServiceProviderRequest
             );
 
             if ($result['success']) {
+                $request = $serviceModel->getRequestById((int)$request_id);
+                if ($request) {
+                    $this->notifyRequesterAction(
+                        (int)($request->requested_by ?? 0),
+                        (int)($request->drama_id ?? 0),
+                        'pm_provider_responded_quote',
+                        'Provider Responded with Quotation',
+                        ($request->provider_name ?? 'Provider') . ' sent a quotation response for "' . ($request->service_type ?? 'service') . '" in "' . ($request->drama_name ?? 'your drama') . '".',
+                        ROOT . '/production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0)
+                    );
+                }
+
                 echo json_encode(['success' => true, 'message' => 'Response submitted successfully']);
             } else {
                 http_response_code(400);
@@ -256,6 +280,18 @@ class ServiceProviderRequest
             $result = $serviceModel->acceptConfirmed((int)$request_id, $_SESSION['user_id']);
 
             if ($result['success']) {
+                $request = $serviceModel->getRequestById((int)$request_id);
+                if ($request) {
+                    $this->notifyRequesterAction(
+                        (int)($request->requested_by ?? 0),
+                        (int)($request->drama_id ?? 0),
+                        'pm_provider_accepted_terms',
+                        'Provider Accepted Confirmed Terms',
+                        ($request->provider_name ?? 'Provider') . ' accepted your confirmed terms for "' . ($request->service_type ?? 'service') . '". Service is now in progress.',
+                        ROOT . '/production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0)
+                    );
+                }
+
                 echo json_encode(['success' => true, 'message' => 'Request accepted successfully']);
             } else {
                 http_response_code(400);
@@ -298,9 +334,21 @@ class ServiceProviderRequest
 
         try {
             $serviceModel = $this->getModel('M_service_request');
+            $request = $serviceModel->getRequestById((int)$request_id);
             $ok = $serviceModel->updateStatusDetailed((int)$request_id, 'rejected', $reason, $_SESSION['user_id']);
             
             if ($ok) {
+                if ($request) {
+                    $this->notifyRequesterAction(
+                        (int)($request->requested_by ?? 0),
+                        (int)($request->drama_id ?? 0),
+                        'pm_provider_rejected_terms',
+                        'Provider Rejected Confirmed Terms',
+                        ($request->provider_name ?? 'Provider') . ' rejected confirmed terms for "' . ($request->service_type ?? 'service') . '". Reason: ' . $reason,
+                        ROOT . '/production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0)
+                    );
+                }
+
                 echo json_encode(['success' => true, 'message' => 'Request rejected']);
             } else {
                 http_response_code(500);
@@ -310,6 +358,48 @@ class ServiceProviderRequest
             error_log("Error in rejectConfirmed: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'error' => 'Server error']);
+        }
+    }
+
+    private function notifyProviderAction($providerId, $dramaId, $type, $title, $message, $link = null)
+    {
+        try {
+            $notificationModel = $this->getModel('M_notification');
+            if (!$notificationModel || !$providerId) {
+                return;
+            }
+
+            $notificationModel->createNotification([
+                'user_id' => (int)$providerId,
+                'drama_id' => $dramaId ? (int)$dramaId : null,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'link' => $link,
+            ]);
+        } catch (Exception $e) {
+            error_log('ServiceProviderRequest notification error: ' . $e->getMessage());
+        }
+    }
+
+    private function notifyRequesterAction($requesterId, $dramaId, $type, $title, $message, $link = null)
+    {
+        try {
+            $notificationModel = $this->getModel('M_notification');
+            if (!$notificationModel || !$requesterId) {
+                return;
+            }
+
+            $notificationModel->createNotification([
+                'user_id' => (int)$requesterId,
+                'drama_id' => $dramaId ? (int)$dramaId : null,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'link' => $link,
+            ]);
+        } catch (Exception $e) {
+            error_log('ServiceProviderRequest PM notification error: ' . $e->getMessage());
         }
     }
 }

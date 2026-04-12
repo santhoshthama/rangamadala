@@ -88,6 +88,39 @@ class M_notification {
     }
 
     /**
+     * Get notifications for a user filtered by notification types
+     */
+    public function getNotificationsByUserTypes($user_id, $types = [], $limit = 50) {
+        try {
+            if (empty($types)) {
+                return $this->getNotificationsByUser($user_id, $limit);
+            }
+
+            $placeholders = [];
+            foreach (array_values($types) as $index => $type) {
+                $placeholders[] = ':type_' . $index;
+            }
+
+            $this->db->query("SELECT n.*, d.drama_name
+                             FROM artist_notifications n
+                             LEFT JOIN dramas d ON n.drama_id = d.id
+                             WHERE n.user_id = :user_id
+                               AND n.type IN (" . implode(', ', $placeholders) . ")
+                             ORDER BY n.created_at DESC
+                             LIMIT :lim");
+            $this->db->bind(':user_id', $user_id);
+            foreach (array_values($types) as $index => $type) {
+                $this->db->bind(':type_' . $index, $type);
+            }
+            $this->db->bind(':lim', (int)$limit);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error in getNotificationsByUserTypes: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * Get unread notification count for a user
      */
     public function getUnreadCount($user_id) {
@@ -99,6 +132,37 @@ class M_notification {
             return $row ? (int)$row->cnt : 0;
         } catch (Exception $e) {
             error_log("Error in getUnreadCount: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Get unread count for a user filtered by notification types
+     */
+    public function getUnreadCountByTypes($user_id, $types = []) {
+        try {
+            if (empty($types)) {
+                return $this->getUnreadCount($user_id);
+            }
+
+            $placeholders = [];
+            foreach (array_values($types) as $index => $type) {
+                $placeholders[] = ':type_' . $index;
+            }
+
+            $this->db->query("SELECT COUNT(*) as cnt FROM artist_notifications 
+                             WHERE user_id = :user_id 
+                               AND is_read = 0
+                               AND type IN (" . implode(', ', $placeholders) . ")");
+            $this->db->bind(':user_id', $user_id);
+            foreach (array_values($types) as $index => $type) {
+                $this->db->bind(':type_' . $index, $type);
+            }
+
+            $row = $this->db->single();
+            return $row ? (int)$row->cnt : 0;
+        } catch (Exception $e) {
+            error_log("Error in getUnreadCountByTypes: " . $e->getMessage());
             return 0;
         }
     }
@@ -130,6 +194,35 @@ class M_notification {
             return $this->db->execute();
         } catch (Exception $e) {
             error_log("Error in markAllAsRead: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Mark all notifications as read for a user filtered by notification types
+     */
+    public function markAllAsReadByTypes($user_id, $types = []) {
+        try {
+            if (empty($types)) {
+                return $this->markAllAsRead($user_id);
+            }
+
+            $placeholders = [];
+            foreach (array_values($types) as $index => $type) {
+                $placeholders[] = ':type_' . $index;
+            }
+
+            $this->db->query("UPDATE artist_notifications SET is_read = 1 
+                             WHERE user_id = :user_id 
+                               AND is_read = 0
+                               AND type IN (" . implode(', ', $placeholders) . ")");
+            $this->db->bind(':user_id', $user_id);
+            foreach (array_values($types) as $index => $type) {
+                $this->db->bind(':type_' . $index, $type);
+            }
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log("Error in markAllAsReadByTypes: " . $e->getMessage());
             return false;
         }
     }

@@ -56,8 +56,36 @@ class ServiceRequests
 
 		try {
 			$reqModel = new M_service_request();
+			$request = $reqModel->getRequestById((int)$id);
 			$ok = $reqModel->updateStatusDetailed((int)$id, (string)$status, $reason, (int)$_SESSION['user_id']);
 			if ($ok) {
+				if ($request && !empty($request->requested_by)) {
+					$notificationType = null;
+					$notificationTitle = null;
+					$notificationMessage = null;
+
+					if ((string)$status === 'completed') {
+						$notificationType = 'pm_provider_marked_completed';
+						$notificationTitle = 'Provider Marked Service Completed';
+						$notificationMessage = ($request->provider_name ?? 'Provider') . ' marked "' . ($request->service_type ?? 'service') . '" as completed for "' . ($request->drama_name ?? 'your drama') . '".';
+					} elseif ((string)$status === 'rejected') {
+						$notificationType = 'pm_provider_rejected_request';
+						$notificationTitle = 'Provider Rejected Service Request';
+						$notificationMessage = ($request->provider_name ?? 'Provider') . ' rejected the service request for "' . ($request->service_type ?? 'service') . '". Reason: ' . ($reason ?: 'No reason provided');
+					}
+
+					if ($notificationType) {
+						$this->notifyRequesterAction(
+							(int)$request->requested_by,
+							(int)($request->drama_id ?? 0),
+							$notificationType,
+							$notificationTitle,
+							$notificationMessage,
+							ROOT . '/production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0)
+						);
+					}
+				}
+
 				echo json_encode(['success' => true, 'status' => $status]);
 			} else {
 				http_response_code(500);
@@ -93,6 +121,27 @@ class ServiceRequests
 		} else {
 			http_response_code(500);
 			echo json_encode(['success' => false, 'error' => 'Failed to update payment status']);
+		}
+	}
+
+	private function notifyRequesterAction($requesterId, $dramaId, $type, $title, $message, $link = null)
+	{
+		try {
+			$notificationModel = $this->getModel('M_notification');
+			if (!$notificationModel || !$requesterId) {
+				return;
+			}
+
+			$notificationModel->createNotification([
+				'user_id' => (int)$requesterId,
+				'drama_id' => $dramaId ? (int)$dramaId : null,
+				'type' => $type,
+				'title' => $title,
+				'message' => $message,
+				'link' => $link,
+			]);
+		} catch (Exception $e) {
+			error_log('ServiceRequests PM notification error: ' . $e->getMessage());
 		}
 	}
 }

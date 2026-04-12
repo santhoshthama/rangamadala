@@ -264,6 +264,15 @@ class Payment
             exit;
         }
 
+        $this->notifyProviderAction(
+            (int)($request->provider_id ?? 0),
+            (int)($request->drama_id ?? 0),
+            'payment_submitted_by_pm',
+            'Cash Payment Submitted',
+            'Production manager submitted a cash payment for your service request. Please verify the payment details.',
+            ROOT . '/ServiceRequests'
+        );
+
         $_SESSION['success'] = 'Cash payment recorded. Waiting for provider confirmation.';
         header('Location: ' . ROOT . '/Payment/receipt/' . $paymentId);
         exit;
@@ -369,6 +378,15 @@ class Payment
             header('Location: ' . ROOT . '/Payment/bankForm?request_id=' . (int)$requestId . '&amount=' . urlencode($amount) . '&type=' . urlencode($type));
             exit;
         }
+
+        $this->notifyProviderAction(
+            (int)($request->provider_id ?? 0),
+            (int)($request->drama_id ?? 0),
+            'payment_submitted_by_pm',
+            'Bank Transfer Submitted',
+            'Production manager uploaded bank transfer proof for your service request. Please verify the payment details.',
+            ROOT . '/ServiceRequests'
+        );
 
         $_SESSION['success'] = 'Bank slip uploaded successfully. Provider can now review it.';
         header('Location: ' . ROOT . '/Payment/receipt/' . $paymentId);
@@ -493,6 +511,19 @@ class Payment
         }
 
         $this->updateServiceRequestPaymentStatus($payment->service_request_id);
+
+        $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
+        if ($request) {
+            $this->notifyRequesterAction(
+                (int)($request->requested_by ?? 0),
+                (int)($request->drama_id ?? 0),
+                'pm_provider_confirmed_manual_payment',
+                'Provider Confirmed Cash Payment',
+                ($request->provider_name ?? 'Provider') . ' confirmed receiving your cash payment for "' . ($request->service_type ?? 'service') . '".',
+                ROOT . '/production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0)
+            );
+        }
+
         echo json_encode(['success' => true]);
     }
 
@@ -566,6 +597,19 @@ class Payment
         }
 
         $this->updateServiceRequestPaymentStatus($payment->service_request_id);
+
+        $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
+        if ($request) {
+            $this->notifyRequesterAction(
+                (int)($request->requested_by ?? 0),
+                (int)($request->drama_id ?? 0),
+                'pm_provider_confirmed_manual_payment',
+                'Provider Confirmed Bank Transfer',
+                ($request->provider_name ?? 'Provider') . ' confirmed your bank transfer payment for "' . ($request->service_type ?? 'service') . '".',
+                ROOT . '/production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0)
+            );
+        }
+
         echo json_encode(['success' => true]);
     }
 
@@ -648,6 +692,18 @@ class Payment
             http_response_code(500);
             echo json_encode(['success' => false, 'error' => 'Failed to update verification status']);
             return;
+        }
+
+        $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
+        if ($request) {
+            $this->notifyRequesterAction(
+                (int)($request->requested_by ?? 0),
+                (int)($request->drama_id ?? 0),
+                'pm_provider_rejected_manual_payment',
+                'Provider Could Not Verify Payment',
+                ($request->provider_name ?? 'Provider') . ' could not verify your ' . ($gateway === 'bank_transfer' ? 'bank transfer' : 'cash') . ' payment for "' . ($request->service_type ?? 'service') . '". Reason: ' . $reason,
+                ROOT . '/production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0)
+            );
         }
 
         echo json_encode(['success' => true]);
@@ -784,6 +840,18 @@ class Payment
             
             // Update service request payment status
             $this->updateServiceRequestPaymentStatus($payment->service_request_id);
+
+            $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
+            if ($request) {
+                $this->notifyProviderAction(
+                    (int)($request->provider_id ?? 0),
+                    (int)($request->drama_id ?? 0),
+                    'payment_completed_by_pm',
+                    'Online Payment Completed',
+                    'Production manager completed an online payment for your service request.',
+                    ROOT . '/ServiceRequests'
+                );
+            }
         }
         
         // Redirect directly to receipt page (no summary page)
@@ -829,6 +897,48 @@ class Payment
                     ]))
                 );
             }
+        }
+    }
+
+    private function notifyProviderAction($providerId, $dramaId, $type, $title, $message, $link = null)
+    {
+        try {
+            $notificationModel = $this->getModel('M_notification');
+            if (!$notificationModel || !$providerId) {
+                return;
+            }
+
+            $notificationModel->createNotification([
+                'user_id' => (int)$providerId,
+                'drama_id' => $dramaId ? (int)$dramaId : null,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'link' => $link,
+            ]);
+        } catch (Exception $e) {
+            error_log('Payment notification error: ' . $e->getMessage());
+        }
+    }
+
+    private function notifyRequesterAction($requesterId, $dramaId, $type, $title, $message, $link = null)
+    {
+        try {
+            $notificationModel = $this->getModel('M_notification');
+            if (!$notificationModel || !$requesterId) {
+                return;
+            }
+
+            $notificationModel->createNotification([
+                'user_id' => (int)$requesterId,
+                'drama_id' => $dramaId ? (int)$dramaId : null,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'link' => $link,
+            ]);
+        } catch (Exception $e) {
+            error_log('Payment PM notification error: ' . $e->getMessage());
         }
     }
 }

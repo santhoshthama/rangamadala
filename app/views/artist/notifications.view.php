@@ -34,7 +34,30 @@ $typeConfig = [
     'application_accepted'  => ['icon' => 'fa-check-circle',   'color' => '#28a745', 'label' => 'Application Accepted'],
     'application_rejected'  => ['icon' => 'fa-times-circle',   'color' => '#dc3545', 'label' => 'Application Rejected'],
     'interview_scheduled'   => ['icon' => 'fa-user-clock',     'color' => '#ba8e23', 'label' => 'Interview Scheduled'],
+    'pm_provider_responded_quote' => ['icon' => 'fa-file-invoice-dollar', 'color' => '#2563eb', 'label' => 'Quote Received'],
+    'pm_provider_accepted_terms' => ['icon' => 'fa-handshake', 'color' => '#16a34a', 'label' => 'Terms Accepted'],
+    'pm_provider_rejected_terms' => ['icon' => 'fa-ban', 'color' => '#dc2626', 'label' => 'Terms Rejected'],
+    'pm_provider_marked_completed' => ['icon' => 'fa-flag-checkered', 'color' => '#0ea5e9', 'label' => 'Service Completed'],
+    'pm_provider_rejected_request' => ['icon' => 'fa-user-slash', 'color' => '#b91c1c', 'label' => 'Request Rejected'],
+    'pm_provider_confirmed_manual_payment' => ['icon' => 'fa-money-check-dollar', 'color' => '#15803d', 'label' => 'Payment Confirmed'],
+    'pm_provider_rejected_manual_payment' => ['icon' => 'fa-triangle-exclamation', 'color' => '#d97706', 'label' => 'Payment Verification Failed'],
 ];
+
+$pmTypes = [
+    'pm_provider_responded_quote',
+    'pm_provider_accepted_terms',
+    'pm_provider_rejected_terms',
+    'pm_provider_marked_completed',
+    'pm_provider_rejected_request',
+    'pm_provider_confirmed_manual_payment',
+    'pm_provider_rejected_manual_payment',
+];
+$pmNotifications = array_values(array_filter($allNotifications, function ($n) use ($pmTypes) {
+    return isset($n->type) && in_array($n->type, $pmTypes, true);
+}));
+$pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
+    return !(int)$n->is_read;
+}));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -281,6 +304,9 @@ $typeConfig = [
             <button class="tab-btn active" onclick="switchTab('all', this)">
                 <i class="fas fa-bell"></i> All Notifications
             </button>
+            <button class="tab-btn" onclick="switchTab('pm', this)">
+                <i class="fas fa-briefcase"></i> Production Manager <?= $pmUnreadCount > 0 ? '(' . $pmUnreadCount . ')' : '' ?>
+            </button>
             <button class="tab-btn" onclick="switchTab('grouped', this)">
                 <i class="fas fa-film"></i> By Drama
             </button>
@@ -309,6 +335,57 @@ $typeConfig = [
                                     $timeAgo = timeAgoStr($n->created_at);
                                 ?>
                                 <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>" 
+                                   class="notification-item <?= $isUnread ? 'unread' : '' ?>">
+                                    <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
+                                        <i class="fas <?= $tc['icon'] ?>"></i>
+                                    </div>
+                                    <div class="notification-body">
+                                        <div class="notification-title">
+                                            <?php if ($isUnread): ?><span class="unread-dot"></span><?php endif; ?>
+                                            <?= esc($n->title) ?>
+                                        </div>
+                                        <div class="notification-message"><?= esc($n->message) ?></div>
+                                        <div class="notification-time">
+                                            <i class="fas fa-clock"></i> <?= $timeAgo ?>
+                                            <?php if ($n->drama_name): ?>
+                                                &nbsp;|&nbsp; <i class="fas fa-film"></i> <?= esc($n->drama_name) ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div style="flex-shrink: 0;">
+                                        <span class="notification-badge" style="background: <?= $tc['color'] ?>20; color: <?= $tc['color'] ?>;">
+                                            <i class="fas <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?>
+                                        </span>
+                                    </div>
+                                </a>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Production Manager -->
+        <div id="tab-pm" class="tab-panel">
+            <div class="content">
+                <div class="profile-container" style="grid-template-columns: 1fr;">
+                    <div class="details">
+                        <div class="card-section">
+                            <h3><i class="fas fa-briefcase"></i> Production Manager Updates</h3>
+                            <?php if (empty($pmNotifications)): ?>
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <h3>No PM Notifications Yet</h3>
+                                    <p>Provider responses and request-stage updates will appear here.</p>
+                                </div>
+                            <?php else: ?>
+                                <?php foreach ($pmNotifications as $n):
+                                    $tc = $typeConfig[$n->type] ?? ['icon' => 'fa-bell', 'color' => '#6c757d', 'label' => 'Notification'];
+                                    $isUnread = !(int)$n->is_read;
+                                    $timeAgo = timeAgoStr($n->created_at);
+                                ?>
+                                <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>"
                                    class="notification-item <?= $isUnread ? 'unread' : '' ?>">
                                     <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
                                         <i class="fas <?= $tc['icon'] ?>"></i>

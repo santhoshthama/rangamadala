@@ -44,6 +44,12 @@ $activePage = $activePage ?? '';
                     <span>Payments</span>
                 </a>
             </li>
+            <li class="<?= $activePage === 'notifications' ? 'active' : '' ?>">
+                <a href="<?= ROOT ?>/ServiceProviderNotifications">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+            </li>
             <li class="<?= $activePage === 'reports' ? 'active' : '' ?>">
                 <a href="<?= ROOT ?>/ServiceReports">
                     <i class="fas fa-file-alt"></i>
