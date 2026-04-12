@@ -87,7 +87,7 @@ class BrowseServiceProviders
         // Get provider's projects
         $projects = $model->getProviderProjects($id);
 
-        // Get booked dates for this provider
+        // Get booked dates for this provider (only dates that don't allow more bookings)
         $bookedDateList = [];
         try {
             $availabilityModel = new M_provider_availability();
@@ -95,7 +95,8 @@ class BrowseServiceProviders
             
             if ($bookedDates) {
                 foreach ($bookedDates as $date) {
-                    if ($date->status === 'booked') {
+                    // Only mark as blocked if status is 'booked' AND allow_more_bookings is 0
+                    if ($date->status === 'booked' && (!isset($date->allow_more_bookings) || $date->allow_more_bookings == 0)) {
                         $bookedDateList[] = $date->available_date;
                     }
                 }

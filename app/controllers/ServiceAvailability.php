@@ -43,6 +43,7 @@ class ServiceAvailability
                         'date' => $availability->available_date,
                         'description' => $availability->description ?? '',
                         'status' => $availability->status ?? 'available',
+                        'allow_more_bookings' => $availability->allow_more_bookings ?? 1,
                         'booked_for' => $availability->booked_for ?? null,
                         'booking_details' => $availability->booking_details ?? null,
                         'service_request_id' => $availability->service_request_id ?? null,
@@ -200,20 +201,12 @@ class ServiceAvailability
     }
 
     /**
-     * Format date from JS format (M/D/YYYY) to database format (Y-m-d)
+     * Format date from JavaScript format (M/D/YYYY) to database format (Y-m-d)
      */
     private function formatDateForDB($jsDate)
     {
-        // Parse M/D/YYYY format
-        $parts = explode('/', $jsDate);
-        if (count($parts) !== 3) {
-            return null;
-        }
-        $month = str_pad($parts[0], 2, '0', STR_PAD_LEFT);
-        $day = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
-        $year = $parts[2];
-        return "$year-$month-$day";
+        $timestamp = strtotime($jsDate);
+        return date('Y-m-d', $timestamp);
     }
 }
 
-?>

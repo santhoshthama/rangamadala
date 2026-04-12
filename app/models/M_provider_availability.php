@@ -12,14 +12,15 @@ class M_provider_availability
     /**
      * Unified method to add a date (handles both manual and automatic additions)
      */
-    public function addAvailableDate($provider_id, $available_date, $description, $status = 'available', $booked_for = null, $booking_details = null, $service_request_id = null)
+    public function addAvailableDate($provider_id, $available_date, $description, $status = 'available', $booked_for = null, $booking_details = null, $service_request_id = null, $allow_more_bookings = 1)
     {
         try {
-            $this->db->query("INSERT INTO provider_availability (provider_id, available_date, description, status, booked_for, booking_details, service_request_id, added_on)
-                             VALUES (:provider_id, :available_date, :description, :status, :booked_for, :booking_details, :service_request_id, NOW())
+            $this->db->query("INSERT INTO provider_availability (provider_id, available_date, description, status, booked_for, booking_details, service_request_id, allow_more_bookings, added_on)
+                             VALUES (:provider_id, :available_date, :description, :status, :booked_for, :booking_details, :service_request_id, :allow_more_bookings, NOW())
                              ON DUPLICATE KEY UPDATE 
                              description = VALUES(description), status = VALUES(status), booked_for = VALUES(booked_for), 
-                             booking_details = VALUES(booking_details), service_request_id = VALUES(service_request_id), updated_at = NOW()");
+                             booking_details = VALUES(booking_details), service_request_id = VALUES(service_request_id),
+                             allow_more_bookings = VALUES(allow_more_bookings), updated_at = NOW()");
             
             $this->db->bind(':provider_id', $provider_id);
             $this->db->bind(':available_date', $available_date);
@@ -28,6 +29,7 @@ class M_provider_availability
             $this->db->bind(':booked_for', $booked_for);
             $this->db->bind(':booking_details', $booking_details);
             $this->db->bind(':service_request_id', $service_request_id);
+            $this->db->bind(':allow_more_bookings', $allow_more_bookings ? 1 : 0);
             
             return $this->db->execute();
         } catch (Exception $e) {
@@ -40,10 +42,10 @@ class M_provider_availability
      * Mark a date as booked when a service request is accepted
      * Now uses the unified addAvailableDate method
      */
-    public function markAsBooked($provider_id, $available_date, $booked_for, $booking_details, $service_request_id)
+    public function markAsBooked($provider_id, $available_date, $booked_for, $booking_details, $service_request_id, $allow_more_bookings = 0)
     {
         try {
-            return $this->addAvailableDate($provider_id, $available_date, $booking_details, 'booked', $booked_for, $booking_details, $service_request_id);
+            return $this->addAvailableDate($provider_id, $available_date, $booking_details, 'booked', $booked_for, $booking_details, $service_request_id, $allow_more_bookings);
         } catch (Exception $e) {
             error_log("Error in markAsBooked: " . $e->getMessage());
             return false;
@@ -71,7 +73,7 @@ class M_provider_availability
                 $sql .= " AND pa.available_date >= :from_date";
             }
             
-            $sql .= " ORDER BY pa.available_date ASC";
+            $sql .= " ORDER BY pa.available_date DESC";
             
             $this->db->query($sql);
             $this->db->bind(':provider_id', $provider_id);
@@ -135,7 +137,7 @@ class M_provider_availability
      */
     public function getBookedDates($provider_id)
     {
-        $this->db->query("SELECT * FROM provider_availability WHERE provider_id = :provider_id AND status = 'booked' ORDER BY available_date ASC");
+        $this->db->query("SELECT * FROM provider_availability WHERE provider_id = :provider_id AND status = 'booked' ORDER BY available_date DESC");
         $this->db->bind(':provider_id', $provider_id);
         
         return $this->db->resultSet();
@@ -147,7 +149,7 @@ class M_provider_availability
     public function unmarkBooked($provider_id, $available_date)
     {
         $this->db->query("UPDATE provider_availability SET status = 'available', booked_for = NULL, booking_details = NULL, 
-                         service_request_id = NULL, booked_on = NULL, updated_at = NOW() 
+                         service_request_id = NULL, allow_more_bookings = 1, booked_on = NULL, updated_at = NOW() 
                          WHERE provider_id = :provider_id AND available_date = :available_date");
         
         $this->db->bind(':provider_id', $provider_id);
