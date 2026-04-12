@@ -26,6 +26,22 @@ $roleStatuses = [
 
 $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
+$currentDirectorId = (int)($_SESSION['user_id'] ?? 0);
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 
 $publishableRoles = array_filter($roles, function ($role) {
     $status = strtolower($role->status ?? 'open');
@@ -43,8 +59,8 @@ $publishedRoleIds = array_map(function ($role) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Artist Roles - <?= esc($dramaName) ?> - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         .message {
             padding: 16px;
             border-radius: 12px;
@@ -102,6 +118,21 @@ $publishedRoleIds = array_map(function ($role) {
 
         .empty-state { padding: 32px; text-align: center; border: 1px dashed var(--border); border-radius: 12px; color: var(--muted); }
 
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-chip.ready { background: rgba(76,175,80,.12); color: #256029; }
+        .status-chip.pending { background: rgba(255,193,7,.18); color: #7a4f02; }
+        .application-actions { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+        .decision-hint { font-size: 12px; color: #a52714; margin: 0; text-align: right; }
+        .interview-summary { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+
         @media (max-width: 768px) {
             .roles-table thead { display: none; }
             .roles-table tbody tr { display: block; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; padding: 12px; }
@@ -114,19 +145,18 @@ $publishedRoleIds = array_map(function ($role) {
     <aside class="sidebar">
         <div class="logo"><h2>🎭</h2></div>
         <ul class="menu">
-            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-film"></i><span>Drama Details</span></a></li>
-            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-users"></i><span>Artist Roles</span></a></li>
-            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-user-tie"></i><span>Production Manager</span></a></li>
-            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-calendar-alt"></i><span>Schedule</span></a></li>
-            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-dollar-sign"></i><span>Services & Budget</span></a></li>
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
-            <li><a href="<?= ROOT ?>/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
+            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-film"></i><span>Drama Details</span></a></li>
+            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-users"></i><span>Artist Roles</span></a></li>
+            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-user-tie"></i><span>Production Manager</span></a></li>
+            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-calendar-alt"></i><span>Schedule</span></a></li>
+            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-dollar-sign"></i><span>Services & Budget</span></a></li>
+            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bx-arrow-left"></i><span>Back to Profile</span></a></li>
         </ul>
     </aside>
 
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="fas fa-arrow-left"></i>Back to Dashboard</a>
+        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="bx bx-arrow-left"></i>Back to Dashboard</a>
 
         <div class="header--wrapper">
             <div class="header--title">
@@ -134,14 +164,21 @@ $publishedRoleIds = array_map(function ($role) {
                 <h2>Manage Artist Roles</h2>
                 <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">Review open roles, handle applications, and collaborate with artists in one place.</p>
             </div>
-            <div class="header-controls">
-                <a href="<?= ROOT ?>/director/create_role?drama_id=<?= esc($dramaId) ?>" class="btn btn-primary"><i class="fas fa-plus-circle"></i>Create Role</a>
+            <div class="user--info">
+                <a href="<?= ROOT ?>/director/create_role?drama_id=<?= esc($dramaId) ?>" class="btn btn-primary"><i class="bx bx-plus-circle"></i>Create Role</a>
+                <div class="role-badge">
+                    <i class="bx bx-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="bx bx-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 
         <?php if (isset($_SESSION['message'])): ?>
             <div class="message <?= $_SESSION['message_type'] ?? 'info' ?>">
-                <i class="fas fa-<?= ($_SESSION['message_type'] ?? '') === 'success' ? 'check-circle' : (($_SESSION['message_type'] ?? '') === 'error' ? 'exclamation-circle' : 'info-circle') ?>"></i>
+                <i class="bx bx-<?= ($_SESSION['message_type'] ?? '') === 'success' ? 'check-circle' : (($_SESSION['message_type'] ?? '') === 'error' ? 'exclamation-circle' : 'info-circle') ?>"></i>
                 <?= esc($_SESSION['message']) ?>
             </div>
             <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
@@ -164,7 +201,7 @@ $publishedRoleIds = array_map(function ($role) {
 
             <?php if (empty($roles)): ?>
                 <div class="empty-state">
-                    <i class="fas fa-clipboard-list" style="font-size: 28px; display: block; margin-bottom: 12px;"></i>
+                    <i class="bx bx-clipboard-list" style="font-size: 28px; display: block; margin-bottom: 12px;"></i>
                     No roles created yet. Use the "Create Role" button to get started.
                 </div>
             <?php else: ?>
@@ -221,10 +258,10 @@ $publishedRoleIds = array_map(function ($role) {
                                     </td>
                                     <td data-label="Actions">
                                         <div class="actions-inline">
-                                            <a class="btn btn-secondary" href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>"><i class="fas fa-eye"></i>View</a>
-                                            <a class="btn btn-success" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>"><i class="fas fa-user-plus"></i>Assign Artist</a>
+                                            <a class="btn btn-secondary" href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>"><i class="bx bx-eye"></i>View</a>
+                                            <a class="btn btn-success" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>"><i class="bx bx-user-plus"></i>Assign Artist</a>
                                             <form action="<?= ROOT ?>/director/delete_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>" method="POST" data-confirm="Delete role '<?= esc($role->role_name ?? 'Role') ?>'?">
-                                                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i>Delete</button>
+                                                <button type="submit" class="btn btn-danger"><i class="bx bx-trash"></i>Delete</button>
                                             </form>
                                         </div>
                                     </td>
@@ -245,11 +282,19 @@ $publishedRoleIds = array_map(function ($role) {
         <section id="tab-applications" class="tab-content active">
             <?php if (empty($pendingApplications)): ?>
                 <div class="empty-state">
-                    <i class="fas fa-inbox" style="font-size: 28px; display: block; margin-bottom: 12px;"></i>
+                    <i class="bx bx-inbox" style="font-size: 28px; display: block; margin-bottom: 12px;"></i>
                     No pending applications right now. Vacancies you publish will appear here as artists apply.
                 </div>
             <?php else: ?>
                 <?php foreach ($pendingApplications as $application): ?>
+                    <?php
+                        $interviewScheduled = !empty($application->interview_at ?? null);
+                        $interviewStatus = strtolower($application->interview_status ?? 'pending');
+                        $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
+                        $confirmationSeen = !empty($application->interview_confirmation_seen_at ?? null);
+                        $confirmationColor = $confirmationStatus === 'confirmed' ? '#1f7a3c' : '#a3202c';
+                        $confirmationBackground = $confirmationStatus === 'confirmed' ? 'rgba(40, 167, 69, 0.12)' : 'rgba(220, 53, 69, 0.12)';
+                    ?>
                     <div class="application-card">
                         <div class="card-header">
                             <div>
@@ -259,20 +304,59 @@ $publishedRoleIds = array_map(function ($role) {
                                     <span><strong>Applied:</strong> <?= esc(date('Y-m-d H:i', strtotime($application->applied_at ?? 'now'))) ?></span>
                                     <?php if (!empty($application->artist_email)): ?><span><?= esc($application->artist_email) ?></span><?php endif; ?>
                                 </div>
+                                <div class="review-status" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <span class="status-chip <?= $interviewScheduled ? 'ready' : 'pending' ?>">
+                                        <i class="bx bx-calendar-alt"></i>
+                                        <?= $interviewScheduled ? 'Interview Scheduled' : 'Interview Pending' ?>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="actions-inline">
-                                <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
-                                    <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i>Accept</button>
-                                </form>
-                                <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
-                                    <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                    <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i>Reject</button>
-                                </form>
+                            <div class="application-actions">
+                                <a class="btn btn-secondary" href="<?= ROOT ?>/director/application_profile?drama_id=<?= esc($dramaId) ?>&application_id=<?= esc($application->id) ?>">
+                                    <i class="bx bx-id-card"></i>View Profile
+                                </a>
+                                <div class="actions-inline">
+                                    <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
+                                        <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                        <button type="submit" class="btn btn-success"><i class="bx bx-check"></i>Accept</button>
+                                    </form>
+                                    <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
+                                        <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                        <button type="submit" class="btn btn-danger"><i class="bx bx-times"></i>Reject</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                         <?php if (!empty($application->application_message)): ?>
                             <div style="margin-top: 12px; white-space: pre-wrap;"><?= nl2br(esc($application->application_message)) ?></div>
+                        <?php endif; ?>
+                        <?php if ($interviewScheduled): ?>
+                            <div class="interview-summary">
+                                <i class="bx bx-video"></i>
+                                Scheduled for <?= esc(date('Y-m-d H:i', strtotime($application->interview_at))) ?>
+                                <span class="status-badge <?= $interviewStatus === 'completed' ? 'assigned' : ($interviewStatus === 'cancelled' ? 'unassigned' : 'pending') ?>" style="text-transform: capitalize;">
+                                    <?= esc($interviewStatus === '' ? 'pending' : $interviewStatus) ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($confirmationStatus !== 'pending'): ?>
+                            <div class="interview-confirmation" style="margin-top: 12px; padding: 12px; border-left: 4px solid <?= $confirmationColor ?>; background: <?= $confirmationBackground ?>; border-radius: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                    <strong style="color: <?= $confirmationColor ?>;">
+                                        <i class="bx <?= $confirmationStatus === 'confirmed' ? 'bx-user-check' : 'bx-user-times' ?>"></i>
+                                        <?= $confirmationStatus === 'confirmed' ? 'Artist confirmed attendance' : 'Artist declined the interview' ?>
+                                    </strong>
+                                    <?php if (!$confirmationSeen): ?>
+                                        <span class="status-badge assigned" style="background: #ffc107; color: #5a4300;">New</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="font-size: 13px; color: #333; margin-top: 6px;">
+                                    Received <?= !empty($application->interview_confirmed_at) ? esc(date('Y-m-d H:i', strtotime($application->interview_confirmed_at))) : 'just now' ?>
+                                    <?php if (!empty($application->interview_confirmation_note)): ?>
+                                        <div style="margin-top: 6px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 4px;">"<?= esc($application->interview_confirmation_note) ?>"</div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
@@ -283,7 +367,7 @@ $publishedRoleIds = array_map(function ($role) {
             <h4 style="margin-top: 0;">Publish a new vacancy</h4>
             <?php if (empty($publishableRoles)): ?>
                 <div class="empty-state" style="margin-bottom: 20px;">
-                    <i class="fas fa-check-double" style="font-size: 26px; display: block; margin-bottom: 10px;"></i>
+                    <i class="bx bx-check-double" style="font-size: 26px; display: block; margin-bottom: 10px;"></i>
                     All roles are currently filled. Update a role to open it for new applicants.
                 </div>
             <?php else: ?>
@@ -304,14 +388,14 @@ $publishedRoleIds = array_map(function ($role) {
                         <label for="publish_message">Vacancy message</label>
                         <textarea id="publish_message" name="message" class="form-control" rows="2" placeholder="Highlight requirements, audition dates, etc."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-bullhorn"></i>Publish Vacancy</button>
+                    <button type="submit" class="btn btn-primary"><i class="bx bx-bullhorn"></i>Publish Vacancy</button>
                 </form>
             <?php endif; ?>
 
             <h4 style="margin: 24px 0 12px;">Published vacancies</h4>
             <?php if (empty($publishedRoles)): ?>
                 <div class="empty-state">
-                    <i class="fas fa-briefcase" style="font-size: 26px; display: block; margin-bottom: 10px;"></i>
+                    <i class="bx bx-briefcase" style="font-size: 26px; display: block; margin-bottom: 10px;"></i>
                     No active vacancies. Publish a role to reach available artists.
                 </div>
             <?php else: ?>
@@ -327,7 +411,7 @@ $publishedRoleIds = array_map(function ($role) {
                             </div>
                             <form class="js-role-action" data-action="unpublish" action="<?= ROOT ?>/director/unpublish_vacancy?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Unpublish this vacancy?">
                                 <input type="hidden" name="role_id" value="<?= esc($role->id) ?>">
-                                <button type="submit" class="btn btn-secondary"><i class="fas fa-eye-slash"></i>Unpublish</button>
+                                <button type="submit" class="btn btn-secondary"><i class="bx bx-eye-slash"></i>Unpublish</button>
                             </form>
                         </div>
                         <?php if (!empty($role->published_message)): ?>
@@ -341,7 +425,7 @@ $publishedRoleIds = array_map(function ($role) {
         <section id="tab-requests" class="tab-content">
             <?php if (empty($pendingRequests)): ?>
                 <div class="empty-state">
-                    <i class="fas fa-users" style="font-size: 26px; display: block; margin-bottom: 10px;"></i>
+                    <i class="bx bx-users" style="font-size: 26px; display: block; margin-bottom: 10px;"></i>
                     No pending direct requests. Use "Assign Artist" to reach out to performers.
                 </div>
             <?php else: ?>
@@ -355,7 +439,7 @@ $publishedRoleIds = array_map(function ($role) {
                                     <span><strong>Requested:</strong> <?= esc(date('Y-m-d H:i', strtotime($request->requested_at ?? 'now'))) ?></span>
                                 </div>
                             </div>
-                            <a class="btn btn-secondary" href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($request->role_id) ?>"><i class="fas fa-eye"></i>View Role</a>
+                            <a class="btn btn-secondary" href="<?= ROOT ?>/director/view_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($request->role_id) ?>"><i class="bx bx-eye"></i>View Role</a>
                         </div>
                         <?php if (!empty($request->note)): ?>
                             <div style="margin-top: 10px; white-space: pre-wrap;"><?= nl2br(esc($request->note)) ?></div>

@@ -4,11 +4,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title><?= isset($pageTitle) ? $pageTitle : 'Reports' ?> - Rangamadala</title>
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-            crossorigin="anonymous" />
-        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
         <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_reports.css">
         <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     </head>
@@ -27,8 +24,8 @@
                             <span class="title">Monthly Revenue</span>
                             <p class="report-desc">Current month earnings breakdown</p>
                         </div>
-                        <button type="button" class="btn-download-report" onclick="quickReport('revenue', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                        <button class="btn-download-report" onclick="quickReport('revenue', 'this_month')">
+                            <i class="bx bx-bolt"></i> Quick Generate
                         </button>
                     </div>
                     <div class="productionCount--card report-card template-card">
@@ -36,8 +33,8 @@
                             <span class="title"> Recent Bookings</span>
                             <p class="report-desc">This month bookings</p>
                         </div>
-                        <button type="button" class="btn-download-report" onclick="quickReport('bookings', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                        <button class="btn-download-report" onclick="quickReport('bookings', 'this_month')">
+                            <i class="bx bx-bolt"></i> Quick Generate
                         </button>
                     </div>
                     <div class="productionCount--card report-card template-card">
@@ -45,8 +42,8 @@
                             <span class="title"> Service Performance</span>
                             <p class="report-desc">Service requests for this month</p>
                         </div>
-                        <button type="button" class="btn-download-report" onclick="quickReport('performance', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                        <button class="btn-download-report" onclick="quickReport('reviews', 'last_3_months')">
+                            <i class="bx bx-bolt"></i> Quick Generate
                         </button>
                     </div>
                     <div class="productionCount--card report-card template-card">
@@ -54,8 +51,8 @@
                             <span class="title"> Cancellations</span>
                             <p class="report-desc">Rejections & Cancellations in this month</p>
                         </div>
-                        <button type="button" class="btn-download-report" onclick="quickReport('cancellation', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                        <button class="btn-download-report" onclick="quickReport('performance', 'this_year')">
+                            <i class="bx bx-bolt"></i> Quick Generate
                         </button>
                     </div>
                 </div>
@@ -124,10 +121,10 @@
                             <!-- Generate Button -->
                             <div class="filter-actions">
                                 <button type="button" class="btn-reset" onclick="resetFilters()">
-                                    <i class="fas fa-undo"></i> Reset
+                                    <i class="bx bx-undo"></i> Reset
                                 </button>
                                 <button type="submit" class="btn-generate">
-                                    <i class="fas fa-chart-bar"></i> Generate Report
+                                    <i class="bx bx-chart-bar"></i> Generate Report
                                 </button>
                             </div>
                         </form>
@@ -215,201 +212,36 @@
                                 </table>
                             </div>
                         </div>
-                    <?php endif; ?>
-
-                    <!-- BOOKINGS REPORT -->
-                    <?php if ($reportType === 'bookings' && isset($bookings_report)): ?>
-                        <div class="card--wrapper">
-                            <div class="productionCount--card filter-card">
-                                <table class="report-table" style="width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr style="background: #8b6914; color: white;">
-                                            <th style="padding: 12px; text-align: left;">Request ID</th>
-                                            <th style="padding: 12px; text-align: left;">Drama / Project</th>
-                                            <th style="padding: 12px; text-align: left;">Service Type</th>
-                                            <th style="padding: 12px; text-align: left;">Client</th>
-                                            <th style="padding: 12px; text-align: center;">Budget</th>
-                                            <th style="padding: 12px; text-align: left;">Duration</th>
-                                            <th style="padding: 12px; text-align: center;">Status</th>
-                                            <th style="padding: 12px; text-align: center;">Payment</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php if (!empty($bookings_report)): ?>
-                                            <?php foreach ($bookings_report as $row): ?>
-                                                <tr style="border-bottom: 1px solid #eee;">
-                                                    <td style="padding: 12px;"><strong><?= 'REQ-' . str_pad($row->id, 5, '0', STR_PAD_LEFT) ?></strong></td>
-                                                    <td style="padding: 12px;"><?= htmlspecialchars($row->drama_name) ?></td>
-                                                    <td style="padding: 12px;"><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px;"><?= ucfirst(str_replace('_', ' ', $row->service_type)) ?></span></td>
-                                                    <td style="padding: 12px;"><?= htmlspecialchars($row->requester_name) ?></td>
-                                                    <td style="padding: 12px; text-align: center;"><strong>Rs <?= number_format($row->budget ?? 0, 2) ?></strong></td>
-                                                    <td style="padding: 12px; font-size: 12px;">
-                                                        <?= date('d M', strtotime($row->start_date)) ?> - <?= date('d M Y', strtotime($row->end_date)) ?>
-                                                    </td>
-                                                    <td style="padding: 12px; text-align: center;">
-                                                        <span style="padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; <?php
-                                                            switch ($row->status) {
-                                                                case 'pending': echo 'background: #fff3cd; color: #856404;'; break;
-                                                                case 'provider_responded': echo 'background: #cfe2ff; color: #084298;'; break;
-                                                                case 'confirmed': echo 'background: #cfe2ff; color: #084298;'; break;
-                                                                case 'accepted': echo 'background: #d1ecf1; color: #0c5460;'; break;
-                                                                case 'completed': echo 'background: #d4edda; color: #155724;'; break;
-                                                                case 'rejected': echo 'background: #f8d7da; color: #842029;'; break;
-                                                                case 'cancelled': echo 'background: #f5f5f5; color: #666;'; break;
-                                                                default: echo 'background: #e2e3e5; color: #383d41;'; break;
-                                                            }
-                                                        ?>">
-                                                            <?= ucfirst(str_replace('_', ' ', $row->status)) ?>
-                                                        </span>
-                                                    </td>
-                                                    <td style="padding: 12px; text-align: center;">
-                                                        <span style="padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; <?php
-                                                            switch ($row->payment_status) {
-                                                                case 'fully_paid': echo 'background: #d4edda; color: #155724;'; break;
-                                                                case 'partially_paid': echo 'background: #fff3cd; color: #856404;'; break;
-                                                                case 'pending': echo 'background: #e2e3e5; color: #383d41;'; break;
-                                                                case 'unpaid': echo 'background: #f8d7da; color: #842029;'; break;
-                                                                default: echo 'background: #e2e3e5; color: #383d41;'; break;
-                                                            }
-                                                        ?>">
-                                                            <?= ucfirst(str_replace('_', ' ', $row->payment_status)) ?>
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No bookings found for this period</td></tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <button class="btn-download-small">
+                            <i class="bx bx-download"></i> Download
+                        </button>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-content">
+                            <div class="activity-title">Bookings Report - Q4 2025</div>
+                            <div class="activity-time">Generated on Dec 30, 2025</div>
                         </div>
-                    <?php endif; ?>
-
-                    <!-- SERVICE PERFORMANCE REPORT -->
-                    <?php if ($reportType === 'performance' && isset($service_performance)): ?>
-                        <div class="card--wrapper">
-                            <div class="productionCount--card filter-card">
-                                <table class="report-table" style="width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr style="background: #8b6914; color: white;">
-                                            <th style="padding: 12px; text-align: left;">Request ID</th>
-                                            <th style="padding: 12px; text-align: left;">Drama / Project</th>
-                                            <th style="padding: 12px; text-align: left;">Service Type</th>
-                                            <th style="padding: 12px; text-align: left;">Client</th>
-                                            <th style="padding: 12px; text-align: right;">Amount</th>
-                                            <th style="padding: 12px; text-align: right;">Paid</th>
-                                            <th style="padding: 12px; text-align: left;">Duration</th>
-                                            <th style="padding: 12px; text-align: center;">Completed</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php if (!empty($service_performance)): ?>
-                                            <?php foreach ($service_performance as $row): ?>
-                                                <tr style="border-bottom: 1px solid #eee;">
-                                                    <td style="padding: 12px;"><strong><?= 'REQ-' . str_pad($row->id, 5, '0', STR_PAD_LEFT) ?></strong></td>
-                                                    <td style="padding: 12px;"><?= htmlspecialchars($row->drama_name) ?></td>
-                                                    <td style="padding: 12px;"><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px;"><?= ucfirst(str_replace('_', ' ', $row->service_type)) ?></span></td>
-                                                    <td style="padding: 12px;"><?= htmlspecialchars($row->requester_name) ?></td>
-                                                    <td style="padding: 12px; text-align: right;"><strong>Rs <?= number_format($row->amount ?? $row->amount_paid ?? 0, 2) ?></strong></td>
-                                                    <td style="padding: 12px; text-align: right;">Rs <?= number_format($row->amount_paid ?? 0, 2) ?></td>
-                                                    <td style="padding: 12px; font-size: 12px;">
-                                                        <?= date('d M', strtotime($row->start_date)) ?> - <?= date('d M Y', strtotime($row->end_date)) ?>
-                                                    </td>
-                                                    <td style="padding: 12px; text-align: center;">
-                                                        <?php if ($row->is_completed): ?>
-                                                            <span style="padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #d4edda; color: #155724;">✓ Yes</span>
-                                                        <?php else: ?>
-                                                            <span style="padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #fff3cd; color: #856404;">Pending</span>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No service data available for this period</td></tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <button class="btn-download-small">
+                            <i class="bx bx-download"></i> Download
+                        </button>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-content">
+                            <div class="activity-title">Performance Report - November 2025</div>
+                            <div class="activity-time">Generated on Nov 30, 2025</div>
                         </div>
-                    <?php endif; ?>
-
-                    <!-- CANCELLATION / REJECTION REPORT -->
-                    <?php if ($reportType === 'cancellation' && isset($cancellation_report)): ?>
-                        <div class="card--wrapper">
-                            <div class="productionCount--card filter-card">
-                                <table class="report-table" style="width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr style="background: #8b6914; color: white;">
-                                            <th style="padding: 12px; text-align: left;">Request ID</th>
-                                            <th style="padding: 12px; text-align: left;">Drama / Project</th>
-                                            <th style="padding: 12px; text-align: left;">Service Type</th>
-                                            <th style="padding: 12px; text-align: left;">Client</th>
-                                            <th style="padding: 12px; text-align: right;">Budget</th>
-                                            <th style="padding: 12px; text-align: left;">Date</th>
-                                            <th style="padding: 12px; text-align: center;">Status</th>
-                                            <th style="padding: 12px; text-align: left;">Reason</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php if (!empty($cancellation_report)): ?>
-                                            <?php foreach ($cancellation_report as $row): ?>
-                                                <tr style="border-bottom: 1px solid #eee;">
-                                                    <td style="padding: 12px;"><strong><?= 'REQ-' . str_pad($row->id, 5, '0', STR_PAD_LEFT) ?></strong></td>
-                                                    <td style="padding: 12px;"><?= htmlspecialchars($row->drama_name) ?></td>
-                                                    <td style="padding: 12px;"><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px;"><?= ucfirst(str_replace('_', ' ', $row->service_type)) ?></span></td>
-                                                    <td style="padding: 12px;"><?= htmlspecialchars($row->requester_name) ?></td>
-                                                    <td style="padding: 12px; text-align: right;"><strong>Rs <?= number_format($row->budget ?? 0, 2) ?></strong></td>
-                                                    <td style="padding: 12px; font-size: 12px;"><?= date('d M Y', strtotime($row->created_at)) ?></td>
-                                                    <td style="padding: 12px; text-align: center;">
-                                                        <span style="padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #f8d7da; color: #842029;">
-                                                            <?= ucfirst($row->status) ?>
-                                                        </span>
-                                                    </td>
-                                                    <td style="padding: 12px;"><?= htmlspecialchars($row->rejection_reason ?? 'N/A') ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No cancellations/rejections for this period</td></tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <button class="btn-download-small">
+                            <i class="bx bx-download"></i> Download
+                        </button>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-content">
+                            <div class="activity-title">Reviews Report - October 2025</div>
+                            <div class="activity-time">Generated on Oct 31, 2025</div>
                         </div>
-                    <?php endif; ?>
-
-                    <!-- Export Actions -->
-                    <div class="report-export-actions" style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
-                        <form method="POST" style="display: inline;">
-                            <input type="hidden" name="reportType" value="<?= $reportType ?>">
-                            <input type="hidden" name="dateRange" value="<?= $dateRange ?>">
-                            <input type="hidden" name="startDate" value="<?= $start_date ?>">
-                            <input type="hidden" name="endDate" value="<?= $end_date ?>">
-                            <input type="hidden" name="exportFormat" value="pdf">
-                            <button type="submit" class="btn-download-report" title="Download as PDF">
-                                <i class="fas fa-file-pdf"></i> Download PDF
-                            </button>
-                        </form>
-                        <form method="POST" style="display: inline;">
-                            <input type="hidden" name="reportType" value="<?= $reportType ?>">
-                            <input type="hidden" name="dateRange" value="<?= $dateRange ?>">
-                            <input type="hidden" name="startDate" value="<?= $start_date ?>">
-                            <input type="hidden" name="endDate" value="<?= $end_date ?>">
-                            <input type="hidden" name="exportFormat" value="excel">
-                            <button type="submit" class="btn-download-report" title="Download as Excel">
-                                <i class="fas fa-file-excel"></i> Download Excel
-                            </button>
-                        </form>
-                        <form method="POST" style="display: inline;">
-                            <input type="hidden" name="reportType" value="<?= $reportType ?>">
-                            <input type="hidden" name="dateRange" value="<?= $dateRange ?>">
-                            <input type="hidden" name="startDate" value="<?= $start_date ?>">
-                            <input type="hidden" name="endDate" value="<?= $end_date ?>">
-                            <input type="hidden" name="exportFormat" value="csv">
-                            <button type="submit" class="btn-download-report" title="Download as CSV">
-                                <i class="fas fa-file-csv"></i> Download CSV
-                            </button>
-                        </form>
+                        <button class="btn-download-small">
+                            <i class="bx bx-download"></i> Download
+                        </button>
                     </div>
                 </div>
             <?php endif; ?>
@@ -465,7 +297,22 @@
                         }
                     }
 
-                    this.submit();
+                    // Show loading message
+                    const btn = this.querySelector('.btn-generate');
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="bx bx-spinner bx-spin"></i> Generating...';
+                    btn.disabled = true;
+
+                    // Simulate report generation (replace with actual API call)
+                    setTimeout(() => {
+                        // In production, this would download the file
+                        // window.location.href = '<?= ROOT ?>/ServiceReports/generate?' + params.toString();
+                        
+                        alert(`Generating ${reportType} report for ${dateRange} as ${exportFormat.toUpperCase()}\n\nFilters:\n- Service: ${serviceCategory}\n- Status: ${status}`);
+                        
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 1500);
                 });
             </script>
         </div>

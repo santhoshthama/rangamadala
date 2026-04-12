@@ -1,6 +1,11 @@
 <?php 
 
-if ($_SERVER['SERVER_NAME'] == 'localhost') 
+$serverName = $_SERVER['SERVER_NAME'] ?? '';
+$isCli = PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg';
+$localHosts = ['localhost', '127.0.0.1', '::1'];
+$isLocalHost = in_array(strtolower((string)$serverName), $localHosts, true);
+
+if ($isCli || $isLocalHost) 
 {
     // Local development configuration
     // define('DB_NAME', 'rangamandala_db');
@@ -19,7 +24,15 @@ if ($_SERVER['SERVER_NAME'] == 'localhost')
     define('DB_CHARSET', 'utf8mb4');
     define("APPROOT", dirname(dirname(__FILE__)));
 
-    define('ROOT', 'http://localhost/Rangamadala/public');
+    if ($isCli) {
+        define('ROOT', 'http://localhost/Rangamadala/public');
+    } else {
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
+        $scheme = $isHttps ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        define('ROOT', $scheme . '://' . $host . '/Rangamadala/public');
+    }
 } 
 else 
 {

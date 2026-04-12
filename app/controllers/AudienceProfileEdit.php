@@ -18,13 +18,14 @@ class AudienceProfileEdit
         }
 
         // Check if user has audience role
-        if ($_SESSION['user_role'] !== 'audience') {
+        if ($_SESSION['role'] !== 'audience') {
             header("Location: " . ROOT . "/Home");
             exit;
         }
 
         $data = [
             'profile' => null,
+            'signup_details' => null,
             'bio' => null,
             'profile_image' => null,
             'success' => '',
@@ -34,6 +35,7 @@ class AudienceProfileEdit
 
         // Get current profile data
         $data['profile'] = $this->model->getProfile($_SESSION['user_id']);
+        $data['signup_details'] = $this->model->getSignupDetails($_SESSION['user_id']);
         $data['bio'] = $this->model->getBio($_SESSION['user_id']);
         $data['profile_image'] = $this->model->getProfileImage($_SESSION['user_id']);
 
@@ -75,7 +77,7 @@ class AudienceProfileEdit
                 } elseif ($_FILES['profile_image']['size'] > $max_size) {
                     $errors[] = "Image size must be less than 5MB";
                 } else {
-                    $upload_dir = "../app/uploads/profile_images/";
+                    $upload_dir = "app/uploads/profile_images/";
                     if (!is_dir($upload_dir)) {
                         mkdir($upload_dir, 0777, true);
                     }
@@ -108,6 +110,7 @@ class AudienceProfileEdit
                     $data['success'] = "Profile updated successfully!";
                     // Refresh profile data
                     $data['profile'] = $this->model->getProfile($_SESSION['user_id']);
+                    $data['signup_details'] = $this->model->getSignupDetails($_SESSION['user_id']);
                     $data['bio'] = $this->model->getBio($_SESSION['user_id']);
                     $data['profile_image'] = $this->model->getProfileImage($_SESSION['user_id']);
                 } else {

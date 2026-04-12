@@ -1,3 +1,25 @@
+<?php
+if (isset($data) && is_array($data)) {
+    extract($data);
+}
+
+$dramaId = isset($drama->id) ? (int)$drama->id : (isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0);
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +27,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Services & Budget - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -15,51 +37,45 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-home"></i>
+                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-film"></i>
+                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-film"></i>
                     <span>Drama Details</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-users"></i>
+                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-users"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-user-tie"></i>
+                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-user-tie"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-calendar-alt"></i>
+                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Schedule</span>
                 </a>
             </li>
             <li class="active">
-                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-dollar-sign"></i>
+                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-dollar-sign"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
                 </a>
             </li>
         </ul>
@@ -67,22 +83,31 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
-                <span>Sinhabahu</span>
+                <span><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></span>
                 <h2>Services & Budget Overview</h2>
+            </div>
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="bx bx-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="bx bx-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 
         <!-- View-Only Notice -->
         <div class="view-only-notice" style="margin-bottom: 30px;">
-            <i class="fas fa-eye"></i>
+            <i class="bx bx-eye"></i>
             <strong>View-Only Access:</strong> Services and Budget are managed by your Production Managers. You can view all details but cannot make changes.
         </div>
 
@@ -109,15 +134,15 @@
         <!-- Tabs -->
         <div class="tabs">
             <button class="tab-button active" onclick="showTab('services')">
-                <i class="fas fa-handshake"></i>
+                <i class="bx bx-handshake"></i>
                 Services
             </button>
             <button class="tab-button" onclick="showTab('budget')">
-                <i class="fas fa-dollar-sign"></i>
+                <i class="bx bx-dollar-sign"></i>
                 Budget Items
             </button>
             <button class="tab-button" onclick="showTab('theaters')">
-                <i class="fas fa-theater-masks"></i>
+                <i class="bx bx-theater-masks"></i>
                 Theater Bookings
             </button>
         </div>

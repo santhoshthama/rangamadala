@@ -17,6 +17,21 @@ $roleTypes = [
 
 $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,8 +40,8 @@ $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Role - <?= esc($dramaName) ?> - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         .form-card {
             background: #fff;
             border-radius: 18px;
@@ -48,21 +63,33 @@ $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
     <aside class="sidebar">
         <div class="logo"><h2>🎭</h2></div>
         <ul class="menu">
-            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-film"></i><span>Drama Details</span></a></li>
-            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-users"></i><span>Artist Roles</span></a></li>
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
+            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
+            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-film"></i><span>Drama Details</span></a></li>
+            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-users"></i><span>Artist Roles</span></a></li>
+            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-user-tie"></i><span>Production Manager</span></a></li>
+            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-calendar-alt"></i><span>Schedule</span></a></li>
+            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-dollar-sign"></i><span>Services & Budget</span></a></li>
+            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bx-arrow-left"></i><span>Back to Profile</span></a></li>
         </ul>
     </aside>
 
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="fas fa-arrow-left"></i>Back to Manage Roles</a>
+        <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="bx bx-arrow-left"></i>Back to Manage Roles</a>
 
         <div class="header--wrapper">
             <div class="header--title">
                 <span><?= esc($dramaName) ?></span>
                 <h2>Create a New Role</h2>
                 <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">Describe the character, requirements, and opportunities to invite the right artists.</p>
+            </div>
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="bx bx-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="bx bx-sign-out-alt"></i>
+                </a>
             </div>
         </div>
 
@@ -110,8 +137,8 @@ $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
                 </div>
 
                 <div class="form-footer">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>Create Role</button>
-                    <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>" class="btn btn-secondary"><i class="fas fa-times"></i>Cancel</a>
+                    <button type="submit" class="btn btn-primary"><i class="bx bx-save"></i>Create Role</button>
+                    <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>" class="btn btn-secondary"><i class="bx bx-times"></i>Cancel</a>
                 </div>
             </form>
         </div>

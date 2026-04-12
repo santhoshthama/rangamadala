@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Management - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -15,38 +15,38 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-home"></i>
+                <a href="dashboard.php?drama_id=1">
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-briefcase"></i>
+                <a href="manage_services.php?drama_id=1">
+                    <i class="bx bx-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li class="active">
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-chart-bar"></i>
+                <a href="manage_budget.php?drama_id=1">
+                    <i class="bx bx-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-theater-masks"></i>
+                <a href="book_theater.php?drama_id=1">
+                    <i class="bx bx-theater-masks"></i>
                     <span>Theater Bookings</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                <a href="../artist/profile.php">
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                <a href="../../public/index.php">
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -55,8 +55,8 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+        <a href="dashboard.php?drama_id=1" class="back-button">
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -68,11 +68,11 @@
             </div>
             <div class="header-controls">
                 <button class="btn btn-primary" onclick="openAddBudgetModal()">
-                    <i class="fas fa-plus"></i>
+                    <i class="bx bx-plus"></i>
                     Add Budget Item
                 </button>
                 <button class="btn btn-secondary" onclick="exportBudgetReport()">
-                    <i class="fas fa-download"></i>
+                    <i class="bx bx-download"></i>
                     Export Report
                 </button>
             </div>
@@ -182,10 +182,10 @@
                                     <td style="padding: 14px;"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
                                     <td style="padding: 14px; text-align: center;">
                                         <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="editBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
-                                            <i class="fas fa-pencil-alt"></i>
+                                            <i class="bx bx-pencil-alt"></i>
                                         </button>
                                         <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="bx bx-trash"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -193,22 +193,11 @@
                         <?php else: ?>
                             <tr style="border-bottom: 1px solid var(--border);">
                                 <td colspan="6" style="padding: 30px; text-align: center; color: var(--muted);">
-                                    <i class="fas fa-file-invoice-dollar" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
+                                    <i class="bx bx-file-invoice-dollar" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
                                     <p>No budget items yet. Add your first budget item to get started.</p>
                                 </td>
                             </tr>
                         <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>>
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                                <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(4)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -219,7 +208,7 @@
     <div id="budgetModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeBudgetModal()">&times;</span>
-            <h2><i class="fas fa-plus"></i> Add Budget Item</h2>
+            <h2><i class="bx bx-plus"></i> Add Budget Item</h2>
             
             <div class="form-group">
                 <label for="itemName">Item Name</label>

@@ -10,8 +10,8 @@ if(isset($data) && is_array($data)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Drama - Rangamadala</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         :root {
             --brand: #ba8e23;
             --brand-strong: #a0781e;
@@ -260,17 +260,17 @@ if(isset($data) && is_array($data)) {
 <body>
     <div class="container">
         <a href="<?=ROOT?>/artistdashboard" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
+            <i class="bx bx-arrow-left"></i> Back to Dashboard
         </a>
 
         <div class="header">
-            <h1><i class="fas fa-certificate"></i> Register Drama with Certificate</h1>
-            <p>Register your drama production using the Public Performance Board Certificate</p>
+            <h1><i class="bx bx-certificate"></i> Register Drama with Certificate</h1>
+            <p>Submit your drama for admin review using the Public Performance Board Certificate</p>
         </div>
 
         <?php if (isset($_SESSION['message'])): ?>
             <div class="message <?= $_SESSION['message_type'] ?? 'info' ?>">
-                <i class="fas fa-<?= $_SESSION['message_type'] === 'success' ? 'check-circle' : 'exclamation-circle' ?>"></i>
+                <i class="bx bx-<?= $_SESSION['message_type'] === 'success' ? 'check-circle' : 'exclamation-circle' ?>"></i>
                 <?= esc($_SESSION['message']) ?>
             </div>
             <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
@@ -280,7 +280,7 @@ if(isset($data) && is_array($data)) {
             <form action="<?=ROOT?>/createDrama" method="POST" enctype="multipart/form-data">
                 
                 <div class="section-title">
-                    <i class="fas fa-file-certificate"></i> Public Performance Board Certificate Details
+                    <i class="bx bx-file-certificate"></i> Public Performance Board Certificate Details
                 </div>
 
                 <div class="form-group">
@@ -337,7 +337,7 @@ if(isset($data) && is_array($data)) {
                 </div>
 
                 <div class="section-title" style="margin-top: 32px;">
-                    <i class="fas fa-image"></i> Certificate Image
+                    <i class="bx bx-image"></i> Certificate Image
                 </div>
 
                 <div class="form-group">
@@ -352,7 +352,7 @@ if(isset($data) && is_array($data)) {
                             required
                         >
                         <label for="certificate_image" class="file-upload-label">
-                            <i class="fas fa-cloud-upload-alt"></i>
+                            <i class="bx bx-cloud-upload-alt"></i>
                             <span>Click to upload certificate image</span>
                         </label>
                         <div class="file-name" id="file-name"></div>
@@ -362,10 +362,10 @@ if(isset($data) && is_array($data)) {
 
                 <div class="btn-group">
                     <a href="<?=ROOT?>/artistdashboard" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Cancel
+                        <i class="bx bx-times"></i> Cancel
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-check-circle"></i> Register Drama
+                        <i class="bx bx-paper-plane"></i> Submit for Approval
                     </button>
                 </div>
             </form>

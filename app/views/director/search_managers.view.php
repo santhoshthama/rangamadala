@@ -7,6 +7,21 @@ $availableManagers = isset($availableManagers) && is_array($availableManagers) ?
 $searchTerm = isset($searchTerm) ? (string)$searchTerm : '';
 
 $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,8 +30,8 @@ $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Production Manager - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         .filters-card { background: #fff; border-radius: 16px; border: 1px solid var(--border); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm, 0 4px 14px rgba(15,23,42,.08)); }
         .filters-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
         .form-group { display: flex; flex-direction: column; }
@@ -46,16 +61,18 @@ $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
     <aside class="sidebar">
         <div class="logo"><h2>🎭</h2></div>
         <ul class="menu">
-            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-users"></i><span>Artist Roles</span></a></li>
-            <li class="active"><a href="#"><i class="fas fa-user-tie"></i><span>Production Manager</span></a></li>
-            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-user-tie"></i><span>Assign Manager</span></a></li>
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
+            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
+            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-film"></i><span>Drama Details</span></a></li>
+            <li><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-users"></i><span>Artist Roles</span></a></li>
+            <li class="active"><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-user-tie"></i><span>Production Manager</span></a></li>
+            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-calendar-alt"></i><span>Schedule</span></a></li>
+            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-dollar-sign"></i><span>Services & Budget</span></a></li>
+            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bx-arrow-left"></i><span>Back to Profile</span></a></li>
         </ul>
     </aside>
 
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="fas fa-arrow-left"></i>Back to Production Manager</a>
+        <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="bx bx-arrow-left"></i>Back to Production Manager</a>
 
         <div class="header--wrapper">
             <div class="header--title">
@@ -63,16 +80,25 @@ $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
                 <h2>Invite Production Manager</h2>
                 <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">Browse artists, review experience, and send Production Manager request.</p>
             </div>
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="bx bx-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="bx bx-sign-out-alt"></i>
+                </a>
+            </div>
         </div>
 
         <section class="search-card">
             <form class="search-form" method="get" action="<?= ROOT ?>/director/search_managers">
                 <input type="hidden" name="drama_id" value="<?= esc($dramaId) ?>">
                 <div class="search-input-wrapper">
-                    <i class="fas fa-search"></i>
+                    <i class="bx bx-search"></i>
                     <input type="text" name="search" value="<?= esc($searchTerm) ?>" class="search-input" placeholder="Search artists by name">
                 </div>
-                <button type="submit" class="search-button"><i class="fas fa-search" style="margin-right:6px;"></i>Search</button>
+                <button type="submit" class="search-button"><i class="bx bx-search" style="margin-right:6px;"></i>Search</button>
                 <?php if ($searchTerm !== ''): ?>
                     <a href="<?= ROOT ?>/director/search_managers?drama_id=<?= esc($dramaId) ?>" class="search-clear">Clear</a>
                 <?php endif; ?>
@@ -81,7 +107,7 @@ $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 
         <?php if (empty($availableManagers)): ?>
             <div class="empty-state">
-                <i class="fas fa-users" style="font-size: 28px; display: block; margin-bottom: 12px;"></i>
+                <i class="bx bx-users" style="font-size: 28px; display: block; margin-bottom: 12px;"></i>
                 <?php if ($searchTerm === ''): ?>
                     No artists are currently available. Invite performers to join or publish a vacancy to attract talent.
                 <?php else: ?>
@@ -115,11 +141,11 @@ $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <?php if ($isAssigned): ?>
-                                <span class="badge badge-assigned"><i class="fas fa-user-check" style="margin-right:6px;"></i>Already assigned</span>
+                                <span class="badge badge-assigned"><i class="bx bx-user-check" style="margin-right:6px;"></i>Already assigned</span>
                             <?php elseif ($hasPendingRequest): ?>
-                                <span class="badge badge-requested"><i class="fas fa-paper-plane" style="margin-right:6px;"></i>Request pending</span>
+                                <span class="badge badge-requested"><i class="bx bx-paper-plane" style="margin-right:6px;"></i>Request pending</span>
                             <?php else: ?>
-                                <span class="badge badge-available"><i class="fas fa-circle" style="font-size: 6px; margin-right:6px;"></i>Available</span>
+                                <span class="badge badge-available"><i class="bx bx-circle" style="font-size: 6px; margin-right:6px;"></i>Available</span>
                             <?php endif; ?>
                         </div>
 
@@ -129,15 +155,15 @@ $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
                         </div>
 
                         <div class="actions-inline" style="margin-top: auto; gap: 10px; display: flex;">
-                            <button type="button" class="btn btn-secondary" disabled><i class="fas fa-id-card"></i>Profile</button>
+                            <button type="button" class="btn btn-secondary" disabled><i class="bx bx-id-card"></i>Profile</button>
                             <?php if ($isAssigned): ?>
-                                <button type="button" class="btn btn-secondary" disabled><i class="fas fa-lock"></i>Assigned</button>
+                                <button type="button" class="btn btn-secondary" disabled><i class="bx bx-lock"></i>Assigned</button>
                             <?php elseif ($hasPendingRequest): ?>
-                                <button type="button" class="btn btn-secondary" disabled><i class="fas fa-hourglass-half"></i>Awaiting reply</button>
+                                <button type="button" class="btn btn-secondary" disabled><i class="bx bx-hourglass-half"></i>Awaiting reply</button>
                             <?php else: ?>
                                 <form class="js-role-action" data-action="request" action="<?= ROOT ?>/director/send_manager_request?drama_id=<?= esc($dramaId) ?>" method="POST" style="margin: 0;">
                                     <input type="hidden" name="artist_id" value="<?= esc($artist->id) ?>">
-                                    <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane"></i>Request Manager</button>
+                                    <button type="submit" class="btn btn-success"><i class="bx bx-paper-plane"></i>Request Manager</button>
                                 </form>
                             <?php endif; ?>
                         </div>

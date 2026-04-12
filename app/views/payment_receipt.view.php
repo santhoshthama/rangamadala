@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Payment Receipt - <?= APP_NAME ?></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -231,8 +231,6 @@
             border-bottom: 2px solid #d4af37;
         }
 
-
-
         .detail-row {
             display: flex;
             justify-content: space-between;
@@ -420,7 +418,7 @@
         <!-- Header -->
         <div class="receipt-header">
             <div class="receipt-icon">
-                <i class="fas fa-receipt"></i>
+                <i class="bx bx-receipt"></i>
             </div>
             <h1>Service Payment Receipt</h1>
             <p>Receipt #<?= htmlspecialchars($receipt_number) ?></p>
@@ -552,11 +550,11 @@
             <!-- Action Buttons -->
             <div class="button-group">
                 <button onclick="window.print()" class="btn btn-primary">
-                    <i class="fas fa-print"></i>
+                    <i class="bx bx-print"></i>
                     Print Receipt
                 </button>
                 <a href="<?= !empty($isProviderView) ? (ROOT . '/ServicePayment') : (ROOT . '/Production_manager/manage_services?drama_id=' . ($request->drama_id ?? '')) ?>" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <?= !empty($isProviderView) ? 'Back to Payments' : 'Back to Services' ?>
                 </a>
             </div>

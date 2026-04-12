@@ -6,9 +6,10 @@
     <title>Manage Services - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/production_manager/manage_services.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
+    <?php $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1); ?>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
@@ -16,38 +17,38 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-home"></i>
+                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-briefcase"></i>
+                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-chart-bar"></i>
+                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-theater-masks"></i>
+                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-theater-masks"></i>
                     <span>Theater Bookings</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                <a href="../artist/profile.php">
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                <a href="../../public/index.php">
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -56,8 +57,8 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -76,11 +77,11 @@
             </div>
             <div class="header-controls">
                 <a class="btn btn-primary" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= isset($drama->id) ? $drama->id : ($_GET['drama_id'] ?? 0) ?>">
-                    <i class="fas fa-plus"></i>
+                    <i class="bx bx-plus"></i>
                     Browse Service
                 </a>
                 <button type="button" class="btn btn-secondary" onclick="openAddServiceModal()">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="bx bx-plus-circle"></i>
                     Add Service
                 </button>
             </div>
@@ -173,18 +174,18 @@
                 <?php foreach ($grouped as $type => $items): ?>
                     <div class="service-group-card">
                         <?php $rawType = html_entity_decode($type, ENT_QUOTES, 'UTF-8'); $canRemove = in_array($rawType, array_map(function($s){ return $s->service_type; }, $dramaServices ?? [])); ?>
-                        <div class="service-group-card__header">
-                            <h3 class="service-group-card__title"><?= htmlspecialchars($type) ?></h3>
-                            <div class="service-group-card__actions">
-                                <span class="service-group-card__count"><?= count($items) ?> request(s)</span>
-                                <a class="btn btn-primary service-group-card__browse-button" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= (int)$dramaId ?>&service_type=<?= urlencode($rawType) ?>">
-                                    <i class="fas fa-search"></i> Browse Service
+                        <div style="padding:16px 20px;background:linear-gradient(135deg,#f7f3e9,#efe3c6);border-bottom:1px solid #e7d8af;display:flex;align-items:center;justify-content:space-between;">
+                            <h3 style="margin:0; font-size:18px; color:#5a4515;"><?= htmlspecialchars($type) ?></h3>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span style="font-size:12px;color:#8a7a4e;"><?= count($items) ?> request(s)</span>
+                                <a class="btn btn-primary" style="padding:6px 10px; font-size:12px;" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= (int)$dramaId ?>&service_type=<?= urlencode($rawType) ?>">
+                                    <i class="bx bx-search"></i> Browse Service
                                 </a>
                                 <?php if ($canRemove): ?>
                                     <form method="POST" action="<?= ROOT ?>/production_manager/save_required_services?drama_id=<?= (int)$dramaId ?>" class="service-group-card__remove-form">
                                         <input type="hidden" name="remove_service_type" value="<?= htmlspecialchars($rawType) ?>">
-                                        <button type="submit" class="btn btn-secondary service-group-card__remove-button">
-                                            <i class="fas fa-trash"></i> Remove
+                                        <button type="submit" class="btn btn-secondary" style="padding:6px 10px; font-size:12px; background:#d9534f; border-color:#d9534f; color:#fff;">
+                                            <i class="bx bx-trash"></i> Remove
                                         </button>
                                     </form>
                                 <?php endif; ?>
@@ -363,15 +364,15 @@
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div class="service-empty-state">
-                    <i class="fas fa-inbox service-empty-state__icon"></i>
-                    <p class="service-empty-state__text">No service requests yet. Start by adding service and request service by existing providers.</p>
-                    <div class="service-empty-state__actions">
-                        <button type="button" class="btn btn-secondary service-empty-state__button" onclick="openAddServiceModal()">
-                            <i class="fas fa-plus-circle"></i> Add Service Type
+                <div style="text-align: center; padding: 60px 30px; color: var(--muted, #999);">
+                    <i class="bx bx-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                    <p style="margin-bottom: 30px; font-size: 16px;">No service requests yet. Start by adding service and request service by existing providers.</p>
+                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary" onclick="openAddServiceModal()" style="padding: 12px 24px; font-size: 14px;">
+                            <i class="bx bx-plus-circle"></i> Add Service Type
                         </button>
-                        <a class="btn btn-primary service-empty-state__link" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= isset($drama->id) ? $drama->id : ($_GET['drama_id'] ?? 0) ?>">
-                            <i class="fas fa-search"></i> Browse Service
+                        <a class="btn btn-primary" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= isset($drama->id) ? $drama->id : ($_GET['drama_id'] ?? 0) ?>" style="padding: 12px 24px; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="bx bx-search"></i> Browse Service
                         </a>
                     </div>
                 </div>
@@ -430,9 +431,9 @@
                         <label class="form-stack__label">Description (optional)</label>
                         <textarea name="service_description" rows="3" placeholder="Add a short description" class="form-textarea"></textarea>
                     </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn modal-button modal-button--secondary" onclick="closeAddServiceModal()">Cancel</button>
-                        <button type="submit" class="btn btn-primary modal-button modal-button--primary"><i class="fas fa-plus"></i> Add</button>
+                    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
+                        <button type="button" class="btn" onclick="closeAddServiceModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="bx bx-plus"></i> Add</button>
                     </div>
                 </form>
             </div>

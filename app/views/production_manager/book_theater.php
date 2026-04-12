@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Theater Bookings - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -15,38 +15,38 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-home"></i>
+                <a href="dashboard.php?drama_id=1">
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-briefcase"></i>
+                <a href="manage_services.php?drama_id=1">
+                    <i class="bx bx-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-chart-bar"></i>
+                <a href="manage_budget.php?drama_id=1">
+                    <i class="bx bx-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
             <li class="active">
-                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-theater-masks"></i>
+                <a href="book_theater.php?drama_id=1">
+                    <i class="bx bx-theater-masks"></i>
                     <span>Theater Bookings</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                <a href="../artist/profile.php">
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                <a href="../../public/index.php">
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -55,8 +55,8 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+        <a href="dashboard.php?drama_id=1" class="back-button">
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -68,7 +68,7 @@
             </div>
             <div class="header-controls">
                 <button class="btn btn-primary" onclick="openBookTheaterModal()">
-                    <i class="fas fa-plus"></i>
+                    <i class="bx bx-plus"></i>
                     Book Theater
                 </button>
             </div>
@@ -124,7 +124,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                             <div>
                                 <h3 style="color: var(--ink); margin-bottom: 4px;">
-                                    <i class="fas fa-theater-masks" style="color: <?= $borderColor ?>>;"></i>
+                                    <i class="bx bx-theater-masks" style="color: <?= $borderColor ?>>;"></i>
                                     <?= isset($booking->theater_name) ? esc($booking->theater_name) : 'Theater' ?>
                                 </h3>
                                 <p style="font-size: 12px; color: var(--muted);"><?= isset($booking->venue) ? esc($booking->venue) : 'Venue TBD' ?></p>
@@ -153,15 +153,15 @@
 
                         <div style="display: flex; gap: 8px;">
                             <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="viewBookingDetails(<?= isset($booking->id) ? $booking->id : 'null' ?>)">
-                                <i class="fas fa-eye"></i>
+                                <i class="bx bx-eye"></i>
                                 View Details
                             </button>
                             <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="editBooking(<?= isset($booking->id) ? $booking->id : 'null' ?>)">
-                                <i class="fas fa-pencil-alt"></i>
+                                <i class="bx bx-pencil-alt"></i>
                                 Edit
                             </button>
                             <button class="btn btn-danger" style="padding: 8px 14px; font-size: 12px;" onclick="cancelBooking(<?= isset($booking->id) ? $booking->id : 'null' ?>)">
-                                <i class="fas fa-trash"></i>
+                                <i class="bx bx-trash"></i>
                                 Cancel
                             </button>
                         </div>
@@ -169,10 +169,10 @@
                 <?php endforeach; ?>
             <?php else: ?>
                 <div style="text-align: center; padding: 60px 30px; color: var(--muted);">
-                    <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                    <i class="bx bx-calendar-times" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
                     <p>No theater bookings yet. Book a theater to start planning your event.</p>
                     <button class="btn btn-primary" style="margin-top: 20px;" onclick="openBookTheaterModal()">
-                        <i class="fas fa-plus"></i> Book Theater
+                        <i class="bx bx-plus"></i> Book Theater
                     </button>
                 </div>
             <?php endif; ?>
@@ -183,7 +183,7 @@
     <div id="bookTheaterModal" class="modal">
         <div class="modal-content" style="max-width: 800px;">
             <span class="close" onclick="closeBookTheaterModal()">&times;</span>
-            <h2><i class="fas fa-plus"></i> Book Theater</h2>
+            <h2><i class="bx bx-plus"></i> Book Theater</h2>
             
             <div class="form-group">
                 <label for="theaterName">Theater</label>

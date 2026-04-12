@@ -30,6 +30,7 @@ $roleStatuses = [
 
 $dramaId = isset($drama->id) ? (int)$drama->id : 0;
 $roleId = (int)($role->id ?? 0);
+$currentDirectorId = (int)($_SESSION['user_id'] ?? 0);
 
 $updateDefaults = [
     'role_name' => $role->role_name ?? '',
@@ -59,6 +60,21 @@ function groupByStatus(array $items, $statusKey = 'status') {
 
 $groupedApplications = groupByStatus($roleApplications, 'status');
 $groupedRequests = groupByStatus($roleRequests, 'status');
+
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -67,8 +83,8 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($role->role_name ?? 'Role') ?> - Role Details - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         .card { background: #fff; border-radius: 18px; padding: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-sm, 0 6px 18px rgba(15, 23, 42, .08)); margin-bottom: 24px; }
         .grid-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
         .list-item { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #fff; }
@@ -82,22 +98,46 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
         .badge-rejected { background: rgba(244,67,54,.12); color: #a52714; }
         .actions-inline { display: flex; gap: 10px; flex-wrap: wrap; }
         .form-error { color: var(--danger); font-size: 12px; margin-top: 4px; }
+        .status-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .status-chip.ready { background: rgba(76,175,80,.12); color: #256029; }
+        .status-chip.pending { background: rgba(255,193,7,.18); color: #7a4f02; }
+        .interview-summary { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+        .application-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+        .decision-hint { font-size: 12px; color: #a52714; margin: 0; text-align: right; }
     </style>
 </head>
 <body>
     <aside class="sidebar">
         <div class="logo"><h2>🎭</h2></div>
         <ul class="menu">
-            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-users"></i><span>Artist Roles</span></a></li>
-            <li class="active"><a href="#"><i class="fas fa-mask"></i><span><?= esc($role->role_name ?? 'Role') ?></span></a></li>
-            <li><a href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>"><i class="fas fa-user-plus"></i><span>Assign Artist</span></a></li>
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="fas fa-arrow-left"></i><span>Back to Profile</span></a></li>
+            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
+            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-film"></i><span>Drama Details</span></a></li>
+            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-users"></i><span>Artist Roles</span></a></li>
+            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-user-tie"></i><span>Production Manager</span></a></li>
+            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-calendar-alt"></i><span>Schedule</span></a></li>
+            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-dollar-sign"></i><span>Services & Budget</span></a></li>
+            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bx-arrow-left"></i><span>Back to Profile</span></a></li>
         </ul>
     </aside>
 
     <main class="main--content">
-        <a class="back-button" href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="fas fa-arrow-left"></i>Back to Manage Roles</a>
+        <a class="back-button" href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-arrow-left"></i>Back to Manage Roles</a>
+
+        <div class="header--wrapper">
+            <div class="header--title">
+                <span><?= esc($drama->drama_name ?? 'Drama') ?></span>
+                <h2>Role Details</h2>
+            </div>
+            <div class="user--info">
+                <div class="role-badge">
+                    <i class="bx bx-video"></i> Director
+                </div>
+                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
+                    <i class="bx bx-sign-out-alt"></i>
+                </a>
+            </div>
+        </div>
 
         <?php if (isset($_SESSION['message'])): ?>
             <div class="card" style="border-left: 4px solid var(--brand); background: rgba(186,142,35,0.1); color: var(--ink);">
@@ -120,17 +160,22 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                     </div>
                 </div>
                 <div class="actions-inline">
-                    <a class="btn btn-secondary" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>"><i class="fas fa-user-search"></i>Find Artists</a>
+                    <?php $isRoleFull = (int)($role->positions_filled ?? 0) >= (int)($role->positions_available ?? 0); ?>
+                    <?php if ($isRoleFull): ?>
+                        <button class="btn btn-secondary" disabled title="All positions filled"><i class="bx bx-user-slash"></i>Role Full</button>
+                    <?php else: ?>
+                        <a class="btn btn-secondary" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($roleId) ?>"><i class="bx bx-user-search"></i>Find Artists</a>
+                    <?php endif; ?>
                     <?php if ((int)($role->is_published ?? 0) === 1): ?>
                         <form class="js-role-action" data-action="unpublish" action="<?= ROOT ?>/director/unpublish_vacancy?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Unpublish this vacancy?">
                             <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
-                            <button type="submit" class="btn btn-secondary"><i class="fas fa-eye-slash"></i>Unpublish</button>
+                            <button type="submit" class="btn btn-secondary"><i class="bx bx-eye-slash"></i>Unpublish</button>
                         </form>
                     <?php else: ?>
                         <form class="js-role-action" data-action="publish" action="<?= ROOT ?>/director/publish_vacancy?drama_id=<?= esc($dramaId) ?>" method="POST">
                             <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
                             <input type="hidden" name="message" value="">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-bullhorn"></i>Publish Vacancy</button>
+                            <button type="submit" class="btn btn-primary"><i class="bx bx-bullhorn"></i>Publish Vacancy</button>
                         </form>
                     <?php endif; ?>
                 </div>
@@ -142,6 +187,12 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                 <div style="margin-top: 16px;">
                     <strong>Requirements:</strong>
                     <div style="margin-top: 6px; white-space: pre-wrap;"><?= nl2br(esc($role->requirements)) ?></div>
+                </div>
+            <?php endif; ?>
+            <?php if ($isRoleFull): ?>
+                <div style="margin-top: 16px; padding: 12px 16px; background: rgba(255,193,7,0.1); border-left: 4px solid #ffc107; border-radius: 8px; font-size: 14px;">
+                    <i class="bx bx-info-circle" style="color: #f57c00; margin-right: 8px;"></i>
+                    <strong>All positions filled.</strong> To assign a new artist, you must first remove a currently assigned artist from this role.
                 </div>
             <?php endif; ?>
         </section>
@@ -169,8 +220,8 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                     <?php if (isset($updateErrors['role_description'])): ?><div class="form-error"><?= esc($updateErrors['role_description']) ?></div><?php endif; ?>
                 </div>
                 <div class="form-group">
-                    <label for="edit_salary">Salary (LKR)</label>
-                    <input type="number" step="0.01" min="0" id="edit_salary" name="salary" class="form-control" value="<?= esc($updateValues['salary']) ?>">
+                    <label for="edit_salary">Salary per Show (LKR)<?php if ($isRoleFull): ?> <span style="color: var(--muted); font-weight: normal; font-size: 12px;">(Locked - role filled)</span><?php endif; ?></label>
+                    <input type="number" step="0.01" min="0" id="edit_salary" name="salary" class="form-control" value="<?= esc($updateValues['salary']) ?>" <?= $isRoleFull ? 'disabled' : '' ?>>
                     <?php if (isset($updateErrors['salary'])): ?><div class="form-error"><?= esc($updateErrors['salary']) ?></div><?php endif; ?>
                 </div>
                 <div class="form-group">
@@ -183,33 +234,58 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                     <textarea id="edit_requirements" name="requirements" class="form-control" rows="3"><?= esc($updateValues['requirements']) ?></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="edit_status">Status</label>
-                    <select id="edit_status" name="status" class="form-control" required>
+                    <label for="edit_status">Status<?php if ($isRoleFull): ?> <span style="color: var(--muted); font-weight: normal; font-size: 12px;">(Locked - role filled)</span><?php endif; ?></label>
+                    <select id="edit_status" name="status" class="form-control" required <?= $isRoleFull ? 'disabled' : '' ?>>
                         <?php foreach ($roleStatuses as $statusKey => $statusLabel): ?>
                             <option value="<?= esc($statusKey) ?>" <?= $updateValues['status'] === $statusKey ? 'selected' : '' ?>><?= esc($statusLabel) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <?php if (isset($updateErrors['status'])): ?><div class="form-error"><?= esc($updateErrors['status']) ?></div><?php endif; ?>
+                    <?php if ($isRoleFull): ?>
+                        <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Status cannot be changed while artists are assigned to this role.</div>
+                    <?php endif; ?>
                 </div>
                 <div style="grid-column: 1 / -1;">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>Save Changes</button>
+                    <button type="submit" class="btn btn-primary"><i class="bx bx-save"></i>Save Changes</button>
                 </div>
             </form>
         </section>
 
         <section class="card">
             <h3 style="margin-top: 0;">Assigned Artists (<?= count($assignments) ?>)</h3>
+            <?php if ($isRoleFull): ?>
+                <div style="padding: 10px 14px; margin-bottom: 16px; background: rgba(76,175,80,0.1); border-left: 4px solid #4caf50; border-radius: 6px; font-size: 13px; color: #256029;">
+                    <i class="bx bx-check-circle" style="margin-right: 8px;"></i>
+                    <strong>All positions filled.</strong> To assign different artists, remove one of the current assignments first.
+                </div>
+            <?php endif; ?>
             <?php if (empty($assignments)): ?>
-                <div class="list-item" style="text-align: center; color: var(--muted);">No artists assigned yet.</div>
+                <div class="list-item" style="text-align: center; color: var(--muted);">No artists assigned yet. Use "Find Artists" to send requests.</div>
             <?php else: ?>
                 <?php foreach ($assignments as $assignment): ?>
                     <div class="list-item">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong><?= esc($assignment->artist_name ?? 'Artist') ?></strong>
-                            <span class="badge badge-open">Active</span>
-                        </div>
-                        <div style="font-size: 13px; color: var(--muted); margin-top: 6px;">
-                            Assigned on <?= esc(date('Y-m-d', strtotime($assignment->assigned_at ?? 'now'))) ?>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <strong style="font-size: 16px;"><?= esc($assignment->artist_name ?? 'Artist') ?></strong>
+                                    <span class="badge badge-open">Active</span>
+                                </div>
+                                <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+                                    <?php if (!empty($assignment->artist_email)): ?>
+                                        <div><i class="bx bx-envelope" style="width: 16px; margin-right: 6px;"></i><?= esc($assignment->artist_email) ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($assignment->artist_phone)): ?>
+                                        <div><i class="bx bx-phone" style="width: 16px; margin-right: 6px;"></i><?= esc($assignment->artist_phone) ?></div>
+                                    <?php endif; ?>
+                                    <div><i class="bx bx-calendar" style="width: 16px; margin-right: 6px;"></i>Assigned on <?= esc(date('M d, Y', strtotime($assignment->assigned_at ?? 'now'))) ?></div>
+                                </div>
+                            </div>
+                            <form action="<?= ROOT ?>/director/remove_assignment?drama_id=<?= esc($dramaId) ?>" method="POST" class="js-role-action" data-action="remove" data-confirm="Remove <?= esc($assignment->artist_name ?? 'this artist') ?> from this role?">
+                                <input type="hidden" name="assignment_id" value="<?= esc($assignment->id ?? 0) ?>">
+                                <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
+                                <input type="hidden" name="return_to" value="role_details">
+                                <button type="submit" class="btn btn-danger btn-sm"><i class="bx bx-user-times"></i>Remove</button>
+                            </form>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -244,31 +320,77 @@ $groupedRequests = groupByStatus($roleRequests, 'status');
                 <div class="list-item" style="text-align: center; color: var(--muted);">No applications received yet.</div>
             <?php else: ?>
                 <?php foreach ($roleApplications as $application): ?>
+                    <?php
+                        $applicationStatus = strtolower($application->status ?? 'pending');
+                        $interviewScheduled = !empty($application->interview_at ?? null);
+                        $interviewStatus = strtolower($application->interview_status ?? 'pending');
+                        $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
+                        $confirmationSeen = !empty($application->interview_confirmation_seen_at ?? null);
+                        $confirmationColor = $confirmationStatus === 'confirmed' ? '#1f7a3c' : '#a3202c';
+                        $confirmationBackground = $confirmationStatus === 'confirmed' ? 'rgba(40, 167, 69, 0.12)' : 'rgba(220, 53, 69, 0.12)';
+                    ?>
                     <div class="list-item">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-                            <div>
+                            <div style="flex: 1;">
                                 <strong><?= esc($application->artist_name ?? 'Artist') ?></strong>
                                 <div style="font-size: 13px; color: var(--muted);">Applied <?= esc(date('Y-m-d H:i', strtotime($application->applied_at ?? 'now'))) ?></div>
+                                <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <span class="status-chip <?= $interviewScheduled ? 'ready' : 'pending' ?>">
+                                        <i class="bx bx-calendar-alt"></i>
+                                        <?= $interviewScheduled ? 'Interview Scheduled' : 'Interview Pending' ?>
+                                    </span>
+                                </div>
                                 <?php if (!empty($application->application_message)): ?>
                                     <div style="margin-top: 8px; white-space: pre-wrap;"><?= nl2br(esc($application->application_message)) ?></div>
                                 <?php endif; ?>
-                            </div>
-                            <div style="text-align: right;">
-                                <span class="badge badge-<?= esc(strtolower($application->status ?? 'pending')) ?>" style="margin-bottom: 8px; display: inline-block;">
-                                    <?= esc(ucfirst($application->status ?? 'pending')) ?>
-                                </span>
-                                <?php if (strtolower($application->status ?? '') === 'pending'): ?>
-                                    <div class="actions-inline" style="justify-content: flex-end;">
-                                        <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
-                                            <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i>Accept</button>
-                                        </form>
-                                        <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
-                                            <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-times"></i>Reject</button>
-                                        </form>
+                                <?php if ($interviewScheduled): ?>
+                                    <div class="interview-summary">
+                                        <i class="bx bx-video"></i>
+                                        Scheduled for <?= esc(date('Y-m-d H:i', strtotime($application->interview_at))) ?>
+                                        <strong style="text-transform: capitalize;"><?= esc($interviewStatus === '' ? 'pending' : $interviewStatus) ?></strong>
                                     </div>
                                 <?php endif; ?>
+                                <?php if ($confirmationStatus !== 'pending'): ?>
+                                    <div class="interview-confirmation" style="margin-top: 10px; padding: 10px; border-left: 4px solid <?= $confirmationColor ?>; background: <?= $confirmationBackground ?>; border-radius: 6px;">
+                                        <div style="display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                            <strong style="color: <?= $confirmationColor ?>;">
+                                                <i class="bx <?= $confirmationStatus === 'confirmed' ? 'bx-user-check' : 'bx-user-times' ?>"></i>
+                                                <?= $confirmationStatus === 'confirmed' ? 'Artist confirmed attendance' : 'Artist declined the interview' ?>
+                                            </strong>
+                                            <?php if (!$confirmationSeen): ?>
+                                                <span class="status-badge assigned" style="background: #ffc107; color: #5a4300;">New</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div style="font-size: 13px; color: #333; margin-top: 6px;">
+                                            Received <?= !empty($application->interview_confirmed_at) ? esc(date('Y-m-d H:i', strtotime($application->interview_confirmed_at))) : 'just now' ?>
+                                            <?php if (!empty($application->interview_confirmation_note)): ?>
+                                                <div style="margin-top: 6px; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px;">"<?= esc($application->interview_confirmation_note) ?>"</div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div style="text-align: right; min-width: 220px;">
+                                <span class="badge badge-<?= esc($applicationStatus) ?>" style="margin-bottom: 8px; display: inline-block;">
+                                    <?= esc(ucfirst($application->status ?? 'pending')) ?>
+                                </span>
+                                <div class="application-actions">
+                                    <a class="btn btn-secondary btn-sm" href="<?= ROOT ?>/director/application_profile?drama_id=<?= esc($dramaId) ?>&application_id=<?= esc($application->id) ?>">
+                                        <i class="bx bx-id-card"></i>View Profile
+                                    </a>
+                                    <?php if ($applicationStatus === 'pending'): ?>
+                                        <div class="actions-inline" style="justify-content: flex-end;">
+                                            <form class="js-role-action" data-action="accept" action="<?= ROOT ?>/director/accept_application?drama_id=<?= esc($dramaId) ?>" method="POST">
+                                                <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                                <button type="submit" class="btn btn-success btn-sm"><i class="bx bx-check"></i>Accept</button>
+                                            </form>
+                                            <form class="js-role-action" data-action="reject" action="<?= ROOT ?>/director/reject_application?drama_id=<?= esc($dramaId) ?>" method="POST" data-confirm="Reject this application?">
+                                                <input type="hidden" name="application_id" value="<?= esc($application->id) ?>">
+                                                <button type="submit" class="btn btn-danger btn-sm"><i class="bx bx-times"></i>Reject</button>
+                                            </form>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     </div>

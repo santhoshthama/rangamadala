@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Drama - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -15,50 +15,26 @@
         </div>
         <ul class="menu">
             <li>
-                <a href="<?= ROOT ?>/director/dashboard">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/manage_dramas">
-                    <i class="fas fa-film"></i>
-                    <span>My Dramas</span>
+                <a href="<?= ROOT ?>/artistdashboard">
+                    <i class="bx bx-arrow-left"></i>
+                    <span>Back to Dashboard</span>
                 </a>
             </li>
             <li class="active">
-                <a href="<?= ROOT ?>/director/create_drama">
-                    <i class="fas fa-plus-circle"></i>
+                <a href="create_drama.php">
+                    <i class="bx bx-plus-circle"></i>
                     <span>Create Drama</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/search_artists">
-                    <i class="fas fa-search"></i>
-                    <span>Search Artists</span>
+                <a href="<?= ROOT ?>/profile">
+                    <i class="bx bx-user-circle"></i>
+                    <span>My Profile</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/director/role_management">
-                    <i class="fas fa-users"></i>
-                    <span>Role Management</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/schedule_management">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>Schedule</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/assign_managers">
-                    <i class="fas fa-user-tie"></i>
-                    <span>Assign Managers</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                <a href="../../public/index.php">
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -67,8 +43,8 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/dashboard" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+        <a href="dashboard.php" class="back-button">
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -80,14 +56,14 @@
                 </div>
 
                 <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="bx bx-info-circle"></i>
                     <strong>Important:</strong> You must upload a valid Public Performance Board Certificate. Your drama will be pending until admin approves it.
                 </div>
 
                 <form id="createDramaForm" enctype="multipart/form-data">
                     <!-- Basic Information -->
                     <h3 style="color: var(--brand); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-film"></i>
+                        <i class="bx bx-film"></i>
                         Basic Information
                     </h3>
 
@@ -138,7 +114,7 @@
 
                     <!-- Certificate Upload -->
                     <h3 style="color: var(--brand); margin: 30px 0 20px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-certificate"></i>
+                        <i class="bx bx-certificate"></i>
                         Public Performance Board Certificate
                     </h3>
 
@@ -161,7 +137,7 @@
 
                     <!-- Production Details -->
                     <h3 style="color: var(--brand); margin: 30px 0 20px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-cog"></i>
+                        <i class="bx bx-cog"></i>
                         Production Details
                     </h3>
 
@@ -196,15 +172,15 @@
                     <!-- Submit Buttons -->
                     <div class="button-group">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-check"></i>
+                            <i class="bx bx-check"></i>
                             Submit for Approval
                         </button>
                         <button type="reset" class="btn btn-secondary">
-                            <i class="fas fa-undo"></i>
+                            <i class="bx bx-undo"></i>
                             Reset Form
                         </button>
-                        <a href="<?= ROOT ?>/director/dashboard" class="btn btn-danger">
-                            <i class="fas fa-times"></i>
+                        <a href="dashboard.php" class="btn btn-danger">
+                            <i class="bx bx-times"></i>
                             Cancel
                         </a>
                     </div>

@@ -1,3 +1,21 @@
+<?php
+// Get current user profile image
+$userModel = new M_universal_profile();
+$currentUser = $userModel->getUserById($_SESSION['user_id']);
+$dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1);
+
+$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+if ($currentUser && !empty($currentUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+    if (strpos($imageValue, '/') !== false) {
+        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
+    } else {
+        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+    }
+} elseif ($currentUser && !empty($currentUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +23,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Production Manager Dashboard - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -15,38 +33,44 @@
         </div>
         <ul class="menu">
             <li class="active">
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-home"></i>
+                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-briefcase"></i>
+                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-briefcase"></i>
                     <span>Manage Services</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-chart-bar"></i>
+                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-chart-bar"></i>
                     <span>Budget Management</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-theater-masks"></i>
+                <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-theater-masks"></i>
                     <span>Theater Bookings</span>
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">
-                    <i class="fas fa-calendar-alt"></i>
+                <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>">
+                    <i class="bx bx-calendar-alt"></i>
                     <span>Service Schedule</span>
                 </a>
             </li>
             <li>
+                <a href="<?= ROOT ?>/profile">
+                    <i class="bx bx-user-circle"></i>
+                    <span>My Profile</span>
+                </a>
+            </li>
+            <li>
                 <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -55,8 +79,8 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/artistdashboard" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+        <a href="../artist/profile.php" class="back-button">
+            <i class="bx bx-arrow-left"></i>
             Back to Profile
         </a>
 
@@ -71,10 +95,10 @@
             </div>
             <div class="user--info">
                 <div class="role-badge">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     Production Manager
                 </div>
-                <img src="<?= ROOT ?>/assets/images/default-avatar.jpg" alt="Avatar">
+                <img src="<?= esc($profileImageSrc) ?>" alt="PM Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
             </div>
         </div>
 
@@ -100,20 +124,20 @@
 
         <!-- Navigation Tab Bar -->
         <div class="nav-tabs-bar">
-            <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn active">
-                <i class="fas fa-home"></i> Dashboard
+            <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="nav-tab-btn active">
+                <i class="bx bx-home"></i> Dashboard
             </a>
-            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
-                <i class="fas fa-briefcase"></i> Manage Services
+            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
+                <i class="bx bx-briefcase"></i> Manage Services
             </a>
-            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
-                <i class="fas fa-chart-bar"></i> Budget Management
+            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
+                <i class="bx bx-chart-bar"></i> Budget Management
             </a>
-            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
-                <i class="fas fa-theater-masks"></i> Theater Bookings
+            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
+                <i class="bx bx-theater-masks"></i> Theater Bookings
             </a>
-            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
-                <i class="fas fa-calendar-alt"></i> Service Schedule
+            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
+                <i class="bx bx-calendar-alt"></i> Service Schedule
             </a>
         </div>
 
@@ -124,10 +148,10 @@
                     <!-- Budget Overview Section -->
                     <div class="card-section">
                         <h3>
-                            <i class="fas fa-wallet" style="color: var(--brand);"></i>
+                            <i class="bx bx-wallet" style="color: var(--brand);"></i>
                             <span>Budget Overview</span>
-                            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="fas fa-pencil-alt"></i>
+                            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                                <i class="bx bx-pencil-alt"></i>
                                 Manage Budget
                             </a>
                         </h3>
@@ -169,8 +193,8 @@
                     <div class="card-section">
                         <h3>
                             <span>Recent Service Requests</span>
-                            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="fas fa-arrow-right"></i>
+                            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
+                                <i class="bx bx-arrow-right"></i>
                                 View All Services
                             </a>
                         </h3>
@@ -197,8 +221,8 @@
                     <div class="card-section">
                         <h3>
                             <span>Upcoming Theater Bookings</span>
-                            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-success" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="fas fa-plus"></i>
+                            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>" class="btn btn-success" style="font-size: 12px; padding: 8px 16px;">
+                                <i class="bx bx-plus"></i>
                                 Book Theater
                             </a>
                         </h3>
@@ -225,7 +249,7 @@
                     <div class="card-section">
                         <h3>
                             <span>Service Schedule</span>
-                            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">Manage Schedule</a>
+                            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">Manage Schedule</a>
                         </h3>
                         <?php if (isset($schedules) && is_array($schedules) && !empty($schedules)): ?>
                             <ul id="serviceScheduleList">
@@ -250,20 +274,20 @@
                     <div class="card-section">
                         <h3>Quick Actions</h3>
                         <div class="permission-controls">
-                            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary">
-                                <i class="fas fa-briefcase"></i>
+                            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>" class="btn btn-primary">
+                                <i class="bx bx-briefcase"></i>
                                 Manage Services
                             </a>
-                            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-success">
-                                <i class="fas fa-chart-bar"></i>
+                            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="btn btn-success">
+                                <i class="bx bx-chart-bar"></i>
                                 Manage Budget
                             </a>
-                            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-warning">
-                                <i class="fas fa-theater-masks"></i>
+                            <a href="<?= ROOT ?>/production_manager/book_theater?drama_id=<?= $dramaId ?>" class="btn btn-warning">
+                                <i class="bx bx-theater-masks"></i>
                                 Book Theater
                             </a>
-                            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-secondary">
-                                <i class="fas fa-calendar-alt"></i>
+                            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="btn btn-secondary">
+                                <i class="bx bx-calendar-alt"></i>
                                 Service Schedule
                             </a>
                         </div>

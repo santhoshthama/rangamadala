@@ -82,24 +82,46 @@ class CreateDrama
             }
         }
         
-        // Prepare data for database
+        $certificateNumber = trim($_POST['certificate_number']);
+
+        if ($drama_model->certificateNumberExistsInDramas($certificateNumber)) {
+            $_SESSION['message'] = "This certificate number is already registered to an existing drama.";
+            $_SESSION['message_type'] = 'error';
+
+            $data['form_data'] = $_POST;
+            $this->view('create_drama', $data);
+            return;
+        }
+
+        if ($drama_model->hasPendingDramaRequest($_SESSION['user_id'], $certificateNumber)) {
+            $_SESSION['message'] = "There is already a pending request with this certificate number.";
+            $_SESSION['message_type'] = 'error';
+
+            $data['form_data'] = $_POST;
+            $this->view('create_drama', $data);
+            return;
+        }
+
+        // Prepare data for pending review
         $drama_data = [
             'drama_name' => trim($_POST['drama_name']),
-            'certificate_number' => trim($_POST['certificate_number']),
+            'certificate_number' => $certificateNumber,
             'owner_name' => trim($_POST['owner_name']),
             'description' => trim($_POST['description']),
             'certificate_image' => $image_name,
-            'created_by' => $_SESSION['user_id']
+            'requested_by' => $_SESSION['user_id']
         ];
         
-        // Create the drama
-        if ($drama_model->createDrama($drama_data)) {
-            $_SESSION['message'] = "Drama registered successfully with certificate!";
+        // Submit request for admin approval
+        $result = $drama_model->createDramaRequest($drama_data);
+
+        if (($result['success'] ?? false) === true) {
+            $_SESSION['message'] = "Drama request submitted successfully. The drama will be created automatically after admin approval.";
             $_SESSION['message_type'] = 'success';
             header("Location: " . ROOT . "/artistdashboard");
             exit;
         } else {
-            $_SESSION['message'] = "Error registering drama. Certificate number may already be in use.";
+            $_SESSION['message'] = $result['message'] ?? "Error submitting drama request. Please try again.";
             $_SESSION['message_type'] = 'error';
             
             $data['form_data'] = $_POST;
