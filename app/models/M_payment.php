@@ -117,6 +117,53 @@ class M_payment
         $this->db->bind(':id', $request_id);
         return $this->db->resultSet();
     }
+
+    /**
+     * Get payments grouped by service request IDs.
+     */
+    public function getPaymentsByRequestIds($requestIds)
+    {
+        $requestIds = array_values(array_filter(array_map('intval', (array)$requestIds)));
+        if (empty($requestIds)) {
+            return [];
+        }
+
+        $placeholders = [];
+        foreach ($requestIds as $index => $requestId) {
+            $placeholders[] = ':id' . $index;
+        }
+
+        $sql = "SELECT
+                    id,
+                    service_request_id,
+                    payment_type,
+                    amount,
+                    payment_gateway,
+                    payment_status,
+                    reference_number,
+                    paid_at,
+                    created_at
+                FROM payments
+                WHERE service_request_id IN (" . implode(',', $placeholders) . ")
+                ORDER BY created_at DESC";
+
+        $this->db->query($sql);
+        foreach ($requestIds as $index => $requestId) {
+            $this->db->bind(':id' . $index, $requestId);
+        }
+
+        $rows = $this->db->resultSet();
+        $map = [];
+        foreach ($rows as $row) {
+            $key = (int)$row->service_request_id;
+            if (!isset($map[$key])) {
+                $map[$key] = [];
+            }
+            $map[$key][] = $row;
+        }
+
+        return $map;
+    }
     
     /**
      * Get payments by type for a request
@@ -277,5 +324,136 @@ class M_payment
         } else {
             return 'unpaid';
         }
+    }
+
+    /**
+     * Get payment statistics grouped by service request IDs.
+     */
+    public function getRequestPaymentStats($requestIds)
+    {
+        $requestIds = array_values(array_filter(array_map('intval', (array)$requestIds)));
+        if (empty($requestIds)) {
+            return [];
+        }
+
+        $placeholders = [];
+        foreach ($requestIds as $index => $requestId) {
+            $placeholders[] = ':id' . $index;
+        }
+
+        $sql = "SELECT
+                    service_request_id,
+                    SUM(CASE WHEN payment_status IN ('completed', 'success') THEN amount ELSE 0 END) AS total_paid,
+                    MAX(CASE WHEN payment_type = 'advance' AND payment_status IN ('completed', 'success') THEN 1 ELSE 0 END) AS advance_paid,
+                    MAX(CASE WHEN payment_type = 'remaining' AND payment_status IN ('completed', 'success') THEN 1 ELSE 0 END) AS remaining_paid,
+                    MAX(CASE WHEN payment_type = 'full' AND payment_status IN ('completed', 'success') THEN 1 ELSE 0 END) AS full_paid
+                FROM payments
+                WHERE service_request_id IN (" . implode(',', $placeholders) . ")
+                  AND payment_status NOT IN ('cancelled', 'canceled')
+                GROUP BY service_request_id";
+
+        $this->db->query($sql);
+        foreach ($requestIds as $index => $requestId) {
+            $this->db->bind(':id' . $index, $requestId);
+        }
+
+        $rows = $this->db->resultSet();
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int)$row->service_request_id] = [
+                'total_paid' => (float)($row->total_paid ?? 0),
+                'advance_paid' => ((int)($row->advance_paid ?? 0) === 1),
+                'remaining_paid' => ((int)($row->remaining_paid ?? 0) === 1),
+                'full_paid' => ((int)($row->full_paid ?? 0) === 1),
+            ];
+        }
+
+        return $map;
+    }
+
+    /**
+     * Revenue Report - Detailed payment transactions
+     */
+    public function getRevenueReport($provider_id, $startDate = null, $endDate = null)
+    {
+        $sql = "SELECT 
+                p.id,
+                p.service_request_id,
+                sr.drama_name,
+                sr.service_type,
+                p.payment_type,
+                p.amount,
+                p.payment_gateway,
+                p.payment_status,
+                p.reference_number,
+                p.paid_at,
+                p.created_at
+            FROM payments p
+            JOIN service_requests sr ON p.service_request_id = sr.id
+            WHERE sr.provider_id = :provider_id 
+            AND p.payment_status IN ('completed', 'success')";
+        
+        if ($startDate && $endDate) {
+            $sql .= " AND p.paid_at BETWEEN :startDate AND :endDate";
+        }
+        
+        $sql .= " ORDER BY p.paid_at DESC";
+        
+        $this->db->query($sql);
+        $this->db->bind(':provider_id', $provider_id);
+        if ($startDate && $endDate) {
+            $this->db->bind(':startDate', $startDate);
+            $this->db->bind(':endDate', $endDate);
+        }
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Get total revenue summary
+     */
+    public function getRevenueSummary($provider_id, $startDate = null, $endDate = null)
+    {
+        $sql = "SELECT 
+                SUM(amount) as total_revenue,
+                COUNT(*) as total_transactions
+            FROM payments p
+            JOIN service_requests sr ON p.service_request_id = sr.id
+            WHERE sr.provider_id = :provider_id 
+            AND p.payment_status IN ('completed', 'success')";
+        
+        if ($startDate && $endDate) {
+            $sql .= " AND paid_at BETWEEN :startDate AND :endDate";
+        }
+        
+        $this->db->query($sql);
+        $this->db->bind(':provider_id', $provider_id);
+        if ($startDate && $endDate) {
+            $this->db->bind(':startDate', $startDate);
+            $this->db->bind(':endDate', $endDate);
+        }
+        return $this->db->single();
+    }
+
+    /**
+     * Monthly revenue trend for dashboard
+     */
+    public function getMonthlyRevenueTrend($provider_id, $months = 6)
+    {
+        $months = max(1, (int)$months);
+
+        $sql = "SELECT
+                    DATE_FORMAT(COALESCE(p.paid_at, p.created_at), '%Y-%m') AS ym,
+                    SUM(p.amount) AS total_amount
+                FROM payments p
+                JOIN service_requests sr ON p.service_request_id = sr.id
+                WHERE sr.provider_id = :provider_id
+                  AND p.payment_status IN ('completed', 'success')
+                  AND COALESCE(p.paid_at, p.created_at) >= DATE_SUB(CURDATE(), INTERVAL " . $months . " MONTH)
+                GROUP BY DATE_FORMAT(COALESCE(p.paid_at, p.created_at), '%Y-%m')
+                ORDER BY ym ASC";
+
+        $this->db->query($sql);
+        $this->db->bind(':provider_id', $provider_id);
+        return $this->db->resultSet();
     }
 }

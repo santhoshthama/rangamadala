@@ -22,14 +22,14 @@
             <!-- Key Metrics Cards -->
             <div class="card--container">
                 <h3 class="main--title">Overview</h3>
-                <div class="card--wrapper">
+                <div class="card--wrapper overview-cards">
                     <div class="productionCount--card">
                         <div class="Count">
                             <span class="title">Total Revenue</span>
-                            <span class="Count-value">Rs. 840,000</span>
-                            <div class="metric-change positive">
-                                <span class="arrow">↑</span>
-                                <span>12.5%</span>
+                            <span class="Count-value">Rs. <?= number_format($total_revenue ?? 0, 2) ?></span>
+                            <div class="metric-change <?= (($revenue_change ?? 0) >= 0) ? 'positive' : 'negative' ?>">
+                                <span class="arrow"><?= (($revenue_change ?? 0) >= 0) ? '↑' : '↓' ?></span>
+                                <span><?= number_format(abs($revenue_change ?? 0), 1) ?>%</span>
                             </div>
                         </div>
                         <i class="fas fa-money-bill-wave icon"></i>
@@ -37,21 +37,21 @@
                     <div class="productionCount--card">
                         <div class="Count">
                             <span class="title">Total Bookings</span>
-                            <span class="Count-value">47</span>
-                            <div class="metric-change positive">
-                                <span class="arrow">↑</span>
-                                <span>8.3%</span>
+                            <span class="Count-value"><?= (int)($total_bookings ?? 0) ?></span>
+                            <div class="metric-change <?= (($booking_change ?? 0) >= 0) ? 'positive' : 'negative' ?>">
+                                <span class="arrow"><?= (($booking_change ?? 0) >= 0) ? '↑' : '↓' ?></span>
+                                <span><?= number_format(abs($booking_change ?? 0), 1) ?>%</span>
                             </div>
                         </div>
                         <i class="fas fa-calendar-check icon light-gold"></i>
                     </div>
                     <div class="productionCount--card">
                         <div class="Count">
-                            <span class="title">Average Rating</span>
-                            <span class="Count-value">4.8 / 5.0</span>
+                            <span class="title">Active Services</span>
+                            <span class="Count-value"><?= (int)($active_services ?? 0) ?></span>
                             <div class="metric-change positive">
-                                <span class="arrow">↑</span>
-                                <span>0.3</span>
+                                <span class="arrow">●</span>
+                                <span>Live</span>
                             </div>
                         </div>
                         <i class="fas fa-star icon"></i>
@@ -59,10 +59,10 @@
                     <div class="productionCount--card">
                         <div class="Count">
                             <span class="title">Completion Rate</span>
-                            <span class="Count-value">94%</span>
-                            <div class="metric-change negative">
-                                <span class="arrow">↓</span>
-                                <span>2%</span>
+                            <span class="Count-value"><?= number_format($completion_rate ?? 0, 1) ?>%</span>
+                            <div class="metric-change positive">
+                                <span class="arrow">✓</span>
+                                <span><?= (int)($completed_services ?? 0) ?> completed</span>
                             </div>
                         </div>
                         <i class="fas fa-check-circle icon light-gold"></i>
@@ -76,20 +76,24 @@
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3>Revenue Trend</h3>
-                        <select class="chart-filter" onchange="updateRevenueChart(this.value)">
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly" selected>Monthly</option>
-                            <option value="yearly">Yearly</option>
+                        <select class="chart-filter" 
+                            onchange="window.location.href='<?= ROOT ?>/ServiceProviderDashboard?trend=' + this.value">
+                            <option value="weekly" <?= ($trend_range ?? 'monthly') === 'weekly' ? 'selected' : '' ?>>Last 7 Days</option>
+                            <option value="monthly" <?= ($trend_range ?? 'monthly') === 'monthly' ? 'selected' : '' ?>>Last 6 Months</option>
+                            <option value="yearly" <?= ($trend_range ?? 'monthly') === 'yearly' ? 'selected' : '' ?>>Last 5 Years</option>
                         </select>
                     </div>
                     <div class="chart-body">
                         <div class="bar-chart">
-                            <div class="bar" style="height: 60%"><span>Jan<br>Rs. 60,000</span></div>
-                            <div class="bar" style="height: 75%"><span>Feb<br>Rs. 90,000</span></div>
-                            <div class="bar" style="height: 85%"><span>Mar<br>Rs. 112,500</span></div>
-                            <div class="bar" style="height: 70%"><span>Apr<br>Rs. 82,500</span></div>
-                            <div class="bar" style="height: 90%"><span>May<br>Rs. 127,500</span></div>
-                            <div class="bar" style="height: 95%"><span>Jun<br>Rs. 142,500</span></div>
+                            <?php if (!empty($revenue_trend)): ?>
+                                <?php foreach ($revenue_trend as $trend): ?>
+                                    <div class="bar" style="height: <?= (int)($trend['height'] ?? 8) ?>%">
+                                        <span><?= htmlspecialchars($trend['label'] ?? '-') ?><br>Rs. <?= number_format($trend['amount'] ?? 0, 0) ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="bar" style="height: 8%"><span>No data<br>Rs. 0</span></div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -101,46 +105,29 @@
                     </div>
                     <div class="chart-body">
                         <div class="service-stats">
-                            <div class="service-item">
-                                <div class="service-info">
-                                    <span class="service-name">Sound Equipment</span>
-                                    <span class="service-count">18 bookings</span>
+                            <?php if (!empty($service_distribution)): ?>
+                                <?php foreach ($service_distribution as $item): ?>
+                                    <div class="service-item">
+                                        <div class="service-info">
+                                            <span class="service-name"><?= htmlspecialchars($item->service_label ?? 'N/A') ?></span>
+                                            <span class="service-count"><?= (int)($item->booking_count ?? 0) ?> bookings</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: <?= (int)($item->percentage ?? 0) ?>%"></div>
+                                        </div>
+                                        <span class="service-percentage"><?= (int)($item->percentage ?? 0) ?>%</span>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="service-item">
+                                    <div class="service-info">
+                                        <span class="service-name">No service bookings yet</span>
+                                        <span class="service-count">0 bookings</span>
+                                    </div>
+                                    <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+                                    <span class="service-percentage">0%</span>
                                 </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 38%"></div>
-                                </div>
-                                <span class="service-percentage">38%</span>
-                            </div>
-                            <div class="service-item">
-                                <div class="service-info">
-                                    <span class="service-name">Lighting Design</span>
-                                    <span class="service-count">14 bookings</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 30%"></div>
-                                </div>
-                                <span class="service-percentage">30%</span>
-                            </div>
-                            <div class="service-item">
-                                <div class="service-info">
-                                    <span class="service-name">Costume Design</span>
-                                    <span class="service-count">10 bookings</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 21%"></div>
-                                </div>
-                                <span class="service-percentage">21%</span>
-                            </div>
-                            <div class="service-item">
-                                <div class="service-info">
-                                    <span class="service-name">Stage Design</span>
-                                    <span class="service-count">5 bookings</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 11%"></div>
-                                </div>
-                                <span class="service-percentage">11%</span>
-                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -149,36 +136,31 @@
             <!-- Recent Activity -->
             <div class="chart-card" style="margin-top: 20px;">
                 <div class="section-header">
-                    <h3>Recent Activity</h3>
+                    <h3>Ongoing Services</h3>
                 </div>
                 <div class="activity-list">
-                    <div class="activity-item">
-                        <div class="activity-content">
-                            <div class="activity-title">Completed service for "Romeo and Juliet"</div>
-                            <div class="activity-time">2 hours ago</div>
+                    <?php if (!empty($ongoing_services)): ?>
+                        <?php foreach ($ongoing_services as $service): ?>
+                            <div class="activity-item">
+                                <div class="activity-content">
+                                    <div class="activity-title">
+                                        <?= htmlspecialchars($service->drama_name ?? 'N/A') ?> - <?= htmlspecialchars(ucwords(str_replace('_', ' ', $service->service_type ?? 'service'))) ?>
+                                    </div>
+                                    <div class="activity-time">
+                                        <?= htmlspecialchars(ucwords(str_replace('_', ' ', $service->status ?? 'pending'))) ?> | Updated: <?= date('d M Y', strtotime($service->updated_at ?? 'now')) ?>
+                                    </div>
+                                </div>
+                                <div class="activity-amount">Rs. <?= number_format($service->amount_paid ?? 0, 2) ?></div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="activity-item">
+                            <div class="activity-content">
+                                <div class="activity-title">No ongoing services</div>
+                                <div class="activity-time">New requests will appear here</div>
+                            </div>
                         </div>
-                        <div class="activity-amount">+Rs. 37,500</div>
-                    </div>
-                    <div class="activity-item">
-                        <div class="activity-content">
-                            <div class="activity-title">Received 5-star review from Theatre Group ABC</div>
-                            <div class="activity-time">5 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <div class="activity-content">
-                            <div class="activity-title">New booking for "Hamlet" lighting setup</div>
-                            <div class="activity-time">1 day ago</div>
-                        </div>
-                        <div class="activity-amount">Rs. 56,250</div>
-                    </div>
-                    <div class="activity-item">
-                        <div class="activity-content">
-                            <div class="activity-title">Payment received for "Macbeth"</div>
-                            <div class="activity-time">2 days ago</div>
-                        </div>
-                        <div class="activity-amount">+Rs. 90,000</div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -188,63 +170,39 @@
                     <h3>Top Clients</h3>
                 </div>
                 <div class="clients-grid">
-                    <div class="client-card">
-                        <div class="client-header">
-                            <div class="client-avatar">TA</div>
-                            <div class="client-info">
-                                <h4>Theatre Group ABC</h4>
-                                <span class="client-bookings">12 bookings</span>
+                    <?php if (!empty($top_clients)): ?>
+                        <?php foreach ($top_clients as $client): ?>
+                            <div class="client-card">
+                                <div class="client-header">
+                                    <div class="client-avatar"><?= htmlspecialchars($client->initials ?? 'NA') ?></div>
+                                    <div class="client-info">
+                                        <h4><?= htmlspecialchars($client->requester_name ?? 'N/A') ?></h4>
+                                        <span class="client-bookings"><?= (int)($client->booking_count ?? 0) ?> bookings</span>
+                                    </div>
+                                </div>
+                                <div class="client-stats">
+                                    <div class="stat">
+                                        <span class="stat-label">Total Spent</span>
+                                        <span class="stat-value">Rs. <?= number_format($client->total_spent ?? 0, 2) ?></span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-label">Last Booking</span>
+                                        <span class="stat-value"><?= !empty($client->last_booking) ? date('d M Y', strtotime($client->last_booking)) : 'N/A' ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="client-card">
+                            <div class="client-header">
+                                <div class="client-avatar">NA</div>
+                                <div class="client-info">
+                                    <h4>No clients yet</h4>
+                                    <span class="client-bookings">0 bookings</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="client-stats">
-                            <div class="stat">
-                                <span class="stat-label">Total Spent</span>
-                                <span class="stat-value">Rs. 240,000</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-label">Last Booking</span>
-                                <span class="stat-value">2 days ago</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="client-card">
-                        <div class="client-header">
-                            <div class="client-avatar">DS</div>
-                            <div class="client-info">
-                                <h4>Drama Society</h4>
-                                <span class="client-bookings">8 bookings</span>
-                            </div>
-                        </div>
-                        <div class="client-stats">
-                            <div class="stat">
-                                <span class="stat-label">Total Spent</span>
-                                <span class="stat-value">Rs. 157,500</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-label">Last Booking</span>
-                                <span class="stat-value">1 week ago</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="client-card">
-                        <div class="client-header">
-                            <div class="client-avatar">CT</div>
-                            <div class="client-info">
-                                <h4>City Theatre</h4>
-                                <span class="client-bookings">6 bookings</span>
-                            </div>
-                        </div>
-                        <div class="client-stats">
-                            <div class="stat">
-                                <span class="stat-label">Total Spent</span>
-                                <span class="stat-value">Rs. 135,000</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-label">Last Booking</span>
-                                <span class="stat-value">3 days ago</span>
-                            </div>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
