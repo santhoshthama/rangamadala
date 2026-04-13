@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Drama - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
@@ -16,25 +16,25 @@
         <ul class="menu">
             <li>
                 <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bx bx-arrow-left"></i>
                     <span>Back to Dashboard</span>
                 </a>
             </li>
             <li class="active">
                 <a href="create_drama.php">
-                    <i class="fas fa-plus-circle"></i>
+                    <i class="bx bx-plus-circle"></i>
                     <span>Create Drama</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/profile">
-                    <i class="fas fa-user-circle"></i>
+                    <i class="bx bx-user-circle"></i>
                     <span>My Profile</span>
                 </a>
             </li>
             <li>
                 <a href="../../public/index.php">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </li>
@@ -44,7 +44,7 @@
     <!-- Main Content -->
     <main class="main--content">
         <a href="dashboard.php" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Dashboard
         </a>
 
@@ -56,14 +56,14 @@
                 </div>
 
                 <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="bx bx-info-circle"></i>
                     <strong>Important:</strong> You must upload a valid Public Performance Board Certificate. Your drama will be pending until admin approves it.
                 </div>
 
                 <form id="createDramaForm" enctype="multipart/form-data">
                     <!-- Basic Information -->
                     <h3 style="color: var(--brand); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-film"></i>
+                        <i class="bx bx-film"></i>
                         Basic Information
                     </h3>
 
@@ -114,7 +114,7 @@
 
                     <!-- Certificate Upload -->
                     <h3 style="color: var(--brand); margin: 30px 0 20px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-certificate"></i>
+                        <i class="bx bx-certificate"></i>
                         Public Performance Board Certificate
                     </h3>
 
@@ -137,7 +137,7 @@
 
                     <!-- Production Details -->
                     <h3 style="color: var(--brand); margin: 30px 0 20px; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-cog"></i>
+                        <i class="bx bx-cog"></i>
                         Production Details
                     </h3>
 
@@ -172,15 +172,15 @@
                     <!-- Submit Buttons -->
                     <div class="button-group">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-check"></i>
+                            <i class="bx bx-check"></i>
                             Submit for Approval
                         </button>
                         <button type="reset" class="btn btn-secondary">
-                            <i class="fas fa-undo"></i>
+                            <i class="bx bx-undo"></i>
                             Reset Form
                         </button>
                         <a href="dashboard.php" class="btn btn-danger">
-                            <i class="fas fa-times"></i>
+                            <i class="bx bx-times"></i>
                             Cancel
                         </a>
                     </div>

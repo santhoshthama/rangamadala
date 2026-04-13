@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Schedule Management - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         .calendar-controls {
             display: flex;
             justify-content: space-between;
@@ -455,7 +455,7 @@
             <div class="user--info">
                 <img src="<?= ROOT ?>/assets/images/default-avatar.jpg" alt="Avatar">
                 <span class="role-badge">
-                    <i class="fas fa-user-tie"></i>
+                    <i class="bx bx-user-tie"></i>
                     Production Manager
                 </span>
             </div>
@@ -483,15 +483,15 @@
             <div class="filter-section">
                 <button class="filter-btn active" onclick="filterByStatus('')">All</button>
                 <button class="filter-btn" onclick="filterByStatus('awaiting')">
-                    <i class="fas fa-hourglass-half"></i>
+                    <i class="bx bx-hourglass-half"></i>
                     Awaiting Response
                 </button>
                 <button class="filter-btn" onclick="filterByStatus('accepted')">
-                    <i class="fas fa-check-circle"></i>
+                    <i class="bx bx-check-circle"></i>
                     Accepted
                 </button>
                 <button class="filter-btn" onclick="filterByStatus('paid')">
-                    <i class="fas fa-credit-card"></i>
+                    <i class="bx bx-credit-card"></i>
                     Paid
                 </button>
             </div>
@@ -499,19 +499,19 @@
             <!-- Calendar Controls -->
             <div class="calendar-controls">
                 <button onclick="previousMonth()">
-                    <i class="fas fa-chevron-left"></i>
+                    <i class="bx bx-chevron-left"></i>
                 </button>
                 <div class="month-year" id="currentMonth">December 2025</div>
                 <button onclick="nextMonth()">
-                    <i class="fas fa-chevron-right"></i>
+                    <i class="bx bx-chevron-right"></i>
                 </button>
                 <div class="view-toggle">
                     <button class="active" onclick="switchView('calendar')">
-                        <i class="fas fa-calendar-grid-3"></i>
+                        <i class="bx bx-calendar-grid-3"></i>
                         Calendar
                     </button>
                     <button onclick="switchView('timeline')">
-                        <i class="fas fa-list"></i>
+                        <i class="bx bx-list"></i>
                         Timeline
                     </button>
                 </div>

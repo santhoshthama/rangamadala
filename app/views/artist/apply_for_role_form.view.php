@@ -21,43 +21,43 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Apply for Role - <?= htmlspecialchars($data['role']->role_name ?? 'Role') ?></title>
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <h2><i class='bx bxs-theater'></i></h2>
         </div>
         <ul class="menu">
             <li>
                 <a href="<?=ROOT?>/artistdashboard">
-                    <i class="fas fa-home"></i>
+                    <i class="bx bx-home"></i>
                     <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?=ROOT?>/profile">
-                    <i class="fas fa-user"></i>
-                    <span>Profile</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?=ROOT?>/artistdashboard/browse_vacancies">
-                    <i class="fas fa-bullhorn"></i>
+                    <i class="bx bx-bullhorn"></i>
                     <span>View All Vacancies</span>
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/browseDramas">
-                    <i class="fas fa-theater-masks"></i>
-                    <span>Browse Dramas</span>
+                <a href="<?=ROOT?>/artistdashboard/notifications">
+                    <i class="bx bx-bell"></i>
+                    <span>Notifications</span>
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class="fas fa-bell"></i>
-                    <span>Notifications</span>
+                <a href="<?=ROOT?>/artistdashboard/classes">
+                    <i class='bx bxs-graduation'></i>
+                    <span>Classes</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?=ROOT?>/artistdashboard#my-showings">
+                    <i class='bx bx-calendar-event'></i>
+                    <span>Showings</span>
                 </a>
             </li>
         </ul>
@@ -66,7 +66,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <!-- Main Content -->
     <main class="main--content">
         <a href="<?=ROOT?>/artistdashboard/browse_vacancies" class="back-button">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             Back to Vacancies
         </a>
 
@@ -78,11 +78,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
             <div class="user--info">
                 <div class="role-badge">
-                    <i class="fas fa-star"></i> Artist
+                    <i class="bx bx-star"></i> Artist
                 </div>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
                 <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                 </a>
             </div>
         </div>
@@ -90,7 +90,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <?php if (!empty($data['errors'])): ?>
             <?php foreach ($data['errors'] as $error): ?>
                 <div class="info-box" style="background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545;">
-                    <i class="fas fa-exclamation-triangle"></i> <?= htmlspecialchars($error) ?>
+                    <i class="bx bx-exclamation-triangle"></i> <?= htmlspecialchars($error) ?>
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
@@ -100,22 +100,22 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             <div class="profile-container" style="grid-template-columns: 1fr;">
                 <div class="details">
                     <div class="card-section">
-                        <h3><span><i class="fas fa-info-circle"></i> Role Details</span></h3>
+                        <h3><span><i class="bx bx-info-circle"></i> Role Details</span></h3>
                         <div class="drama-info">
                             <div class="service-info-item">
-                                <span class="service-info-label"><i class="fas fa-theater-masks"></i> Drama</span>
+                                <span class="service-info-label"><i class="bx bx-theater-masks"></i> Drama</span>
                                 <span class="service-info-value"><?= htmlspecialchars($data['role']->drama_name ?? 'N/A') ?></span>
                             </div>
                             <div class="service-info-item">
-                                <span class="service-info-label"><i class="fas fa-tag"></i> Role Type</span>
+                                <span class="service-info-label"><i class="bx bx-tag"></i> Role Type</span>
                                 <span class="service-info-value"><?= ucfirst(htmlspecialchars($data['role']->role_type ?? 'N/A')) ?></span>
                             </div>
                             <div class="service-info-item">
-                                <span class="service-info-label"><i class="fas fa-money-bill-wave"></i> Salary</span>
+                                <span class="service-info-label"><i class="fas fa-money-bill-wave"></i> Salary (LKR) (Per session)</span>
                                 <span class="service-info-value">LKR <?= isset($data['role']->salary) && $data['role']->salary ? number_format($data['role']->salary) : 'Negotiable' ?></span>
                             </div>
                             <div class="service-info-item">
-                                <span class="service-info-label"><i class="fas fa-users"></i> Openings</span>
+                                <span class="service-info-label"><i class="bx bx-users"></i> Openings</span>
                                 <span class="service-info-value"><?= $data['role']->positions_available - $data['role']->positions_filled ?> positions</span>
                             </div>
                         </div>
@@ -123,7 +123,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                     <!-- Application Form -->
                     <div class="card-section">
-                        <h3><span><i class="fas fa-file-alt"></i> Application Form</span></h3>
+                        <h3><span><i class="bx bx-file-alt"></i> Application Form</span></h3>
                         <form method="POST" action="<?= ROOT ?>/artistdashboard/submit_application" class="form-container">
                             <input type="hidden" name="role_id" value="<?= $data['role']->id ?? '' ?>">
 
@@ -160,10 +160,10 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                             <div style="display: flex; gap: 15px; margin-top: 30px;">
                                 <button type="button" class="btn btn-secondary" onclick="window.history.back()">
-                                    <i class="fas fa-arrow-left"></i> Cancel
+                                    <i class="bx bx-arrow-left"></i> Cancel
                                 </button>
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane"></i> Submit Application
+                                    <i class="bx bx-paper-plane"></i> Submit Application
                                 </button>
                             </div>
                         </form>

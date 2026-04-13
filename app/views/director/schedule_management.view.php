@@ -74,11 +74,11 @@ foreach ($upcomingEvents as $evt) {
 
 function eventTypeIcon($type) {
     switch ($type) {
-        case 'rehearsal': return 'fa-theater-masks';
-        case 'interview': return 'fa-user-check';
-        case 'meeting': return 'fa-users';
-        case 'performance': return 'fa-star';
-        default: return 'fa-calendar';
+        case 'rehearsal': return 'bx-theater-masks';
+        case 'interview': return 'bx-user-check';
+        case 'meeting': return 'bx-users';
+        case 'performance': return 'bx-star';
+        default: return 'bx-calendar';
     }
 }
 
@@ -120,8 +120,8 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule Management - <?= esc($dramaName) ?> - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         .date-availability { margin-top: 8px; padding: 10px 14px; border-radius: 6px; font-size: 13px; display: none; }
         .date-availability.available { background: rgba(40, 167, 69, 0.12); color: #155724; border-left: 4px solid #28a745; }
         .date-availability.conflict { background: rgba(220, 53, 69, 0.12); color: #721c24; border-left: 4px solid #dc3545; }
@@ -146,37 +146,37 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <ul class="menu">
             <li>
                 <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>">
-                    <i class="fas fa-home"></i><span>Dashboard</span>
+                    <i class="bx bx-home"></i><span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>">
-                    <i class="fas fa-film"></i><span>Drama Details</span>
+                    <i class="bx bx-film"></i><span>Drama Details</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>">
-                    <i class="fas fa-users"></i><span>Artist Roles</span>
+                    <i class="bx bx-users"></i><span>Artist Roles</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>">
-                    <i class="fas fa-user-tie"></i><span>Production Manager</span>
+                    <i class="bx bx-user-tie"></i><span>Production Manager</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>">
-                    <i class="fas fa-calendar-alt"></i><span>Schedule</span>
+                    <i class="bx bx-calendar-alt"></i><span>Schedule</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>">
-                    <i class="fas fa-dollar-sign"></i><span>Services & Budget</span>
+                    <i class="bx bx-dollar-sign"></i><span>Services & Budget</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i><span>Back to Profile</span>
+                    <i class="bx bx-arrow-left"></i><span>Back to Profile</span>
                 </a>
             </li>
         </ul>
@@ -185,7 +185,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <!-- Main Content -->
     <main class="main--content">
         <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
+            <i class="bx bx-arrow-left"></i> Back to Dashboard
         </a>
 
         <!-- Header -->
@@ -196,17 +196,17 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
             <div class="user--info">
                 <button class="btn btn-primary" onclick="openCreateModal('rehearsal')">
-                    <i class="fas fa-theater-masks"></i> Schedule Rehearsal
+                    <i class="bx bx-theater-masks"></i> Schedule Rehearsal
                 </button>
                 <button class="btn btn-success" onclick="openCreateModal('interview')">
-                    <i class="fas fa-user-check"></i> Schedule Interview
+                    <i class="bx bx-user-check"></i> Schedule Interview
                 </button>
                 <div class="role-badge">
-                    <i class="fas fa-video"></i> Director
+                    <i class="bx bx-video"></i> Director
                 </div>
                 <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
                 <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="bx bx-sign-out-alt"></i>
                 </a>
             </div>
         </div>
@@ -245,13 +245,13 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <!-- Tabs -->
         <div class="tabs">
             <button class="tab-button active" onclick="showScheduleTab('upcoming', this)">
-                <i class="fas fa-calendar-day"></i> Upcoming Events
+                <i class="bx bx-calendar-day"></i> Upcoming Events
             </button>
             <button class="tab-button" onclick="showScheduleTab('past', this)">
-                <i class="fas fa-history"></i> Past Events
+                <i class="bx bx-history"></i> Past Events
             </button>
             <button class="tab-button" onclick="showScheduleTab('calendar', this)">
-                <i class="fas fa-calendar"></i> Calendar View
+                <i class="bx bx-calendar"></i> Calendar View
             </button>
         </div>
 
@@ -263,11 +263,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <?php if (empty($upcomingEvents)): ?>
                             <div class="card-section">
                                 <div style="text-align: center; padding: 40px; color: var(--muted);">
-                                    <i class="fas fa-calendar-plus" style="font-size: 40px; display: block; margin-bottom: 16px;"></i>
+                                    <i class="bx bx-calendar-plus" style="font-size: 40px; display: block; margin-bottom: 16px;"></i>
                                     <h3>No Upcoming Events</h3>
                                     <p>Schedule a rehearsal or interview to get started.</p>
                                     <button class="btn btn-primary" style="margin-top: 12px;" onclick="openCreateModal()">
-                                        <i class="fas fa-plus"></i> Schedule Event
+                                        <i class="bx bx-plus"></i> Schedule Event
                                     </button>
                                 </div>
                             </div>
@@ -313,7 +313,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                             <h3>Past Events</h3>
                             <?php if (empty($pastEvents)): ?>
                                 <div style="text-align: center; padding: 40px; color: var(--muted);">
-                                    <i class="fas fa-history" style="font-size: 40px; display: block; margin-bottom: 16px;"></i>
+                                    <i class="bx bx-history" style="font-size: 40px; display: block; margin-bottom: 16px;"></i>
                                     <h3>No Past Events</h3>
                                     <p>Completed events will appear here.</p>
                                 </div>
@@ -338,11 +338,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <div class="card-section">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <button class="btn btn-secondary" onclick="previousMonth()">
-                                    <i class="fas fa-chevron-left"></i>
+                                    <i class="bx bx-chevron-left"></i>
                                 </button>
                                 <h3 id="calendarMonthYear" style="margin: 0;"></h3>
                                 <button class="btn btn-secondary" onclick="nextMonth()">
-                                    <i class="fas fa-chevron-right"></i>
+                                    <i class="bx bx-chevron-right"></i>
                                 </button>
                             </div>
 
@@ -386,7 +386,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                             <div style="margin-top: 20px;">
                                 <button class="btn btn-success" onclick="openCreateModal()">
-                                    <i class="fas fa-plus"></i> Add Event
+                                    <i class="bx bx-plus"></i> Add Event
                                 </button>
                             </div>
                         </div>
@@ -400,7 +400,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <div id="scheduleModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle"><i class="fas fa-calendar-plus"></i> Schedule Event</h2>
+            <h2 id="modalTitle"><i class="bx bx-calendar-plus"></i> Schedule Event</h2>
             <div class="modal-body">
                 <form id="scheduleForm" method="POST" action="">
                     <input type="hidden" name="event_id" id="formEventId" value="">
@@ -464,7 +464,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                     <div class="modal-actions" style="margin-top: 16px;">
                         <button type="submit" class="btn btn-primary" id="formSubmitBtn">
-                            <i class="fas fa-check"></i> Create Schedule
+                            <i class="bx bx-check"></i> Create Schedule
                         </button>
                         <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     </div>
@@ -477,7 +477,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <div id="detailsModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeDetailsModal()">&times;</span>
-            <h2><i class="fas fa-calendar"></i> Event Details</h2>
+            <h2><i class="bx bx-calendar"></i> Event Details</h2>
             <div class="modal-body" id="detailsBody">
                 <!-- Populated by JS -->
             </div>

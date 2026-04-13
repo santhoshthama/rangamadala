@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cash Payment - <?= APP_NAME ?></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/payment/cash.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/payment/cash.css">
 </head>
 <body class="payment-cash-form">
     <div class="payment-container">
-        <h1><i class="fas fa-money-bill-wave"></i> Record Cash Payment</h1>
+        <h1><i class="bx bx-money-bill-wave"></i> Record Cash Payment</h1>
 
         <div class="payment-meta">
             <div class="payment-meta-row"><span>Drama</span><strong><?= htmlspecialchars($request->drama_name ?? 'N/A') ?></strong></div>
@@ -35,8 +35,8 @@
             </div>
 
             <div class="payment-actions">
-                <button type="submit" class="payment-btn payment-btn-primary"><i class="fas fa-check-circle"></i> Save Cash Payment</button>
-                <a href="<?= ROOT ?>/Production_manager/manage_services?drama_id=<?= (int)($request->drama_id ?? 0) ?>" class="payment-btn payment-btn-secondary"><i class="fas fa-arrow-left"></i> Cancel</a>
+                <button type="submit" class="payment-btn payment-btn-primary"><i class="bx bx-check-circle"></i> Save Cash Payment</button>
+                <a href="<?= ROOT ?>/Production_manager/manage_services?drama_id=<?= (int)($request->drama_id ?? 0) ?>" class="payment-btn payment-btn-secondary"><i class="bx bx-arrow-left"></i> Cancel</a>
             </div>
         </form>
     </div>

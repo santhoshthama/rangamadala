@@ -72,13 +72,14 @@ body {
     background: #f5f0e8;
     border: 1px solid #e5d4c1;
     border-radius: 16px;
-    padding: 16px;
+    padding: 18px;
     margin-bottom: 24px;
+    box-shadow: 0 10px 26px rgba(108, 78, 45, 0.08);
 }
 
 .search-form {
     display: flex;
-    gap: 12px;
+    gap: 14px;
     flex-wrap: wrap;
     align-items: center;
 }
@@ -89,34 +90,64 @@ body {
     min-width: 250px;
 }
 
+.search-box.search-box-pro {
+    flex: 2.2;
+    min-width: 320px;
+}
+
 .search-box i, .filter-box i {
     position: absolute;
-    left: 12px;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
     color: #aa8c2c;
     font-size: 20px;
+    pointer-events: none;
+    z-index: 2;
 }
 
 .search-box input, .filter-box select {
     width: 100%;
-    padding: 12px 15px 12px 40px;
-    background: white;
-    border: 1px solid #e5d4c1;
-    border-radius: 10px;
+    padding: 13px 16px 13px 44px;
+    background: linear-gradient(180deg, #ffffff 0%, #fefcf8 100%);
+    border: 1px solid #dbc8af;
+    border-radius: 12px;
     color: #3d2817;
-    font-size: 16px;
-    transition: 0.2s ease;
+    font-size: 15px;
+    font-weight: 500;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    min-height: 48px;
+}
+
+.search-box input:hover, .filter-box select:hover {
+    border-color: #c9ab6c;
 }
 
 .search-box input:focus, .filter-box select:focus {
     outline: none;
     border-color: #d4af37;
-    box-shadow: 0 0 0 3px rgba(212,175,55,0.15);
+    box-shadow: 0 0 0 3px rgba(212,175,55,0.18), 0 10px 24px rgba(108, 78, 45, 0.12);
+    transform: translateY(-1px);
 }
 
 .search-box input::placeholder {
     color: #8b7355;
+    font-weight: 400;
+}
+
+.filter-box-category select {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: 42px;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #aa8c2c 50%),
+        linear-gradient(135deg, #aa8c2c 50%, transparent 50%);
+    background-position:
+        calc(100% - 19px) calc(50% - 3px),
+        calc(100% - 13px) calc(50% - 3px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
 }
 
 .filter-box select option {

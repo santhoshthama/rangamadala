@@ -33,6 +33,8 @@ class Director{
             
             // Get all roles for this drama
             $roles = $this->roleModel ? $this->roleModel->getRolesByDrama((int)$drama->id) : [];
+            $roleStats = $this->roleModel ? $this->roleModel->getRoleStats((int)$drama->id) : null;
+            $pendingApplications = $this->roleModel ? $this->roleModel->getPendingApplications((int)$drama->id) : [];
             
             // Get assigned artists for each role
             $assignedArtists = [];
@@ -49,10 +51,23 @@ class Director{
                     }
                 }
             }
+
+            $totalRoles = (int)($roleStats->total_roles ?? 0);
+            $totalPositions = (int)($roleStats->total_positions ?? 0);
+            $filledPositions = (int)($roleStats->filled_positions ?? 0);
+            $hasProductionManager = $productionManager ? 1 : 0;
+            $pendingApplicationsCount = is_array($pendingApplications) ? count($pendingApplications) : 0;
             
             return [
                 'productionManager' => $productionManager,
                 'assignedArtists' => $assignedArtists,
+                'dashboardStats' => [
+                    'total_roles' => $totalRoles,
+                    'total_positions' => $totalPositions,
+                    'filled_positions' => $filledPositions,
+                    'production_managers' => $hasProductionManager,
+                    'pending_applications' => $pendingApplicationsCount,
+                ],
             ];
         });
     }
@@ -1027,6 +1042,49 @@ class Director{
         ]);
     }
 
+    public function remove_role_request()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $this->respondWithRedirect(false, 'Role management is currently unavailable.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $requestId = (int)($_POST['request_id'] ?? 0);
+        if ($requestId <= 0) {
+            $this->respondWithRedirect(false, 'Invalid request selected.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $removed = $this->roleModel->cancelRoleRequestByDirector(
+            $requestId,
+            (int)$_SESSION['user_id'],
+            (int)$drama->id
+        );
+
+        if ($removed) {
+            $this->respondWithRedirect(true, 'Role request removed successfully.', (int)$drama->id, [
+                'route' => 'manage',
+            ], 'success');
+        }
+
+        $this->respondWithRedirect(false, 'Unable to remove request. It may already be handled.', (int)$drama->id, [
+            'route' => 'manage',
+        ]);
+    }
+
     public function publish_vacancy()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -1440,9 +1498,111 @@ class Director{
         exit;
     }
 
+    public function publish_drama()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            header('Location: ' . ROOT . '/director/drama_details' . ($dramaId ? '?drama_id=' . (int)$dramaId : ''));
+            exit;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        $formData = [
+            'category_id' => trim($_POST['category_id'] ?? ''),
+            'public_description' => trim($_POST['public_description'] ?? ''),
+            'language' => trim($_POST['language'] ?? ''),
+            'duration_minutes' => trim($_POST['duration_minutes'] ?? ''),
+            'showing_prices' => trim($_POST['showing_prices'] ?? ''),
+        ];
+
+        $errors = [];
+
+        $categoryId = filter_var($formData['category_id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($categoryId === false) {
+            $errors[] = 'Category is required.';
+        }
+
+        if ($formData['public_description'] === '') {
+            $errors[] = 'Public drama description is required.';
+        }
+
+        if ($formData['language'] === '') {
+            $errors[] = 'Language is required.';
+        }
+
+        $duration = filter_var($formData['duration_minutes'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($duration === false) {
+            $errors[] = 'Duration must be a positive whole number.';
+        }
+
+        if ($formData['showing_prices'] === '') {
+            $errors[] = 'Showing prices are required.';
+        } elseif (strlen($formData['showing_prices']) > 500) {
+            $errors[] = 'Showing prices cannot exceed 500 characters.';
+        }
+
+        $posterName = $drama->poster_image ?? null;
+        if (isset($_FILES['poster_image']) && $_FILES['poster_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $newPoster = $this->handlePosterUpload($_FILES['poster_image']);
+            if ($newPoster === false) {
+                $errors[] = 'Invalid poster image. Allowed types: JPG, PNG, GIF, WEBP up to 8MB.';
+            } else {
+                $posterName = $newPoster;
+            }
+        }
+
+        if (empty($posterName)) {
+            $errors[] = 'Drama poster image is required to publish.';
+        }
+
+        if (!empty($errors)) {
+            $_SESSION['message'] = implode(' ', $errors);
+            $_SESSION['message_type'] = 'error';
+            $this->renderDramaView('drama_details', ['publish_form_data' => $formData]);
+            return;
+        }
+
+        $publishData = [
+            'category_id' => (int)$categoryId,
+            'public_description' => $formData['public_description'],
+            'genre' => $drama->genre ?? '',
+            'language' => $formData['language'],
+            'duration_minutes' => (int)$duration,
+            'venue' => $drama->venue ?? '',
+            'event_date' => $drama->event_date ?? null,
+            'event_time' => $drama->event_time ?? null,
+            'ticket_price' => isset($drama->ticket_price) ? number_format((float)$drama->ticket_price, 2, '.', '') : '0.00',
+            'showing_prices' => $formData['showing_prices'],
+            'poster_image' => $posterName,
+        ];
+
+        $ok = $this->dramaModel->publishDrama((int)$drama->id, (int)$_SESSION['user_id'], $publishData);
+
+        if ($ok) {
+            $queued = $this->dramaModel->queuePosterForAdminHome((int)$drama->id);
+            $_SESSION['message'] = $queued
+                ? 'Drama published successfully. Poster sent to admin for home page review.'
+                : 'Drama published successfully. Poster queue could not be updated for admin.';
+            $_SESSION['message_type'] = $queued ? 'success' : 'info';
+        } else {
+            $_SESSION['message'] = 'Failed to publish drama. Please try again.';
+            $_SESSION['message_type'] = 'error';
+        }
+
+        header('Location: ' . ROOT . '/director/drama_details?drama_id=' . (int)$drama->id);
+        exit;
+    }
+
     protected function renderDramaView($view, array $data = [], ?callable $dataBuilder = null)
     {
         $drama = $this->authorizeDrama();
+
+        $categories = [];
+        if ($this->dramaModel && method_exists($this->dramaModel, 'getAllCategories')) {
+            $categories = $this->dramaModel->getAllCategories() ?? [];
+        }
+
         if ($dataBuilder) {
             $additional = $dataBuilder($drama);
             if (is_array($additional)) {
@@ -1450,7 +1610,7 @@ class Director{
             }
         }
 
-        $payload = array_merge(['drama' => $drama], $data);
+        $payload = array_merge(['drama' => $drama, 'categories' => $categories], $data);
         $this->view('director/' . $view, $payload);
     }
 
@@ -1567,7 +1727,7 @@ class Director{
     protected function validateRoleInput(array $data, string $mode = 'create'): array
     {
         $errors = [];
-        $allowedTypes = ['lead', 'supporting', 'ensemble', 'dancer', 'musician', 'other'];
+        $allowedTypes = ['lead', 'supporting', 'other'];
         $allowedStatuses = ['open', 'filled', 'closed'];
 
         $roleName = trim($data['role_name'] ?? '');
@@ -1693,6 +1853,35 @@ class Director{
 
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $filename = 'certificate_' . time() . '_' . uniqid('', true) . '.' . $extension;
+        $filepath = $uploadDir . $filename;
+
+        if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            return $filename;
+        }
+
+        return false;
+    }
+
+    protected function handlePosterUpload($file)
+    {
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        $maxSize = 8 * 1024 * 1024; // 8MB
+
+        if (!in_array($file['type'], $allowedTypes)) {
+            return false;
+        }
+
+        if ($file['size'] > $maxSize) {
+            return false;
+        }
+
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/dramas/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $filename = 'drama_poster_' . time() . '_' . uniqid('', true) . '.' . $extension;
         $filepath = $uploadDir . $filename;
 
         if (move_uploaded_file($file['tmp_name'], $filepath)) {

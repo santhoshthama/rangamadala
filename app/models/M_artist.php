@@ -1,8 +1,57 @@
 <?php
 
 class M_artist extends M_signup {
-    public function register($full_name, $email, $password, $phone, $nic_photo = null) {
-        return $this->registerUser($full_name, $email, $password, $phone, 'artist', $nic_photo);
+    public function register($full_name, $email, $password, $phone, $nic_photo = null, $nic_number = null, $nic_photo_back = null) {
+        $created = $this->registerUser($full_name, $email, $password, $phone, 'artist', $nic_photo);
+        if (!$created) {
+            return false;
+        }
+
+        try {
+            // Some environments may not yet have these optional columns.
+            // If so, avoid failing the whole registration after user insert succeeds.
+            $this->db->query("SELECT COLUMN_NAME
+                              FROM information_schema.COLUMNS
+                              WHERE TABLE_SCHEMA = DATABASE()
+                                AND TABLE_NAME = 'users'
+                                AND COLUMN_NAME IN ('nic_number', 'nic_photo_back')");
+            $columns = $this->db->resultSet();
+
+            $existingColumns = [];
+            foreach ($columns as $column) {
+                if (isset($column->COLUMN_NAME)) {
+                    $existingColumns[] = $column->COLUMN_NAME;
+                }
+            }
+
+            $setParts = [];
+            if (in_array('nic_number', $existingColumns, true)) {
+                $setParts[] = 'nic_number = :nic_number';
+            }
+            if (in_array('nic_photo_back', $existingColumns, true)) {
+                $setParts[] = 'nic_photo_back = :nic_photo_back';
+            }
+
+            if (!empty($setParts)) {
+                $sql = "UPDATE users SET " . implode(', ', $setParts) . " WHERE email = :email AND role = 'artist'";
+                $this->db->query($sql);
+
+                if (in_array('nic_number', $existingColumns, true)) {
+                    $this->db->bind(':nic_number', $nic_number);
+                }
+                if (in_array('nic_photo_back', $existingColumns, true)) {
+                    $this->db->bind(':nic_photo_back', $nic_photo_back);
+                }
+                $this->db->bind(':email', $email);
+                $this->db->execute();
+            }
+
+            return true;
+        } catch (Exception $e) {
+            error_log('Error in M_artist::register extra NIC fields: ' . $e->getMessage());
+            // User insert already succeeded; don't show a false duplicate-email style failure.
+            return true;
+        }
     }
 
     public function get_artist_by_id($user_id) {

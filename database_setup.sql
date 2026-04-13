@@ -527,6 +527,7 @@ CREATE TABLE IF NOT EXISTS `provider_availability` (
   `provider_id` int NOT NULL,
   `available_date` date NOT NULL,
   `status` enum('available','booked') NOT NULL DEFAULT 'available',
+  `allow_more_bookings` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'Summary: Can more bookings be added to this date?',
   `description` text,
   `booked_for` varchar(255) DEFAULT NULL,
   `booking_details` text,

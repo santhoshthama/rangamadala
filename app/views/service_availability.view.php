@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($pageTitle) ? $pageTitle : 'Availability Calendar' ?> - Rangamadala</title>
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        crossorigin="anonymous" />
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_availability.css">
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
@@ -224,6 +221,7 @@
         let currentYear = new Date().getFullYear();
         let selectedDate = null;
         let currentViewingDate = null;
+        let dateBookingsCache = {};
 
         // Data storage - Load from backend
         let availableDatesData = <?= $availability_data ?? '{}' ?>;
@@ -273,6 +271,7 @@
                 const currentDate = new Date(currentYear, currentMonth, day);
                 currentDate.setHours(0, 0, 0, 0);
                 const dateString = `${currentMonth + 1}/${day}/${currentYear}`;
+                dayElement.setAttribute('data-date', dateString);
                 
                 // Check if date is in the past
                 if (currentDate < today) {
@@ -288,6 +287,10 @@
                         } else {
                             dayElement.title = dateData.description || 'Booked';
                         }
+
+                        const requestCount = (dateBookingsCache[dateString] || []).length;
+                        applyMultiRequestIndicator(dayElement, requestCount);
+
                         // Add click event to view details
                         dayElement.addEventListener('click', () => viewDateDetails(dateString));
                     } else {
@@ -353,6 +356,44 @@
             generateCalendarDays();
             selectedDate = null;
             document.getElementById('addDateBtn').disabled = true;
+        }
+
+        function applyMultiRequestIndicator(dayElement, requestCount) {
+            const existing = dayElement.querySelector('.multi-req-indicator');
+            if (existing) {
+                existing.remove();
+            }
+
+            if (requestCount <= 1) {
+                return;
+            }
+
+            dayElement.style.position = 'relative';
+
+            const badge = document.createElement('span');
+            badge.className = 'multi-req-indicator';
+            badge.textContent = `+${requestCount - 1}`;
+            badge.style.position = 'absolute';
+            badge.style.top = '2px';
+            badge.style.right = '2px';
+            badge.style.fontSize = '10px';
+            badge.style.lineHeight = '1';
+            badge.style.padding = '2px 4px';
+            badge.style.borderRadius = '999px';
+            badge.style.color = '#fff';
+            badge.style.fontWeight = '700';
+            badge.style.pointerEvents = 'none';
+
+            dayElement.appendChild(badge);
+            dayElement.title = (dayElement.title ? dayElement.title + ' | ' : '') + `${requestCount} requests`;
+        }
+
+        function updateCalendarMultiRequestIndicator(dateString, requestCount) {
+            document.querySelectorAll('.calendar-day[data-date]').forEach(cell => {
+                if (cell.getAttribute('data-date') === dateString) {
+                    applyMultiRequestIndicator(cell, requestCount);
+                }
+            });
         }
 
         // Modal functions
@@ -458,8 +499,10 @@
             
             if (dateData.status === 'booked') {
                 bookedForRow.style.display = 'block';
-                document.getElementById('bookedForText').textContent = dateData.booked_for;
                 document.getElementById('viewModalTitle').textContent = 'Booking Details';
+                
+                document.getElementById('bookedForText').textContent = dateData.booked_for || 'Booked';
+                
                 // Hide edit button for booked dates
                 document.getElementById('editBtn').style.display = 'none';
                 
@@ -551,6 +594,7 @@
                     } else {
                         serviceSpecificDiv.innerHTML = '';
                     }
+                    
                 } else {
                     requestDetailsSection.style.display = 'none';
                     // Manual booking without linked request: show description
@@ -637,57 +681,229 @@
         function updateAvailableDatesList() {
             const container = document.getElementById('availableDatesList');
             container.innerHTML = '';
-            
-            // Convert object to array and sort by date
-            const sortedDates = Object.keys(availableDatesData).sort((a, b) => new Date(a) - new Date(b));
-            
+
+            const sortedDates = Object.keys(availableDatesData).sort((a, b) => new Date(b) - new Date(a));
+
             if (sortedDates.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 20px;">No available dates added yet.</p>';
                 return;
             }
-            
+
             sortedDates.forEach(date => {
                 const dateData = availableDatesData[date];
                 const dateItem = document.createElement('div');
                 dateItem.className = 'date-item';
-                
-                let bookedInfoHTML = '';
-                const isAutoBooking = !!dateData.service_request_id;
-                
-                if (isAutoBooking) {
-                    // Automatically booked date (from service request)
-                    bookedInfoHTML = `
-                        <div class="booked-info">
-                            <strong>Booked For:</strong>
-                            <span>${dateData.booked_for}</span>
-                        </div>
-                    `;
-                } else {
-                    // Manually added date
-                    bookedInfoHTML = `
-                        <div class="booked-info">
-                            <strong>Booked For:</strong>
-                            <span>${dateData.booked_for || 'Manual Booking'}</span>
-                        </div>
-                    `;
-                }
-                
+                dateItem.id = `date-card-${date.replace(/\//g, '-')}`;
+
                 dateItem.innerHTML = `
                     <div class="date-item-header">
                         <span class="date-text">${date}</span>
                         <span class="status-badge ${dateData.status}">${dateData.status}</span>
                     </div>
-                    ${bookedInfoHTML}
+                    <div class="bookings-list" id="bookings-${date.replace(/\//g, '-')}"></div>
+                `;
+
+                container.appendChild(dateItem);
+
+                if (dateData.status === 'booked') {
+                    loadBookingsForDate(date, dateData);
+                } else {
+                    document.getElementById(`bookings-${date.replace(/\//g, '-')}`).innerHTML = `
+                        <div class="booked-info">
+                            <strong>Booked For:</strong>
+                            <span>${dateData.booked_for || 'Manual Booking'}</span>
+                        </div>
+                        <div class="date-actions">
+                            <button class="btn-small btn-view" onclick="viewDateDetails('${date}')">View Details</button>
+                            <button class="btn-small btn-remove" onclick="removeDate('${date}')">Remove</button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function loadBookingsForDate(date, dateData) {
+            const parts = date.split('/');
+            const dbDate = `${parts[2]}-${String(parts[0]).padStart(2, '0')}-${String(parts[1]).padStart(2, '0')}`;
+            const container = document.getElementById(`bookings-${date.replace(/\//g, '-')}`);
+
+            if (!container) return;
+            container.innerHTML = '<div class="booked-info"><span>Loading bookings...</span></div>';
+
+            fetch('<?= ROOT ?>/ServiceProviderRequest/getOverlappingBookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ start_date: dbDate, end_date: dbDate })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.bookings) && data.bookings.length > 0) {
+                    dateBookingsCache[date] = data.bookings;
+                    updateCalendarMultiRequestIndicator(date, data.bookings.length);
+                    let html = '';
+                    data.bookings.forEach(booking => {
+                        const bookingTitle = `${booking.requester_name || 'Unknown'} - ${booking.drama_name || '-'}`;
+                        html += `
+                            <div class="booked-info">
+                                <strong>Booked For:</strong>
+                                <span>${bookingTitle}</span>
+                            </div>
+                            <div class="date-actions">
+                                <button class="btn-small btn-view" onclick="viewBookingDetails('${date}', ${booking.id})">View Details</button>
+                                <button class="btn-small btn-remove" onclick="removeBookingRequest(${booking.id}, '${date}')">Remove</button>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    dateBookingsCache[date] = [];
+                    updateCalendarMultiRequestIndicator(date, 0);
+                    container.innerHTML = `
+                        <div class="booked-info">
+                            <strong>Booked For:</strong>
+                            <span>${dateData.booked_for || 'Booked'}</span>
+                        </div>
+                        <div class="date-actions">
+                            <button class="btn-small btn-view" onclick="viewDateDetails('${date}')">View Details</button>
+                            <button class="btn-small btn-remove" onclick="removeDate('${date}')">Remove</button>
+                        </div>
+                    `;
+                }
+            })
+            .catch(() => {
+                dateBookingsCache[date] = [];
+                updateCalendarMultiRequestIndicator(date, 0);
+                container.innerHTML = `
+                    <div class="booked-info">
+                        <strong>Booked For:</strong>
+                        <span>${dateData.booked_for || 'Booked'}</span>
+                    </div>
                     <div class="date-actions">
-                        ${dateData.status === 'available' 
-                            ? `<button onclick="showBookingModal('${date}')"></button>` 
-                            : ''}
                         <button class="btn-small btn-view" onclick="viewDateDetails('${date}')">View Details</button>
                         <button class="btn-small btn-remove" onclick="removeDate('${date}')">Remove</button>
                     </div>
                 `;
-                
-                container.appendChild(dateItem);
+            });
+        }
+
+        function viewBookingDetails(dateString, requestId) {
+            const bookings = dateBookingsCache[dateString] || [];
+            const booking = bookings.find(b => Number(b.id) === Number(requestId));
+            if (!booking) {
+                showMessage('Booking details not found', 'error');
+                return;
+            }
+
+            currentViewingDate = dateString;
+            document.getElementById('viewDateText').textContent = dateString;
+            const statusBadge = document.getElementById('viewStatusBadge');
+            statusBadge.textContent = 'booked';
+            statusBadge.className = 'status-badge booked';
+
+            document.getElementById('bookedForRow').style.display = 'block';
+            document.getElementById('bookedForText').textContent = `${booking.requester_name || 'Unknown'} - ${booking.drama_name || '-'}`;
+            document.getElementById('viewModalTitle').textContent = 'Booking Details';
+            document.getElementById('editBtn').style.display = 'none';
+            document.getElementById('viewDescriptionRow').style.display = 'none';
+            document.getElementById('requestDetailsSection').style.display = 'block';
+
+            document.getElementById('requesterNameText').textContent = booking.requester_name || 'N/A';
+            document.getElementById('requesterEmailText').textContent = booking.requester_email || 'N/A';
+            document.getElementById('requesterPhoneText').textContent = booking.requester_phone || 'N/A';
+
+            const dramaNameRow = document.getElementById('dramaNameRow');
+            if (booking.drama_name) {
+                dramaNameRow.style.display = 'block';
+                document.getElementById('dramaNameText').textContent = booking.drama_name;
+            } else {
+                dramaNameRow.style.display = 'none';
+            }
+
+            document.getElementById('serviceTypeText').textContent = booking.service_type || 'N/A';
+
+            const serviceRequiredRow = document.getElementById('serviceRequiredRow');
+            if (booking.service_required) {
+                serviceRequiredRow.style.display = 'block';
+                document.getElementById('serviceRequiredText').textContent = booking.service_required;
+            } else {
+                serviceRequiredRow.style.display = 'none';
+            }
+
+            const budgetRow = document.getElementById('budgetRow');
+            if (booking.budget) {
+                budgetRow.style.display = 'block';
+                document.getElementById('budgetText').textContent = 'Rs ' + parseFloat(booking.budget).toFixed(2);
+            } else {
+                budgetRow.style.display = 'none';
+            }
+
+            const dateRangeRow = document.getElementById('dateRangeRow');
+            if (booking.start_date && booking.end_date) {
+                dateRangeRow.style.display = 'block';
+                document.getElementById('dateRangeText').textContent = `${booking.start_date} to ${booking.end_date}`;
+            } else {
+                dateRangeRow.style.display = 'none';
+            }
+
+            const requestNotesRow = document.getElementById('requestNotesRow');
+            if (booking.notes) {
+                requestNotesRow.style.display = 'block';
+                document.getElementById('requestNotesText').textContent = booking.notes;
+            } else {
+                requestNotesRow.style.display = 'none';
+            }
+
+            const serviceSpecificDiv = document.getElementById('serviceSpecificDetails');
+            if (booking.service_details && Object.keys(booking.service_details).length > 0) {
+                let detailsHTML = '<div style="margin-top: 15px;"><strong>Service-Specific Details:</strong><div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">';
+                for (const [key, value] of Object.entries(booking.service_details)) {
+                    if (key === 'uploaded_files' || !value) continue;
+                    const formattedKey = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                    detailsHTML += `<p style="margin: 5px 0;"><strong>${formattedKey}:</strong> ${value}</p>`;
+                }
+                if (booking.service_details.uploaded_files && Array.isArray(booking.service_details.uploaded_files) && booking.service_details.uploaded_files.length > 0) {
+                    detailsHTML += '<p style="margin: 10px 0 5px 0;"><strong>Uploaded Files:</strong></p>';
+                    booking.service_details.uploaded_files.forEach(file => {
+                        detailsHTML += `<p style="margin: 3px 0 3px 15px;">• <a href="<?= ROOT ?>/${file.relative_path}" target="_blank">View ${file.original_name}</a></p>`;
+                    });
+                }
+                detailsHTML += '</div></div>';
+                serviceSpecificDiv.innerHTML = detailsHTML;
+            } else {
+                serviceSpecificDiv.innerHTML = '';
+            }
+
+            document.getElementById('viewModalOverlay').classList.add('active');
+        }
+
+        function removeBookingRequest(requestId, dateString) {
+            if (!confirm('Are you sure you want to remove this booking request?')) {
+                return;
+            }
+
+            fetch('<?= ROOT ?>/ServiceRequests/updateStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    id: requestId,
+                    status: 'cancelled',
+                    reason: 'Cancelled from availability calendar'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Booking removed', 'success');
+                    loadBookingsForDate(dateString, availableDatesData[dateString] || {});
+                    setTimeout(() => {
+                        generateCalendarDays();
+                    }, 300);
+                } else {
+                    showMessage(data.error || 'Failed to remove booking', 'error');
+                }
+            })
+            .catch(() => {
+                showMessage('An error occurred while removing booking', 'error');
             });
         }
 

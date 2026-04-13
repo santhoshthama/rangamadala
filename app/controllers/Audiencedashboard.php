@@ -2,10 +2,21 @@
 class Audiencedashboard {
     use Controller;
     protected $dramaModel = null;
+    protected $bookingModel = null;
+    protected $classModel = null;
+    protected $payHereHelper = null;
 
     public function __construct()
     {
         $this->dramaModel = $this->getModel("M_drama");
+        $this->bookingModel = $this->getModel("M_audience_show_booking");
+        $this->classModel = $this->getModel("M_class");
+        try {
+            $this->payHereHelper = new PayHereHelper();
+        } catch (Throwable $e) {
+            $this->payHereHelper = null;
+            error_log('Audiencedashboard PayHereHelper init failed: ' . $e->getMessage());
+        }
     }
 
     public function index(){
@@ -16,7 +27,7 @@ class Audiencedashboard {
         }
 
         // Check if user has audience role
-        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'audience') {
+        if ($_SESSION['role'] !== 'audience') {
             header("Location: " . ROOT . "/Home");
             exit;
         }
@@ -25,12 +36,125 @@ class Audiencedashboard {
         $data = [
             'dramas' => $this->dramaModel->getAllDramas(),
             'categories' => $this->dramaModel->getAllCategories(),
-            'total_dramas' => 0
+            'total_dramas' => 0,
+            'my_showings' => [],
+            'classes' => [],
+            'my_classes' => []
         ];
 
         $data['total_dramas'] = count($data['dramas']);
+        if ($this->bookingModel) {
+            $data['my_showings'] = $this->bookingModel->getBookingsByAudience((int)$_SESSION['user_id']);
+        }
+
+        if ($this->classModel) {
+            $data['classes'] = $this->classModel->getPublishedClasses();
+            $data['my_classes'] = $this->classModel->getEnrolledClassesByUser((int)$_SESSION['user_id']);
+        }
 
         $this->view('audiencedashboard', $data);
+    }
+
+    public function enroll_class()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: " . ROOT . "/Login");
+            exit;
+        }
+
+        if (($_SESSION['role'] ?? '') !== 'audience') {
+            header("Location: " . ROOT . "/Home");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ROOT . '/audiencedashboard#classes');
+            exit;
+        }
+
+        $_SESSION['error_message'] = 'Complete class payment first to enroll.';
+        header('Location: ' . ROOT . '/audiencedashboard#classes');
+        exit;
+    }
+
+    public function start_class_payment()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'audience')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+
+        $classId = isset($_POST['class_id']) ? (int)$_POST['class_id'] : 0;
+        if ($classId <= 0 || !$this->classModel || !$this->payHereHelper) {
+            echo json_encode(['success' => false, 'error' => 'Invalid class payment request']);
+            exit;
+        }
+
+        $paymentOrder = $this->classModel->createEnrollmentPaymentOrder($classId, (int)$_SESSION['user_id'], 'audience', true);
+        if (!$paymentOrder['success']) {
+            echo json_encode(['success' => false, 'error' => $paymentOrder['message'] ?? 'Unable to initialize class payment']);
+            exit;
+        }
+
+        $orderId = (string)$paymentOrder['order_id'];
+        $amount = number_format((float)($paymentOrder['amount'] ?? 0), 2, '.', '');
+        $hash = $this->payHereHelper->generateHash($orderId, $amount);
+        $class = $paymentOrder['class'] ?? null;
+
+        echo json_encode([
+            'success' => true,
+            'order_id' => $orderId,
+            'amount' => $amount,
+            'hash' => $hash,
+            'title' => $class->title ?? 'Drama Class',
+            'merchant_id' => $this->payHereHelper->getConfig('merchant_id'),
+            'sandbox' => (bool)$this->payHereHelper->getConfig('sandbox', false),
+            'return_url' => ROOT . '/audiencedashboard/class_payment_return?order_id=' . rawurlencode($orderId),
+            'cancel_url' => ROOT . '/audiencedashboard#classes',
+            'notify_url' => ROOT . '/audiencedashboard/class_payment_notify',
+        ]);
+        exit;
+    }
+
+    public function class_payment_return()
+    {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'audience')) {
+            header('Location: ' . ROOT . '/Login');
+            exit;
+        }
+
+        $orderId = trim((string)($_GET['order_id'] ?? ''));
+        if ($orderId === '' || !$this->classModel) {
+            $_SESSION['error_message'] = 'Invalid class payment return details.';
+            header('Location: ' . ROOT . '/audiencedashboard#classes');
+            exit;
+        }
+
+        $result = $this->classModel->completeEnrollmentPayment($orderId, (int)$_SESSION['user_id'], 'audience', true);
+        if ($result['success']) {
+            $_SESSION['success_message'] = $result['message'];
+        } else {
+            $_SESSION['error_message'] = $result['message'];
+        }
+
+        header('Location: ' . ROOT . '/audiencedashboard#classes');
+        exit;
+    }
+
+    public function class_payment_notify()
+    {
+        http_response_code(200);
+        echo 'OK';
+        exit;
     }
 }
 ?>

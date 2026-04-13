@@ -34,8 +34,8 @@ $currentImageLabel = $user && !empty($user->profile_image)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artist Profile</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<style>
         :root {
             --brand: #ba8e23;
             --brand-strong: #a0781e;
@@ -351,7 +351,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
 <body>
     <div class="page-wrapper">
         <a class="back-link" href="<?= ROOT ?>/artistdashboard">
-            <i class="fas fa-arrow-left"></i>
+            <i class="bx bx-arrow-left"></i>
             <span>Back to Dashboard</span>
         </a>
 
@@ -361,10 +361,10 @@ $currentImageLabel = $user && !empty($user->profile_image)
 
                 <div>
                     <h2><?= $user ? esc($user->full_name ?? 'Artist') : 'Artist' ?></h2>
-                    <p><i class="fas fa-envelope"></i> <?= $user ? esc($user->email ?? 'N/A') : 'N/A' ?></p>
-                    <p><i class="fas fa-phone"></i> <?= $user ? esc($user->phone ?? 'N/A') : 'N/A' ?></p>
+                    <p><i class="bx bx-envelope"></i> <?= $user ? esc($user->email ?? 'N/A') : 'N/A' ?></p>
+                    <p><i class="bx bx-phone"></i> <?= $user ? esc($user->phone ?? 'N/A') : 'N/A' ?></p>
                     <?php if ($user && !empty($user->location)): ?>
-                    <p><i class="fas fa-map-marker-alt"></i> <?= esc($user->location) ?></p>
+                    <p><i class="bx bx-map-marker-alt"></i> <?= esc($user->location) ?></p>
                     <?php endif; ?>
 
                     <div class="summary-item">
@@ -375,7 +375,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
                     <?php if ($nicDownload): ?>
                         <div class="summary-actions">
                             <a href="<?= esc($nicDownload) ?>" target="_blank" rel="noopener">
-                                <i class="fas fa-id-card"></i>
+                                <i class="bx bx-id-card"></i>
                                 View NIC Upload
                             </a>
                         </div>
@@ -390,7 +390,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
                 <?php if (!empty($success)): ?>
                     <div class="alerts">
                         <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> <?= esc($success) ?>
+                            <i class="bx bx-check-circle"></i> <?= esc($success) ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -399,7 +399,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
                     <div class="alerts">
                         <?php foreach ($errors as $error): ?>
                             <div class="alert alert-error">
-                                <i class="fas fa-exclamation-triangle"></i> <?= esc($error) ?>
+                                <i class="bx bx-exclamation-triangle"></i> <?= esc($error) ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -445,7 +445,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
                         <label>Profile Image</label>
                         <div class="file-input">
                             <label for="profile_image">
-                                <i class="fas fa-upload"></i>
+                                <i class="bx bx-upload"></i>
                                 <span>Upload new image</span>
                             </label>
                             <input id="profile_image" name="profile_image" type="file" accept="image/*">
@@ -455,7 +455,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
 
                     <div class="form-actions">
                         <button type="submit">
-                            <i class="fas fa-save"></i>
+                            <i class="bx bx-save"></i>
                             Save Changes
                         </button>
                     </div>
