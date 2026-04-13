@@ -4,6 +4,7 @@ class Audiencedashboard {
     protected $dramaModel = null;
     protected $bookingModel = null;
     protected $classModel = null;
+    protected $audienceModel = null;
     protected $payHereHelper = null;
 
     public function __construct()
@@ -11,6 +12,7 @@ class Audiencedashboard {
         $this->dramaModel = $this->getModel("M_drama");
         $this->bookingModel = $this->getModel("M_audience_show_booking");
         $this->classModel = $this->getModel("M_class");
+        $this->audienceModel = $this->getModel("M_audience");
         try {
             $this->payHereHelper = new PayHereHelper();
         } catch (Throwable $e) {
@@ -39,17 +41,29 @@ class Audiencedashboard {
             'total_dramas' => 0,
             'my_showings' => [],
             'classes' => [],
-            'my_classes' => []
+            'my_classes' => [],
+            'showing_payments' => [],
+            'class_payments' => [],
+            'dashboard_profile_image' => ROOT . '/uploads/profile_images/default_user.png'
         ];
 
         $data['total_dramas'] = count($data['dramas']);
         if ($this->bookingModel) {
             $data['my_showings'] = $this->bookingModel->getBookingsByAudience((int)$_SESSION['user_id']);
+            $data['showing_payments'] = $this->bookingModel->getShowingPaymentsByAudience((int)$_SESSION['user_id']);
         }
 
         if ($this->classModel) {
             $data['classes'] = $this->classModel->getPublishedClasses();
             $data['my_classes'] = $this->classModel->getEnrolledClassesByUser((int)$_SESSION['user_id']);
+            $data['class_payments'] = $this->classModel->getEnrollmentPaymentsByUser((int)$_SESSION['user_id'], 'audience');
+        }
+
+        if ($this->audienceModel) {
+            $profileImage = $this->audienceModel->getProfileImage((int)$_SESSION['user_id']);
+            if (!empty($profileImage)) {
+                $data['dashboard_profile_image'] = ROOT . '/uploads/profile_images/' . rawurlencode($profileImage);
+            }
         }
 
         $this->view('audiencedashboard', $data);

@@ -77,7 +77,7 @@ class AudienceProfileEdit
                 } elseif ($_FILES['profile_image']['size'] > $max_size) {
                     $errors[] = "Image size must be less than 5MB";
                 } else {
-                    $upload_dir = "app/uploads/profile_images/";
+                    $upload_dir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . "public" . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . "profile_images" . DIRECTORY_SEPARATOR;
                     if (!is_dir($upload_dir)) {
                         mkdir($upload_dir, 0777, true);
                     }

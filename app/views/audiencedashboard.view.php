@@ -1,3 +1,6 @@
+<?php
+$dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/profile_images/default_user.png');
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -595,6 +598,78 @@
       outline-offset: 2px;
     }
 
+    #payments .payments-subtabs {
+      display: flex;
+      gap: 0;
+      margin: 10px 12px 18px;
+      flex-wrap: wrap;
+      background: linear-gradient(180deg, #f6f5f2 0%, #efede8 100%);
+      border: 1px solid #ddd9cf;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.05);
+    }
+
+    #payments .payments-subtab-btn {
+      border: none;
+      background: transparent;
+      color: #6c7484;
+      padding: 14px 18px;
+      min-height: 56px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      line-height: 1;
+      border-bottom: 3px solid transparent;
+      border-right: 1px solid #e2dfd7;
+    }
+
+    #payments .payments-subtab-btn:last-child {
+      border-right: none;
+    }
+
+    #payments .payments-subtab-btn:hover {
+      background: rgba(186, 142, 35, 0.1);
+      color: #8c6c20;
+    }
+
+    #payments .payments-subtab-btn.active {
+      background: linear-gradient(180deg, #f5efe1 0%, #efe6d2 100%);
+      color: #b48218;
+      border-bottom-color: #b48218;
+      box-shadow: inset 0 -1px 0 rgba(180, 130, 24, 0.12);
+    }
+
+    #payments .payments-subtab-panel {
+      display: none;
+      padding: 0 12px 12px;
+    }
+
+    #payments .payments-subtab-panel.active {
+      display: block;
+    }
+
+    #payments .payment-amount {
+      font-weight: 700;
+      color: #6e5214;
+    }
+
+    @media (max-width: 768px) {
+      #payments .payments-subtabs {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      #payments .payments-subtab-btn {
+        width: 100%;
+        border-right: none;
+      }
+    }
+
     @media (max-width: 768px) {
       #browse .dramas-grid {
         grid-template-columns: 1fr;
@@ -646,33 +721,33 @@
       <nav class="dashboard-nav">
         <div class="dashboard-nav-section">
 
-          <!-- Overview -->
+          <!-- Dashboard -->
           <a href="#" class="dashboard-nav-item active" data-view="overview">
             <i class='bx bxs-home nav-icon'></i>
-            <span class="nav-label">Overview</span>
+            <span class="nav-label">Dashboard</span>
           </a>
 
           <!-- Browse Dramas / Events -->
           <a href="#" class="dashboard-nav-item" data-view="browse">
-            <i class='bx bxs-movie-play nav-icon'></i>
+            <i class='bx bx-camera-movie nav-icon'></i>
             <span class="nav-label">Browse Dramas</span>
           </a>
 
           <!-- My Showings -->
           <a href="#" class="dashboard-nav-item" data-view="my-showings">
-            <i class='bx bxs-calendar-event nav-icon'></i>
+            <i class='bx bx-calendar nav-icon'></i>
             <span class="nav-label">My Showings</span>
           </a>
 
           <!-- Payment History -->
           <a href="#" class="dashboard-nav-item" data-view="classes">
-            <i class='bx bxs-graduation nav-icon'></i>
+            <i class='bx bx-book-reader nav-icon'></i>
             <span class="nav-label">Classes</span>
           </a>
 
           <!-- Payment History -->
           <a href="#" class="dashboard-nav-item" data-view="payments">
-            <i class='bx bxs-receipt nav-icon'></i>
+            <i class='bx bx-receipt nav-icon'></i>
             <span class="nav-label">Payment History</span>
           </a>
 
@@ -697,7 +772,7 @@
           <button class="dashboard-sidebar-toggle">
             <span class="material-symbols-rounded">menu</span>
           </button>
-          <h1 class="dashboard-header-title" id="dashboardTitle">Overview</h1>
+          <h1 class="dashboard-header-title" id="dashboardTitle">Dashboard</h1>
         </div>
 
         <div class="dashboard-header-actions">
@@ -709,7 +784,8 @@
             <div class="user-menu-trigger" id="user-menu-trigger">
               <div class="user-avatar-small">
                 <img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face&auto=format"
+                  src="<?= htmlspecialchars($dashboardProfileImage) ?>"
+                  onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.png'"
                   alt="User Avatar" />
               </div>
             </div>
@@ -732,7 +808,7 @@
       <!-- Dashboard Views -->
       <div class="dashboard-content">
 
-        <!-- Overview -->
+        <!-- Dashboard -->
         <div class="dashboard-view active" id="overview">
           <div class="stats-grid">
             <div class="stat-card">
@@ -753,7 +829,7 @@
               <div class="stat-card-header">
                 <div class="stat-card-title">Upcoming Shows</div>
                 <div class="stat-card-icon info">
-                  <span class="material-symbols-rounded">event</span>
+                  <i class='bx bx-calendar'></i>
                 </div>
               </div>
               <div class="stat-card-value">2</div>
@@ -763,7 +839,7 @@
               <div class="stat-card-header">
                 <div class="stat-card-title">Watched Dramas</div>
                 <div class="stat-card-icon success">
-                  <span class="material-symbols-rounded">done_all</span>
+                  <i class='bx bx-check-double'></i>
                 </div>
               </div>
               <div class="stat-card-value">6</div>
@@ -773,7 +849,7 @@
               <div class="stat-card-header">
                 <div class="stat-card-title">Notifications</div>
                 <div class="stat-card-icon warning">
-                  <span class="material-symbols-rounded">notifications</span>
+                  <i class='bx bx-bell'></i>
                 </div>
               </div>
               <div class="stat-card-value">3</div>
@@ -877,6 +953,10 @@
                         <div class="info-item">
                           <span class="material-symbols-rounded">person</span>
                           <span>Producer: <?= htmlspecialchars($drama->owner_name ?? 'N/A') ?></span>
+                        </div>
+                        <div class="info-item">
+                          <span class="material-symbols-rounded">call</span>
+                          <span>Producer Contact: <?= htmlspecialchars(!empty($drama->producer_phone) ? $drama->producer_phone : 'Not available') ?></span>
                         </div>
                         <div class="info-item">
                           <span class="material-symbols-rounded">category</span>
@@ -1081,12 +1161,106 @@
 
         <!-- Payment History -->
         <div class="dashboard-view" id="payments">
-          <div class="empty-state">
-            <div class="empty-state-icon">
-              <span class="material-symbols-rounded">receipt_long</span>
+          <div class="dashboard-table-container">
+            <div class="dashboard-table-header" style="margin-bottom: 18px;">
+              <h3 class="dashboard-table-title">Payment History</h3>
             </div>
-            <h3 class="empty-state-title">Payment History</h3>
-            <p class="empty-state-description">View your booking payment records.</p>
+
+            <div class="payments-subtabs" role="tablist" aria-label="Payment history tabs">
+              <button type="button" class="payments-subtab-btn active" data-payment-tab="showings" role="tab" aria-selected="true">
+                <i class="bx bx-calendar"></i> Showings Payments (<?= count($data['showing_payments'] ?? []) ?>)
+              </button>
+              <button type="button" class="payments-subtab-btn" data-payment-tab="classes" role="tab" aria-selected="false">
+                <i class="bx bx-book-reader"></i> Classes Payments (<?= count($data['class_payments'] ?? []) ?>)
+              </button>
+            </div>
+
+            <div class="payments-subtab-panel active" data-payment-panel="showings" role="tabpanel">
+              <h4 style="margin-bottom: 12px; color: #4f3a12;">Showing Payments</h4>
+              <?php if (!empty($data['showing_payments'])): ?>
+                <table class="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>Drama</th>
+                      <th>Order ID</th>
+                      <th>Amount</th>
+                      <th>Paid At</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($data['showing_payments'] as $payment): ?>
+                      <?php
+                        $showingPriceText = trim((string)($payment->showing_prices ?? ''));
+                        if ($showingPriceText === '' && !empty($payment->ticket_price)) {
+                          $showingPriceText = 'LKR ' . number_format((float)$payment->ticket_price, 2);
+                        }
+
+                        $paidAtValue = !empty($payment->paid_at) ? date('M d, Y h:i A', strtotime($payment->paid_at)) : 'Pending verification';
+                        $statusRaw = strtolower((string)($payment->booking_status ?? 'confirmed'));
+                        $statusClass = in_array($statusRaw, ['confirmed', 'completed', 'watched', 'attended'], true) ? 'success' : 'warning';
+                      ?>
+                      <tr>
+                        <td><?= htmlspecialchars($payment->title ?? 'Drama') ?></td>
+                        <td><?= htmlspecialchars($payment->payhere_order_id ?? 'N/A') ?></td>
+                        <td class="payment-amount"><?= htmlspecialchars($showingPriceText !== '' ? $showingPriceText : 'N/A') ?></td>
+                        <td><?= htmlspecialchars($paidAtValue) ?></td>
+                        <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span></td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              <?php else: ?>
+                <div class="empty-state">
+                  <div class="empty-state-icon">
+                    <span class="material-symbols-rounded">receipt_long</span>
+                  </div>
+                  <h3 class="empty-state-title">No Showing Payments Yet</h3>
+                  <p class="empty-state-description">Payments for approved show requests will appear here.</p>
+                </div>
+              <?php endif; ?>
+            </div>
+
+            <div class="payments-subtab-panel" data-payment-panel="classes" role="tabpanel">
+              <h4 style="margin-bottom: 12px; color: #4f3a12;">Class Payments</h4>
+              <?php if (!empty($data['class_payments'])): ?>
+                <table class="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>Class</th>
+                      <th>Order ID</th>
+                      <th>Amount</th>
+                      <th>Paid At</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($data['class_payments'] as $payment): ?>
+                      <?php
+                        $paidAtValue = !empty($payment->paid_at) ? date('M d, Y h:i A', strtotime($payment->paid_at)) : 'Pending verification';
+                        $statusRaw = strtolower((string)($payment->status ?? 'completed'));
+                        $statusClass = $statusRaw === 'completed' ? 'success' : 'warning';
+                      ?>
+                      <tr>
+                        <td><?= htmlspecialchars($payment->class_title ?? 'Class') ?></td>
+                        <td><?= htmlspecialchars($payment->order_id ?? 'N/A') ?></td>
+                        <td class="payment-amount">LKR <?= number_format((float)($payment->amount ?? 0), 2) ?></td>
+                        <td><?= htmlspecialchars($paidAtValue) ?></td>
+                        <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span></td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              <?php else: ?>
+                <div class="empty-state">
+                  <div class="empty-state-icon">
+                    <span class="material-symbols-rounded">receipt_long</span>
+                  </div>
+                  <h3 class="empty-state-title">No Class Payments Yet</h3>
+                  <p class="empty-state-description">Completed class enrollment payments will appear here.</p>
+                </div>
+              <?php endif; ?>
+            </div>
           </div>
         </div>
 
@@ -1330,6 +1504,36 @@
       });
     }
 
+    function initAudiencePaymentTabs() {
+      const paymentsView = document.getElementById('payments');
+      if (!paymentsView) {
+        return;
+      }
+
+      const buttons = paymentsView.querySelectorAll('.payments-subtab-btn');
+      const panels = paymentsView.querySelectorAll('.payments-subtab-panel');
+
+      if (!buttons.length || !panels.length) {
+        return;
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', function () {
+          const target = button.getAttribute('data-payment-tab');
+
+          buttons.forEach((btn) => {
+            const isActive = btn === button;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          });
+
+          panels.forEach((panel) => {
+            panel.classList.toggle('active', panel.getAttribute('data-payment-panel') === target);
+          });
+        });
+      });
+    }
+
     // Toast notification handler
     function closeToast() {
       const toast = document.getElementById('successToast');
@@ -1342,6 +1546,7 @@
     // Auto-hide toast after 4 seconds
     window.addEventListener('load', function() {
       initAudienceClassesTabs();
+      initAudiencePaymentTabs();
 
       const toast = document.getElementById('successToast');
       if (toast) {

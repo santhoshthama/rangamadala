@@ -4,7 +4,7 @@ if(isset($data) && is_array($data)) {
     extract($data);
 }
 
-$profileImageSrc = ROOT . '/uploads/profile_images/default_user.jpg';
+$profileImageSrc = ROOT . '/uploads/profile_images/default_user.png';
 if (isset($user->profile_image) && !empty($user->profile_image)) {
     $storedValue = str_replace('\\', '/', $user->profile_image);
     if (strpos($storedValue, '/') !== false) {
@@ -315,6 +315,64 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
         #my-showings-tab .classes-subtab-panel.active {
             display: block;
         }
+
+        #my-showings-tab .accepted-showings-toolbar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+            padding: 12px;
+            border: 1px solid #ead7a4;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #fffefb 0%, #fff8e9 100%);
+        }
+
+        #my-showings-tab .accepted-showings-toolbar label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #7a6121;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        #my-showings-tab .accepted-showings-toolbar input {
+            width: 100%;
+            border: 1px solid #e1cb95;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #fffefb;
+            color: #2f2f2f;
+            font-size: 14px;
+        }
+
+        #my-showings-tab .accepted-showings-toolbar .btn {
+            align-self: end;
+            height: 42px;
+        }
+
+        #my-showings-tab .accepted-showings-empty {
+            display: none;
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px dashed #d9c28a;
+            color: #7a6121;
+            background: rgba(255, 248, 233, 0.8);
+            font-size: 14px;
+        }
+
+        #my-showings-tab .pending-slot-conflict {
+            display: none;
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border-left: 3px solid #f59e0b;
+            background: rgba(245, 158, 11, 0.12);
+            color: #92400e;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -391,7 +449,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                 <div class="user-menu" id="userMenu">
                     <div class="user-menu-trigger" id="user-menu-trigger">
                         <div class="user-avatar-small">
-                            <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.jpg'">
+                            <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.png'">
                         </div>
                     </div>
                     <div class="user-menu-dropdown">
@@ -803,6 +861,9 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                     $requestedSchedule = trim((string)($requestDetails['show_datetime'] ?? ''));
                                     $requestedStartRaw = trim((string)($requestDetails['request_start_at'] ?? ''));
                                     $requestedEndRaw = trim((string)($requestDetails['request_end_at'] ?? ''));
+                                    $requestSenderName = trim((string)($requestDetails['request_sender_name'] ?? ($show_request->audience_name ?? 'Audience User')));
+                                    $requestContactPhone = trim((string)($requestDetails['request_contact_phone'] ?? ($show_request->audience_phone ?? 'Not provided')));
+                                    $requestContactEmail = trim((string)($requestDetails['request_contact_email'] ?? ($show_request->audience_email ?? 'Not provided')));
                                     $requestedStart = $requestedStartRaw !== '' ? date('M d, Y g:i A', strtotime($requestedStartRaw)) : 'Not specified';
                                     $requestedEnd = $requestedEndRaw !== '' ? date('M d, Y g:i A', strtotime($requestedEndRaw)) : 'Not specified';
                                     $requestedShowDate = $requestedShowDateRaw !== '' ? date('M d, Y', strtotime($requestedShowDateRaw)) : 'Not specified';
@@ -819,10 +880,13 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                     if ($requestedSchedule === '') {
                                         $requestedSchedule = 'Not specified';
                                     }
+                                    $pendingShowDateForMatch = $requestedShowDateRaw !== '' ? date('Y-m-d', strtotime($requestedShowDateRaw)) : '';
+                                    $pendingShowTimeForMatch = trim((string)($requestDetails['show_time_start'] ?? ($requestDetails['show_time'] ?? '')));
+                                    $pendingShowTimeEndForMatch = trim((string)($requestDetails['show_time_end'] ?? ''));
                                     $presentCount = (int)($requestDetails['present_count'] ?? 0);
                                     $requestNotes = trim((string)($requestDetails['request_notes'] ?? ''));
                                 ?>
-                                <div class="role-info-card">
+                                <div class="role-info-card pending-showing-card" data-show-date="<?= esc($pendingShowDateForMatch) ?>" data-show-start="<?= esc($pendingShowTimeForMatch) ?>" data-show-end="<?= esc($pendingShowTimeEndForMatch) ?>">
                                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 14px; gap: 12px;">
                                         <div>
                                             <h3 style="color: var(--brand); margin-bottom: 8px;"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
@@ -831,8 +895,12 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                         <span class="status-badge requested"><i class="bx bx-time"></i> Pending</span>
                                     </div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-map"></i> Requested Place:</span><span class="role-info-value"><?= esc($requestedVenue) ?></span></div>
+                                    <div class="role-info-item"><span class="role-info-label"><i class="bx bx-user"></i> Sender Name:</span><span class="role-info-value"><?= esc($requestSenderName !== '' ? $requestSenderName : 'Audience User') ?></span></div>
+                                    <div class="role-info-item"><span class="role-info-label"><i class="bx bx-phone"></i> Contact Phone:</span><span class="role-info-value"><?= esc($requestContactPhone !== '' ? $requestContactPhone : 'Not provided') ?></span></div>
+                                    <div class="role-info-item"><span class="role-info-label"><i class="bx bx-envelope"></i> Contact Email:</span><span class="role-info-value"><?= esc($requestContactEmail !== '' ? $requestContactEmail : 'Not provided') ?></span></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-calendar"></i> Show Date:</span><span class="role-info-value"><?= esc($requestedShowDate !== 'Not specified' ? $requestedShowDate : $requestedSchedule) ?></span></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-time-five"></i> Show Time:</span><span class="role-info-value"><?= esc($requestedShowTime) ?></span></div>
+                                    <div class="pending-slot-conflict" data-conflict-hint></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-group"></i> Expected Present Count:</span><span class="role-info-value"><?= $presentCount > 0 ? (int)$presentCount : 'Not specified' ?></span></div>
                                     <?php if ($requestNotes !== ''): ?>
                                         <div style="margin: 12px 0; padding: 12px; background: rgba(255,255,255,0.65); border-radius: 8px; border-left: 3px solid var(--brand);">
@@ -873,6 +941,26 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
 
                     <div class="classes-subtab-panel" data-showings-panel="accepted" role="tabpanel">
                     <?php if (!empty($show_requests_accepted)): ?>
+                        <div class="accepted-showings-toolbar">
+                            <div>
+                                <label for="accepted-filter-date">Filter by Date</label>
+                                <input type="date" id="accepted-filter-date" />
+                            </div>
+                            <div>
+                                <label for="accepted-filter-start-time">Filter by Start Time</label>
+                                <input type="time" id="accepted-filter-start-time" />
+                            </div>
+                            <div>
+                                <label for="accepted-filter-end-time">Filter by End Time</label>
+                                <input type="time" id="accepted-filter-end-time" />
+                            </div>
+                            <button type="button" class="btn btn-secondary" id="accepted-filter-clear">
+                                <i class="bx bx-reset"></i> Clear Filter
+                            </button>
+                        </div>
+                        <div class="accepted-showings-empty" id="accepted-showings-empty">
+                            No accepted showings found for the selected date/time filter.
+                        </div>
                         <div style="display: grid; gap: 16px; margin-bottom: 18px;">
                             <?php foreach ($show_requests_accepted as $show_request): ?>
                                 <?php
@@ -886,8 +974,14 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                     $requestedShowDateRaw = trim((string)($requestDetails['show_date'] ?? ''));
                                     $requestedShowDate = $requestedShowDateRaw !== '' ? date('M d, Y', strtotime($requestedShowDateRaw)) : 'Not specified';
                                     $requestedShowTime = trim((string)($requestDetails['show_time'] ?? 'Not specified'));
+                                    $requestSenderName = trim((string)($requestDetails['request_sender_name'] ?? ($show_request->audience_name ?? 'Audience User')));
+                                    $requestContactPhone = trim((string)($requestDetails['request_contact_phone'] ?? ($show_request->audience_phone ?? 'Not provided')));
+                                    $requestContactEmail = trim((string)($requestDetails['request_contact_email'] ?? ($show_request->audience_email ?? 'Not provided')));
+                                    $acceptedShowDateForMatch = $requestedShowDateRaw !== '' ? date('Y-m-d', strtotime($requestedShowDateRaw)) : '';
+                                    $acceptedShowTimeForMatch = trim((string)($requestDetails['show_time_start'] ?? ($requestDetails['show_time'] ?? '')));
+                                    $acceptedShowTimeEndForMatch = trim((string)($requestDetails['show_time_end'] ?? ''));
                                 ?>
-                                <div class="role-info-card">
+                                <div class="role-info-card accepted-showing-card" data-show-date="<?= esc($acceptedShowDateForMatch) ?>" data-show-start="<?= esc($acceptedShowTimeForMatch) ?>" data-show-end="<?= esc($acceptedShowTimeEndForMatch) ?>">
                                     <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
                                         <div>
                                             <h3 style="color: var(--brand); margin-bottom: 8px;"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
@@ -895,6 +989,9 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                         </div>
                                         <span class="status-badge success"><i class="bx bx-check-circle"></i> Accepted</span>
                                     </div>
+                                    <div class="role-info-item"><span class="role-info-label"><i class="bx bx-user"></i> Sender Name:</span><span class="role-info-value"><?= esc($requestSenderName !== '' ? $requestSenderName : 'Audience User') ?></span></div>
+                                    <div class="role-info-item"><span class="role-info-label"><i class="bx bx-phone"></i> Contact Phone:</span><span class="role-info-value"><?= esc($requestContactPhone !== '' ? $requestContactPhone : 'Not provided') ?></span></div>
+                                    <div class="role-info-item"><span class="role-info-label"><i class="bx bx-envelope"></i> Contact Email:</span><span class="role-info-value"><?= esc($requestContactEmail !== '' ? $requestContactEmail : 'Not provided') ?></span></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-calendar"></i> Show Date:</span><span class="role-info-value"><?= esc($requestedShowDate) ?></span></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-time-five"></i> Show Time:</span><span class="role-info-value"><?= esc($requestedShowTime !== '' ? $requestedShowTime : 'Not specified') ?></span></div>
                                 </div>
@@ -920,6 +1017,9 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                     $requestedShowDateRaw = trim((string)($requestDetails['show_date'] ?? ''));
                                     $requestedShowDate = $requestedShowDateRaw !== '' ? date('M d, Y', strtotime($requestedShowDateRaw)) : 'Not specified';
                                     $requestedShowTime = trim((string)($requestDetails['show_time'] ?? 'Not specified'));
+                                    $requestSenderName = trim((string)($requestDetails['request_sender_name'] ?? ($show_request->audience_name ?? 'Audience User')));
+                                    $requestContactPhone = trim((string)($requestDetails['request_contact_phone'] ?? ($show_request->audience_phone ?? 'Not provided')));
+                                    $requestContactEmail = trim((string)($requestDetails['request_contact_email'] ?? ($show_request->audience_email ?? 'Not provided')));
                                     $rejectionReason = trim((string)($show_request->rejection_reason ?? ''));
                                 ?>
                                 <div class="role-info-card" style="border-left: 4px solid #ef4444;">
@@ -930,6 +1030,9 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                         </div>
                                         <span class="status-badge danger"><i class="bx bx-x-circle"></i> Rejected</span>
                                     </div>
+                                    <div class="role-info-item"><span class="role-info-label"><i class="bx bx-user"></i> Sender Name:</span><span class="role-info-value"><?= esc($requestSenderName !== '' ? $requestSenderName : 'Audience User') ?></span></div>
+                                    <div class="role-info-item"><span class="role-info-label"><i class="bx bx-phone"></i> Contact Phone:</span><span class="role-info-value"><?= esc($requestContactPhone !== '' ? $requestContactPhone : 'Not provided') ?></span></div>
+                                    <div class="role-info-item"><span class="role-info-label"><i class="bx bx-envelope"></i> Contact Email:</span><span class="role-info-value"><?= esc($requestContactEmail !== '' ? $requestContactEmail : 'Not provided') ?></span></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-calendar"></i> Show Date:</span><span class="role-info-value"><?= esc($requestedShowDate) ?></span></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-time-five"></i> Show Time:</span><span class="role-info-value"><?= esc($requestedShowTime !== '' ? $requestedShowTime : 'Not specified') ?></span></div>
                                     <div style="margin-top: 12px; padding: 10px; background: rgba(239, 68, 68, 0.08); border-radius: 8px; border-left: 3px solid #ef4444;">
@@ -1278,6 +1381,160 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
             });
         }
 
+        function parseTimeToMinutes(value) {
+            let input = (value || '').trim();
+            if (!input) {
+                return null;
+            }
+
+            const rangeLeadingTime = input.match(/^(\d{1,2}:\d{2})(?:\s*(AM|PM))?/i);
+            if (rangeLeadingTime) {
+                const hhmm = rangeLeadingTime[1];
+                const meridiem = (rangeLeadingTime[2] || '').toUpperCase();
+                if (meridiem) {
+                    input = hhmm + ' ' + meridiem;
+                } else {
+                    input = hhmm;
+                }
+            }
+
+            const twentyFourHour = input.match(/^(\d{1,2}):(\d{2})$/);
+            if (twentyFourHour) {
+                const hh = parseInt(twentyFourHour[1], 10);
+                const mm = parseInt(twentyFourHour[2], 10);
+                if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+                    return (hh * 60) + mm;
+                }
+            }
+
+            const twelveHour = input.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+            if (twelveHour) {
+                let hh = parseInt(twelveHour[1], 10);
+                const mm = parseInt(twelveHour[2], 10);
+                const meridiem = twelveHour[3].toUpperCase();
+
+                if (hh === 12) {
+                    hh = 0;
+                }
+                if (meridiem === 'PM') {
+                    hh += 12;
+                }
+
+                if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+                    return (hh * 60) + mm;
+                }
+            }
+
+            return null;
+        }
+
+        function initAcceptedShowingsFilters() {
+            const acceptedPanel = document.querySelector('#my-showings-tab .classes-subtab-panel[data-showings-panel="accepted"]');
+            if (!acceptedPanel) {
+                return;
+            }
+
+            const cards = acceptedPanel.querySelectorAll('.accepted-showing-card');
+            const dateInput = acceptedPanel.querySelector('#accepted-filter-date');
+            const startTimeInput = acceptedPanel.querySelector('#accepted-filter-start-time');
+            const endTimeInput = acceptedPanel.querySelector('#accepted-filter-end-time');
+            const clearButton = acceptedPanel.querySelector('#accepted-filter-clear');
+            const emptyState = acceptedPanel.querySelector('#accepted-showings-empty');
+
+            if (!cards.length || !dateInput || !startTimeInput || !endTimeInput || !clearButton) {
+                return;
+            }
+
+            const applyAcceptedFilters = function () {
+                const selectedDate = dateInput.value;
+                const selectedStartMins = parseTimeToMinutes(startTimeInput.value);
+                const selectedEndMins = parseTimeToMinutes(endTimeInput.value);
+                let visibleCount = 0;
+
+                cards.forEach(function (card) {
+                    const cardDate = (card.getAttribute('data-show-date') || '').trim();
+                    const cardStartMins = parseTimeToMinutes(card.getAttribute('data-show-start') || '');
+                    const cardEndMins = parseTimeToMinutes(card.getAttribute('data-show-end') || '');
+
+                    const dateMatches = !selectedDate || (cardDate !== '' && cardDate === selectedDate);
+                    const startMatches = selectedStartMins === null || (cardStartMins !== null && cardStartMins === selectedStartMins);
+                    const endMatches = selectedEndMins === null || (cardEndMins !== null && cardEndMins === selectedEndMins);
+
+                    const shouldShow = dateMatches && startMatches && endMatches;
+                    card.style.display = shouldShow ? '' : 'none';
+                    if (shouldShow) {
+                        visibleCount += 1;
+                    }
+                });
+
+                if (emptyState) {
+                    emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+            };
+
+            dateInput.addEventListener('input', applyAcceptedFilters);
+            startTimeInput.addEventListener('input', applyAcceptedFilters);
+            endTimeInput.addEventListener('input', applyAcceptedFilters);
+            clearButton.addEventListener('click', function () {
+                dateInput.value = '';
+                startTimeInput.value = '';
+                endTimeInput.value = '';
+                applyAcceptedFilters();
+            });
+
+            applyAcceptedFilters();
+        }
+
+        function initPendingShowingConflicts() {
+            const acceptedCards = document.querySelectorAll('#my-showings-tab .accepted-showing-card');
+            const pendingCards = document.querySelectorAll('#my-showings-tab .pending-showing-card');
+
+            if (!acceptedCards.length || !pendingCards.length) {
+                return;
+            }
+
+            const acceptedSlots = [];
+            acceptedCards.forEach(function (card) {
+                acceptedSlots.push({
+                    date: (card.getAttribute('data-show-date') || '').trim(),
+                    startMinutes: parseTimeToMinutes(card.getAttribute('data-show-start') || ''),
+                    endMinutes: parseTimeToMinutes(card.getAttribute('data-show-end') || '')
+                });
+            });
+
+            pendingCards.forEach(function (card) {
+                const pendingDate = (card.getAttribute('data-show-date') || '').trim();
+                const pendingStartMinutes = parseTimeToMinutes(card.getAttribute('data-show-start') || '');
+                const pendingEndMinutes = parseTimeToMinutes(card.getAttribute('data-show-end') || '');
+                const hint = card.querySelector('[data-conflict-hint]');
+
+                if (!hint || pendingDate === '' || pendingStartMinutes === null) {
+                    return;
+                }
+
+                const matches = acceptedSlots.filter(function (slot) {
+                    if (slot.date === '' || slot.startMinutes === null) {
+                        return false;
+                    }
+
+                    if (slot.date !== pendingDate || slot.startMinutes !== pendingStartMinutes) {
+                        return false;
+                    }
+
+                    if (pendingEndMinutes !== null && slot.endMinutes !== null) {
+                        return slot.endMinutes === pendingEndMinutes;
+                    }
+
+                    return true;
+                }).length;
+
+                if (matches > 0) {
+                    hint.style.display = 'block';
+                    hint.innerHTML = '<i class="bx bx-error-circle"></i> This requested slot matches ' + matches + ' accepted showing(s).';
+                }
+            });
+        }
+
         function handleDirectorManage(dramaId) {
             const url = '<?=ROOT?>/director/dashboard?drama_id=' + dramaId;
             console.log('Director manage - Navigating to:', url);
@@ -1316,6 +1573,8 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
         updateShowingsOnlyMode();
         initArtistShowingsTabs();
         initShowRequestRejectForms();
+        initAcceptedShowingsFilters();
+        initPendingShowingConflicts();
     </script>
 </body>
 </html>

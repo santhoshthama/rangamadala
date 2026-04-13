@@ -26,7 +26,7 @@ $formatClassTimeRange = function ($startTime, $durationMinutes) {
     return $label;
 };
 
-$profileImageSrc = ROOT . '/uploads/profile_images/default_user.jpg';
+$profileImageSrc = ROOT . '/uploads/profile_images/default_user.png';
 if (isset($user->profile_image) && !empty($user->profile_image)) {
     $storedValue = str_replace('\\', '/', $user->profile_image);
     if (strpos($storedValue, '/') !== false) {
@@ -253,6 +253,83 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
             box-shadow: 0 8px 16px rgba(166, 125, 30, 0.25);
         }
 
+        #manage-tab .artists-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 18px;
+        }
+
+        #manage-tab .artist-card {
+            background: linear-gradient(180deg, #fffefb 0%, #fff8e9 100%);
+            border: 1px solid #e8cf97;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(186, 142, 35, 0.12);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        #manage-tab .artist-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(186, 142, 35, 0.2);
+        }
+
+        #manage-tab .artist-header {
+            background: linear-gradient(135deg, #ba8e23, #9b761d);
+            color: #fff;
+            padding: 16px 18px;
+        }
+
+        #manage-tab .artist-header .artist-name {
+            color: #fff;
+            margin: 0;
+            font-size: 32px;
+            line-height: 1.3;
+        }
+
+        #manage-tab .artist-header .artist-experience {
+            margin-top: 6px;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        #manage-tab .artist-body {
+            padding: 14px 16px;
+        }
+
+        #manage-tab .artist-footer {
+            display: flex;
+            gap: 10px;
+            padding: 12px 14px 14px;
+            border-top: 1px solid #ecd9ad;
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        #manage-tab .artist-footer form {
+            flex: 1;
+        }
+
+        #manage-tab .artist-footer .btn-secondary {
+            width: 100%;
+            border: 1px solid #9f781a;
+            background: linear-gradient(135deg, #ba8e23, #9b761d);
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 8px 16px rgba(186, 142, 35, 0.28);
+        }
+
+        #manage-tab .artist-footer .btn-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 18px rgba(186, 142, 35, 0.35);
+        }
+
+        #manage-tab .artist-footer .btn-danger {
+            width: 100%;
+            font-weight: 700;
+        }
+
         @media (max-width: 768px) {
             .create-class-card {
                 padding: 18px;
@@ -340,7 +417,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                 <div class="user-menu" id="userMenu">
                     <div class="user-menu-trigger" id="user-menu-trigger">
                         <div class="user-avatar-small">
-                            <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.jpg'">
+                            <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.png'">
                         </div>
                     </div>
                     <div class="user-menu-dropdown">
@@ -459,7 +536,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                     <div class="artists-grid">
                         <?php foreach ($my_classes as $class): ?>
                             <div class="artist-card">
-                                <div class="artist-header" style="background: linear-gradient(135deg, #7f56d9, #5b3ab0);">
+                                <div class="artist-header">
                                     <h3 class="artist-name"><?= esc($class->title) ?></h3>
                                     <p class="artist-experience"><?= esc(ucwords(str_replace('_', ' ', $class->class_level ?? 'all_levels'))) ?></p>
                                 </div>
@@ -497,16 +574,16 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                         </span>
                                     </div>
                                 </div>
-                                <div class="artist-footer" style="display: flex; gap: 10px;">
-                                    <form method="POST" action="<?= ROOT ?>/artistdashboard/toggle_class_publish" style="flex: 1;">
+                                <div class="artist-footer">
+                                    <form method="POST" action="<?= ROOT ?>/artistdashboard/toggle_class_publish">
                                         <input type="hidden" name="class_id" value="<?= (int)$class->id ?>">
-                                        <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                                        <button type="submit" class="btn btn-secondary">
                                             <i class="bx bx-bullhorn"></i> <?= !empty($class->is_published) ? 'Unpublish' : 'Publish' ?>
                                         </button>
                                     </form>
-                                    <form method="POST" action="<?= ROOT ?>/artistdashboard/delete_class" style="flex: 1;" onsubmit="return confirm('Delete this class? This will remove all enrollments too.');">
+                                    <form method="POST" action="<?= ROOT ?>/artistdashboard/delete_class" onsubmit="return confirm('Delete this class? This will remove all enrollments too.');">
                                         <input type="hidden" name="class_id" value="<?= (int)$class->id ?>">
-                                        <button type="submit" class="btn btn-danger" style="width: 100%;">
+                                        <button type="submit" class="btn btn-danger">
                                             <i class="bx bx-trash"></i> Delete
                                         </button>
                                     </form>

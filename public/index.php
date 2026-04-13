@@ -77,4 +77,117 @@ if (is_string($output) && preg_match('/<html\b/i', $output) && preg_match('/<hea
     }, $output, 1);
 }
 
+if (is_string($output)) {
+    $iconMap = [
+        'dashboard' => 'bx bx-grid-alt',
+        'people' => 'bx bx-user',
+        'app_registration' => 'bx bx-edit-alt',
+        'approval' => 'bx bx-shield-quarter',
+        'article' => 'bx bx-file',
+        'home' => 'bx bx-home',
+        'menu' => 'bx bx-menu',
+        'search' => 'bx bx-search',
+        'close' => 'bx bx-x',
+        'notifications' => 'bx bx-bell',
+        'person' => 'bx bx-user',
+        'palette' => 'bx bx-palette',
+        'logout' => 'bx bx-log-out',
+        'groups' => 'bx bx-group',
+        'theater_comedy' => 'bx bx-mask',
+        'event_available' => 'bx bx-calendar-check',
+        'pending_actions' => 'bx bx-time',
+        'schedule' => 'bx bx-calendar',
+        'hourglass_top' => 'bx bx-hourglass',
+        'add' => 'bx bx-plus',
+        'progress_activity' => 'bx bx-loader-alt',
+        'task_alt' => 'bx bx-check-circle',
+        'view_carousel' => 'bx bx-carousel',
+        'photo_library' => 'bx bx-photo-album',
+        'reviews' => 'bx bx-message-square-detail',
+        'add_photo_alternate' => 'bx bx-image-add',
+        'rate_review' => 'bx bx-message-edit',
+        'confirmation_number' => 'bx bx-purchase-tag',
+        'trending_up' => 'bx bx-trending-up',
+        'event' => 'bx bx-calendar',
+        'done_all' => 'bx bx-check-double',
+        'filter_list' => 'bx bx-filter-alt',
+        'movie' => 'bx bx-camera-movie',
+        'call' => 'bx bx-phone',
+        'category' => 'bx bx-category',
+        'language' => 'bx bx-world',
+        'timer' => 'bx bx-timer',
+        'visibility' => 'bx bx-show-alt',
+        'visibility_off' => 'bx bx-hide',
+        'theaters' => 'bx bx-camera-movie',
+        'calendar_today' => 'bx bx-calendar',
+        'group' => 'bx bx-group',
+        'payments' => 'bx bx-money',
+        'location_on' => 'bx bx-map',
+        'school' => 'bx bx-book-open',
+        'bookmarks' => 'bx bx-bookmark',
+        'receipt_long' => 'bx bx-receipt',
+        'event_busy' => 'bx bx-calendar-x',
+        'settings' => 'bx bx-cog',
+        'star' => 'bx bx-star',
+        'info' => 'bx bx-info-circle',
+        'check_circle' => 'bx bx-check-circle',
+        'title' => 'bx bx-text',
+        'cloud_upload' => 'bx bx-cloud-upload',
+        'badge' => 'bx bx-id-card',
+        'chat' => 'bx bx-chat',
+        'error' => 'bx bx-error-circle',
+        'delete' => 'bx bx-trash',
+    ];
+
+    // Remove Material Symbols stylesheet links globally.
+    $output = preg_replace('/\s*<link[^>]*Material\+Symbols[^>]*>\s*/i', "\n", $output);
+
+    // Ensure Boxicons stylesheet is always available.
+    if (preg_match('/<head\b[^>]*>/i', $output) && !preg_match('/boxicons\.min\.css/i', $output)) {
+        $output = preg_replace(
+            '/<head\b[^>]*>/i',
+            "$0\n    <link href=\"https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css\" rel=\"stylesheet\">",
+            $output,
+            1
+        );
+    }
+
+    // Convert static Material icon tags in server-rendered HTML to Boxicons.
+    $output = preg_replace_callback(
+        '/<(span|i)([^>]*?)class=("|\')([^"\']*?)material-symbols-rounded([^"\']*?)("|\')([^>]*)>(.*?)<\/\1>/is',
+        function ($matches) use ($iconMap) {
+            $before = trim((string)$matches[4]);
+            $after = trim((string)$matches[5]);
+            $attrs = (string)$matches[7];
+            $name = trim(strip_tags((string)$matches[8]));
+            $mapped = $iconMap[$name] ?? 'bx bx-circle';
+
+            $classParts = [];
+            if ($before !== '') {
+                $classParts[] = $before;
+            }
+            // Keep material-symbols-rounded class for compatibility with existing CSS selectors.
+            $classParts[] = 'material-symbols-rounded';
+            if ($after !== '') {
+                $classParts[] = $after;
+            }
+            $classParts[] = $mapped;
+
+            $classString = preg_replace('/\s+/', ' ', trim(implode(' ', $classParts)));
+            return '<i class="' . htmlspecialchars($classString, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '"' . $attrs . '></i>';
+        },
+        $output
+    );
+
+    // Convert dynamically injected Material icon elements (e.g., JS-rendered modals/cards).
+    $iconMapJson = json_encode($iconMap, JSON_UNESCAPED_SLASHES);
+    $boxiconRuntimeScript = "\n<script>(function(){\n  const ICON_MAP = " . $iconMapJson . ";\n  function convert(node){\n    if(!node || !node.querySelectorAll){return;}\n    const all = [];\n    if(node.classList && node.classList.contains('material-symbols-rounded')){ all.push(node); }\n    node.querySelectorAll('.material-symbols-rounded').forEach(function(el){ all.push(el); });\n    all.forEach(function(el){\n      const name = (el.textContent || '').trim();\n      const mapped = ICON_MAP[name] || 'bx bx-circle';\n      const parts = (el.className || '').split(/\\s+/).filter(Boolean);\n      mapped.split(/\\s+/).forEach(function(c){ if(parts.indexOf(c) === -1){ parts.push(c); } });\n      if(el.tagName.toLowerCase() !== 'i'){\n        const i = document.createElement('i');\n        i.className = parts.join(' ');\n        for (let j = 0; j < el.attributes.length; j++) {\n          const attr = el.attributes[j];\n          if(attr && attr.name !== 'class'){ i.setAttribute(attr.name, attr.value); }\n        }\n        el.replaceWith(i);\n      } else {\n        el.className = parts.join(' ');\n        el.textContent = '';\n      }\n    });\n  }\n  if(document.readyState === 'loading'){\n    document.addEventListener('DOMContentLoaded', function(){ convert(document); });\n  } else {\n    convert(document);\n  }\n  const observer = new MutationObserver(function(mutations){\n    mutations.forEach(function(m){\n      m.addedNodes.forEach(function(n){ if(n && n.nodeType === 1){ convert(n); } });\n    });\n  });\n  observer.observe(document.documentElement, { childList: true, subtree: true });\n})();</script>\n";
+
+    if (preg_match('/<\/body>/i', $output)) {
+        $output = preg_replace('/<\/body>/i', $boxiconRuntimeScript . '</body>', $output, 1);
+    } else {
+        $output .= $boxiconRuntimeScript;
+    }
+}
+
 echo $output;

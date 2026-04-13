@@ -1062,11 +1062,36 @@ class Admindashboard {
         }
 
         $db = new Database();
-        $db->query("SELECT s.*, d.drama_name AS linked_drama_name
-                FROM swiper_slides s
-                LEFT JOIN dramas d ON s.drama_id = d.id
-                ORDER BY s.display_order ASC");
-        $slides = $db->resultSet();
+        try {
+            $db->query("SHOW COLUMNS FROM swiper_slides");
+            $columns = $db->resultSet();
+
+            $hasDramaId = false;
+            foreach ($columns as $column) {
+                if (strtolower((string)$column->Field) === 'drama_id') {
+                    $hasDramaId = true;
+                    break;
+                }
+            }
+
+            if ($hasDramaId) {
+                $db->query("SELECT s.*, d.drama_name AS linked_drama_name
+                        FROM swiper_slides s
+                        LEFT JOIN dramas d ON s.drama_id = d.id
+                        ORDER BY s.display_order ASC");
+                $slides = $db->resultSet();
+            } else {
+                $db->query("SELECT s.*, NULL AS linked_drama_name
+                        FROM swiper_slides s
+                        ORDER BY s.display_order ASC");
+                $slides = $db->resultSet();
+            }
+        } catch (Exception $e) {
+            error_log('Error loading swiper slides: ' . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Failed to load slides']);
+            exit;
+        }
 
         header('Content-Type: application/json');
         echo json_encode($slides);
