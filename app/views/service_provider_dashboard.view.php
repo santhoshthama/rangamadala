@@ -57,7 +57,6 @@
                             <span class="title">Completion Rate</span>
                             <span class="Count-value"><?= number_format($completion_rate ?? 0, 1) ?>%</span>
                             <div class="metric-change positive">
-                                <span class="arrow">✓</span>
                                 <span><?= (int)($completed_services ?? 0) ?> completed</span>
                             </div>
                         </div>

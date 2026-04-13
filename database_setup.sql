@@ -3,26 +3,28 @@
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS `users` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `full_name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
-  `role` enum('admin','artist','audience','service_provider') NOT NULL,
+  `role` enum('admin','artist','audience','service_provider') NOT NULL DEFAULT 'audience',
   `nic_number` varchar(20) DEFAULT NULL,
-  `nic_photo_front` varchar(255) DEFAULT NULL,
-  `nic_photo_back` varchar(255) DEFAULT NULL,
   `profile_image` varchar(255) DEFAULT NULL,
+  `years_experience` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `bio` text DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `website` varchar(255) DEFAULT NULL,
   `is_verified` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'Whether user is verified (1=yes, 0=no)',
   `verification_status` enum('pending','approved','rejected') DEFAULT 'approved' COMMENT 'Current verification status',
   `rejection_reason` text DEFAULT NULL COMMENT 'Reason for rejection if status is rejected',
   `verified_by_admin_id` int(11) DEFAULT NULL COMMENT 'Admin user ID who verified/rejected',
+  `verified_by` int(11) DEFAULT NULL COMMENT 'Admin user ID who verified',
   `verified_at` datetime DEFAULT NULL COMMENT 'Timestamp of verification action',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `email_role` (`email`, `role`)
+  `nic_photo` varchar(255) DEFAULT NULL,
+  `nic_photo_back` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create categories table

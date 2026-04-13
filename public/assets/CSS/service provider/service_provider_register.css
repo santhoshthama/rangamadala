@@ -959,6 +959,12 @@ body {
     box-shadow: 0 0 20px rgba(212, 175, 55, 0.2), inset 0 0 10px rgba(212, 175, 55, 0.08);
 }
 
+/* Rate dropdown option surface */
+.rate-input-group select.form-input option {
+    background: transparent;
+    color: #1a1410;
+}
+
 .drag-drop-zone,
 .service-item,
 .experience-item,
