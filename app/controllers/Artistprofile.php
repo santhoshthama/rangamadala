@@ -74,8 +74,8 @@ class Artistprofile
                 }
             }
 
-            if ($website !== '' && !filter_var($website, FILTER_VALIDATE_URL)) {
-                $errors[] = 'Please enter a valid website URL (e.g., https://yourwebsite.com).';
+            if ($website !== '' && strlen($website) > 2000) {
+                $errors[] = 'Links field is too long. Keep it under 2000 characters.';
             }
 
             if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] !== UPLOAD_ERR_NO_FILE) {

@@ -435,8 +435,8 @@ $currentImageLabel = $user && !empty($user->profile_image)
                     </div>
 
                     <div class="form-group full">
-                        <label for="website">Website / Portfolio URL</label>
-                        <input id="website" name="website" type="url" placeholder="https://yourwebsite.com" value="<?= esc($form['website'] ?? '') ?>">
+                        <label for="website">Links (Social / Portfolio / Any)</label>
+                        <input id="website" name="website" type="text" placeholder="Add one or more links (Instagram, YouTube, portfolio, etc.)" value="<?= esc($form['website'] ?? '') ?>">
                     </div>
 
                     <div class="form-group full">

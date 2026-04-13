@@ -196,8 +196,8 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                     <input type="text" class="form-input" value="<?= esc($artist->location ?? 'Not added') ?>" readonly>
                                 </div>
                                 <div class="form-group">
-                                    <label>Website / Portfolio</label>
-                                    <input type="text" class="form-input" value="<?= esc($artist->website ?? 'Not added') ?>" readonly>
+                                    <label>Links (Social / Portfolio / Any)</label>
+                                    <textarea class="form-input" rows="3" readonly><?= esc($artist->website ?? 'Not added') ?></textarea>
                                 </div>
                             </div>
 

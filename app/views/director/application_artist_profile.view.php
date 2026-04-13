@@ -139,7 +139,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <div class="pill-row">
                             <?php if (!empty($artist->years_experience)): ?><span class="pill"><i class="bx bx-star"></i> <?= esc($artist->years_experience) ?> yrs exp</span><?php endif; ?>
                             <?php if (!empty($artist->location)): ?><span class="pill"><i class="bx bx-map-marker-alt"></i> <?= esc($artist->location) ?></span><?php endif; ?>
-                            <?php if (!empty($artist->website)): ?><span class="pill"><i class="bx bx-link"></i> Portfolio</span><?php endif; ?>
+                            <?php if (!empty($artist->website)): ?><span class="pill"><i class="bx bx-link"></i> Links Added</span><?php endif; ?>
                         </div>
                         <div class="muted" style="margin-top: 8px;">Profile review updated <?= $profileReviewedAt ? esc($profileReviewedAt) : 'just now' ?></div>
                     </div>
@@ -149,9 +149,9 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="info-chip"><span>Email</span><?= esc($artist->email ?? 'Not provided') ?></div>
                     <div class="info-chip"><span>Phone</span><?= esc($artist->phone ?? 'Not provided') ?></div>
                     <div class="info-chip"><span>Location</span><?= esc($artist->location ?? 'Not provided') ?></div>
-                    <div class="info-chip"><span>Website</span>
+                    <div class="info-chip"><span>Links</span>
                         <?php if (!empty($artist->website)): ?>
-                            <a href="<?= esc($artist->website) ?>" target="_blank" rel="noopener" style="color: var(--brand);">Visit site</a>
+                            <div style="white-space: pre-wrap;"><?= nl2br(esc($artist->website)) ?></div>
                         <?php else: ?>
                             Not provided
                         <?php endif; ?>
