@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= APP_NAME ?></title>
+  <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/register.css">
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_register.css">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <link rel="shortcut icon" href="<?php echo ROOT; ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
@@ -22,8 +23,7 @@
   <div class="signup-container signup-service">
     <div class="register-card">
       <div class="register-header">
-        <h2>Register as Service Provider</h2>
-        <p>Complete the form to create your account</p>
+        <h2>Service Provider Signup</h2>
       </div>
 
       <?php if (!empty($data['errors'])): ?>
@@ -42,12 +42,12 @@
       <?php endif; ?>
 
       <div class="register-content">
-        <div class="alert-info">
+        <!-- <div class="alert-info">
           <span class="alert-info-icon">i</span>
           <div class="alert-info-text">
             Fill your account, profile, NIC, service types, and past engagements now. You can add full service details after admin approval.
           </div>
-        </div>
+        </div> -->
 
         <div class="page-indicator">
           <div class="step active" data-step="1"><div class="step-number">1</div></div>
@@ -114,8 +114,8 @@
                   <input type="text" name="location" class="form-input" placeholder="City, Country" value="<?= htmlspecialchars($formData['location'] ?? '') ?>">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Years of Experience</label>
-                  <input type="number" name="years_experience" class="form-input" placeholder="Enter your years of experience" value="<?= htmlspecialchars($formData['years_experience'] ?? '') ?>">
+                  <label class="form-label">Years of Experience <span class="required">*</span></label>
+                  <input type="number" name="years_experience" class="form-input" placeholder="Enter your years of experience" value="<?= htmlspecialchars($formData['years_experience'] ?? '') ?>" min="0" required>
                 </div>
               </div>
 
@@ -798,7 +798,7 @@
           <div class="form-page">
             <div class="section">
               <h3 class="section-title">Past Engagements</h3>
-              <p style="margin-bottom:12px;color:#a89968;font-size:13px;">Add a few recent projects if you have them. This helps verify your experience.</p>
+              <p style="margin-bottom:12px;color:#a89968;font-size:13px;">Add your past engagements. This helps verify your experience.</p>
 
               <div id="projectList">
                 <?php if (!empty($projectsData) && is_array($projectsData)): ?>

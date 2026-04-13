@@ -245,7 +245,7 @@ class Admindashboard {
                     u.email,
                     u.phone,
                     u.role,
-                    u.nic_photo,
+                    u.nic_photo_front AS nic_photo,
                     u.created_at
                 FROM users u
                 WHERE u.is_verified = 0 
@@ -393,7 +393,7 @@ class Admindashboard {
         $db = new Database();
 
         // Base user info
-        $db->query("SELECT id, full_name, email, phone, role, nic_photo, created_at, verification_status 
+        $db->query("SELECT id, full_name, email, phone, role, nic_photo_front AS nic_photo, created_at, verification_status 
                     FROM users WHERE id = :user_id");
         $db->bind(':user_id', $userId);
         $user = $db->single();
@@ -420,10 +420,12 @@ class Admindashboard {
 
         // Role-specific extra details
         if ($user->role === 'service_provider') {
-            $db->query("SELECT full_name, professional_title, email, phone, location, nic_number,
-                               social_media_link, years_experience, professional_summary,
-                               availability, availability_notes, nic_photo_front, nic_photo_back
-                        FROM serviceprovider WHERE user_id = :user_id");
+                 $db->query("SELECT u.full_name, sp.professional_title, u.email, u.phone, sp.location, u.nic_number,
+                           sp.social_media_link, sp.years_experience, u.bio AS professional_summary,
+                           sp.availability, sp.availability_notes, u.nic_photo_front, u.nic_photo_back
+                       FROM serviceprovider sp
+                       INNER JOIN users u ON u.id = sp.user_id
+                       WHERE sp.user_id = :user_id");
             $db->bind(':user_id', $userId);
             $spData = $db->single();
             if ($spData) {

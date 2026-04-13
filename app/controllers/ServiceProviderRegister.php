@@ -123,6 +123,9 @@ class ServiceProviderRegister
         if ($provider['professional_title'] === '') $errors[] = 'Professional title is required.';
         if ($provider['email'] === '' || !filter_var($provider['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
         if ($provider['phone'] === '') $errors[] = 'Phone number is required.';
+        if ($provider['years_experience'] === '' || !is_numeric($provider['years_experience']) || (int)$provider['years_experience'] < 0) {
+            $errors[] = 'Years of experience is required and must be a valid number.';
+        }
         
         // NIC number validation
         if ($provider['nic_number'] === '') {
@@ -199,9 +202,9 @@ class ServiceProviderRegister
 
         // Duplicate checks
         if (empty($errors)) {
-            // Check email in both serviceprovider and users tables
-            if ($model->emailExists($provider['email']) || $model->emailExistsInUsers($provider['email'])) {
-                $errors[] = 'This email is already registered. Please use a different email.';
+            // Check duplicates only for the service_provider role (same email can exist for other roles)
+            if ($model->emailExists($provider['email'])) {
+                $errors[] = 'This email is already registered for service provider role. Please use a different email.';
             }
             if ($model->nameExists($provider['full_name'])) {
                 $errors[] = 'A service provider with this full name is already registered.';
@@ -232,7 +235,7 @@ class ServiceProviderRegister
         }
 
         // Get the newly created user ID
-        $user_id = $model->getUserIdByEmail($provider['email']);
+        $user_id = $model->getUserIdByEmail($provider['email'], 'service_provider');
         if (!$user_id) {
             $this->view('service_provider_register', ['errors' => ['Failed to retrieve user ID. Please try again.']]);
             return;

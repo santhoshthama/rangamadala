@@ -9,18 +9,18 @@ class M_service_provider extends M_signup {
     }
 
     public function register($full_name, $email, $password, $phone, $nic_photo_front = null, $nic_photo_back = null) {
-        return $this->registerUser($full_name, $email, $password, $phone, 'service_provider', $nic_photo_front);
+        return $this->registerUser($full_name, $email, $password, $phone, 'service_provider', $nic_photo_front, $nic_photo_back);
     }
 
     public function emailExists($email) {
-        $this->db->query("SELECT COUNT(*) AS cnt FROM serviceprovider WHERE email = :email");
+        $this->db->query("SELECT COUNT(*) AS cnt FROM users WHERE email = :email AND role = 'service_provider'");
         $this->db->bind(':email', $email);
         $row = $this->db->single();
         return $row && isset($row->cnt) ? ((int)$row->cnt > 0) : false;
     }
 
     public function nameExists($full_name) {
-        $this->db->query("SELECT COUNT(*) AS cnt FROM serviceprovider WHERE full_name = :full_name");
+        $this->db->query("SELECT COUNT(*) AS cnt FROM users WHERE full_name = :full_name AND role = 'service_provider'");
         $this->db->bind(':full_name', $full_name);
         $row = $this->db->single();
         return $row && isset($row->cnt) ? ((int)$row->cnt > 0) : false;
@@ -33,15 +33,40 @@ class M_service_provider extends M_signup {
         return $row && isset($row->cnt) ? ((int)$row->cnt > 0) : false;
     }
 
-    public function getUserIdByEmail($email) {
-        $this->db->query("SELECT id FROM users WHERE email = :email LIMIT 1");
+    public function getUserIdByEmail($email, $role = null) {
+        if ($role) {
+            $this->db->query("SELECT id FROM users WHERE email = :email AND role = :role LIMIT 1");
+            $this->db->bind(':role', $role);
+        } else {
+            $this->db->query("SELECT id FROM users WHERE email = :email LIMIT 1");
+        }
         $this->db->bind(':email', $email);
         $row = $this->db->single();
         return $row ? (int)$row->id : false;
     }
 
     public function getProviderById($user_id) {
-        $this->db->query("SELECT * FROM serviceprovider WHERE user_id = :user_id");
+        $this->db->query("SELECT
+                            sp.user_id,
+                            sp.professional_title,
+                            sp.location,
+                            sp.social_media_link,
+                            sp.years_experience,
+                            sp.availability,
+                            sp.availability_notes,
+                            sp.created_at,
+                            sp.updated_at,
+                            u.full_name,
+                            u.email,
+                            u.phone,
+                            u.nic_number,
+                            u.nic_photo_front,
+                            u.nic_photo_back,
+                            u.profile_image,
+                            u.bio AS professional_summary
+                          FROM serviceprovider sp
+                          INNER JOIN users u ON u.id = sp.user_id
+                          WHERE sp.user_id = :user_id");
         $this->db->bind(':user_id', $user_id);
         return $this->db->single();
     }
@@ -68,44 +93,50 @@ class M_service_provider extends M_signup {
         try {
             $this->db->beginTransaction();
 
-            $this->db->query("INSERT INTO serviceprovider (
-                user_id, full_name, professional_title, email, phone, location, nic_number,
-                social_media_link, years_experience, professional_summary,
-                availability, availability_notes, nic_photo_front, nic_photo_back
-            ) VALUES (
-                :user_id, :full_name, :professional_title, :email, :phone, :location, :nic_number,
-                :social_media_link, :years_experience, :professional_summary,
-                :availability, :availability_notes, :nic_photo_front, :nic_photo_back
-            )
-            ON DUPLICATE KEY UPDATE
-                full_name = VALUES(full_name),
-                professional_title = VALUES(professional_title),
-                email = VALUES(email),
-                phone = VALUES(phone),
-                location = VALUES(location),
-                nic_number = VALUES(nic_number),
-                social_media_link = VALUES(social_media_link),
-                years_experience = VALUES(years_experience),
-                professional_summary = VALUES(professional_summary),
-                availability = VALUES(availability),
-                availability_notes = VALUES(availability_notes),
-                nic_photo_front = VALUES(nic_photo_front),
-                nic_photo_back = VALUES(nic_photo_back)");
+            $this->db->query("UPDATE users SET
+                                full_name = :full_name,
+                                email = :email,
+                                phone = :phone,
+                                nic_number = :nic_number,
+                                nic_photo_front = :nic_photo_front,
+                                nic_photo_back = :nic_photo_back,
+                                bio = :bio
+                              WHERE id = :user_id AND role = 'service_provider'");
 
             $this->db->bind(':user_id', $providerId);
             $this->db->bind(':full_name', $provider['full_name'] ?? null);
-            $this->db->bind(':professional_title', $provider['professional_title'] ?? null);
             $this->db->bind(':email', $provider['email'] ?? null);
             $this->db->bind(':phone', $provider['phone'] ?? null);
-            $this->db->bind(':location', $provider['location'] ?? null);
             $this->db->bind(':nic_number', $provider['nic_number'] ?? null);
-            $this->db->bind(':social_media_link', $provider['website'] ?? null);
-            $this->db->bind(':years_experience', isset($provider['years_experience']) && $provider['years_experience'] !== '' ? (int)$provider['years_experience'] : null);
-            $this->db->bind(':professional_summary', $provider['professional_summary'] ?? null);
-            $this->db->bind(':availability', isset($provider['availability']) ? (int)$provider['availability'] : 1);
-            $this->db->bind(':availability_notes', $provider['availability_notes'] ?? null);
             $this->db->bind(':nic_photo_front', $provider['nic_photo_front'] ?? null);
             $this->db->bind(':nic_photo_back', $provider['nic_photo_back'] ?? null);
+            $this->db->bind(':bio', $provider['professional_summary'] ?? null);
+            $this->db->execute();
+
+            $this->db->query("INSERT INTO serviceprovider (
+                user_id, professional_title, location,
+                social_media_link, years_experience,
+                availability, availability_notes
+            ) VALUES (
+                :user_id, :professional_title, :location,
+                :social_media_link, :years_experience,
+                :availability, :availability_notes
+            )
+            ON DUPLICATE KEY UPDATE
+                professional_title = VALUES(professional_title),
+                location = VALUES(location),
+                social_media_link = VALUES(social_media_link),
+                years_experience = VALUES(years_experience),
+                availability = VALUES(availability),
+                availability_notes = VALUES(availability_notes)");
+
+            $this->db->bind(':user_id', $providerId);
+            $this->db->bind(':professional_title', $provider['professional_title'] ?? null);
+            $this->db->bind(':location', $provider['location'] ?? null);
+            $this->db->bind(':social_media_link', $provider['website'] ?? null);
+            $this->db->bind(':years_experience', isset($provider['years_experience']) && $provider['years_experience'] !== '' ? (int)$provider['years_experience'] : null);
+            $this->db->bind(':availability', isset($provider['availability']) ? (int)$provider['availability'] : 1);
+            $this->db->bind(':availability_notes', $provider['availability_notes'] ?? null);
 
             $this->db->execute();
             $this->db->commit();
@@ -528,30 +559,46 @@ class M_service_provider extends M_signup {
     public function updateBasicInfo($provider_id, $full_name, $professional_title, $email, $phone, 
                                     $location, $website, $years_experience, $professional_summary, 
                                     $availability, $availability_notes) {
-        $this->db->query("UPDATE serviceprovider SET 
-                         full_name = :full_name, 
-                         professional_title = :professional_title, 
-                         email = :email, 
-                         phone = :phone, 
-                         location = :location, 
-                         social_media_link = :social_media_link, 
-                         years_experience = :years_experience,
-                         professional_summary = :professional_summary,
-                         availability = :availability,
-                         availability_notes = :availability_notes
-                         WHERE user_id = :user_id");
-        $this->db->bind(':full_name', $full_name);
-        $this->db->bind(':professional_title', $professional_title);
-        $this->db->bind(':email', $email);
-        $this->db->bind(':phone', $phone);
-        $this->db->bind(':location', $location);
-        $this->db->bind(':social_media_link', $website);
-        $this->db->bind(':years_experience', $years_experience);
-        $this->db->bind(':professional_summary', $professional_summary);
-        $this->db->bind(':availability', $availability);
-        $this->db->bind(':availability_notes', $availability_notes);
-        $this->db->bind(':user_id', $provider_id);
-        return $this->db->execute();
+        try {
+            $this->db->beginTransaction();
+
+            $this->db->query("UPDATE users SET
+                             full_name = :full_name,
+                             email = :email,
+                             phone = :phone,
+                             bio = :bio
+                             WHERE id = :user_id AND role = 'service_provider'");
+            $this->db->bind(':full_name', $full_name);
+            $this->db->bind(':email', $email);
+            $this->db->bind(':phone', $phone);
+            $this->db->bind(':bio', $professional_summary);
+            $this->db->bind(':user_id', $provider_id);
+            $this->db->execute();
+
+            $this->db->query("UPDATE serviceprovider SET
+                             professional_title = :professional_title,
+                             location = :location,
+                             social_media_link = :social_media_link,
+                             years_experience = :years_experience,
+                             availability = :availability,
+                             availability_notes = :availability_notes
+                             WHERE user_id = :user_id");
+            $this->db->bind(':professional_title', $professional_title);
+            $this->db->bind(':location', $location);
+            $this->db->bind(':social_media_link', $website);
+            $this->db->bind(':years_experience', $years_experience);
+            $this->db->bind(':availability', $availability);
+            $this->db->bind(':availability_notes', $availability_notes);
+            $this->db->bind(':user_id', $provider_id);
+            $this->db->execute();
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log('updateBasicInfo failed: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // Update password with current password verification
@@ -609,7 +656,7 @@ class M_service_provider extends M_signup {
 
     // Update Profile Image (SEPARATE from business certificate)
     public function updateProfileImage($user_id, $filename) {
-        $this->db->query("UPDATE serviceprovider SET profile_image = :profile_image WHERE user_id = :user_id");
+        $this->db->query("UPDATE users SET profile_image = :profile_image WHERE id = :user_id");
         $this->db->bind(':profile_image', $filename);
         $this->db->bind(':user_id', $user_id);
         return $this->db->execute();
@@ -646,10 +693,26 @@ class M_service_provider extends M_signup {
         $rateExpr = !empty($ratePerHourParts) ? ('COALESCE(' . implode(', ', $ratePerHourParts) . ')') : 'NULL';
         $rateTypeExpr = !empty($rateTypeParts) ? ('COALESCE(' . implode(', ', $rateTypeParts) . ')') : "'hourly'";
 
-        $sql = "SELECT DISTINCT sp.*, 
+        $sql = "SELECT DISTINCT
+            sp.user_id,
+            sp.professional_title,
+            sp.location,
+            sp.social_media_link,
+            sp.years_experience,
+            sp.availability,
+            sp.availability_notes,
+            u.full_name,
+            u.email,
+            u.phone,
+            u.bio AS professional_summary,
+            u.nic_number,
+            u.nic_photo_front,
+            u.nic_photo_back,
+            u.profile_image,
                 GROUP_CONCAT(DISTINCT st.service_type SEPARATOR ', ') as services,
                 GROUP_CONCAT(DISTINCT CONCAT({$rateExpr}, '|', {$rateTypeExpr}) ORDER BY {$rateExpr} SEPARATOR ', ') as rates
                 FROM serviceprovider sp
+            INNER JOIN users u ON u.id = sp.user_id
                 LEFT JOIN services s ON sp.user_id = s.provider_id
                 LEFT JOIN service_types st ON s.service_type_id = st.service_type_id
                 {$dynamicJoins}
@@ -675,7 +738,7 @@ class M_service_provider extends M_signup {
             }
         }
 
-        $sql .= " GROUP BY sp.user_id ORDER BY sp.full_name ASC";
+        $sql .= " GROUP BY sp.user_id ORDER BY u.full_name ASC";
 
         $this->db->query($sql);
 

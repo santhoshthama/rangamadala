@@ -10,7 +10,7 @@ body {
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
-    background: url("../../images/Theatre.jpg") no-repeat center center/cover;
+    background: url("../../images/aud_signup.png") no-repeat center center/cover;
     background-attachment: fixed;
     padding: 20px;
     overflow-y: auto;
@@ -822,7 +822,7 @@ body {
 }
 /* End of css from register.css file */
 
-/* Unified audience/artist theme overrides for service provider signup */
+/* Service-provider-specific overrides */
 * {
     font-family: "Poppins", sans-serif;
 }
@@ -830,21 +830,7 @@ body {
 body {
     justify-content: center;
     align-items: center;
-    background: url("../../images/loginImg.jpg") no-repeat center center/cover;
     position: relative;
-}
-
-body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(26, 20, 16, 0.34);
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(2px);
-    z-index: 0;
 }
 
 .signup-container {
