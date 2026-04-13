@@ -954,6 +954,49 @@ class Director{
         });
     }
 
+    public function artist_profile()
+    {
+        $artistId = $this->sanitizeInt($this->getQueryParam('artist_id'));
+        if (!$artistId) {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $roleId = $this->sanitizeInt($this->getQueryParam('role_id'));
+
+        $this->renderDramaView('artist_profile', [], function ($drama) use ($artistId, $roleId) {
+            if (!$this->artistModel) {
+                $this->respondWithRedirect(false, 'Artist profile service is currently unavailable.', (int)$drama->id, [
+                    'route' => 'manage',
+                    'role_id' => $roleId,
+                ]);
+            }
+
+            $artist = $this->artistModel->get_artist_by_id((int)$artistId);
+            if (!$artist) {
+                $this->respondWithRedirect(false, 'Artist profile not found.', (int)$drama->id, [
+                    'route' => 'search',
+                    'role_id' => $roleId,
+                ]);
+            }
+
+            $role = null;
+            if ($roleId) {
+                $role = $this->findRoleForDrama((int)$roleId, (int)$drama->id);
+            }
+
+            return [
+                'artist' => $artist,
+                'role' => $role,
+                'roleId' => $roleId,
+            ];
+        });
+    }
+
     public function send_role_request()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
