@@ -25,14 +25,16 @@
     .section { margin-top: 16px; padding: 16px; }
     .section h2 { margin: 0 0 12px; color: #5a4415; }
     .summary-box { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: #fff9ec; border: 1px solid #efdcb0; color: #5f4b23; }
-    .message { margin-bottom: 12px; padding: 12px 14px; border-radius: 10px; }
-    .message.ok { border: 1px solid rgba(27, 148, 79, .45); background: rgba(27, 148, 79, .16); color: #e8fbe8; }
+    .message { margin-bottom: 12px; padding: 12px 14px; border-radius: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .message i { font-size: 18px; }
+    .message.ok { border: 1px solid rgba(21, 128, 61, 0.35); border-left: 4px solid #15803d; background: rgba(21, 128, 61, 0.12); color: #166534; }
     .message.err { border: 1px solid rgba(220, 53, 69, .45); background: rgba(220, 53, 69, .16); color: #ffe8e8; }
     .booking-box { margin-top: 14px; padding: 14px; border-radius: 10px; background: #fff9ec; border: 1px solid #efdcb0; }
     .booking-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-bottom: 10px; }
     .booking-field { display: flex; flex-direction: column; gap: 5px; }
     .booking-field label { font-size: 13px; color: #6f5a2e; font-weight: 600; }
     .booking-field input, .booking-field textarea { border: 1px solid #e4cd95; border-radius: 8px; padding: 8px 10px; font-size: 14px; }
+    .time-range-preview { font-size: 12px; color: #8b6a21; margin-top: 2px; }
     .hint { color: #7a6121; margin: 8px 0 0; font-size: 14px; }
     .review-list { display: grid; gap: 10px; }
     .review { border: 1px solid #efdcb0; border-radius: 10px; padding: 12px; background: #fffdf7; }
@@ -70,6 +72,25 @@
         $requestDetails = $decodedRequestDetails;
       }
     }
+    $showTimeStartValue = trim((string)($requestDetails['show_time_start'] ?? ''));
+    $showTimeEndValue = trim((string)($requestDetails['show_time_end'] ?? ''));
+    $showTimeTextValue = trim((string)($requestDetails['show_time'] ?? ''));
+    if (($showTimeStartValue === '' || $showTimeEndValue === '') && $showTimeTextValue !== '') {
+      if (preg_match('/(\d{1,2}:\d{2})\s*(AM|PM)?\s*to\s*(\d{1,2}:\d{2})\s*(AM|PM)?/i', $showTimeTextValue, $timeMatch)) {
+        $startRaw = $timeMatch[1] . (!empty($timeMatch[2]) ? (' ' . strtoupper($timeMatch[2])) : '');
+        $endRaw = $timeMatch[3] . (!empty($timeMatch[4]) ? (' ' . strtoupper($timeMatch[4])) : '');
+        $startTs = strtotime($startRaw);
+        $endTs = strtotime($endRaw);
+        if ($startTs !== false && $endTs !== false) {
+          if ($showTimeStartValue === '') {
+            $showTimeStartValue = date('H:i', $startTs);
+          }
+          if ($showTimeEndValue === '') {
+            $showTimeEndValue = date('H:i', $endTs);
+          }
+        }
+      }
+    }
     $rejectionReason = trim((string)($bookingRequest->rejection_reason ?? ''));
     $bookingId = (int)($bookingRequest->id ?? 0);
   ?>
@@ -80,7 +101,7 @@
     </div>
 
     <?php if (!empty($successMessage)): ?>
-      <div class="message ok"><?= htmlspecialchars($successMessage) ?></div>
+      <div class="message ok"><i class='bx bx-check-circle'></i> <?= htmlspecialchars($successMessage) ?></div>
     <?php endif; ?>
     <?php if (!empty($errorMessage)): ?>
       <div class="message err"><?= htmlspecialchars($errorMessage) ?></div>
@@ -127,6 +148,18 @@
               <form method="POST" action="<?= ROOT ?>/BrowseDramas/bookShowings/<?= (int)$d->id ?>">
                 <div class="booking-grid">
                   <div class="booking-field">
+                    <label for="request_sender_name">Request Sender Name *</label>
+                    <input id="request_sender_name" type="text" name="request_sender_name" required value="<?= htmlspecialchars((string)($requestDetails['request_sender_name'] ?? ($audienceUser->full_name ?? ''))) ?>">
+                  </div>
+                  <div class="booking-field">
+                    <label for="request_contact_phone">Contact Phone *</label>
+                    <input id="request_contact_phone" type="text" name="request_contact_phone" required placeholder="Example: 0771234567" value="<?= htmlspecialchars((string)($requestDetails['request_contact_phone'] ?? ($audienceUser->phone ?? ''))) ?>">
+                  </div>
+                  <div class="booking-field">
+                    <label for="request_contact_email">Contact Email</label>
+                    <input id="request_contact_email" type="email" name="request_contact_email" placeholder="Example: name@email.com" value="<?= htmlspecialchars((string)($requestDetails['request_contact_email'] ?? ($audienceUser->email ?? ''))) ?>">
+                  </div>
+                  <div class="booking-field">
                     <label for="request_venue">Expected Place of Show *</label>
                     <input id="request_venue" type="text" name="request_venue" required value="<?= htmlspecialchars((string)($requestDetails['request_venue'] ?? '')) ?>">
                   </div>
@@ -136,7 +169,12 @@
                   </div>
                   <div class="booking-field">
                     <label for="show_time">Show Time *</label>
-                    <input id="show_time" type="text" name="show_time" required placeholder="Example: 9.00 a.m to 11.00 a.m" value="<?= htmlspecialchars((string)($requestDetails['show_time'] ?? '')) ?>">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                      <input id="show_time_start" type="time" name="show_time_start" required value="<?= htmlspecialchars($showTimeStartValue) ?>">
+                      <input id="show_time_end" type="time" name="show_time_end" required value="<?= htmlspecialchars($showTimeEndValue) ?>">
+                    </div>
+                    <input id="show_time" type="hidden" name="show_time" value="<?= htmlspecialchars($showTimeTextValue) ?>">
+                    <div class="time-range-preview" id="show_time_preview">Select start and end time.</div>
                   </div>
                   <div class="booking-field">
                     <label for="present_count">Expected Present Count</label>
@@ -206,6 +244,71 @@
       </div>
     <?php endif; ?>
   </div>
+
+  <script>
+    (function () {
+      const startInput = document.getElementById('show_time_start');
+      const endInput = document.getElementById('show_time_end');
+      const hiddenInput = document.getElementById('show_time');
+      const preview = document.getElementById('show_time_preview');
+
+      if (!startInput || !endInput || !hiddenInput || !preview) {
+        return;
+      }
+
+      const toHuman = function (timeValue) {
+        if (!timeValue || !/^\d{2}:\d{2}$/.test(timeValue)) {
+          return '';
+        }
+
+        const parts = timeValue.split(':');
+        let hh = parseInt(parts[0], 10);
+        const mm = parts[1];
+        const suffix = hh >= 12 ? 'PM' : 'AM';
+
+        if (hh === 0) {
+          hh = 12;
+        } else if (hh > 12) {
+          hh -= 12;
+        }
+
+        return hh + ':' + mm + ' ' + suffix;
+      };
+
+      const syncShowTime = function () {
+        const start = startInput.value;
+        const end = endInput.value;
+
+        if (start && end) {
+          const startLabel = toHuman(start);
+          const endLabel = toHuman(end);
+          hiddenInput.value = startLabel + ' to ' + endLabel;
+          preview.textContent = 'Selected: ' + hiddenInput.value;
+          preview.style.color = '#1f6f35';
+        } else {
+          hiddenInput.value = '';
+          preview.textContent = 'Select start and end time.';
+          preview.style.color = '#8b6a21';
+        }
+      };
+
+      startInput.addEventListener('input', syncShowTime);
+      endInput.addEventListener('input', syncShowTime);
+      syncShowTime();
+
+      const form = startInput.closest('form');
+      if (form) {
+        form.addEventListener('submit', function (event) {
+          if (startInput.value && endInput.value && startInput.value >= endInput.value) {
+            event.preventDefault();
+            preview.textContent = 'End time must be later than start time.';
+            preview.style.color = '#a3202c';
+            endInput.focus();
+          }
+        });
+      }
+    })();
+  </script>
 
   <?php if ($canMakePayment && $bookingId > 0): ?>
   <script>

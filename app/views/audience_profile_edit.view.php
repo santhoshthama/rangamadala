@@ -1,173 +1,365 @@
+<?php
+$profile = $data['profile'] ?? null;
+$profileImage = $data['profile_image'] ?? null;
+$errors = $data['errors'] ?? [];
+$success = $data['success'] ?? '';
+$error = $data['error'] ?? '';
+
+$profileImageSrc = ROOT . '/uploads/profile_images/default_user.png';
+if (!empty($profileImage)) {
+    $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($profileImage);
+}
+
+$currentImageLabel = !empty($profileImage)
+    ? basename(str_replace('\\', '/', $profileImage))
+    : 'Recommended 800x800 JPG/PNG';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profile - <?= APP_NAME ?></title>
-    <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+    <title>Audience Profile</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/edit_profile.css">
     <style>
-        .message-box {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
+        :root {
+            --brand: #ba8e23;
+            --brand-strong: #a0781e;
+            --card: #ffffff;
+            --ink: #1f2933;
+            --muted: #6b7280;
+            --danger: #dc2626;
+            --success: #15803d;
+            --border: #e5e7eb;
+            --radius: 16px;
+            --shadow: 0 12px 40px rgba(31, 41, 51, 0.12);
         }
-        .success-box {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', Arial, sans-serif;
+            background: linear-gradient(135deg, rgba(186, 142, 35, 0.12), rgba(160, 120, 30, 0.08));
+            color: var(--ink);
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .error-box {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .error-list {
-            margin: 10px 0 0 20px;
-        }
-        .back-container {
-            text-align: left;
-            margin-bottom: 20px;
-        }
+
+        a { color: inherit; text-decoration: none; }
+
+        .page-wrapper { width: min(1100px, 100%); }
+
         .back-link {
-            text-decoration: none;
-        }
-        .back-btn {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background-color: transparent;
-            color: #d4af37;
-            padding: 8px 14px;
-            border: 2px solid #d4af37;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.3s ease;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--brand-strong);
+            margin-bottom: 16px;
         }
-        .back-btn:hover {
-            background-color: #d4af37;
-            color: #1a1410;
+
+        .profile-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            overflow: hidden;
         }
-        .back-btn i {
+
+        .profile-summary {
+            background: linear-gradient(180deg, rgba(186, 142, 35, 0.95), rgba(160, 120, 30, 0.92));
+            color: #fff;
+            padding: 40px 32px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .profile-summary img {
+            width: 160px;
+            height: 160px;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 6px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+            align-self: center;
+        }
+
+        .profile-summary h2 {
+            margin-top: 28px;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .profile-summary p {
+            margin: 4px 0;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .profile-form { padding: 40px; }
+
+        .profile-form h1 {
+            margin: 0 0 16px;
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .profile-form p.subtitle {
+            margin: 0 0 32px;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .alerts {
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .alert {
+            padding: 14px 18px;
+            border-radius: 12px;
             font-size: 14px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(21, 128, 61, 0.12);
+            color: var(--success);
+            border: 1px solid rgba(21, 128, 61, 0.35);
+        }
+
+        .alert-error {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full { grid-column: 1 / -1; }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 15px;
+            font-family: inherit;
+            transition: border 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--brand);
+            box-shadow: 0 0 0 4px rgba(186, 142, 35, 0.18);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-input {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .file-input label {
+            cursor: pointer;
+            padding: 12px 18px;
+            border-radius: 12px;
+            background: rgba(186, 142, 35, 0.12);
+            color: var(--brand-strong);
+            font-weight: 600;
+            letter-spacing: normal;
+            text-transform: none;
+        }
+
+        .file-input span {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        input[type="file"] { display: none; }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            margin-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 26px;
+            border-radius: 12px;
+            border: none;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background: #6b7280;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+            box-shadow: 0 12px 30px rgba(186, 142, 35, 0.28);
+        }
+
+        @media (max-width: 960px) {
+            .profile-card { grid-template-columns: 1fr; }
+
+            .profile-summary { text-align: center; }
+
+            form { grid-template-columns: 1fr; }
+
+            .form-actions { justify-content: center; }
         }
     </style>
 </head>
-
 <body>
-
-<div class="container">
-    <div class="back-container">
-        <a href="<?= ROOT ?>/AudienceProfile" class="back-link">
-            <button class="back-btn" type="button">
-                <i class="bx bx-arrow-left"></i> Back to Profile
-            </button>
+    <div class="page-wrapper">
+        <a class="back-link" href="<?= ROOT ?>/AudienceProfile">
+            <i class="bx bx-arrow-left"></i>
+            <span>Back to Profile</span>
         </a>
-    </div>
 
-    <h2 class="page-title">Edit Profile</h2>
-    <hr class="divider">
-
-    <?php if (!empty($data['success'])): ?>
-        <div class="message-box success-box">
-            <?= htmlspecialchars($data['success']) ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if (!empty($data['error'])): ?>
-        <div class="message-box error-box">
-            <?= htmlspecialchars($data['error']) ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if (!empty($data['errors'])): ?>
-        <div class="message-box error-box">
-            <strong>Please fix the following errors:</strong>
-            <ul class="error-list">
-                <?php foreach ($data['errors'] as $error): ?>
-                    <li><?= htmlspecialchars($error) ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    <?php endif; ?>
-
-    <form class="profile-form" method="POST" enctype="multipart/form-data">
-
-        <div class="form-grid">
-
-            <!-- Contact Details -->
-            <div class="card">
-                <h3 class="card-title">Contact Details</h3>
-
-                <div class="input-grid">
-                    <label>Full Name *</label>
-                    <input type="text" name="full_name" value="<?= htmlspecialchars($data['profile']->full_name ?? '') ?>" required>
-
-                    <label>Phone Number *</label>
-                    <input type="text" name="phone" value="<?= htmlspecialchars($data['profile']->phone ?? '') ?>" required>
-
-                    <label>Email *</label>
-                    <input type="email" name="email" value="<?= htmlspecialchars($data['profile']->email ?? '') ?>" required>
+        <div class="profile-card">
+            <aside class="profile-summary">
+                <img id="profilePreview" src="<?= esc($profileImageSrc) ?>" alt="Audience profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.png'">
+                <div>
+                    <h2><?= esc($profile->full_name ?? 'Audience') ?></h2>
+                    <p><i class="bx bx-envelope"></i> <?= esc($profile->email ?? 'N/A') ?></p>
+                    <p><i class="bx bx-phone"></i> <?= esc($profile->phone ?? 'N/A') ?></p>
                 </div>
-            </div>
+            </aside>
 
-            <!-- Profile Upload -->
-            <div class="card">
-                <h3 class="card-title">Upload Profile Photo</h3>
+            <section class="profile-form">
+                <h1>Profile Details</h1>
+                <p class="subtitle">Keep your information up to date.</p>
 
-                <div class="upload-box">
-                    <div class="photo-preview">
-                        <?php if (!empty($data['profile_image'])): ?>
-                            <img src="<?= ROOT ?>/uploads/profile_images/<?= htmlspecialchars($data['profile_image']) ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                        <?php else: ?>
-                            <i class="bx bx-user"></i>
-                        <?php endif; ?>
+                <?php if (!empty($success)): ?>
+                    <div class="alerts">
+                        <div class="alert alert-success">
+                            <i class="bx bx-check-circle"></i> <?= esc($success) ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($error)): ?>
+                    <div class="alerts">
+                        <div class="alert alert-error">
+                            <i class="bx bx-exclamation-triangle"></i> <?= esc($error) ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($errors)): ?>
+                    <div class="alerts">
+                        <?php foreach ($errors as $item): ?>
+                            <div class="alert alert-error">
+                                <i class="bx bx-exclamation-triangle"></i> <?= esc($item) ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
+                <form method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="full_name">Full Name</label>
+                        <input id="full_name" name="full_name" type="text" value="<?= esc($profile->full_name ?? '') ?>" required>
                     </div>
 
-                    <input type="file" name="profile_image" id="profileUpload" accept="image/*" hidden>
-                    <label class="btn btn-primary-soft" for="profileUpload">Upload Photo</label>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input id="email" name="email" type="email" value="<?= esc($profile->email ?? '') ?>" required>
+                    </div>
 
-                    <p class="note">JPG, PNG or GIF (Max 5MB)</p>
-                </div>
-            </div>
+                    <div class="form-group full">
+                        <label for="phone">Phone</label>
+                        <input id="phone" name="phone" type="text" value="<?= esc($profile->phone ?? '') ?>" required>
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="bio">Bio / About Me</label>
+                        <textarea id="bio" name="bio" rows="4" placeholder="Tell us about yourself..."><?= esc($data['bio'] ?? '') ?></textarea>
+                    </div>
+
+                    <div class="form-group full">
+                        <label>Profile Image</label>
+                        <div class="file-input">
+                            <label for="profile_image">
+                                <i class="bx bx-upload"></i>
+                                <span>Upload new image</span>
+                            </label>
+                            <input id="profile_image" name="profile_image" type="file" accept="image/*">
+                            <span><?= esc($currentImageLabel) ?></span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="<?= ROOT ?>/AudienceProfile" class="btn btn-cancel">Cancel</a>
+                        <button type="submit" class="btn btn-save">
+                            <i class="bx bx-save"></i>
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </section>
         </div>
+    </div>
 
-        <!-- Bio Section -->
-        <div class="card">
-            <h3 class="card-title">Bio / About You</h3>
-            <div class="input-grid">
-                <label>Bio</label>
-                <textarea name="bio" rows="5" placeholder="Tell us about yourself..."><?= htmlspecialchars($data['bio'] ?? '') ?></textarea>
-            </div>
-        </div>
+    <script>
+        const imageInput = document.getElementById('profile_image');
+        const preview = document.getElementById('profilePreview');
 
-        <!-- Buttons -->
-        <div class="btn-row">
-            <a href="<?= ROOT ?>/AudienceProfile" class="btn btn-error">Cancel</a>
-            <button type="submit" class="btn btn-primary">Update Profile</button>
-        </div>
+        if (imageInput && preview) {
+            imageInput.addEventListener('change', function(event) {
+                const file = event.target.files && event.target.files[0];
+                if (!file) {
+                    return;
+                }
 
-    </form>
-</div>
-
-<script>
-    // Preview image before upload
-    document.getElementById('profileUpload').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.querySelector('.photo-preview');
-                preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
-            }
-            reader.readAsDataURL(file);
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
         }
-    });
-</script>
-
+    </script>
 </body>
 </html>

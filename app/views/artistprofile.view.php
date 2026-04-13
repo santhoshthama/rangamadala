@@ -8,7 +8,7 @@ $form = $form ?? ['full_name' => '', 'phone' => '', 'years_experience' => '', 'b
 $errors = $errors ?? [];
 $success = $success ?? '';
 
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+$profileImageSrc = ROOT . '/uploads/profile_images/default_user.png';
 if ($user && !empty($user->profile_image)) {
     $imageValue = str_replace('\\', '/', $user->profile_image);
     if (strpos($imageValue, '/') !== false) {
@@ -16,8 +16,6 @@ if ($user && !empty($user->profile_image)) {
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
-} elseif ($user && !empty($user->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
 }
 
 $nicDownload = $user && !empty($user->nic_photo)
@@ -357,7 +355,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
 
         <div class="profile-card">
             <aside class="profile-summary">
-                <img src="<?= esc($profileImageSrc) ?>" alt="Artist profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <img src="<?= esc($profileImageSrc) ?>" alt="Artist profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.png'">
 
                 <div>
                     <h2><?= $user ? esc($user->full_name ?? 'Artist') : 'Artist' ?></h2>

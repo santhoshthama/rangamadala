@@ -351,6 +351,45 @@ class M_audience_show_booking
         }
     }
 
+    public function getShowingPaymentsByAudience($audienceId)
+    {
+        if (!$this->canUseTable()) {
+            return [];
+        }
+
+        try {
+            $selectPaidAt = $this->tableHasColumn('paid_at') ? 'b.paid_at,' : "NULL AS paid_at,";
+            $selectPayOrder = $this->tableHasColumn('payhere_order_id') ? 'b.payhere_order_id,' : "NULL AS payhere_order_id,";
+
+            $this->db->query("SELECT b.id,
+                                     b.drama_id,
+                                     b.ticket_price,
+                                     b.booking_status,
+                                     b.created_at,
+                                     {$selectPaidAt}
+                                     {$selectPayOrder}
+                                     d.drama_name AS title,
+                                     d.showing_prices,
+                                     d.event_date,
+                                     d.venue
+                              FROM audience_show_bookings b
+                              LEFT JOIN dramas d ON d.id = b.drama_id
+                              WHERE b.audience_id = :audience_id
+                                AND (
+                                    (b.paid_at IS NOT NULL)
+                                    OR (LOWER(b.booking_status) IN ('confirmed', 'completed', 'watched', 'attended')
+                                        AND b.payhere_order_id IS NOT NULL
+                                        AND b.payhere_order_id <> '')
+                                )
+                              ORDER BY COALESCE(b.paid_at, b.created_at) DESC");
+            $this->db->bind(':audience_id', (int)$audienceId);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log('Error in M_audience_show_booking::getShowingPaymentsByAudience: ' . $e->getMessage());
+            return [];
+        }
+    }
+
     public function getPendingShowRequestsByArtist($artistId)
     {
         if (!$this->canUseTable()) {
@@ -368,6 +407,7 @@ class M_audience_show_booking
                                      {$selectRequestDetails}
                                      u.full_name AS audience_name,
                                      u.email AS audience_email,
+                             u.phone AS audience_phone,
                              d.drama_name AS drama_title
                               FROM audience_show_bookings b
                               INNER JOIN dramas d ON d.id = b.drama_id
@@ -429,6 +469,7 @@ class M_audience_show_booking
                                      {$selectRejectionReason}
                                      u.full_name AS audience_name,
                                      u.email AS audience_email,
+                                     u.phone AS audience_phone,
                                          d.drama_name AS drama_title
                               FROM audience_show_bookings b
                               INNER JOIN dramas d ON d.id = b.drama_id

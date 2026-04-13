@@ -22,9 +22,11 @@ class M_drama {
                                     d.event_date,
                                     TIME_FORMAT(d.event_time, '%h:%i %p') AS event_time,
                                     d.ticket_price,
-                                    c.name AS category_name
+                                    c.name AS category_name,
+                                    u.phone AS producer_phone
                              FROM dramas d
                              LEFT JOIN categories c ON d.category_id = c.id
+                             LEFT JOIN users u ON u.id = COALESCE(d.creator_artist_id, d.created_by)
                              WHERE d.is_published = 1
                              ORDER BY d.published_at DESC, d.created_at DESC");
             return $this->db->resultSet();
@@ -507,41 +509,85 @@ class M_drama {
                 return false;
             }
 
-            $posterPath = 'uploads/dramas/' . ltrim($drama->poster_image, '/');
+            $rawPosterPath = ltrim((string)$drama->poster_image, '/');
+            if (strpos($rawPosterPath, 'uploads/') === 0) {
+                $posterPath = $rawPosterPath;
+            } else {
+                $posterPath = 'uploads/dramas/' . $rawPosterPath;
+            }
 
-            $this->db->query("SELECT id FROM swiper_slides WHERE drama_id = :drama_id LIMIT 1");
-            $this->db->bind(':drama_id', (int)$dramaId);
-            $existing = $this->db->single();
+            // Handle old/new schema variants safely.
+            $this->db->query("SHOW COLUMNS FROM swiper_slides");
+            $columns = $this->db->resultSet();
+            $columnMap = [];
+            foreach ($columns as $column) {
+                $columnMap[strtolower((string)$column->Field)] = true;
+            }
+
+            $hasDramaId = isset($columnMap['drama_id']);
+            $hasDescription = isset($columnMap['description']);
+            $hasUpdatedAt = isset($columnMap['updated_at']);
+
+            $existing = null;
+            if ($hasDramaId) {
+                $this->db->query("SELECT id FROM swiper_slides WHERE drama_id = :drama_id LIMIT 1");
+                $this->db->bind(':drama_id', (int)$dramaId);
+                $existing = $this->db->single();
+            }
 
             if ($existing) {
-                $this->db->query("UPDATE swiper_slides
-                                 SET image_path = :image_path,
-                                     title = :title,
-                                     description = :description,
-                                     is_active = 0,
-                                     updated_at = CURRENT_TIMESTAMP
-                                 WHERE id = :id");
+                $setParts = [
+                    'image_path = :image_path',
+                    'title = :title',
+                    'is_active = 0'
+                ];
+
+                if ($hasDescription) {
+                    $setParts[] = 'description = :description';
+                }
+
+                if ($hasUpdatedAt) {
+                    $setParts[] = 'updated_at = CURRENT_TIMESTAMP';
+                }
+
+                $this->db->query("UPDATE swiper_slides SET " . implode(', ', $setParts) . " WHERE id = :id");
                 $this->db->bind(':image_path', $posterPath);
                 $this->db->bind(':title', $drama->drama_name);
-                $this->db->bind(':description', 'Submitted by director for home page approval');
+                if ($hasDescription) {
+                    $this->db->bind(':description', 'Submitted by director for home page approval');
+                }
                 $this->db->bind(':id', (int)$existing->id);
                 return $this->db->execute();
             }
 
-            $this->db->query("INSERT INTO swiper_slides (id, image_path, title, description, drama_id, display_order, is_active)
-                             VALUES (
-                                (SELECT COALESCE(MAX(s.id), 0) + 1 FROM (SELECT id FROM swiper_slides) s),
-                                :image_path,
-                                :title,
-                                :description,
-                                :drama_id,
-                                (SELECT COALESCE(MAX(display_order), 0) + 1 FROM swiper_slides),
-                                0
-                             )");
+            $insertColumns = ['image_path', 'title'];
+            $insertValues = [':image_path', ':title'];
+
+            if ($hasDescription) {
+                $insertColumns[] = 'description';
+                $insertValues[] = ':description';
+            }
+
+            if ($hasDramaId) {
+                $insertColumns[] = 'drama_id';
+                $insertValues[] = ':drama_id';
+            }
+
+            $insertColumns[] = 'display_order';
+            $insertValues[] = '(SELECT COALESCE(MAX(display_order), 0) + 1 FROM swiper_slides)';
+
+            $insertColumns[] = 'is_active';
+            $insertValues[] = '0';
+
+            $this->db->query("INSERT INTO swiper_slides (" . implode(', ', $insertColumns) . ") VALUES (" . implode(', ', $insertValues) . ")");
             $this->db->bind(':image_path', $posterPath);
             $this->db->bind(':title', $drama->drama_name);
-            $this->db->bind(':description', 'Submitted by director for home page approval');
-            $this->db->bind(':drama_id', (int)$dramaId);
+            if ($hasDescription) {
+                $this->db->bind(':description', 'Submitted by director for home page approval');
+            }
+            if ($hasDramaId) {
+                $this->db->bind(':drama_id', (int)$dramaId);
+            }
 
             return $this->db->execute();
         } catch (Exception $e) {
