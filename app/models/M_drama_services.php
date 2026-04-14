@@ -1,5 +1,6 @@
 <?php
 
+if (!class_exists('M_drama_services')) {
 class M_drama_services
 {
     private $db;
@@ -66,4 +67,5 @@ class M_drama_services
         $services = $this->getServicesByDrama($drama_id);
         return array_map(function($s) { return $s->service_type; }, $services ?? []);
     }
+}
 }

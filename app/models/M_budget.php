@@ -3,6 +3,7 @@
 class M_budget
 {
     private $db;
+    private $columnCache = [];
 
     public function __construct()
     {
@@ -111,24 +112,49 @@ class M_budget
      */
     public function createBudgetItem($data)
     {
-        $this->db->query("
-            INSERT INTO drama_budgets (
-                drama_id, item_name, category, allocated_amount, spent_amount, 
-                status, notes, created_by
-            ) VALUES (
-                :drama_id, :item_name, :category, :allocated_amount, :spent_amount,
-                :status, :notes, :created_by
-            )
+        $columns = [
+            'drama_id', 'item_name', 'category', 'allocated_amount', 'spent_amount',
+            'status', 'notes', 'created_by'
+        ];
+
+        $binds = [
+            ':drama_id' => $data['drama_id'],
+            ':item_name' => $data['item_name'],
+            ':category' => $data['category'],
+            ':allocated_amount' => $data['allocated_amount'] ?? 0,
+            ':spent_amount' => $data['spent_amount'] ?? 0,
+            ':status' => $data['status'] ?? 'pending',
+            ':notes' => $data['notes'] ?? null,
+            ':created_by' => $data['created_by'] ?? null,
+        ];
+
+        if ($this->hasColumn('drama_budgets', 'service_request_id')) {
+            $columns[] = 'service_request_id';
+            $binds[':service_request_id'] = $data['service_request_id'] ?? null;
+        }
+
+        if ($this->hasColumn('drama_budgets', 'source_type')) {
+            $columns[] = 'source_type';
+            $binds[':source_type'] = $data['source_type'] ?? 'manual';
+        }
+
+        if ($this->hasColumn('drama_budgets', 'last_synced_at')) {
+            $columns[] = 'last_synced_at';
+            $binds[':last_synced_at'] = $data['last_synced_at'] ?? null;
+        }
+
+        $placeholders = array_map(function ($column) {
+            return ':' . $column;
+        }, $columns);
+
+        $this->db->query(" 
+            INSERT INTO drama_budgets (" . implode(', ', $columns) . ")
+            VALUES (" . implode(', ', $placeholders) . ")
         ");
 
-        $this->db->bind(':drama_id', $data['drama_id']);
-        $this->db->bind(':item_name', $data['item_name']);
-        $this->db->bind(':category', $data['category']);
-        $this->db->bind(':allocated_amount', $data['allocated_amount'] ?? 0);
-        $this->db->bind(':spent_amount', $data['spent_amount'] ?? 0);
-        $this->db->bind(':status', $data['status'] ?? 'pending');
-        $this->db->bind(':notes', $data['notes'] ?? null);
-        $this->db->bind(':created_by', $data['created_by']);
+        foreach ($binds as $param => $value) {
+            $this->db->bind($param, $value);
+        }
 
         return $this->db->execute();
     }
@@ -138,27 +164,64 @@ class M_budget
      */
     public function updateBudgetItem($id, $data)
     {
-        $this->db->query("
+        $setParts = [
+            'item_name = :item_name',
+            'category = :category',
+            'allocated_amount = :allocated_amount',
+            'spent_amount = :spent_amount',
+            'status = :status',
+            'notes = :notes',
+        ];
+
+        $binds = [
+            ':id' => $id,
+            ':item_name' => $data['item_name'],
+            ':category' => $data['category'],
+            ':allocated_amount' => $data['allocated_amount'] ?? 0,
+            ':spent_amount' => $data['spent_amount'] ?? 0,
+            ':status' => $data['status'],
+            ':notes' => $data['notes'] ?? null,
+        ];
+
+        if ($this->hasColumn('drama_budgets', 'service_request_id') && array_key_exists('service_request_id', $data)) {
+            $setParts[] = 'service_request_id = :service_request_id';
+            $binds[':service_request_id'] = $data['service_request_id'];
+        }
+
+        if ($this->hasColumn('drama_budgets', 'source_type') && array_key_exists('source_type', $data)) {
+            $setParts[] = 'source_type = :source_type';
+            $binds[':source_type'] = $data['source_type'];
+        }
+
+        if ($this->hasColumn('drama_budgets', 'last_synced_at')) {
+            $setParts[] = 'last_synced_at = :last_synced_at';
+            $binds[':last_synced_at'] = $data['last_synced_at'] ?? null;
+        }
+
+        $setParts[] = 'updated_at = CURRENT_TIMESTAMP';
+
+        $this->db->query(" 
             UPDATE drama_budgets SET
-                item_name = :item_name,
-                category = :category,
-                allocated_amount = :allocated_amount,
-                spent_amount = :spent_amount,
-                status = :status,
-                notes = :notes,
-                updated_at = CURRENT_TIMESTAMP
+                " . implode(",\n                ", $setParts) . "
             WHERE id = :id
         ");
 
-        $this->db->bind(':id', $id);
-        $this->db->bind(':item_name', $data['item_name']);
-        $this->db->bind(':category', $data['category']);
-        $this->db->bind(':allocated_amount', $data['allocated_amount'] ?? 0);
-        $this->db->bind(':spent_amount', $data['spent_amount'] ?? 0);
-        $this->db->bind(':status', $data['status']);
-        $this->db->bind(':notes', $data['notes'] ?? null);
+        foreach ($binds as $param => $value) {
+            $this->db->bind($param, $value);
+        }
 
         return $this->db->execute();
+    }
+
+    public function getBudgetItemByServiceRequest($service_request_id)
+    {
+        if (!$this->hasColumn('drama_budgets', 'service_request_id')) {
+            return null;
+        }
+
+        $this->db->query("SELECT * FROM drama_budgets WHERE service_request_id = :service_request_id ORDER BY id DESC LIMIT 1");
+        $this->db->bind(':service_request_id', $service_request_id);
+        return $this->db->single();
     }
 
     /**
@@ -232,6 +295,27 @@ class M_budget
         ");
         $this->db->bind(':drama_id', $drama_id);
         return $this->db->single();
+    }
+
+    private function hasColumn(string $table, string $column): bool
+    {
+        $cacheKey = $table . '.' . $column;
+        if (array_key_exists($cacheKey, $this->columnCache)) {
+            return $this->columnCache[$cacheKey];
+        }
+
+        try {
+            $this->db->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column LIMIT 1");
+            $this->db->bind(':table', $table);
+            $this->db->bind(':column', $column);
+            $exists = (bool)$this->db->single();
+            $this->columnCache[$cacheKey] = $exists;
+            return $exists;
+        } catch (Exception $e) {
+            error_log('M_budget::hasColumn check failed: ' . $e->getMessage());
+            $this->columnCache[$cacheKey] = false;
+            return false;
+        }
     }
 }
 

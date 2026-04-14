@@ -914,7 +914,93 @@ class Director{
 
     public function view_services_budget()
     {
-        $this->renderDramaView('view_services_budget');
+        $this->renderDramaView('view_services_budget', [], function ($drama) {
+            $dramaId = (int)$drama->id;
+
+            $serviceModel = $this->getModel('M_service_request');
+            $budgetModel = $this->getModel('M_budget');
+            $paymentModel = $this->getModel('M_payment');
+
+            $servicesRaw = $serviceModel ? ($serviceModel->getServicesByDrama($dramaId) ?? []) : [];
+            $budgetItemsRaw = $budgetModel ? ($budgetModel->getBudgetByDrama($dramaId) ?? []) : [];
+            $budgetCategoriesRaw = $budgetModel ? ($budgetModel->getBudgetSummaryByCategory($dramaId) ?? []) : [];
+
+            $totalBudget = $budgetModel ? (float)$budgetModel->getTotalBudget($dramaId) : 0.0;
+            $usedBudget = $budgetModel ? (float)$budgetModel->getTotalSpent($dramaId) : 0.0;
+            $remainingBudget = max(0, $totalBudget - $usedBudget);
+            $usedPct = $totalBudget > 0 ? round(($usedBudget / $totalBudget) * 100, 2) : 0;
+            $remainingPct = max(0, round(100 - $usedPct, 2));
+
+            $pendingPayments = 0.0;
+            if ($paymentModel && is_array($servicesRaw) && !empty($servicesRaw)) {
+                $requestIds = [];
+                foreach ($servicesRaw as $service) {
+                    $rid = (int)($service->id ?? 0);
+                    if ($rid > 0) {
+                        $requestIds[] = $rid;
+                    }
+                }
+
+                if (!empty($requestIds)) {
+                    $paymentStats = $paymentModel->getRequestPaymentStats($requestIds);
+                    foreach ($servicesRaw as $service) {
+                        $rid = (int)($service->id ?? 0);
+                        $serviceBudget = (float)($service->budget ?? 0);
+                        $paid = isset($paymentStats[$rid]) ? (float)($paymentStats[$rid]['total_paid'] ?? 0) : 0.0;
+                        if ($serviceBudget > $paid) {
+                            $pendingPayments += ($serviceBudget - $paid);
+                        }
+                    }
+                }
+            }
+
+            $services = [];
+            foreach ($servicesRaw as $service) {
+                $services[] = [
+                    'title' => $service->service_type ?? 'Service',
+                    'managed_by' => $service->provider_name ?? null,
+                    'details' => $service->description ?? $service->service_required ?? null,
+                    'status' => ucfirst((string)($service->status ?? 'pending')),
+                    'payment_status' => ucfirst((string)($service->calculated_payment_status ?? $service->payment_status ?? 'unpaid')),
+                ];
+            }
+
+            $budgetItems = [];
+            foreach ($budgetItemsRaw as $item) {
+                $budgetItems[] = [
+                    'title' => $item->item_name ?? 'Budget Item',
+                    'details' => $item->notes ?? null,
+                    'amount' => isset($item->allocated_amount) ? (float)$item->allocated_amount : 0,
+                    'status' => ucfirst((string)($item->status ?? 'pending')),
+                ];
+            }
+
+            $budgetCategories = [];
+            foreach ($budgetCategoriesRaw as $category) {
+                $allocated = isset($category->total_allocated) ? (float)$category->total_allocated : 0.0;
+                $pct = $totalBudget > 0 ? round(($allocated / $totalBudget) * 100, 2) : 0.0;
+                $budgetCategories[] = [
+                    'name' => ucfirst((string)($category->category ?? 'Other')),
+                    'amount' => $allocated,
+                    'percentage' => $pct,
+                ];
+            }
+
+            return [
+                'services' => $services,
+                'budgetItems' => $budgetItems,
+                'budgetCategories' => $budgetCategories,
+                'theaterBookings' => [],
+                'budgetSummary' => [
+                    'total_budget' => $totalBudget,
+                    'used_budget' => $usedBudget,
+                    'remaining_budget' => $remainingBudget,
+                    'used_percentage' => $usedPct,
+                    'remaining_percentage' => $remainingPct,
+                    'pending_payments' => $pendingPayments,
+                ],
+            ];
+        });
     }
 
     public function search_artists()
