@@ -4,7 +4,7 @@ if(isset($data) && is_array($data)) {
     extract($data);
 }
 
-$profileImageSrc = ROOT . '/uploads/profile_images/default_user.png';
+$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
 if (isset($user->profile_image) && !empty($user->profile_image)) {
     $storedValue = str_replace('\\', '/', $user->profile_image);
     if (strpos($storedValue, '/') !== false) {
@@ -17,6 +17,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
 }
 
 $requestPath = strtolower((string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? ''));
+$requestedTab = strtolower(trim((string)($_GET['tab'] ?? '')));
 $sidebarActive = [
     'dashboard' => false,
     'notifications' => false,
@@ -31,6 +32,8 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
     $sidebarActive['vacancies'] = true;
 } elseif (strpos($requestPath, '/artistdashboard/classes') !== false) {
     $sidebarActive['classes'] = true;
+} elseif ($requestedTab === 'my-showings') {
+    $sidebarActive['showings'] = true;
 } else {
     $sidebarActive['dashboard'] = true;
 }
@@ -43,7 +46,6 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
     <title>Artist Dashboard - Rangamadala</title>
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/toast.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <style>
         .header--wrapper .user--info {
@@ -403,30 +405,30 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
         <ul class="menu">
             <li class="<?= $sidebarActive['dashboard'] ? 'active' : '' ?>">
                 <a href="<?=ROOT?>/artistdashboard">
-                    <i class='bx bxs-home'></i>
+                    <i class='bx bx-home'></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="<?= $sidebarActive['vacancies'] ? 'active' : '' ?>">
                 <a href="<?=ROOT?>/artistdashboard/browse_vacancies">
-                    <i class='bx bxs-megaphone'></i>
+                    <i class='bx bx-volume-full'></i>
                     <span>View All Vacancies</span>
                 </a>
             </li>
             <li class="<?= $sidebarActive['notifications'] ? 'active' : '' ?>">
                 <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class='bx bxs-bell'></i>
+                    <i class='bx bx-bell'></i>
                     <span>Notifications</span>
                 </a>
             </li>
             <li class="<?= $sidebarActive['classes'] ? 'active' : '' ?>">
                 <a href="<?=ROOT?>/artistdashboard/classes">
-                    <i class='bx bxs-graduation'></i>
+                    <i class='bx bx-microphone'></i>
                     <span>Classes</span>
                 </a>
             </li>
             <li class="<?= $sidebarActive['showings'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard#my-showings">
+                <a href="<?=ROOT?>/artistdashboard?tab=my-showings#my-showings">
                     <i class='bx bx-calendar-event'></i>
                     <span>Showings</span>
                 </a>
@@ -449,12 +451,12 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                 <div class="user-menu" id="userMenu">
                     <div class="user-menu-trigger" id="user-menu-trigger">
                         <div class="user-avatar-small">
-                            <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.png'">
+                            <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'">
                         </div>
                     </div>
                     <div class="user-menu-dropdown">
                         <a href="<?= ROOT ?>/profile" class="user-menu-item">
-                            <i class='bx bxs-user icon'></i>
+                            <i class='bx bx-user icon'></i>
                             <span>Profile</span>
                         </a>
                         <a href="<?= ROOT ?>/logout" class="user-menu-item">
@@ -479,7 +481,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                 <div class="stat-card-header">
                     <div class="stat-card-title">Total Dramas</div>
                     <div class="stat-card-icon primary">
-                        <i class="bx bx-theater-masks"></i>
+                        <i class="bx bx-mask"></i>
                     </div>
                 </div>
                 <div class="stat-card-value"><?= isset($stats['total_dramas']) ? $stats['total_dramas'] : 0 ?></div>
@@ -506,7 +508,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                 <div class="stat-card-header">
                     <div class="stat-card-title">As Actor</div>
                     <div class="stat-card-icon warning">
-                        <i class="bx bx-user-tie"></i>
+                        <i class="bx bx-award"></i>
                     </div>
                 </div>
                 <div class="stat-card-value"><?= isset($stats['as_actor']) ? $stats['as_actor'] : 0 ?></div>
@@ -1294,18 +1296,22 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
         }
 
         function syncSidebarWithHash() {
-            if (window.location.hash !== '#my-showings') {
-                return;
-            }
-
             const menuItems = document.querySelectorAll('.sidebar .menu li');
             menuItems.forEach(function (item) {
                 item.classList.remove('active');
             });
 
-            const showingsLink = document.querySelector('.sidebar .menu a[href*="#my-showings"]');
-            if (showingsLink && showingsLink.parentElement) {
-                showingsLink.parentElement.classList.add('active');
+            if (window.location.hash === '#my-showings') {
+                const showingsLink = document.querySelector('.sidebar .menu a[href*="tab=my-showings"]');
+                if (showingsLink && showingsLink.parentElement) {
+                    showingsLink.parentElement.classList.add('active');
+                }
+                return;
+            }
+
+            const dashboardItem = document.querySelector('.sidebar .menu li:first-child');
+            if (dashboardItem) {
+                dashboardItem.classList.add('active');
             }
         }
 

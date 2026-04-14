@@ -113,10 +113,10 @@ function renderUsers(users) {
       <td>
         <div class="action-buttons">
           <button class="btn btn-secondary btn-sm" onclick="showEditUserModal(${user.id})" title="Edit User">
-            <span class="material-symbols-rounded">edit</span>
+            <span class="bx bx-edit"></span>
           </button>
           <button class="btn btn-danger btn-sm" onclick="confirmRemoveUser(${user.id}, '${escapeHtml(user.full_name)}')" title="Remove User">
-            <span class="material-symbols-rounded">delete</span>
+            <span class="bx bx-trash"></span>
           </button>
         </div>
       </td>
@@ -147,22 +147,22 @@ function showAddUserModal() {
         <div class="modal-header">
           <h3>Add New User</h3>
           <button class="modal-close" onclick="closeAddUserModal()">
-            <span class="material-symbols-rounded">close</span>
+            <span class="bx bx-x"></span>
           </button>
         </div>
         <div class="modal-body">
           <form id="addUserForm">
             <div class="input-box">
               <input type="text" id="addUserName" placeholder="Full Name" required />
-              <i class="material-symbols-rounded">person</i>
+              <i class="bx bx-user"></i>
             </div>
             <div class="input-box">
               <input type="email" id="addUserEmail" placeholder="Email Address" required />
-              <i class="material-symbols-rounded">mail</i>
+              <i class="bx bx-envelope"></i>
             </div>
             <div class="input-box">
               <input type="tel" id="addUserPhone" placeholder="Phone Number" />
-              <i class="material-symbols-rounded">phone</i>
+              <i class="bx bx-phone"></i>
             </div>
             <div class="input-box select-box">
               <select id="addUserRole" required>
@@ -171,18 +171,18 @@ function showAddUserModal() {
                 <option value="audience">Audience</option>
                 <option value="service_provider">Service Provider</option>
               </select>
-              <i class="material-symbols-rounded">badge</i>
+              <i class="bx bx-badge">badge</i>
             </div>
             <div class="input-box">
               <input type="password" id="addUserPassword" placeholder="Password (min 6 characters)" required minlength="6" />
-              <i class="material-symbols-rounded">lock</i>
+              <i class="bx bx-lock"></i>
             </div>
             <div class="input-box">
               <input type="password" id="addUserConfirmPassword" placeholder="Confirm Password" required minlength="6" />
-              <i class="material-symbols-rounded">lock_reset</i>
+              <i class="bx bx-lock-reset"></i>
             </div>
             <p class="form-note">
-              <span class="material-symbols-rounded">info</span>
+              <span class="bx bx-info-circle"></span>
               Users added by admin are automatically verified and can log in immediately.
             </p>
           </form>
@@ -190,7 +190,7 @@ function showAddUserModal() {
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="closeAddUserModal()">Cancel</button>
           <button class="btn btn-primary" onclick="submitAddUser()">
-            <span class="material-symbols-rounded">person_add</span>
+            <span class="bx bx-user-plus"></span>
             Add User
           </button>
         </div>
@@ -299,7 +299,7 @@ function showEditUserModal(userId) {
             <div class="modal-header">
               <h3>Edit User</h3>
               <button class="modal-close" onclick="closeEditUserModal()">
-                <span class="material-symbols-rounded">close</span>
+                <span class="bx bx-x"></span>
               </button>
             </div>
             <div class="modal-body">
@@ -307,15 +307,15 @@ function showEditUserModal(userId) {
                 <input type="hidden" id="editUserId" value="${user.id}" />
                 <div class="input-box">
                   <input type="text" id="editUserName" value="${escapeHtml(user.full_name)}" placeholder="Full Name" required />
-                  <i class="material-symbols-rounded">person</i>
+                  <i class="bx bx-user"></i>
                 </div>
                 <div class="input-box">
                   <input type="email" id="editUserEmail" value="${escapeHtml(user.email)}" placeholder="Email Address" required />
-                  <i class="material-symbols-rounded">mail</i>
+                  <i class="bx bx-envelope"></i>
                 </div>
                 <div class="input-box">
                   <input type="tel" id="editUserPhone" value="${escapeHtml(user.phone || '')}" placeholder="Phone Number" />
-                  <i class="material-symbols-rounded">phone</i>
+                  <i class="bx bx-phone"></i>
                 </div>
                 <div class="input-box select-box">
                   <select id="editUserRole" required>
@@ -323,14 +323,14 @@ function showEditUserModal(userId) {
                     <option value="audience" ${user.role === 'audience' ? 'selected' : ''}>Audience</option>
                     <option value="service_provider" ${user.role === 'service_provider' ? 'selected' : ''}>Service Provider</option>
                   </select>
-                  <i class="material-symbols-rounded">badge</i>
+                  <i class="bx bx-badge"></i>
                 </div>
               </form>
             </div>
             <div class="modal-footer">
               <button class="btn btn-secondary" onclick="closeEditUserModal()">Cancel</button>
               <button class="btn btn-primary" onclick="submitEditUser()">
-                <span class="material-symbols-rounded">save</span>
+                <span class="bx bx-save"></span>
                 Save Changes
               </button>
             </div>

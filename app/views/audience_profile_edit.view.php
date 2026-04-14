@@ -5,7 +5,7 @@ $errors = $data['errors'] ?? [];
 $success = $data['success'] ?? '';
 $error = $data['error'] ?? '';
 
-$profileImageSrc = ROOT . '/uploads/profile_images/default_user.png';
+$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
 if (!empty($profileImage)) {
     $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($profileImage);
 }
@@ -259,7 +259,7 @@ $currentImageLabel = !empty($profileImage)
 
         <div class="profile-card">
             <aside class="profile-summary">
-                <img id="profilePreview" src="<?= esc($profileImageSrc) ?>" alt="Audience profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.png'">
+                <img id="profilePreview" src="<?= esc($profileImageSrc) ?>" alt="Audience profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'">
                 <div>
                     <h2><?= esc($profile->full_name ?? 'Audience') ?></h2>
                     <p><i class="bx bx-envelope"></i> <?= esc($profile->email ?? 'N/A') ?></p>

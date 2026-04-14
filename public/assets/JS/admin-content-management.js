@@ -124,12 +124,19 @@ function showAddSwiperModal() {
         </div>
         <div class="modal-body">
           <form id="addSwiperForm" enctype="multipart/form-data">
+            <div class="input-box select-box">
+              <select id="swiperDramaSelect">
+                <option value="">Select published drama (optional)</option>
+              </select>
+              <i class="material-symbols-rounded">theater_comedy</i>
+            </div>
+            <div class="form-hint" style="margin-bottom: 12px; color: #8a6a1f;">Choose a published drama to use its poster image and title.</div>
             <div class="input-box">
               <input type="text" id="swiperTitle" placeholder="Slide Title (optional)" />
               <i class="material-symbols-rounded">title</i>
             </div>
             <div class="file-upload-box">
-              <input type="file" id="swiperImage" accept="image/*" required />
+              <input type="file" id="swiperImage" accept="image/*" />
               <label for="swiperImage">
                 <span class="material-symbols-rounded">cloud_upload</span>
                 <span>Choose Image</span>
@@ -149,6 +156,8 @@ function showAddSwiperModal() {
     </div>
   `;
   document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+  loadPublishedDramaOptions();
   
   // File preview handler
   document.getElementById('swiperImage').addEventListener('change', function(e) {
@@ -156,18 +165,50 @@ function showAddSwiperModal() {
   });
 }
 
+function loadPublishedDramaOptions() {
+  const select = document.getElementById('swiperDramaSelect');
+  if (!select) {
+    return;
+  }
+
+  fetch(ROOT + '/admindashboard/getPublishedDramasForSlides')
+    .then(response => response.json())
+    .then(data => {
+      if (!Array.isArray(data)) {
+        return;
+      }
+
+      const options = data.map(drama => {
+        const alreadyAddedTag = drama.already_added ? ' (already in slides)' : '';
+        return `<option value="${drama.id}">${escapeHtml(drama.drama_name)}${alreadyAddedTag}</option>`;
+      }).join('');
+
+      select.insertAdjacentHTML('beforeend', options);
+    })
+    .catch(error => {
+      console.error('Failed to load published dramas:', error);
+    });
+}
+
 function submitAddSwiper() {
   const title = document.getElementById('swiperTitle').value;
+  const dramaSelect = document.getElementById('swiperDramaSelect');
+  const selectedDramaId = dramaSelect ? dramaSelect.value : '';
   const imageInput = document.getElementById('swiperImage');
   
-  if (!imageInput.files.length) {
-    alert('Please select an image');
+  if (!selectedDramaId && !imageInput.files.length) {
+    alert('Please select a published drama or upload an image');
     return;
   }
 
   const formData = new FormData();
   formData.append('title', title);
-  formData.append('image', imageInput.files[0]);
+  if (selectedDramaId) {
+    formData.append('drama_id', selectedDramaId);
+  }
+  if (imageInput.files.length) {
+    formData.append('image', imageInput.files[0]);
+  }
 
   fetch(ROOT + '/admindashboard/addSwiperSlide', {
     method: 'POST',
@@ -178,7 +219,7 @@ function submitAddSwiper() {
     if (data.success) {
       closeModal('addSwiperModal');
       loadSwiperSlides();
-      showToast('Slide added successfully!', 'success');
+      showToast(data.message || 'Slide added successfully!', 'success');
     } else {
       alert(data.message || 'Failed to add slide');
     }

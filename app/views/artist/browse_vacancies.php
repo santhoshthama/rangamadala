@@ -3,19 +3,16 @@ if(isset($data) && is_array($data)) {
     extract($data);
 }
 
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
+if (isset($user->profile_image) && !empty($user->profile_image)) {
+    $imageValue = str_replace('\\', '/', $user->profile_image);
     if (strpos($imageValue, '/') !== false) {
         $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+} elseif (isset($user->nic_photo) && !empty($user->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
 }
 ?>
 <!DOCTYPE html>
@@ -24,6 +21,9 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Role Vacancies - Rangamadala</title>
+    <link rel="icon" type="image/png" href="<?=ROOT?>/assets/images/Rangamadala%20logo.png">
+    <link rel="apple-touch-icon" href="<?=ROOT?>/assets/images/Rangamadala%20logo.png">
+
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <style>
@@ -639,19 +639,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <ul class="menu">
             <li>
                 <a href="<?=ROOT?>/artistdashboard">
-                    <i class="bx bx-home"></i>
+                    <i class="bx bxs-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?=ROOT?>/artistdashboard/browse_vacancies">
-                    <i class="bx bx-bullhorn"></i>
+                    <i class="bx bxs-megaphone"></i>
                     <span>View All Vacancies</span>
                 </a>
             </li>
             <li>
                 <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class="bx bx-bell"></i>
+                    <i class="bx bxs-bell"></i>
                     <span>Notifications</span>
                 </a>
             </li>
@@ -662,7 +662,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/artistdashboard#my-showings">
+                <a href="<?=ROOT?>/artistdashboard?tab=my-showings#my-showings">
                     <i class='bx bx-calendar-event'></i>
                     <span>Showings</span>
                 </a>
@@ -727,8 +727,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 <option value="supporting" <?= ($filters['role_type'] ?? '') === 'supporting' ? 'selected' : '' ?>>Supporting Role</option>
                                 <option value="minor" <?= ($filters['role_type'] ?? '') === 'minor' ? 'selected' : '' ?>>Minor Role</option>
                                 <option value="extra" <?= ($filters['role_type'] ?? '') === 'extra' ? 'selected' : '' ?>>Extra</option>
-                            </select>
-                        </div>
                             </select>
                         </div>
 

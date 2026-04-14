@@ -548,16 +548,7 @@ nav img:hover {
     z-index: 1;
 }
 
-.testimonials-title::after {
-    content: '';
-    display: block;
-    width: 100px;
-    height: 5px;
-    background: linear-gradient(90deg, var(--accent-dark) 0%, var(--accent-color) 50%, var(--accent-light) 100%);
-    margin: 15px auto 0;
-    border-radius: 3px;
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-}
+
 
 .testimonials-container {
     display: flex;
@@ -721,29 +712,35 @@ nav img:hover {
 
 .testimonial-img {
     width: 100%;
-    height: 180px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
     border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    background: linear-gradient(180deg, rgba(212, 175, 55, 0.12) 0%, rgba(255, 255, 255, 0.95) 100%);
 }
 
 .testimonial-img img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
+    padding: 8px;
 }
 
 .testimonial-avatar-placeholder {
-    width: 78px;
-    height: 78px;
-    border-radius: 50%;
-    margin: 24px auto 12px;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--accent-dark), var(--accent-color));
     color: #0f1115;
     font-weight: 800;
-    font-size: 28px;
+    font-size: 46px;
 }
 
 .t-name {

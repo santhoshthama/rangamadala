@@ -140,55 +140,56 @@
           </div>
 
           <div class="booking-box">
-            <?php if ($bookingStatus === 'none' || $bookingStatus === 'rejected'): ?>
-              <?php if ($bookingStatus === 'rejected'): ?>
-                <p class="hint" style="color:#8a1f1f; font-weight:600;">Your previous request was rejected.</p>
-                <p class="hint" style="color:#8a1f1f;">Reason: <?= htmlspecialchars($rejectionReason !== '' ? $rejectionReason : 'No reason provided by artist.') ?></p>
-              <?php endif; ?>
-              <form method="POST" action="<?= ROOT ?>/BrowseDramas/bookShowings/<?= (int)$d->id ?>">
-                <div class="booking-grid">
-                  <div class="booking-field">
-                    <label for="request_sender_name">Request Sender Name *</label>
-                    <input id="request_sender_name" type="text" name="request_sender_name" required value="<?= htmlspecialchars((string)($requestDetails['request_sender_name'] ?? ($audienceUser->full_name ?? ''))) ?>">
-                  </div>
-                  <div class="booking-field">
-                    <label for="request_contact_phone">Contact Phone *</label>
-                    <input id="request_contact_phone" type="text" name="request_contact_phone" required placeholder="Example: 0771234567" value="<?= htmlspecialchars((string)($requestDetails['request_contact_phone'] ?? ($audienceUser->phone ?? ''))) ?>">
-                  </div>
-                  <div class="booking-field">
-                    <label for="request_contact_email">Contact Email</label>
-                    <input id="request_contact_email" type="email" name="request_contact_email" placeholder="Example: name@email.com" value="<?= htmlspecialchars((string)($requestDetails['request_contact_email'] ?? ($audienceUser->email ?? ''))) ?>">
-                  </div>
-                  <div class="booking-field">
-                    <label for="request_venue">Expected Place of Show *</label>
-                    <input id="request_venue" type="text" name="request_venue" required value="<?= htmlspecialchars((string)($requestDetails['request_venue'] ?? '')) ?>">
-                  </div>
-                  <div class="booking-field">
-                    <label for="show_date">Show Date *</label>
-                    <input id="show_date" type="date" name="show_date" required value="<?= htmlspecialchars((string)($requestDetails['show_date'] ?? '')) ?>">
-                  </div>
-                  <div class="booking-field">
-                    <label for="show_time">Show Time *</label>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                      <input id="show_time_start" type="time" name="show_time_start" required value="<?= htmlspecialchars($showTimeStartValue) ?>">
-                      <input id="show_time_end" type="time" name="show_time_end" required value="<?= htmlspecialchars($showTimeEndValue) ?>">
-                    </div>
-                    <input id="show_time" type="hidden" name="show_time" value="<?= htmlspecialchars($showTimeTextValue) ?>">
-                    <div class="time-range-preview" id="show_time_preview">Select start and end time.</div>
-                  </div>
-                  <div class="booking-field">
-                    <label for="present_count">Expected Present Count</label>
-                    <input id="present_count" type="number" name="present_count" min="0" value="<?= (int)($requestDetails['present_count'] ?? 0) ?>">
-                  </div>
-                  <div class="booking-field" style="grid-column: 1 / -1;">
-                    <label for="request_notes">Other Required Details</label>
-                    <textarea id="request_notes" name="request_notes" rows="3" placeholder="Mention any additional requirements for the show."><?= htmlspecialchars((string)($requestDetails['request_notes'] ?? '')) ?></textarea>
-                  </div>
+            <?php if ($bookingStatus === 'rejected'): ?>
+              <p class="hint" style="color:#8a1f1f; font-weight:600;">Your previous request was rejected.</p>
+              <p class="hint" style="color:#8a1f1f;">Reason: <?= htmlspecialchars($rejectionReason !== '' ? $rejectionReason : 'No reason provided by artist.') ?></p>
+            <?php endif; ?>
+
+            <form method="POST" action="<?= ROOT ?>/BrowseDramas/bookShowings/<?= (int)$d->id ?>">
+              <div class="booking-grid">
+                <div class="booking-field">
+                  <label for="request_sender_name">Request Sender Name *</label>
+                  <input id="request_sender_name" type="text" name="request_sender_name" required value="">
                 </div>
-                <button class="btn btn-primary" type="submit"><i class='bx bx-send'></i> Send Request to Artist</button>
-              </form>
-              <p class="hint">After artist approval, card payment with PayHere will be enabled.</p>
-            <?php elseif ($bookingStatus === 'pending'): ?>
+                <div class="booking-field">
+                  <label for="request_contact_phone">Contact Phone *</label>
+                  <input id="request_contact_phone" type="text" name="request_contact_phone" required placeholder="Example: 0771234567" value="">
+                </div>
+                <div class="booking-field">
+                  <label for="request_contact_email">Contact Email</label>
+                  <input id="request_contact_email" type="email" name="request_contact_email" placeholder="Example: name@email.com" value="">
+                </div>
+                <div class="booking-field">
+                  <label for="request_venue">Expected Place of Show *</label>
+                  <input id="request_venue" type="text" name="request_venue" required value="">
+                </div>
+                <div class="booking-field">
+                  <label for="show_date">Show Date *</label>
+                  <input id="show_date" type="date" name="show_date" required value="">
+                </div>
+                <div class="booking-field">
+                  <label for="show_time">Show Time *</label>
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <input id="show_time_start" type="time" name="show_time_start" required value="">
+                    <input id="show_time_end" type="time" name="show_time_end" required value="">
+                  </div>
+                  <input id="show_time" type="hidden" name="show_time" value="">
+                  <div class="time-range-preview" id="show_time_preview">Select start and end time.</div>
+                </div>
+                <div class="booking-field">
+                  <label for="present_count">Expected Present Count</label>
+                  <input id="present_count" type="number" name="present_count" min="0" value="">
+                </div>
+                <div class="booking-field" style="grid-column: 1 / -1;">
+                  <label for="request_notes">Other Required Details</label>
+                  <textarea id="request_notes" name="request_notes" rows="3" placeholder="Mention any additional requirements for the show."></textarea>
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit"><i class='bx bx-send'></i> Send Request to Artist</button>
+            </form>
+            <p class="hint">You can submit multiple requests for this drama. After artist approval, card payment with PayHere will be enabled for accepted requests.</p>
+
+            <?php if ($bookingStatus === 'pending'): ?>
               <p class="hint" style="font-weight:600;">Your request is pending artist approval.</p>
               <p class="hint">You can pay only after the artist accepts your request.</p>
             <?php elseif ($bookingStatus === 'accepted'): ?>
@@ -197,7 +198,7 @@
               <p class="hint">Complete payment to confirm your showing.</p>
             <?php elseif ($bookingStatus === 'confirmed'): ?>
               <p class="hint" style="color:#176e2a; font-weight:600;">Payment completed. Your showing request is confirmed.</p>
-            <?php else: ?>
+            <?php elseif ($bookingStatus !== 'none'): ?>
               <p class="hint">Current request status: <?= htmlspecialchars(ucfirst($bookingStatus)) ?></p>
             <?php endif; ?>
 

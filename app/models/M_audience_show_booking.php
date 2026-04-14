@@ -118,11 +118,6 @@ class M_audience_show_booking
         }
 
         try {
-            $existing = $this->getLatestBookingByAudienceDrama((int)$audienceId, (int)$dramaId);
-            if (!empty($existing) && in_array(strtolower((string)$existing->booking_status), ['pending', 'accepted'], true)) {
-                return ['success' => false, 'message' => 'You already have an active request for this drama.'];
-            }
-
             $this->db->query("INSERT INTO audience_show_bookings (
                                 audience_id,
                                 drama_id,

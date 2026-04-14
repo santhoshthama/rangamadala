@@ -44,7 +44,7 @@ class Audiencedashboard {
             'my_classes' => [],
             'showing_payments' => [],
             'class_payments' => [],
-            'dashboard_profile_image' => ROOT . '/uploads/profile_images/default_user.png'
+            'dashboard_profile_image' => ROOT . '/uploads/profile_images/user_profile.png'
         ];
 
         $data['total_dramas'] = count($data['dramas']);

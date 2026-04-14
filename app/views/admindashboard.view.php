@@ -14,44 +14,10 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <!-- CSS -->
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css" />
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard-page.css" />
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css" />
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      /* Match audience dashboard stat-card color style on admin overview */
-      #overview .stat-card {
-        background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
-        border: 1px solid #f0dfb4;
-        color: #4a3a14;
-        text-align: left;
-        box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
-      }
-
-      #overview .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 22px rgba(186, 142, 35, 0.2);
-      }
-
-      #overview .stat-card-title {
-        color: #7a6121;
-      }
-
-      #overview .stat-card-icon.primary,
-      #overview .stat-card-icon.info,
-      #overview .stat-card-icon.success,
-      #overview .stat-card-icon.warning {
-        background: rgba(186, 142, 35, 0.14);
-        color: var(--brand);
-      }
-
-      #overview .stat-card-value {
-        color: #5a4415;
-      }
-
-      #overview .stat-card-change {
-        color: #8a6a1f;
-      }
-    </style>
     <link rel="shortcut icon" href="<?php echo ROOT;?>/assets/images/Rangamadala logo.png" type="image/x-icon">
   </head>
   <body>
@@ -85,23 +51,23 @@
         <nav class="dashboard-nav">
           <div class="dashboard-nav-section">
             <a href="#" class="dashboard-nav-item active" data-view="overview">
-              <span class="nav-icon material-symbols-rounded">dashboard</span>
+              <span class="nav-icon bx bx-home"></span>
               <span class="nav-label">Overview</span>
             </a>
             <a href="#" class="dashboard-nav-item" data-view="users">
-              <span class="nav-icon material-symbols-rounded">people</span>
+              <span class="nav-icon bx bx-user"></span>
               <span class="nav-label">User Management</span>
             </a>
             <a href="#" class="dashboard-nav-item" data-view="registrations">
-              <span class="nav-icon material-symbols-rounded">app_registration</span>
+              <span class="nav-icon bx bx-user-plus"></span>
               <span class="nav-label">Registrations</span>
             </a>
             <a href="#" class="dashboard-nav-item" data-view="drama-approvals">
-              <span class="nav-icon material-symbols-rounded">approval</span>
+              <span class="nav-icon bx bx-check-circle"></span>
               <span class="nav-label">Drama Approvals</span>
             </a>
             <a href="#" class="dashboard-nav-item" data-view="content">
-              <span class="nav-icon material-symbols-rounded">article</span>
+              <span class="nav-icon bx bx-file"></span>
               <span class="nav-label">Content</span>
             </a>
           </div>
@@ -109,7 +75,7 @@
         <!-- Back to Site Button -->
         <div class="sidebar-footer">
           <a href="<?= ROOT ?>/home" class="btn btn-secondary sidebar-back-button">
-            <span class="material-symbols-rounded">home</span>
+            <span class="bx bx-home"></span>
             <span class="btn-label">Back to Site</span>
           </a>
         </div>
@@ -122,29 +88,20 @@
           <!-- Header Content -->
           <div class="dashboard-header-content">
             <button class="dashboard-sidebar-toggle">
-              <span class="material-symbols-rounded">menu</span>
+              <span class="bx bx-menu"></span>
             </button>
             <h1 class="dashboard-header-title" id="dashboardTitle">Overview</h1>
           </div>
           <!-- Search Container -->
-          <div class="search-container" id="searchContainer">
-            <span class="search-icon material-symbols-rounded">search</span>
-            <input type="search" class="search-input form-input" placeholder="Search projects, tasks, reports..." id="searchInput" />
-            <button class="search-close btn" id="searchClose">
-              <span class="material-symbols-rounded">close</span>
-            </button>
-          </div>
+
           <!-- Header Actions -->
           <div class="dashboard-header-actions">
             <!-- Mobile Search Button -->
             <button class="mobile-search-btn btn btn-ghost" id="mobileSearchBtn">
-              <span class="material-symbols-rounded">search</span>
+              <span class="bx bx-search"></span>
             </button>
             <!-- Notification Button -->
-            <div class="notification-button">
-              <span class="material-symbols-rounded">notifications</span>
-              <div class="notification-badge">3</div>
-            </div>
+
             <!-- User Profile -->
             <div class="user-menu" id="userMenu">
               <div class="user-menu-trigger" id="user-menu-trigger">
@@ -154,20 +111,14 @@
               </div>
               <div class="user-menu-dropdown">
                 <a href="#" class="user-menu-item" id="adminProfileMenuItem">
-                  <span class="icon material-symbols-rounded">person</span>
+                  <span class="icon bx bx-user"></span>
                   <span>Profile</span>
                 </a>
                 <!-- Theme Toggle inside dropdown -->
-                <div class="user-menu-item theme-item">
-                  <span class="icon material-symbols-rounded">palette</span>
-                  <div class="theme-toggle" id="theme-toggle">
-                    <div class="theme-option active" data-theme="light">Light</div>
-                    <div class="theme-option" data-theme="dark">Dark</div>
-                  </div>
-                </div>
+               
                 <a href="<?= ROOT ?>/Logout" class="user-menu-item">
-                  <span class="icon material-symbols-rounded">logout</span>
-                  <span>Sign Out</span>
+                  <span class="icon bx bx-log-out"></span>
+                  <span>Log Out</span>
                 </a>
               </div>
             </div>
@@ -183,12 +134,12 @@
                 <div class="stat-card-header">
                   <div class="stat-card-title">Total Users</div>
                   <div class="stat-card-icon primary">
-                    <span class="material-symbols-rounded">people</span>
+                    <span class="bx bx-user"></span>
                   </div>
                 </div>
                 <div class="stat-card-value" id="statTotalUsers">0</div>
                 <div class="stat-card-change">
-                  <span class="material-symbols-rounded">groups</span>
+                  <span class="bx bx-group"></span>
                   <span>Registered non-admin users</span>
                 </div>
               </div>
@@ -222,12 +173,12 @@
                 <div class="stat-card-header">
                   <div class="stat-card-title">Pending Drama Approvals</div>
                   <div class="stat-card-icon info">
-                    <span class="material-symbols-rounded">approval</span>
+                    <span class="bx bx-check-circle"></span>
                   </div>
                 </div>
                 <div class="stat-card-value" id="statPendingDramaApprovals">0</div>
                 <div class="stat-card-change negative">
-                  <span class="material-symbols-rounded">hourglass_top</span>
+                  <span class="bx bx-hourglass"></span>
                   <span>Waiting for admin review</span>
                 </div>
               </div>
@@ -273,7 +224,7 @@
                     <td>
                       <div class="project-title-cell">
                         <div class="project-icon">
-                          <span class="material-symbols-rounded">person</span>
+                          <span class="bx bx-user"></span>
                         </div>
                         <div class="project-info">
                           <div class="project-title-text">Rajesh Kumar</div>
@@ -289,7 +240,7 @@
                     <td>
                       <div class="project-title-cell">
                         <div class="project-icon">
-                          <span class="material-symbols-rounded">person</span>
+                          <span class="bx bx-user"></span>
                         </div>
                         <div class="project-info">
                           <div class="project-title-text">Priya Sharma</div>
@@ -305,7 +256,7 @@
                     <td>
                       <div class="project-title-cell">
                         <div class="project-icon">
-                          <span class="material-symbols-rounded">person</span>
+                          <span class="bx bx-user"></span>
                         </div>
                         <div class="project-info">
                           <div class="project-title-text">Aman Singh</div>
@@ -350,12 +301,12 @@
                 <!-- Empty state -->
                 <div class="empty-state" id="usersEmpty" style="display: none;">
                   <div class="empty-state-icon">
-                    <span class="material-symbols-rounded">people</span>
+                    <span class="bx bx-user"></span>
                   </div>
                   <h3 class="empty-state-title">No Users Found</h3>
                   <p class="empty-state-description">There are no users in the system yet. Add a new user to get started.</p>
                   <button class="btn btn-primary" style="margin-top: 20px;" onclick="showAddUserModal()">
-                    <span class="material-symbols-rounded">add</span>
+                    <span class="bx bx-plus"></span>
                     Add New User
                   </button>
                 </div>
@@ -401,7 +352,7 @@
                 <!-- Empty state -->
                 <div class="empty-state" id="registrationsEmpty" style="display: none;">
                   <div class="empty-state-icon">
-                    <span class="material-symbols-rounded">task_alt</span>
+                    <span class="bx bx-task"></span>
                   </div>
                   <h3 class="empty-state-title">No Pending Registrations</h3>
                   <p class="empty-state-description">All registration requests have been processed.</p>
@@ -432,13 +383,13 @@
               </div>
 
               <div class="loading-state" id="dramaRequestsLoading">
-                <span class="material-symbols-rounded spinning">progress_activity</span>
+                <span class="bx bx-loader-circle"></span>
                 <p>Loading drama requests...</p>
               </div>
 
               <div class="empty-state" id="dramaRequestsEmpty" style="display: none;">
                 <div class="empty-state-icon">
-                  <span class="material-symbols-rounded">task_alt</span>
+                  <span class="bx bx-task"></span>
                 </div>
                 <h3 class="empty-state-title">No Pending Drama Requests</h3>
                 <p class="empty-state-description">All drama creation requests have been processed.</p>
@@ -463,15 +414,15 @@
             <!-- Content Management Tabs -->
             <div class="content-tabs">
               <button class="content-tab active" data-content-tab="swiper">
-                <span class="material-symbols-rounded">view_carousel</span>
+                <span class="bx bx-mask"></span>
                 Drama Slides
               </button>
               <button class="content-tab" data-content-tab="gallery">
-                <span class="material-symbols-rounded">photo_library</span>
+                <span class="bx bx-image"></span>
                 Stage Highlights
               </button>
               <button class="content-tab" data-content-tab="testimonials">
-                <span class="material-symbols-rounded">reviews</span>
+                <span class="bx bx-comment"></span>
                 Testimonials
               </button>
             </div>
@@ -481,13 +432,13 @@
               <div class="dashboard-table-header">
                 <h3 class="dashboard-table-title">Drama Slides (Swiper)</h3>
                 <button class="btn btn-primary" onclick="showAddSwiperModal()">
-                  <span class="material-symbols-rounded">add_photo_alternate</span>
+                  <span class="bx bx-mask"></span>
                   Add Slide
                 </button>
               </div>
               <div class="content-grid" id="swiperGrid">
                 <div class="loading-state" id="swiperLoading">
-                  <span class="material-symbols-rounded spinning">progress_activity</span>
+                  <span class="bx bx-loader-circle"></span>
                   <p>Loading slides...</p>
                 </div>
               </div>
@@ -498,7 +449,7 @@
               <div class="dashboard-table-header">
                 <h3 class="dashboard-table-title">Stage Highlights (Gallery)</h3>
                 <button class="btn btn-primary" onclick="showAddGalleryModal()">
-                  <span class="material-symbols-rounded">add_photo_alternate</span>
+                  <span class="bx bx-image"></span>
                   Add Image
                 </button>
               </div>
@@ -512,7 +463,7 @@
               <div class="dashboard-table-header">
                 <h3 class="dashboard-table-title">Testimonials</h3>
                 <button class="btn btn-primary" onclick="showAddTestimonialModal()">
-                  <span class="material-symbols-rounded">rate_review</span>
+                  <span class="bx bx-comment"></span>
                   Add Testimonial
                 </button>
               </div>
@@ -525,31 +476,11 @@
       </main>
     </div>
     <!-- Scripts -->
+    <script>var ROOT = '<?= ROOT ?>';</script>
     <script src="<?= ROOT ?>/assets/JS/admindashboard.js?v=20260404"></script>
     <script src="<?= ROOT ?>/assets/JS/admin-verification.js"></script>
     <script src="<?= ROOT ?>/assets/JS/admin-user-management.js"></script>
     <script src="<?= ROOT ?>/assets/JS/admin-content-management.js"></script>
-    <script>
-      const ROOT = '<?= ROOT ?>';
-
-      // Toast notification handler
-      function closeToast() {
-        const toast = document.getElementById('successToast');
-        if (toast) {
-          toast.style.animation = 'toastSlideOut 0.4s ease forwards';
-          setTimeout(() => toast.remove(), 400);
-        }
-      }
-
-      // Auto-hide toast after 4 seconds
-      window.addEventListener('load', function() {
-        const toast = document.getElementById('successToast');
-        if (toast) {
-          setTimeout(() => {
-            closeToast();
-          }, 4000);
-        }
-      });
-    </script>
+    <script src="<?= ROOT ?>/assets/JS/admindashboard-page.js"></script>
   </body>
 </html>

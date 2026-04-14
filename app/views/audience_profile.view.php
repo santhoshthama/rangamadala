@@ -4,7 +4,7 @@ $signup = $data['signup_details'] ?? null;
 $bio = $data['bio'] ?? null;
 $profileImage = $data['profile_image'] ?? null;
 
-$profileImageSrc = ROOT . '/uploads/profile_images/default_user.png';
+$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
 if (!empty($profileImage)) {
     $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($profileImage);
 }
@@ -209,7 +209,7 @@ $displayBio = !empty($bio) ? (string)$bio : '';
 
         <div class="profile-card">
             <aside class="profile-summary">
-                <img src="<?= esc($profileImageSrc) ?>" alt="Audience profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.png'">
+                <img src="<?= esc($profileImageSrc) ?>" alt="Audience profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'">
 
                 <div>
                     <h2><?= esc($displayName) ?></h2>

@@ -166,7 +166,7 @@
         top: 20px;
         left: 50%;
         transform: translateX(-50%);
-        background: linear-gradient(135deg, #1a4d1a 0%, #2d5a2d 100%);
+        background:linear-gradient(135deg, #a8e063, #56ab2f);
         color: #90EE90;
         padding: 16px 24px;
         font-size: 15px;
@@ -376,7 +376,7 @@
 
     <?php if (!empty($_SESSION['registration_success'])): ?>
         <div class="registration-success-message">
-            <i class="bx bx-check-circle"></i>
+            <i class='bx bx-check'></i>
             <div>
                 <strong>Registration Submitted!</strong><br>
                 <?= $_SESSION['registration_message'] ?? 'Your account is pending verification.' ?>
@@ -393,7 +393,7 @@
 
     <?php if (!empty($approval_notice)): ?>
       <div class="registration-success-message">
-        <i class="bx bx-badge-check"></i>
+        <i class='bx bx-badge-check'></i>
         <div>
           <strong>Account Approved!</strong><br>
           <?= htmlspecialchars($approval_notice) ?>
@@ -410,13 +410,13 @@
     <div class="input-box" id="emailBox">
       <input type="email" name="email" id="email" placeholder="Email" value="<?= htmlspecialchars($email ?? '') ?>">
       <i class='bx bx-envelope'></i>
-      <div class="validation-error" id="emailError"><i class='bx bx-error-circle'></i><span></span></div>
+      <div class="validation-error" id="emailError"><i class='bx bx-error'></i><span></span></div>
     </div>
 
     <div class="input-box" id="passwordBox">
       <input type="password" name="password" id="password" placeholder="Password">
       <i class='bx bx-hide' id="togglePassword"></i>
-      <div class="validation-error" id="passwordError"><i class='bx bx-error-circle'></i><span></span></div>
+      <div class="validation-error" id="passwordError"><i class='bx bx-error'></i><span></span></div>
     </div>
 
     <div class="remember-frogot">
