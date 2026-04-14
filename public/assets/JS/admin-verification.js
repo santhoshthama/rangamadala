@@ -508,8 +508,7 @@ function showUserDetails(userId) {
       const user = data.user;
       const sp = data.service_provider || null;
 
-      const nicFront = user.nic_photo ? `<img src="${ROOT}/${user.nic_photo}" alt="NIC Front" class="nic-image" />` : '<em>No NIC front image uploaded</em>';
-      const nicBack = user.nic_photo_back ? `<img src="${ROOT}/${user.nic_photo_back}" alt="NIC Back" class="nic-image" />` : '<em>No NIC back image uploaded</em>';
+      const nicImage = user.nic_photo ? `<img src="${ROOT}/${user.nic_photo}" alt="NIC" class="nic-image" />` : '<em>No NIC image uploaded</em>';
 
       let extraDetails = '';
       if (sp) {
@@ -574,12 +573,7 @@ function showUserDetails(userId) {
           </div>
           <div class="nic-images-row">
             <div class="nic-image-box">
-              <h5>NIC Front</h5>
-              ${nicFront}
-            </div>
-            <div class="nic-image-box">
-              <h5>NIC Back</h5>
-              ${nicBack}
+              ${nicImage}
             </div>
           </div>
         `;
