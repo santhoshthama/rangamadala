@@ -737,6 +737,87 @@ class Payment
         } elseif ($advancePaid || $remainingPaid) {
             $this->serviceRequestModel->updatePaymentStatus($request_id, 'partially_paid');
         }
+
+        $this->syncBudgetWithServicePayment((int)$request_id);
+    }
+
+    private function syncBudgetWithServicePayment(int $requestId): void
+    {
+        try {
+            if ($requestId <= 0) {
+                return;
+            }
+
+            $request = $this->serviceRequestModel->getRequestById($requestId);
+            if (!$request) {
+                return;
+            }
+
+            $budgetModel = $this->getModel('M_budget');
+            if (!$budgetModel) {
+                return;
+            }
+
+            $totalPaid = (float)$this->paymentModel->getTotalPaid($requestId);
+            $allocated = isset($request->budget) && $request->budget !== null ? (float)$request->budget : $totalPaid;
+            if ($allocated < $totalPaid) {
+                $allocated = $totalPaid;
+            }
+
+            $status = $this->mapBudgetStatusFromServiceAndPayment(
+                strtolower((string)($request->status ?? 'pending')),
+                strtolower((string)($request->payment_status ?? 'unpaid')),
+                $totalPaid
+            );
+
+            $itemName = trim((string)($request->service_type ?? 'Service Request'));
+            if ($itemName === '') {
+                $itemName = 'Service Request';
+            }
+            $itemName .= ' #' . $requestId;
+
+            $payload = [
+                'drama_id' => (int)($request->drama_id ?? 0),
+                'item_name' => $itemName,
+                'category' => trim((string)($request->service_type ?? 'Other')) ?: 'Other',
+                'allocated_amount' => $allocated,
+                'spent_amount' => $totalPaid,
+                'status' => $status,
+                'notes' => 'Auto-synced from service payment flow',
+                'created_by' => (int)($request->requested_by ?? $_SESSION['user_id'] ?? 0),
+                'service_request_id' => $requestId,
+                'source_type' => 'payment_sync',
+                'last_synced_at' => date('Y-m-d H:i:s'),
+            ];
+
+            $existing = $budgetModel->getBudgetItemByServiceRequest($requestId);
+            if ($existing && isset($existing->id)) {
+                $payload['notes'] = $existing->notes ?? $payload['notes'];
+                $budgetModel->updateBudgetItem((int)$existing->id, $payload);
+                return;
+            }
+
+            $budgetModel->createBudgetItem($payload);
+        } catch (Exception $e) {
+            error_log('Payment::syncBudgetWithServicePayment failed: ' . $e->getMessage());
+        }
+    }
+
+    private function mapBudgetStatusFromServiceAndPayment(string $requestStatus, string $paymentStatus, float $totalPaid): string
+    {
+        if (in_array($requestStatus, ['rejected', 'cancelled'], true)) {
+            return 'cancelled';
+        }
+
+        if ($requestStatus === 'completed_paid' || $paymentStatus === 'paid') {
+            return 'completed';
+        }
+
+        if (in_array($requestStatus, ['confirmed', 'accepted', 'completed'], true)) {
+            return 'approved';
+        }
+
+        return $totalPaid > 0 ? 'approved' : 'pending';
     }
     
     /**

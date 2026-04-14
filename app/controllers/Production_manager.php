@@ -4,10 +4,14 @@ class Production_manager{
     use Controller;
 
     protected $dramaModel;
+    protected $serviceRequestModel;
+    protected $paymentModel;
 
     public function __construct()
     {
         $this->dramaModel = $this->getModel('M_drama');
+        $this->serviceRequestModel = $this->getModel('M_service_request');
+        $this->paymentModel = $this->getModel('M_payment');
     }
 
     public function index()
@@ -148,10 +152,15 @@ class Production_manager{
         
         // Get budget model and fetch budget data
         $budgetModel = $this->getModel('M_budget');
+        $dramaServicesModel = $this->getModel('M_drama_services');
+        $serviceModel = $this->serviceRequestModel ?: $this->getModel('M_service_request');
         $budgetItems = [];
         $totalBudget = 0;
         $totalSpent = 0;
         $categorySummary = [];
+        $serviceTypes = $this->getAllowedBudgetCategories((int)$drama->id);
+        $serviceRequests = $serviceModel ? $serviceModel->getServicesByDrama((int)$drama->id) : [];
+        $dramaServices = $dramaServicesModel ? $dramaServicesModel->getServicesByDrama((int)$drama->id) : [];
         
         if ($budgetModel) {
             $budgetItems = $budgetModel->getBudgetByDrama($drama->id);
@@ -171,6 +180,9 @@ class Production_manager{
             'remainingBudget' => $remainingBudget,
             'percentSpent' => $percentSpent,
             'categorySummary' => $categorySummary,
+            'serviceTypes' => $serviceTypes,
+            'serviceRequests' => $serviceRequests,
+            'dramaServices' => $dramaServices,
         ];
         
         $this->view('production_manager/manage_budget', $data);
@@ -257,18 +269,54 @@ class Production_manager{
         $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int)$_POST['id'] : null;
         $itemName = trim((string)($_POST['item_name'] ?? ''));
         $category = trim((string)($_POST['category'] ?? ''));
+        $serviceRequestId = isset($_POST['service_request_id']) && $_POST['service_request_id'] !== '' ? (int)$_POST['service_request_id'] : null;
         $allocatedAmount = isset($_POST['allocated_amount']) ? (float)$_POST['allocated_amount'] : null;
         $spentAmount = isset($_POST['spent_amount']) && $_POST['spent_amount'] !== '' ? (float)$_POST['spent_amount'] : 0.0;
         $status = trim((string)($_POST['status'] ?? 'pending'));
         $notes = trim((string)($_POST['notes'] ?? ''));
 
-        $allowedCategories = ['venue', 'technical', 'costume', 'marketing', 'other'];
+        $allowedCategories = $this->getAllowedBudgetCategories((int)$drama->id);
         $allowedStatuses = ['pending', 'approved', 'completed', 'cancelled'];
+        $linkedRequest = null;
 
         if ($itemName === '') {
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Item name is required']);
             return;
+        }
+
+        if ($serviceRequestId !== null) {
+            $serviceModel = $this->serviceRequestModel ?: $this->getModel('M_service_request');
+            if (!$serviceModel) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'error' => 'Service request model not found']);
+                return;
+            }
+
+            $linkedRequest = $serviceModel->getRequestById($serviceRequestId);
+            if (!$linkedRequest || (int)($linkedRequest->drama_id ?? 0) !== (int)$drama->id) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Selected service request is invalid for this drama']);
+                return;
+            }
+
+            $requestType = trim((string)($linkedRequest->service_type ?? ''));
+            if ($requestType !== '' && !in_array($requestType, $allowedCategories, true)) {
+                $allowedCategories[] = $requestType;
+            }
+
+            if ($requestType !== '') {
+                $category = $requestType;
+            }
+
+            $linkedStatus = $this->mapBudgetStatusFromService($linkedRequest);
+            if ($linkedStatus !== null) {
+                $status = $linkedStatus;
+            }
+
+            if ($this->paymentModel) {
+                $spentAmount = (float)$this->paymentModel->getTotalPaid($serviceRequestId);
+            }
         }
 
         if (!in_array($category, $allowedCategories, true)) {
@@ -301,6 +349,16 @@ class Production_manager{
             return;
         }
 
+        if ($serviceRequestId !== null && $linkedRequest && $status === 'completed') {
+            $calcPaymentStatus = strtolower((string)($linkedRequest->calculated_payment_status ?? 'unpaid'));
+            $requestStatus = strtolower((string)($linkedRequest->status ?? 'pending'));
+            if (!($requestStatus === 'completed_paid' || $calcPaymentStatus === 'paid')) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Linked request is not fully paid. Budget status cannot be completed yet.']);
+                return;
+            }
+        }
+
         $payload = [
             'drama_id' => (int)$drama->id,
             'item_name' => $itemName,
@@ -310,6 +368,8 @@ class Production_manager{
             'status' => $status,
             'notes' => $notes !== '' ? $notes : null,
             'created_by' => $_SESSION['user_id'] ?? null,
+            'service_request_id' => $serviceRequestId,
+            'source_type' => $serviceRequestId !== null ? 'service_request' : 'manual',
         ];
 
         if ($id) {
@@ -333,6 +393,64 @@ class Production_manager{
             'success' => (bool)$ok,
             'message' => $ok ? 'Budget item created successfully' : 'Failed to create budget item'
         ]);
+    }
+
+    protected function getAllowedBudgetCategories(int $dramaId): array
+    {
+        $fallback = [
+            'Theater Production',
+            'Lighting Design',
+            'Sound Systems',
+            'Video Production',
+            'Set Design',
+            'Costume Design',
+            'Makeup & Hair',
+            'Other',
+        ];
+
+        $dramaServicesModel = $this->getModel('M_drama_services');
+        if (!$dramaServicesModel) {
+            return $fallback;
+        }
+
+        $services = $dramaServicesModel->getServicesByDrama($dramaId);
+        if (!is_array($services) || empty($services)) {
+            return $fallback;
+        }
+
+        $types = [];
+        foreach ($services as $svc) {
+            $type = trim((string)($svc->service_type ?? ''));
+            if ($type !== '' && !in_array($type, $types, true)) {
+                $types[] = $type;
+            }
+        }
+
+        return !empty($types) ? $types : $fallback;
+    }
+
+    protected function mapBudgetStatusFromService($serviceRequest): ?string
+    {
+        if (!$serviceRequest) {
+            return null;
+        }
+
+        $requestStatus = strtolower((string)($serviceRequest->status ?? 'pending'));
+        $paymentStatus = strtolower((string)($serviceRequest->calculated_payment_status ?? 'unpaid'));
+
+        if (in_array($requestStatus, ['rejected', 'cancelled'], true)) {
+            return 'cancelled';
+        }
+
+        if ($requestStatus === 'completed_paid' || $paymentStatus === 'paid') {
+            return 'completed';
+        }
+
+        if (in_array($requestStatus, ['confirmed', 'accepted', 'completed'], true)) {
+            return 'approved';
+        }
+
+        return 'pending';
     }
 
     public function delete_budget_item()

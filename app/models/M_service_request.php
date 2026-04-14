@@ -1,5 +1,6 @@
 <?php
 
+if (!class_exists('M_service_request')) {
 class M_service_request
 {
     private $db;
@@ -772,4 +773,5 @@ class M_service_request
         $this->db->bind(':provider_id', $provider_id);
         return $this->db->resultSet();
     }
+}
 }

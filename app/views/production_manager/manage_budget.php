@@ -9,6 +9,10 @@
 </head>
 <body>
     <?php $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1); ?>
+    <?php
+        $serviceTypes = (isset($serviceTypes) && is_array($serviceTypes)) ? $serviceTypes : [];
+        $serviceRequests = (isset($serviceRequests) && is_array($serviceRequests)) ? $serviceRequests : [];
+    ?>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
@@ -148,6 +152,7 @@
                         <tr style="background: #f8f9fa; border-bottom: 2px solid var(--border-strong);">
                             <th style="padding: 14px; text-align: left; font-weight: 700;">Item Name</th>
                             <th style="padding: 14px; text-align: left; font-weight: 700;">Category</th>
+                            <th style="padding: 14px; text-align: left; font-weight: 700;">Linked Service</th>
                             <th style="padding: 14px; text-align: right; font-weight: 700;">Allocated</th>
                             <th style="padding: 14px; text-align: right; font-weight: 700;">Spent</th>
                             <th style="padding: 14px; text-align: left; font-weight: 700;">Status</th>
@@ -172,6 +177,7 @@
                                 <tr style="border-bottom: 1px solid var(--border);">
                                     <td style="padding: 14px;"><?= isset($item->item_name) ? esc($item->item_name) : 'N/A' ?></td>
                                     <td style="padding: 14px;"><?= isset($item->category) ? ucfirst($item->category) : 'N/A' ?></td>
+                                    <td style="padding: 14px;"><?= !empty($item->service_request_id) ? ('Request #' . (int)$item->service_request_id) : 'Manual' ?></td>
                                     <td style="padding: 14px; text-align: right; font-weight: 700;">LKR <?= isset($item->allocated_amount) ? number_format($item->allocated_amount) : '0' ?></td>
                                     <td style="padding: 14px; text-align: right; font-weight: 700;">LKR <?= isset($item->spent_amount) ? number_format($item->spent_amount) : '0' ?></td>
                                     <td style="padding: 14px;"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
@@ -187,7 +193,7 @@
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr style="border-bottom: 1px solid var(--border);">
-                                <td colspan="6" style="padding: 30px; text-align: center; color: var(--muted);">
+                                <td colspan="7" style="padding: 30px; text-align: center; color: var(--muted);">
                                     <i class="bx bx-file-invoice-dollar" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
                                     <p>No budget items yet. Add your first budget item to get started.</p>
                                 </td>
@@ -213,19 +219,41 @@
             </div>
 
             <div class="form-group">
+                <label for="serviceRequestId">Link to Service Request (Optional)</label>
+                <select id="serviceRequestId" onchange="handleServiceRequestChange()">
+                    <option value="">Manual Budget Item (Not linked)</option>
+                    <?php foreach ($serviceRequests as $request): ?>
+                        <?php
+                            $rid = (int)($request->id ?? 0);
+                            if ($rid <= 0) {
+                                continue;
+                            }
+                            $serviceType = trim((string)($request->service_type ?? 'Service'));
+                            $providerName = trim((string)($request->provider_name ?? 'Unassigned provider'));
+                            $budgetVal = isset($request->budget) ? (float)$request->budget : 0;
+                            $statusVal = trim((string)($request->status ?? 'pending'));
+                        ?>
+                        <option value="<?= $rid ?>">
+                            #<?= $rid ?> - <?= esc($serviceType) ?> | <?= esc($providerName) ?> | LKR <?= number_format($budgetVal) ?> | <?= esc(ucfirst($statusVal)) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small style="color: var(--muted);">When linked, category and status follow the service/payment lifecycle automatically.</small>
+            </div>
+
+            <div class="form-group">
                 <label for="itemCategory">Category</label>
                 <select id="itemCategory">
                     <option value="">Select Category</option>
-                    <option value="venue">Venue Rental</option>
-                    <option value="technical">Technical Services</option>
-                    <option value="costume">Costumes & Makeup</option>
-                    <option value="marketing">Marketing & Promotion</option>
-                    <option value="other">Other Expenses</option>
+                    <?php foreach ($serviceTypes as $serviceType): ?>
+                        <?php $serviceType = trim((string)$serviceType); if ($serviceType === '') { continue; } ?>
+                        <option value="<?= esc($serviceType) ?>"><?= esc($serviceType) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="itemAmount">Amount (LKR)</label>
+                <label for="itemAmount">Allocated Amount (LKR)</label>
                 <input type="number" id="itemAmount" placeholder="Enter amount" min="0" step="1000">
             </div>
 
@@ -242,6 +270,7 @@
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
                 </select>
+                <small style="color: var(--muted);">For linked requests, this is auto-derived from request and payment states.</small>
             </div>
 
             <div class="form-group">
@@ -258,6 +287,7 @@
 
     <script>
         window.PM_BUDGET_API_BASE = '<?= ROOT ?>/production_manager';
+        window.PM_SERVICE_REQUESTS = <?= json_encode($serviceRequests) ?>;
     </script>
     <script src="/Rangamadala/public/assets/JS/manage-budget.js"></script>
 </body>
