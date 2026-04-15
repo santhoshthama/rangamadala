@@ -546,7 +546,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeRequestModal()">Cancel</button>
                 <button type="submit" class="btn-primary">
-                    <i class="bx bx-paper-plane"></i> Send Request
+                    <i class="fas fa-paper-plane"></i> Send Request
                 </button>
             </div>
         </form>
