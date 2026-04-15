@@ -283,6 +283,89 @@ body {
     margin-bottom: 10px;
 }
 
+/* Service editor alignment fixes for add/edit service pages */
+form .service-item {
+    padding: 18px;
+}
+
+form .service-header {
+    display: grid;
+    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+
+form .service-header > .checkbox-group {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 8px;
+    min-width: 0;
+}
+
+form .service-header > .rate-input-group {
+    display: grid;
+    justify-content: start;
+    align-items: start;
+    width: 100%;
+    gap: 10px;
+}
+
+form .service-header > .rate-input-group > div {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+form .service-header > .rate-input-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+form .service-header .input-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 190px;
+}
+
+form .service-header .service-rate {
+    width: 100%;
+    min-width: 130px;
+}
+
+form .service-item .form-group,
+form .service-item .form-row {
+    width: 100%;
+}
+
+form .service-details {
+    margin-top: 18px;
+    padding: 18px;
+    border-left: 4px solid #daa520;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+form .service-details .form-row {
+    gap: 16px;
+    align-items: start;
+}
+
+form .service-details .checkbox-group {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 8px;
+}
+
+form .service-details .form-input,
+form .service-details .form-group textarea,
+form .service-details select {
+    width: 100%;
+}
+
 .service-name {
     font-weight: bold;
     color: #b8860b;
@@ -604,6 +687,18 @@ body {
 
     .services-list, .portfolio-list {
         grid-template-columns: 1fr;
+    }
+
+    form .service-header {
+        grid-template-columns: 1fr;
+    }
+
+    form .service-header > .rate-input-group > div {
+        width: 100%;
+    }
+
+    form .service-header .input-wrapper {
+        max-width: none;
     }
     
     .contact-info {

@@ -51,7 +51,7 @@ class M_service_provider extends M_signup {
                             sp.professional_title,
                             sp.location,
                             sp.social_media_link,
-                            sp.years_experience,
+                            u.years_experience,
                             sp.availability,
                             sp.availability_notes,
                             sp.created_at,
@@ -86,22 +86,69 @@ class M_service_provider extends M_signup {
         return $this->db->resultSet();
     }
 
+    public function providerProfileExists($user_id) {
+        $this->db->query("SELECT 1 FROM serviceprovider WHERE user_id = :user_id LIMIT 1");
+        $this->db->bind(':user_id', (int)$user_id);
+        return (bool)$this->db->single();
+    }
+
+    public function cleanupIncompleteRegistration($user_id) {
+        $providerId = (int)$user_id;
+
+        try {
+            $this->db->beginTransaction();
+
+            $this->db->query("DELETE FROM projects WHERE provider_id = :provider_id");
+            $this->db->bind(':provider_id', $providerId);
+            $this->db->execute();
+
+            $this->db->query("DELETE FROM services WHERE provider_id = :provider_id");
+            $this->db->bind(':provider_id', $providerId);
+            $this->db->execute();
+
+            $this->db->query("DELETE FROM serviceprovider WHERE user_id = :user_id");
+            $this->db->bind(':user_id', $providerId);
+            $this->db->execute();
+
+            $this->db->query("DELETE FROM users WHERE id = :user_id AND role = 'service_provider'");
+            $this->db->bind(':user_id', $providerId);
+            $this->db->execute();
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log('cleanupIncompleteRegistration failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function saveFullProfile($provider, $user_id, $services = [], $projects = []) {
         $providerId = (int)$user_id;
+        $serviceProviderHasYears = $this->columnExists('serviceprovider', 'years_experience');
+        $usersHasYears = $this->columnExists('users', 'years_experience');
+        $yearsExperience = isset($provider['years_experience']) && $provider['years_experience'] !== '' ? (int)$provider['years_experience'] : null;
 
         // Phase 1: Insert the provider profile (transactional)
         try {
             $this->db->beginTransaction();
 
-            $this->db->query("UPDATE users SET
+            $usersUpdateSql = "UPDATE users SET
                                 full_name = :full_name,
                                 email = :email,
                                 phone = :phone,
                                 nic_number = :nic_number,
                                 nic_photo = :nic_photo,
                                 nic_photo_back = :nic_photo_back,
-                                bio = :bio
-                              WHERE id = :user_id AND role = 'service_provider'");
+                                bio = :bio";
+
+            if ($usersHasYears) {
+                $usersUpdateSql .= ", years_experience = :years_experience";
+            }
+
+            $usersUpdateSql .= " WHERE id = :user_id AND role = 'service_provider'";
+
+            $this->db->query($usersUpdateSql);
 
             $this->db->bind(':user_id', $providerId);
             $this->db->bind(':full_name', $provider['full_name'] ?? null);
@@ -111,32 +158,46 @@ class M_service_provider extends M_signup {
             $this->db->bind(':nic_photo', $provider['nic_photo'] ?? ($provider['nic_photo_front'] ?? null));
             $this->db->bind(':nic_photo_back', $provider['nic_photo_back'] ?? null);
             $this->db->bind(':bio', $provider['professional_summary'] ?? null);
+            if ($usersHasYears) {
+                $this->db->bind(':years_experience', $yearsExperience);
+            }
             $this->db->execute();
 
-            $this->db->query("INSERT INTO serviceprovider (
-                user_id, professional_title, location,
-                social_media_link, years_experience,
-                availability, availability_notes
-            ) VALUES (
-                :user_id, :professional_title, :location,
-                :social_media_link, :years_experience,
-                :availability, :availability_notes
-            )
+            $serviceProviderColumns = ['user_id', 'professional_title', 'location', 'social_media_link', 'availability', 'availability_notes'];
+            if ($serviceProviderHasYears) {
+                $serviceProviderColumns[] = 'years_experience';
+            }
+
+            $serviceProviderSql = "INSERT INTO serviceprovider (" . implode(', ', $serviceProviderColumns) . ")
+            VALUES (:user_id, :professional_title, :location, :social_media_link, :availability, :availability_notes";
+
+            if ($serviceProviderHasYears) {
+                $serviceProviderSql .= ", :years_experience";
+            }
+
+            $serviceProviderSql .= ")
             ON DUPLICATE KEY UPDATE
                 professional_title = VALUES(professional_title),
                 location = VALUES(location),
                 social_media_link = VALUES(social_media_link),
-                years_experience = VALUES(years_experience),
                 availability = VALUES(availability),
-                availability_notes = VALUES(availability_notes)");
+                availability_notes = VALUES(availability_notes)";
+
+            if ($serviceProviderHasYears) {
+                $serviceProviderSql .= ", years_experience = VALUES(years_experience)";
+            }
+
+            $this->db->query($serviceProviderSql);
 
             $this->db->bind(':user_id', $providerId);
             $this->db->bind(':professional_title', $provider['professional_title'] ?? null);
             $this->db->bind(':location', $provider['location'] ?? null);
             $this->db->bind(':social_media_link', $provider['website'] ?? null);
-            $this->db->bind(':years_experience', isset($provider['years_experience']) && $provider['years_experience'] !== '' ? (int)$provider['years_experience'] : null);
             $this->db->bind(':availability', isset($provider['availability']) ? (int)$provider['availability'] : 1);
             $this->db->bind(':availability_notes', $provider['availability_notes'] ?? null);
+            if ($serviceProviderHasYears) {
+                $this->db->bind(':years_experience', $yearsExperience);
+            }
 
             $this->db->execute();
             $this->db->commit();
@@ -150,6 +211,10 @@ class M_service_provider extends M_signup {
 
         // Phase 2: Insert services (best-effort, do not rollback provider)
         try {
+            $this->db->query("DELETE FROM services WHERE provider_id = :provider_id");
+            $this->db->bind(':provider_id', $providerId);
+            $this->db->execute();
+
             if (!empty($services) && is_array($services)) {
                 foreach ($services as $svc) {
                     if (!empty($svc['selected']) && !empty($svc['name'])) {
@@ -176,6 +241,10 @@ class M_service_provider extends M_signup {
 
         // Phase 3: Insert projects (best-effort, do not rollback provider)
         try {
+            $this->db->query("DELETE FROM projects WHERE provider_id = :provider_id");
+            $this->db->bind(':provider_id', $providerId);
+            $this->db->execute();
+
             if (!empty($projects) && is_array($projects)) {
                 foreach ($projects as $proj) {
                     $this->db->query("INSERT INTO projects (provider_id, year, project_name, services_provided, description)
@@ -705,6 +774,7 @@ class M_service_provider extends M_signup {
             u.email,
             u.phone,
             u.bio AS professional_summary,
+            u.years_experience,
             u.nic_number,
             u.nic_photo AS nic_photo_front,
             u.nic_photo_back,
@@ -774,6 +844,26 @@ class M_service_provider extends M_signup {
 
         $exists = $row && isset($row->cnt) && (int)$row->cnt > 0;
         $this->tableExistsCache[$tableName] = $exists;
+        return $exists;
+    }
+
+    private function columnExists(string $tableName, string $columnName): bool {
+        $cacheKey = $tableName . '.' . $columnName;
+        if (isset($this->tableExistsCache[$cacheKey])) {
+            return $this->tableExistsCache[$cacheKey];
+        }
+
+        $this->db->query("SELECT COUNT(*) AS cnt
+                          FROM information_schema.columns
+                          WHERE table_schema = DATABASE()
+                            AND table_name = :table_name
+                            AND column_name = :column_name");
+        $this->db->bind(':table_name', $tableName);
+        $this->db->bind(':column_name', $columnName);
+        $row = $this->db->single();
+
+        $exists = $row && isset($row->cnt) && (int)$row->cnt > 0;
+        $this->tableExistsCache[$cacheKey] = $exists;
         return $exists;
     }
 
