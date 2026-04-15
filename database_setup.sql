@@ -3,19 +3,28 @@
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS `users` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `full_name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `role` enum('admin','artist','audience','service_provider') NOT NULL DEFAULT 'audience',
-  `nic_photo` varchar(255) DEFAULT NULL,
+  `nic_number` varchar(20) DEFAULT NULL,
   `profile_image` varchar(255) DEFAULT NULL,
-  `years_experience` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
+  `years_experience` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `bio` text DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `website` varchar(255) DEFAULT NULL,
+  `is_verified` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'Whether user is verified (1=yes, 0=no)',
+  `verification_status` enum('pending','approved','rejected') DEFAULT 'approved' COMMENT 'Current verification status',
+  `rejection_reason` text DEFAULT NULL COMMENT 'Reason for rejection if status is rejected',
+  `verified_by_admin_id` int(11) DEFAULT NULL COMMENT 'Admin user ID who verified/rejected',
+  `verified_by` int(11) DEFAULT NULL COMMENT 'Admin user ID who verified',
+  `verified_at` datetime DEFAULT NULL COMMENT 'Timestamp of verification action',
+  `nic_photo` varchar(255) DEFAULT NULL,
+  `nic_photo_back` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create categories table
@@ -201,18 +210,6 @@ CREATE TABLE IF NOT EXISTS `drama_manager_requests` (
   CONSTRAINT `drama_manager_requests_ibfk_3` FOREIGN KEY (`director_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- User Bios (for audience members)
-CREATE TABLE IF NOT EXISTS `user_bios` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL UNIQUE,
-  `bio` text DEFAULT NULL,
-  `profile_image` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `user_bios_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Drama Budgets
 CREATE TABLE IF NOT EXISTS `drama_budgets` (
@@ -252,28 +249,20 @@ CREATE TABLE IF NOT EXISTS `drama_services` (
 
 
 
---Service Provider and Services Tables
+--Service Provider and Services Tables--
 
 -- Create serviceprovider table
 CREATE TABLE IF NOT EXISTS `serviceprovider` (
   `user_id` int NOT NULL,
-  `full_name` varchar(100) NOT NULL,
   `professional_title` varchar(100) DEFAULT NULL,
-  `email` varchar(100) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL,
   `location` varchar(100) DEFAULT NULL,
-  `nic_number` varchar(20) DEFAULT NULL,
   `social_media_link` varchar(255) DEFAULT NULL,
   `years_experience` int DEFAULT NULL,
-  `professional_summary` text,
   `availability` tinyint(1) DEFAULT '1',
   `availability_notes` varchar(255) DEFAULT NULL,
-  `nic_photo_front` varchar(255) DEFAULT NULL,
-  `nic_photo_back` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
-  UNIQUE KEY `email` (`email`),
   CONSTRAINT `serviceprovider_ibfk_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -541,4 +530,49 @@ CREATE TABLE IF NOT EXISTS `provider_availability` (
   KEY `available_date` (`available_date`),
   CONSTRAINT `availability_ibfk_provider` FOREIGN KEY (`provider_id`) REFERENCES `serviceprovider` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `availability_ibfk_request` FOREIGN KEY (`service_request_id`) REFERENCES `service_requests` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
+-- CONTENT MANAGEMENT TABLES FOR HOME PAGE
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS `swiper_slides` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `image_path` VARCHAR(255) NOT NULL,
+  `title` VARCHAR(100) DEFAULT NULL,
+  `description` VARCHAR(255) DEFAULT NULL,
+  `drama_id` INT DEFAULT NULL,
+  `display_order` INT DEFAULT 0,
+  `is_active` TINYINT(1) DEFAULT 1,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_swiper_drama_id` (`drama_id`),
+  CONSTRAINT `swiper_slides_ibfk_drama` FOREIGN KEY (`drama_id`) REFERENCES `dramas` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `gallery_images` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `image_path` VARCHAR(255) NOT NULL,
+  `title` VARCHAR(100) DEFAULT NULL,
+  `alt_text` VARCHAR(100) DEFAULT NULL,
+  `display_order` INT DEFAULT 0,
+  `is_active` TINYINT(1) DEFAULT 1,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `testimonials` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(100) NOT NULL,
+  `role` VARCHAR(50) NOT NULL,
+  `message` TEXT NOT NULL,
+  `image_path` VARCHAR(255) DEFAULT NULL,
+  `rating` INT DEFAULT 5,
+  `display_order` INT DEFAULT 0,
+  `is_active` TINYINT(1) DEFAULT 1,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
