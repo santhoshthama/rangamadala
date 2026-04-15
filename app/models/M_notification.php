@@ -88,6 +88,25 @@ class M_notification {
     }
 
     /**
+     * Get a single notification by id for a specific user
+     */
+    public function getNotificationByIdForUser($notification_id, $user_id) {
+        try {
+            $this->db->query("SELECT n.*, d.drama_name
+                             FROM artist_notifications n
+                             LEFT JOIN dramas d ON n.drama_id = d.id
+                             WHERE n.id = :id AND n.user_id = :user_id
+                             LIMIT 1");
+            $this->db->bind(':id', (int)$notification_id);
+            $this->db->bind(':user_id', (int)$user_id);
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log("Error in getNotificationByIdForUser: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Get notifications for a user filtered by notification types
      */
     public function getNotificationsByUserTypes($user_id, $types = [], $limit = 50) {

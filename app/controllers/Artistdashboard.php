@@ -566,6 +566,56 @@ class Artistdashboard
     }
 
     /**
+     * Show a single notification in detail (marks as read)
+     */
+    public function notification_detail()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $notificationId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($notificationId <= 0) {
+            $_SESSION['message'] = 'Invalid notification.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/notifications');
+            exit;
+        }
+
+        $notificationModel = $this->getModel('M_notification');
+        $artist_model = $this->getModel('M_artist');
+        if (!$notificationModel) {
+            $_SESSION['message'] = 'Notification service unavailable.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/notifications');
+            exit;
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $notification = $notificationModel->getNotificationByIdForUser($notificationId, $userId);
+        if (!$notification) {
+            $_SESSION['message'] = 'Notification not found.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/notifications');
+            exit;
+        }
+
+        if (!(int)($notification->is_read ?? 0)) {
+            $notificationModel->markAsRead($notificationId, $userId);
+            $notification->is_read = 1;
+        }
+
+        $data = [
+            'user' => $artist_model ? $artist_model->get_artist_by_id($userId) : null,
+            'notification' => $notification,
+            'back_url' => ROOT . '/artistdashboard/notifications',
+        ];
+
+        $this->view('artist/notification_detail', $data);
+    }
+
+    /**
      * Allow only safe in-app artist dashboard redirects and prevent mark-route loops.
      */
     private function sanitizeArtistRedirect($redirect, $fallbackPath = '/artistdashboard/notifications')

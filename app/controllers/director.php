@@ -2126,15 +2126,30 @@ class Director{
         $removed = $this->roleModel->removeAssignment($assignmentId);
 
         if ($removed) {
-            if ($this->notificationModel && !empty($assignment->artist_id)) {
+            if ($this->notificationModel) {
                 $dramaLink = ROOT . '/artistdashboard/view_drama?drama_id=' . (int)$drama->id;
+
+                // Notify removed actor with the reason
+                if (!empty($assignment->artist_id)) {
+                    $this->notificationModel->createNotification([
+                        'user_id' => (int)$assignment->artist_id,
+                        'drama_id' => (int)$drama->id,
+                        'type' => 'role_removed',
+                        'title' => 'Role Assignment Removed: ' . ($assignment->role_name ?? 'Role'),
+                        'message' => 'Your assignment for the role "' . ($assignment->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '" has been removed by the director. Reason: ' . $removeReason,
+                        'link' => $dramaLink,
+                    ]);
+                }
+
+                // Notify director as an action log/confirmation
+                $directorLogLink = ROOT . '/director/view_role?drama_id=' . (int)$drama->id . '&role_id=' . (int)$roleId;
                 $this->notificationModel->createNotification([
-                    'user_id' => (int)$assignment->artist_id,
+                    'user_id' => (int)($_SESSION['user_id'] ?? 0),
                     'drama_id' => (int)$drama->id,
-                    'type' => 'role_removed',
-                    'title' => 'Role Assignment Removed: ' . ($assignment->role_name ?? 'Role'),
-                    'message' => 'Your assignment for the role "' . ($assignment->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '" has been removed by the director. Reason: ' . $removeReason,
-                    'link' => $dramaLink,
+                    'type' => 'role_artist_removed',
+                    'title' => 'Artist Removed from Role: ' . ($assignment->role_name ?? 'Role'),
+                    'message' => 'You removed "' . ($assignment->artist_name ?? 'Artist') . '" from the role "' . ($assignment->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '". Reason: ' . $removeReason,
+                    'link' => $directorLogLink,
                 ]);
             }
 
