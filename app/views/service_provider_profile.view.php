@@ -156,7 +156,10 @@
             <div class="form-group">
                 <label class="form-label">Professional Summary</label>
                 <div class="form-input textarea" style="background: #f8f9fa; cursor: default; min-height: 100px;">
-                    <?php echo nl2br(htmlspecialchars($data['provider']->professional_summary)); ?>
+                    <?php
+                        $professionalSummary = $data['provider']->professional_summary ?? ($data['provider']->bio ?? '');
+                        echo nl2br(htmlspecialchars((string)$professionalSummary));
+                    ?>
                 </div>
             </div>
         </div>
