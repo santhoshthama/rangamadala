@@ -1116,8 +1116,13 @@ class M_role {
             $this->db->bind(':id', $assignment_id);
             $this->db->execute();
             
-            // Decrement positions_filled counter
-            $this->db->query("UPDATE drama_roles SET positions_filled = positions_filled - 1 
+            // Decrement positions_filled and reopen role if it was previously filled
+            $this->db->query("UPDATE drama_roles 
+                             SET positions_filled = positions_filled - 1,
+                                 status = CASE
+                                     WHEN status = 'filled' AND (positions_filled - 1) < positions_available THEN 'open'
+                                     ELSE status
+                                 END
                              WHERE id = :role_id AND positions_filled > 0");
             $this->db->bind(':role_id', $assignment->role_id);
             $this->db->execute();
