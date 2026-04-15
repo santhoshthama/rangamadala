@@ -3,6 +3,12 @@
 const urlParams = new URLSearchParams(window.location.search);
 const dramaId = urlParams.get('drama_id') || 1;
 const apiBase = window.PM_BUDGET_API_BASE || `${window.location.origin}/Rangamadala/public/production_manager`;
+const serviceRequests = Array.isArray(window.PM_SERVICE_REQUESTS) ? window.PM_SERVICE_REQUESTS : [];
+const serviceRequestMap = Object.fromEntries(
+    serviceRequests
+        .map((request) => [String(request.id), request])
+        .filter(([id]) => id && id !== 'undefined' && id !== 'null')
+);
 let editingBudgetId = null;
 
 console.log('Budget Management initialized for Drama ID:', dramaId);
@@ -31,6 +37,8 @@ function closeBudgetModal() {
 function clearBudgetForm() {
     const idField = document.getElementById('budgetItemId');
     if (idField) idField.value = '';
+    const serviceRequestField = document.getElementById('serviceRequestId');
+    if (serviceRequestField) serviceRequestField.value = '';
     document.getElementById('itemName').value = '';
     document.getElementById('itemCategory').value = '';
     document.getElementById('itemAmount').value = '';
@@ -38,6 +46,52 @@ function clearBudgetForm() {
     if (spentInput) spentInput.value = '0';
     document.getElementById('paymentStatus').value = 'pending';
     document.getElementById('notes').value = '';
+    applyLinkedRequestMode(null);
+}
+
+function applyLinkedRequestMode(requestId) {
+    const itemCategory = document.getElementById('itemCategory');
+    const spentAmount = document.getElementById('spentAmount');
+    const paymentStatus = document.getElementById('paymentStatus');
+    const linked = !!requestId;
+
+    if (itemCategory) itemCategory.disabled = linked;
+    if (spentAmount) spentAmount.readOnly = linked;
+    if (paymentStatus) paymentStatus.disabled = linked;
+}
+
+function handleServiceRequestChange() {
+    const serviceRequestField = document.getElementById('serviceRequestId');
+    if (!serviceRequestField) return;
+
+    const selectedRequestId = serviceRequestField.value;
+    const request = selectedRequestId ? serviceRequestMap[String(selectedRequestId)] : null;
+    applyLinkedRequestMode(selectedRequestId || null);
+
+    if (!request) {
+        return;
+    }
+
+    const itemCategory = document.getElementById('itemCategory');
+    const itemAmount = document.getElementById('itemAmount');
+    const spentAmount = document.getElementById('spentAmount');
+    const paymentStatus = document.getElementById('paymentStatus');
+
+    if (itemCategory && request.service_type) {
+        itemCategory.value = String(request.service_type);
+    }
+
+    if (itemAmount && Number(request.budget || 0) > 0) {
+        itemAmount.value = Number(request.budget || 0);
+    }
+
+    if (spentAmount) {
+        spentAmount.value = '0';
+    }
+
+    if (paymentStatus) {
+        paymentStatus.value = 'pending';
+    }
 }
 
 // Save budget item
@@ -45,26 +99,34 @@ function saveBudgetItem() {
     const idField = document.getElementById('budgetItemId');
     const itemName = document.getElementById('itemName').value;
     const itemCategory = document.getElementById('itemCategory').value;
+    const serviceRequestId = document.getElementById('serviceRequestId')?.value || '';
     const itemAmount = document.getElementById('itemAmount').value;
     const spentAmountField = document.getElementById('spentAmount');
     const spentAmount = spentAmountField ? spentAmountField.value : '0';
     const paymentStatus = document.getElementById('paymentStatus').value;
     const notes = document.getElementById('notes').value;
 
+    const linkedRequest = serviceRequestId ? serviceRequestMap[String(serviceRequestId)] : null;
+    const effectiveCategory = itemCategory || (linkedRequest && linkedRequest.service_type ? String(linkedRequest.service_type) : '');
+
     // Validate inputs
-    if (!itemName || !itemCategory || !itemAmount) {
+    if (!itemName || !effectiveCategory || !itemAmount) {
         alert('Please fill in all required fields');
         return;
     }
 
     const payload = new URLSearchParams({
         item_name: itemName,
-        category: itemCategory,
+        category: effectiveCategory,
         allocated_amount: itemAmount,
         spent_amount: spentAmount || '0',
         status: paymentStatus,
         notes: notes || ''
     });
+
+    if (serviceRequestId) {
+        payload.append('service_request_id', String(serviceRequestId));
+    }
 
     if (editingBudgetId) {
         payload.append('id', String(editingBudgetId));
@@ -117,6 +179,10 @@ function editBudgetItem(itemId) {
 
             const idField = document.getElementById('budgetItemId');
             if (idField) idField.value = item.id || '';
+            const serviceRequestField = document.getElementById('serviceRequestId');
+            if (serviceRequestField) {
+                serviceRequestField.value = item.service_request_id ? String(item.service_request_id) : '';
+            }
             document.getElementById('itemName').value = item.item_name || '';
             document.getElementById('itemCategory').value = item.category || '';
             document.getElementById('itemAmount').value = item.allocated_amount || '';
@@ -126,6 +192,7 @@ function editBudgetItem(itemId) {
 
             document.getElementById('paymentStatus').value = item.status || 'pending';
             document.getElementById('notes').value = item.notes || '';
+            handleServiceRequestChange();
             modal.style.display = 'block';
         })
         .catch((error) => {
@@ -182,6 +249,7 @@ function exportBudgetReport() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Budget Management page loaded');
     loadBudgetItems();
+    handleServiceRequestChange();
     
     // Close modal when clicking outside it
     const modal = document.getElementById('budgetModal');

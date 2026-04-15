@@ -1,17 +1,19 @@
 <?php
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+if(isset($data) && is_array($data)) {
+    extract($data);
+}
+
+$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
+$profileUser = $artist ?? ($user ?? null);
+if ($profileUser && !empty($profileUser->profile_image)) {
+    $imageValue = str_replace('\\', '/', $profileUser->profile_image);
     if (strpos($imageValue, '/') !== false) {
         $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+} elseif ($profileUser && !empty($profileUser->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $profileUser->nic_photo), '/');
 }
 ?>
 <!DOCTYPE html>
@@ -19,10 +21,13 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apply for Role - <?= htmlspecialchars($data['role']->role_name ?? 'Role') ?></title>
-    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="shortcut icon" href="<?php echo ROOT; ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+    <link rel="apple-touch-icon" href="<?=ROOT?>/assets/images/Rangamadala logo.png">
+    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
+    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/artist-apply  for-role.css">
 </head>
+
 <body>
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -32,19 +37,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <ul class="menu">
             <li>
                 <a href="<?=ROOT?>/artistdashboard">
-                    <i class="bx bx-home"></i>
+                    <i class="bx bxs-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?=ROOT?>/artistdashboard/browse_vacancies">
-                    <i class="bx bx-bullhorn"></i>
+                    <i class="bx bxs-megaphone"></i>
                     <span>View All Vacancies</span>
                 </a>
             </li>
             <li>
                 <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class="bx bx-bell"></i>
+                    <i class="bx bxs-bell"></i>
                     <span>Notifications</span>
                 </a>
             </li>
@@ -55,7 +60,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 </a>
             </li>
             <li>
-                <a href="<?=ROOT?>/artistdashboard#my-showings">
+                <a href="<?=ROOT?>/artistdashboard?tab=my-showings#my-showings">
                     <i class='bx bx-calendar-event'></i>
                     <span>Showings</span>
                 </a>
@@ -111,7 +116,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 <span class="service-info-value"><?= ucfirst(htmlspecialchars($data['role']->role_type ?? 'N/A')) ?></span>
                             </div>
                             <div class="service-info-item">
-                                <span class="service-info-label"><i class="fas fa-money-bill-wave"></i> Salary (LKR) (Per session)</span>
+                                <span class="service-info-label"><i class="bx bx-money"></i> Salary (LKR) (Per session)</span>
                                 <span class="service-info-value">LKR <?= isset($data['role']->salary) && $data['role']->salary ? number_format($data['role']->salary) : 'Negotiable' ?></span>
                             </div>
                             <div class="service-info-item">

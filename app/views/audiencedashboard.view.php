@@ -1,3 +1,6 @@
+<?php
+$dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/profile_images/user_profile.png');
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,601 +17,10 @@
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
 
-  <!-- Material Design Icons -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
-  
-  <!-- Font Awesome -->
-  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<!-- Dashboard CSS -->
+  <!-- Dashboard CSS -->
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css" />
+  <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/audiencedashboard-page.css" />
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css" />
-
-  <style>
-    .dashboard-header-actions {
-      gap: 16px;
-    }
-
-    .audience-role-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #be9227, #a67d1e);
-      color: #fff;
-      border: 1px solid rgba(145, 108, 24, 0.35);
-      box-shadow: 0 4px 10px rgba(166, 125, 30, 0.2);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      line-height: 1;
-    }
-
-    .audience-role-badge i {
-      font-size: 12px;
-    }
-
-    .dashboard-header-actions .user-menu-trigger {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: 3px solid #b88b22;
-      box-shadow: 0 0 0 2px rgba(224, 191, 105, 0.45);
-      overflow: hidden;
-    }
-
-    .dashboard-header-actions .user-avatar-small {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: transparent;
-    }
-
-    .dashboard-header-actions .user-avatar-small img {
-      border-radius: 50%;
-    }
-
-    /* Audience overview stats cards: match artist dashboard design */
-    #overview .stats-grid {
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 24px;
-    }
-
-    #overview .stat-card {
-      background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
-      border: 1px solid #f0dfb4;
-      border-radius: 18px;
-      padding: 22px;
-      text-align: left;
-      color: #4a3a14;
-      box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      overflow: hidden;
-    }
-
-    #overview .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 22px rgba(186, 142, 35, 0.2);
-    }
-
-    #overview .stat-card .stat-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    #overview .stat-card .stat-card-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #7a6121;
-    }
-
-    #overview .stat-card .stat-card-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    }
-
-    #overview .stat-card .stat-card-icon.primary {
-      background: rgba(186, 142, 35, 0.14);
-      color: var(--brand);
-    }
-
-    #overview .stat-card .stat-card-icon.info {
-      background: rgba(186, 142, 35, 0.14);
-      color: var(--brand);
-    }
-
-    #overview .stat-card .stat-card-icon.success {
-      background: rgba(186, 142, 35, 0.14);
-      color: var(--brand);
-    }
-
-    #overview .stat-card .stat-card-icon.warning {
-      background: rgba(186, 142, 35, 0.14);
-      color: var(--brand);
-    }
-
-    #overview .stat-card .stat-card-value {
-      font-size: 34px;
-      font-weight: 700;
-      line-height: 1;
-      margin: 0;
-      color: #5a4415;
-    }
-
-    #overview .stat-card-change.positive,
-    #overview .stat-card-change.negative {
-      color: #8a6a1f;
-    }
-
-    /* Browse dramas layout fixes */
-    #browse .browse-dramas-container {
-      width: 100%;
-    }
-
-    #browse .browse-header {
-      margin-bottom: 18px;
-    }
-
-    #browse .browse-title {
-      font-size: 34px;
-      font-weight: 700;
-      color: #3d2e12;
-      margin-bottom: 4px;
-    }
-
-    #browse .browse-subtitle {
-      color: #7d6a3b;
-    }
-
-    #browse .browse-search-filter {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    #browse .search-box,
-    #browse .filter-box {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #fff;
-      border: 1px solid #ead7a4;
-      border-radius: 12px;
-      padding: 10px 12px;
-      min-height: 46px;
-      box-shadow: 0 3px 12px rgba(186, 142, 35, 0.08);
-    }
-
-    #browse .search-box {
-      flex: 1;
-      min-width: 260px;
-    }
-
-    #browse .filter-box {
-      min-width: 220px;
-    }
-
-    #browse .search-box input,
-    #browse .filter-box select {
-      border: none;
-      outline: none;
-      width: 100%;
-      font-size: 15px;
-      background: transparent;
-      color: #3f3320;
-    }
-
-    #browse .browse-results-info {
-      margin: 8px 0 16px;
-      color: #6f5a2e;
-      font-size: 18px;
-    }
-
-    #browse .dramas-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-    }
-
-    #classes .classes-subtabs {
-      display: flex;
-      gap: 0;
-      margin: 10px 12px 18px;
-      flex-wrap: wrap;
-      background: linear-gradient(180deg, #f6f5f2 0%, #efede8 100%);
-      border: 1px solid #ddd9cf;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.05);
-    }
-
-    #classes .classes-subtab-btn {
-      border: none;
-      background: transparent;
-      color: #6c7484;
-      padding: 14px 18px;
-      min-height: 56px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      line-height: 1;
-      border-bottom: 3px solid transparent;
-      border-right: 1px solid #e2dfd7;
-    }
-
-    #classes .classes-subtab-btn:last-child {
-      border-right: none;
-    }
-
-    #classes .classes-subtab-btn i {
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    #classes .classes-subtab-btn:hover {
-      background: rgba(186, 142, 35, 0.1);
-      color: #8c6c20;
-    }
-
-    #classes .classes-subtab-btn.active {
-      background: linear-gradient(180deg, #f5efe1 0%, #efe6d2 100%);
-      color: #b48218;
-      border-bottom-color: #b48218;
-      box-shadow: inset 0 -1px 0 rgba(180, 130, 24, 0.12);
-    }
-
-    #classes .classes-subtab-panel {
-      display: none;
-      padding: 0 12px 12px;
-    }
-
-    #classes .classes-subtab-panel.active {
-      display: block;
-    }
-
-    #classes .dramas-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 18px;
-    }
-
-    #classes .drama-card {
-      background: linear-gradient(180deg, #fffefb 0%, #fff8e9 100%);
-      border: 1px solid #e8cf97;
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 6px 16px rgba(186, 142, 35, 0.12);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    #classes .drama-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(186, 142, 35, 0.2);
-    }
-
-    #classes .drama-content {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex: 1;
-    }
-
-    #classes .drama-title {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 700;
-      color: #3f2f12;
-      line-height: 1.3;
-    }
-
-    #classes .drama-description {
-      margin: 0;
-      color: #6f5a2e;
-      line-height: 1.5;
-      min-height: 44px;
-    }
-
-    #classes .drama-info {
-      display: grid;
-      gap: 7px;
-      padding-top: 10px;
-      border-top: 1px dashed #ead8a9;
-    }
-
-    #classes .info-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #5f4b23;
-      font-size: 14px;
-    }
-
-    #classes .info-item .material-symbols-rounded {
-      color: #a67d1e;
-      font-size: 18px;
-    }
-
-    #classes .drama-footer {
-      margin-top: auto;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      align-items: center;
-      padding-top: 12px;
-      border-top: 1px solid #ecd9ad;
-    }
-
-    #classes .drama-footer .status-badge {
-      width: 100%;
-      text-align: center;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #classes .btn-book {
-      width: 100%;
-      justify-content: center;
-      align-items: center;
-      border-radius: 10px;
-      font-weight: 700;
-      height: 44px;
-      min-height: 44px;
-      padding: 8px 12px;
-      border: 1px solid transparent;
-      background: linear-gradient(135deg, #ba8e23, #9b761d);
-      color: #fff;
-      box-shadow: 0 8px 16px rgba(186, 142, 35, 0.28);
-    }
-
-    #classes .btn-book:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 18px rgba(186, 142, 35, 0.35);
-    }
-
-    @media (max-width: 768px) {
-      #classes .classes-subtabs {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-      }
-
-      #classes .classes-subtab-btn {
-        width: 100%;
-        border-right: none;
-      }
-
-      #classes .dramas-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    #browse .drama-card {
-      background: linear-gradient(180deg, #fffefb 0%, #fff7e7 100%);
-      border: 1px solid #efdcb0;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 8px 20px rgba(186, 142, 35, 0.14);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #browse .drama-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 14px 26px rgba(186, 142, 35, 0.22);
-    }
-
-    #browse .drama-image {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 10;
-      min-height: 210px;
-      overflow: hidden;
-      border-bottom: 1px solid #f1dfb7;
-      background: #f6ead0;
-    }
-
-    #browse .drama-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-      display: block;
-      transition: transform 0.3s ease;
-    }
-
-    #browse .drama-card:hover .drama-image img {
-      transform: scale(1.05);
-    }
-
-    #browse .placeholder-image {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #ead7a8, #d8b96f);
-    }
-
-    #browse .placeholder-image .material-symbols-rounded {
-      font-size: 64px;
-      color: #6d5320;
-    }
-
-    #browse .category-badge {
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      background: rgba(58, 43, 13, 0.86);
-      color: #f5e5ba;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    #browse .drama-content {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex: 1;
-    }
-
-    #browse .drama-title {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 700;
-      color: #3f2f12;
-      line-height: 1.3;
-    }
-
-    #browse .drama-description {
-      margin: 0;
-      color: #6f5a2e;
-      min-height: 44px;
-      line-height: 1.5;
-    }
-
-    #browse .drama-info {
-      display: grid;
-      gap: 7px;
-      padding-top: 10px;
-      border-top: 1px dashed #ead8a9;
-    }
-
-    #browse .info-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #5f4b23;
-      font-size: 14px;
-    }
-
-    #browse .info-item .material-symbols-rounded {
-      color: #a67d1e;
-      font-size: 18px;
-    }
-
-    #browse .drama-footer {
-      margin-top: auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      align-items: center;
-      padding-top: 12px;
-      border-top: 1px solid #efdfb8;
-    }
-
-    #browse .drama-footer .price {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #8f6717;
-      font-weight: 700;
-      font-size: 18px;
-    }
-
-    #browse .drama-footer .form-hint {
-      grid-column: 1 / -1;
-      margin: 0;
-      width: auto !important;
-      color: #6f5a2e !important;
-    }
-
-    #browse .btn-book,
-    #browse .btn-rate {
-      width: 100%;
-      justify-content: center;
-      align-items: center;
-      border-radius: 10px;
-      font-weight: 600;
-      height: 44px;
-      min-height: 44px;
-      padding: 8px 12px;
-      border: 1px solid transparent;
-    }
-
-    #browse .btn-book {
-      background: linear-gradient(135deg, #ba8e23, #9b761d);
-      color: #fff;
-    }
-
-    #browse .btn-book:hover {
-      box-shadow: 0 8px 16px rgba(186, 142, 35, 0.3);
-      transform: translateY(-2px);
-    }
-
-    #browse .btn-rate {
-      background: #fff;
-      color: #8f6717;
-      border-color: #e1c37f;
-    }
-
-    #browse .btn-rate:hover {
-      background: #fff7e2;
-      transform: translateY(-1px);
-    }
-
-    #my-showings .btn-pay-now {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 112px;
-      border-radius: 10px;
-      border: 1px solid #9f781a;
-      background: linear-gradient(135deg, #c79a2b 0%, #9a7318 100%);
-      color: #fff;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      box-shadow: 0 6px 14px rgba(154, 115, 24, 0.28);
-      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-    }
-
-    #my-showings .btn-pay-now:hover {
-      color: #fff;
-      transform: translateY(-1px);
-      box-shadow: 0 10px 20px rgba(154, 115, 24, 0.34);
-      filter: saturate(1.05);
-    }
-
-    #my-showings .btn-pay-now:focus-visible {
-      outline: 3px solid rgba(199, 154, 43, 0.3);
-      outline-offset: 2px;
-    }
-
-    @media (max-width: 768px) {
-      #browse .dramas-grid {
-        grid-template-columns: 1fr;
-      }
-
-      #browse .drama-image {
-        min-height: 190px;
-      }
-
-      #browse .drama-footer {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
 
   <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
@@ -646,33 +58,33 @@
       <nav class="dashboard-nav">
         <div class="dashboard-nav-section">
 
-          <!-- Overview -->
+          <!-- Dashboard -->
           <a href="#" class="dashboard-nav-item active" data-view="overview">
             <i class='bx bxs-home nav-icon'></i>
-            <span class="nav-label">Overview</span>
+            <span class="nav-label">Dashboard</span>
           </a>
 
           <!-- Browse Dramas / Events -->
           <a href="#" class="dashboard-nav-item" data-view="browse">
-            <i class='bx bxs-movie-play nav-icon'></i>
+            <i class='bx bx-camera-movie nav-icon'></i>
             <span class="nav-label">Browse Dramas</span>
           </a>
 
           <!-- My Showings -->
           <a href="#" class="dashboard-nav-item" data-view="my-showings">
-            <i class='bx bxs-calendar-event nav-icon'></i>
+            <i class='bx bx-calendar nav-icon'></i>
             <span class="nav-label">My Showings</span>
           </a>
 
           <!-- Payment History -->
           <a href="#" class="dashboard-nav-item" data-view="classes">
-            <i class='bx bxs-graduation nav-icon'></i>
+            <i class='bx bx-book-reader nav-icon'></i>
             <span class="nav-label">Classes</span>
           </a>
 
           <!-- Payment History -->
           <a href="#" class="dashboard-nav-item" data-view="payments">
-            <i class='bx bxs-receipt nav-icon'></i>
+            <i class='bx bx-receipt nav-icon'></i>
             <span class="nav-label">Payment History</span>
           </a>
 
@@ -680,9 +92,7 @@
       </nav>
 
       <div class="sidebar-footer">
-        <a href="<?= ROOT ?>/Logout" class="btn btn-secondary sidebar-back-button">
-          <i class='bx bx-log-out nav-icon'></i>
-          <span class="btn-label">Logout</span>
+
         </a>
       </div>
     </aside>
@@ -695,9 +105,9 @@
       <header class="dashboard-header">
         <div class="dashboard-header-content">
           <button class="dashboard-sidebar-toggle">
-            <span class="material-symbols-rounded">menu</span>
+            <i class='bx bx-menu'></i>
           </button>
-          <h1 class="dashboard-header-title" id="dashboardTitle">Overview</h1>
+          <h1 class="dashboard-header-title" id="dashboardTitle">Dashboard</h1>
         </div>
 
         <div class="dashboard-header-actions">
@@ -709,19 +119,20 @@
             <div class="user-menu-trigger" id="user-menu-trigger">
               <div class="user-avatar-small">
                 <img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face&auto=format"
+                  src="<?= htmlspecialchars($dashboardProfileImage) ?>"
+                  onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'"
                   alt="User Avatar" />
               </div>
             </div>
 
             <div class="user-menu-dropdown">
               <a href="<?= ROOT ?>/AudienceProfile" class="user-menu-item">
-                <span class="icon material-symbols-rounded">person</span>
+                <i class='icon bx bx-user'></i>
                 <span>Profile</span>
               </a>
 
               <a href="<?= ROOT ?>/Logout" class="user-menu-item">
-                <span class="icon material-symbols-rounded">logout</span>
+                <i class='icon bx bx-log-out'></i>
                 <span>Logout</span>
               </a>
             </div>
@@ -732,86 +143,190 @@
       <!-- Dashboard Views -->
       <div class="dashboard-content">
 
-        <!-- Overview -->
+        <!-- Dashboard -->
         <div class="dashboard-view active" id="overview">
+          <?php
+            $today = date('Y-m-d');
+            $upcomingDramasCount = 0;
+            $pendingShowRequestsCount = 0;
+
+            foreach (($data['my_showings'] ?? []) as $booking) {
+              $status = strtolower((string)($booking->booking_status ?? 'pending'));
+
+              if ($status === 'pending') {
+                $pendingShowRequestsCount++;
+              }
+
+              if (!in_array($status, ['accepted', 'confirmed', 'completed', 'watched', 'attended'], true)) {
+                continue;
+              }
+
+              $requestDetails = [];
+              if (!empty($booking->request_details_json)) {
+                $decoded = json_decode((string)$booking->request_details_json, true);
+                if (is_array($decoded)) {
+                  $requestDetails = $decoded;
+                }
+              }
+
+              $requestedShowDateRaw = trim((string)($requestDetails['show_date'] ?? ''));
+              $eventDateRaw = trim((string)($booking->event_date ?? ''));
+              $checkDate = $requestedShowDateRaw !== '' ? $requestedShowDateRaw : $eventDateRaw;
+
+              if ($checkDate !== '' && strtotime($checkDate) !== false && date('Y-m-d', strtotime($checkDate)) >= $today) {
+                $upcomingDramasCount++;
+              }
+            }
+
+            $availableClassesCount = count($data['classes'] ?? []);
+            $paidBookingShowsCount = count($data['showing_payments'] ?? []);
+          ?>
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-card-header">
-                <div class="stat-card-title">Total Bookings</div>
+                <div class="stat-card-title">Upcoming Dramas</div>
                 <div class="stat-card-icon primary">
-                  <span class="material-symbols-rounded">confirmation_number</span>
+                  <i class='bx bx-calendar-event'></i>
                 </div>
               </div>
-              <div class="stat-card-value">4</div>
+              <div class="stat-card-value"><?= (int)$upcomingDramasCount ?></div>
               <div class="stat-card-change positive">
-                <span class="material-symbols-rounded">trending_up</span>
-                <span>+1 this month</span>
+             
               </div>
             </div>
 
             <div class="stat-card">
               <div class="stat-card-header">
-                <div class="stat-card-title">Upcoming Shows</div>
+                <div class="stat-card-title">Available Classes</div>
                 <div class="stat-card-icon info">
-                  <span class="material-symbols-rounded">event</span>
+                  <i class='bx bx-book-reader'></i>
                 </div>
               </div>
-              <div class="stat-card-value">2</div>
+              <div class="stat-card-value"><?= (int)$availableClassesCount ?></div>
             </div>
 
             <div class="stat-card">
               <div class="stat-card-header">
-                <div class="stat-card-title">Watched Dramas</div>
+                <div class="stat-card-title">Booking Shows Paid</div>
                 <div class="stat-card-icon success">
-                  <span class="material-symbols-rounded">done_all</span>
+                  <i class='bx bx-credit-card'></i>
                 </div>
               </div>
-              <div class="stat-card-value">6</div>
+              <div class="stat-card-value"><?= (int)$paidBookingShowsCount ?></div>
             </div>
 
             <div class="stat-card">
               <div class="stat-card-header">
-                <div class="stat-card-title">Notifications</div>
+                <div class="stat-card-title">Pending Show Requests</div>
                 <div class="stat-card-icon warning">
-                  <span class="material-symbols-rounded">notifications</span>
+                  <i class='bx bx-time-five'></i>
                 </div>
               </div>
-              <div class="stat-card-value">3</div>
+              <div class="stat-card-value"><?= (int)$pendingShowRequestsCount ?></div>
             </div>
           </div>
 
-          <div class="dashboard-table-container">
+          <div class="dashboard-table-container dashboard-bookings-section">
             <div class="dashboard-table-header">
-              <h3 class="dashboard-table-title">Recent Bookings</h3>
-              <a href="#" class="btn btn-secondary">View All</a>
+              <h3 class="dashboard-table-title">Booking Status</h3>
             </div>
 
-            <table class="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Drama</th>
-                  <th>Date</th>
-                  <th>Venue</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
+            <?php if (!empty($data['my_showings'])): ?>
+              <div class="my-showings-filters">
+                <div class="my-showings-filter-box">
+                  <i class='bx bx-filter-alt'></i>
+                  <select id="overviewShowingsStatusFilter" aria-label="Filter dashboard bookings by status">
+                    <option value="all">All Bookings</option>
+                    <option value="paid">Payment Done</option>
+                    <option value="pending">Request Pending</option>
+                    <option value="rejected">Rejected Requests</option>
+                  </select>
+                </div>
+                <div class="my-showings-search-box">
+                  <i class='bx bx-search'></i>
+                  <input type="text" id="overviewShowingsSearchInput" placeholder="Search drama, venue, date or status" aria-label="Search dashboard bookings" />
+                </div>
+              </div>
 
-              <tbody>
-                <tr>
-                  <td>Stage Play - "Sonduru Siththam"</td>
-                  <td>Nov 23, 2024</td>
-                  <td>Colombo</td>
-                  <td><span class="status-badge success">Confirmed</span></td>
-                </tr>
+              <table class="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>Drama</th>
+                    <th>Show Date</th>
+                    <th>Time</th>
+                    <th>Venue</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($data['my_showings'] as $booking): ?>
+                    <?php
+                      $statusRaw = strtolower((string)($booking->booking_status ?? 'pending'));
 
-                <tr>
-                  <td>Drama - "Siri Pade"</td>
-                  <td>Dec 05, 2024</td>
-                  <td>Kandy</td>
-                  <td><span class="status-badge warning">Pending</span></td>
-                </tr>
-              </tbody>
-            </table>
+                      $requestDetails = [];
+                      if (!empty($booking->request_details_json)) {
+                        $decodedRequestDetails = json_decode((string)$booking->request_details_json, true);
+                        if (is_array($decodedRequestDetails)) {
+                          $requestDetails = $decodedRequestDetails;
+                        }
+                      }
+
+                      $requestedShowDateRaw = trim((string)($requestDetails['show_date'] ?? ''));
+                      $requestedShowTime = trim((string)($requestDetails['show_time'] ?? ''));
+                      $requestedVenue = trim((string)($requestDetails['request_venue'] ?? ''));
+
+                      $displayShowDate = !empty($requestedShowDateRaw)
+                        ? date('M d, Y', strtotime($requestedShowDateRaw))
+                        : (!empty($booking->event_date) ? date('M d, Y', strtotime($booking->event_date)) : 'TBA');
+
+                      $displayShowTime = $requestedShowTime !== ''
+                        ? $requestedShowTime
+                        : (!empty($booking->event_time) ? (string)$booking->event_time : 'TBA');
+
+                      $displayVenue = $requestedVenue !== ''
+                        ? $requestedVenue
+                        : (string)($booking->venue ?? 'TBA');
+
+                      if (in_array($statusRaw, ['confirmed', 'completed', 'watched', 'attended', 'accepted'], true)) {
+                        $statusClass = 'success';
+                      } elseif ($statusRaw === 'rejected') {
+                        $statusClass = 'danger';
+                      } else {
+                        $statusClass = 'warning';
+                      }
+
+                      $paymentDone = in_array($statusRaw, ['confirmed', 'completed', 'watched', 'attended'], true);
+
+                      $searchBlob = strtolower(trim(
+                        ($booking->title ?? '') . ' ' .
+                        $displayShowDate . ' ' .
+                        $displayShowTime . ' ' .
+                        $displayVenue . ' ' .
+                        $statusRaw
+                      ));
+                    ?>
+                    <tr class="overview-showings-row" data-status="<?= htmlspecialchars($statusRaw) ?>" data-payment="<?= $paymentDone ? 'paid' : 'unpaid' ?>" data-search="<?= htmlspecialchars($searchBlob) ?>">
+                      <td><?= htmlspecialchars($booking->title ?? 'Drama') ?></td>
+                      <td><?= htmlspecialchars($displayShowDate) ?></td>
+                      <td><?= htmlspecialchars($displayShowTime) ?></td>
+                      <td><?= htmlspecialchars($displayVenue) ?></td>
+                      <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span></td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+              <div id="overviewShowingsNoResults" class="my-showings-no-results" style="display: none;">
+                No bookings match your filter.
+              </div>
+            <?php else: ?>
+              <div class="empty-state">
+                <div class="empty-state-icon">
+                  <i class='bx bx-calendar-x'></i>
+                </div>
+                <h3 class="empty-state-title">No Showings Yet</h3>
+                <p class="empty-state-description">Book a drama from Browse Dramas to see your booking status here.</p>
+              </div>
+            <?php endif; ?>
           </div>
         </div>
 
@@ -826,11 +341,11 @@
             <!-- Search & Filter -->
             <div class="browse-search-filter">
               <div class="search-box">
-                <span class="material-symbols-rounded">search</span>
+                <i class='bx bx-search'></i>
                 <input type="text" id="dramaSearch" placeholder="Search dramas..." />
               </div>
               <div class="filter-box">
-                <span class="material-symbols-rounded">filter_list</span>
+                <i class='bx bx-filter-alt'></i>
                 <select id="categoryFilter">
                   <option value="">All Categories</option>
                   <?php if (!empty($data['categories'])): ?>
@@ -857,7 +372,7 @@
                         <img src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($drama->image) ?>" alt="<?= htmlspecialchars($drama->title) ?>">
                       <?php else: ?>
                         <div class="placeholder-image">
-                          <span class="material-symbols-rounded">movie</span>
+                          <i class='bx bx-camera-movie'></i>
                         </div>
                       <?php endif; ?>
                       <div class="category-badge"><?= htmlspecialchars($drama->category_name ?? 'Uncategorized') ?></div>
@@ -875,19 +390,23 @@
 
                       <div class="drama-info" style="margin-bottom: 8px;">
                         <div class="info-item">
-                          <span class="material-symbols-rounded">person</span>
+                          <i class='bx bx-user'></i>
                           <span>Producer: <?= htmlspecialchars($drama->owner_name ?? 'N/A') ?></span>
                         </div>
                         <div class="info-item">
-                          <span class="material-symbols-rounded">category</span>
+                          <i class='bx bx-phone'></i>
+                          <span>Producer Contact: <?= htmlspecialchars(!empty($drama->producer_phone) ? $drama->producer_phone : 'Not available') ?></span>
+                        </div>
+                        <div class="info-item">
+                          <i class='bx bx-category'></i>
                           <span>Category: <?= htmlspecialchars($drama->category_name ?? 'N/A') ?></span>
                         </div>
                         <div class="info-item">
-                          <span class="material-symbols-rounded">language</span>
+                          <i class='bx bx-world'></i>
                           <span>Language: <?= htmlspecialchars($drama->language ?? 'N/A') ?></span>
                         </div>
                         <div class="info-item">
-                          <span class="material-symbols-rounded">timer</span>
+                          <i class='bx bx-time-five'></i>
                           <span>Duration: <?= !empty($drama->duration_minutes) ? (int)$drama->duration_minutes . ' min' : 'N/A' ?></span>
                         </div>
                       </div>
@@ -897,7 +416,7 @@
                           Showing prices: <?= !empty($drama->showing_prices) ? htmlspecialchars($drama->showing_prices) : 'Not specified' ?>
                         </div>
                         <a class="btn btn-secondary btn-book" href="<?= ROOT ?>/BrowseDramas/bookShowings/<?= $drama->id ?>" data-drama-id="<?= $drama->id ?>">
-                          <span class="material-symbols-rounded">visibility</span>
+                          <i class='bx bx-show'></i>
                           <span>Book Showings</span>
                         </a>
                       </div>
@@ -907,7 +426,7 @@
               <?php else: ?>
                 <div class="empty-state">
                   <div class="empty-state-icon">
-                    <span class="material-symbols-rounded">theaters</span>
+                    <i class='bx bx-theater'></i>
                   </div>
                   <h3 class="empty-state-title">No Dramas Available</h3>
                   <p class="empty-state-description">Check back later for upcoming shows</p>
@@ -960,28 +479,28 @@
                         <p class="drama-description"><?= htmlspecialchars(substr((string)($class->description ?? ''), 0, 120)) ?><?= !empty($class->description) && strlen((string)$class->description) > 120 ? '...' : '' ?></p>
                         <div class="drama-info">
                           <div class="info-item">
-                            <span class="material-symbols-rounded">person</span>
+                            <i class='bx bx-user'></i>
                             <span>By <?= htmlspecialchars($class->creator_name ?? 'Artist') ?></span>
                           </div>
                           <div class="info-item">
-                            <span class="material-symbols-rounded">calendar_today</span>
+                            <i class='bx bx-calendar'></i>
                             <span><?= !empty($class->class_date) ? date('M d, Y', strtotime($class->class_date)) : 'TBA' ?></span>
                           </div>
                           <div class="info-item">
-                            <span class="material-symbols-rounded">schedule</span>
+                            <i class='bx bx-time-five'></i>
                             <span><?= htmlspecialchars($classTime) ?></span>
                           </div>
                           <div class="info-item">
-                            <span class="material-symbols-rounded">group</span>
+                            <i class='bx bx-group'></i>
                             <span><?= (int)($class->enrolled_count ?? 0) ?> / <?= (int)($class->capacity ?? 0) ?> enrolled</span>
                           </div>
                           <div class="info-item">
-                            <span class="material-symbols-rounded">payments</span>
+                            <i class='bx bx-credit-card'></i>
                             <span>LKR <?= number_format((float)($class->fee ?? 0), 2) ?></span>
                           </div>
                           <?php if (!empty($class->venue)): ?>
                             <div class="info-item">
-                              <span class="material-symbols-rounded">location_on</span>
+                              <i class='bx bx-map'></i>
                               <span><?= htmlspecialchars($class->venue) ?></span>
                             </div>
                           <?php endif; ?>
@@ -990,7 +509,7 @@
                           <form method="POST" action="<?= ROOT ?>/audiencedashboard/start_class_payment" class="class-enroll-payment-form" style="width: 100%;">
                             <input type="hidden" name="class_id" value="<?= (int)$class->id ?>">
                             <button type="submit" class="btn btn-book" style="width: 100%; display: inline-flex; justify-content: center; align-items: center;">
-                              <span class="material-symbols-rounded">school</span>
+                              <i class='bx bx-book-reader'></i>
                               <span>Enroll Now</span>
                             </button>
                           </form>
@@ -1002,7 +521,7 @@
               <?php else: ?>
                 <div class="empty-state">
                   <div class="empty-state-icon">
-                    <span class="material-symbols-rounded">school</span>
+                    <i class='bx bx-book-reader'></i>
                   </div>
                   <h3 class="empty-state-title">No Classes Available</h3>
                   <p class="empty-state-description">Check back soon for new classes from artists.</p>
@@ -1037,24 +556,24 @@
                         <p class="drama-description"><?= htmlspecialchars(substr((string)($class->description ?? ''), 0, 120)) ?><?= !empty($class->description) && strlen((string)$class->description) > 120 ? '...' : '' ?></p>
                         <div class="drama-info">
                           <div class="info-item">
-                            <span class="material-symbols-rounded">person</span>
+                            <i class='bx bx-user'></i>
                             <span>By <?= htmlspecialchars($class->creator_name ?? 'Artist') ?></span>
                           </div>
                           <div class="info-item">
-                            <span class="material-symbols-rounded">calendar_today</span>
+                            <i class='bx bx-calendar'></i>
                             <span><?= !empty($class->class_date) ? date('M d, Y', strtotime($class->class_date)) : 'TBA' ?></span>
                           </div>
                           <div class="info-item">
-                            <span class="material-symbols-rounded">schedule</span>
+                            <i class='bx bx-time-five'></i>
                             <span><?= htmlspecialchars($classTime) ?></span>
                           </div>
                           <div class="info-item">
-                            <span class="material-symbols-rounded">payments</span>
+                            <i class='bx bx-credit-card'></i>
                             <span>LKR <?= number_format((float)($class->fee ?? 0), 2) ?></span>
                           </div>
                           <?php if (!empty($class->venue)): ?>
                             <div class="info-item">
-                              <span class="material-symbols-rounded">location_on</span>
+                              <i class='bx bx-map'></i>
                               <span><?= htmlspecialchars($class->venue) ?></span>
                             </div>
                           <?php endif; ?>
@@ -1069,7 +588,7 @@
               <?php else: ?>
                 <div class="empty-state">
                   <div class="empty-state-icon">
-                    <span class="material-symbols-rounded">bookmarks</span>
+                    <i class='bx bx-bookmark'></i>
                   </div>
                   <h3 class="empty-state-title">No Enrolled Classes Yet</h3>
                   <p class="empty-state-description">Join a class from the Available Classes tab to see it here.</p>
@@ -1081,12 +600,106 @@
 
         <!-- Payment History -->
         <div class="dashboard-view" id="payments">
-          <div class="empty-state">
-            <div class="empty-state-icon">
-              <span class="material-symbols-rounded">receipt_long</span>
+          <div class="dashboard-table-container">
+            <div class="dashboard-table-header" style="margin-bottom: 18px;">
+              <h3 class="dashboard-table-title">Payment History</h3>
             </div>
-            <h3 class="empty-state-title">Payment History</h3>
-            <p class="empty-state-description">View your booking payment records.</p>
+
+            <div class="payments-subtabs" role="tablist" aria-label="Payment history tabs">
+              <button type="button" class="payments-subtab-btn active" data-payment-tab="showings" role="tab" aria-selected="true">
+                <i class="bx bx-calendar"></i> Showings Payments (<?= count($data['showing_payments'] ?? []) ?>)
+              </button>
+              <button type="button" class="payments-subtab-btn" data-payment-tab="classes" role="tab" aria-selected="false">
+                <i class="bx bx-book-reader"></i> Classes Payments (<?= count($data['class_payments'] ?? []) ?>)
+              </button>
+            </div>
+
+            <div class="payments-subtab-panel active" data-payment-panel="showings" role="tabpanel">
+              <h4 style="margin-bottom: 12px; color: #4f3a12;">Showing Payments</h4>
+              <?php if (!empty($data['showing_payments'])): ?>
+                <table class="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>Drama</th>
+                      <th>Order ID</th>
+                      <th>Amount</th>
+                      <th>Paid At</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($data['showing_payments'] as $payment): ?>
+                      <?php
+                        $showingPriceText = trim((string)($payment->showing_prices ?? ''));
+                        if ($showingPriceText === '' && !empty($payment->ticket_price)) {
+                          $showingPriceText = 'LKR ' . number_format((float)$payment->ticket_price, 2);
+                        }
+
+                        $paidAtValue = !empty($payment->paid_at) ? date('M d, Y h:i A', strtotime($payment->paid_at)) : 'Pending verification';
+                        $statusRaw = strtolower((string)($payment->booking_status ?? 'confirmed'));
+                        $statusClass = in_array($statusRaw, ['confirmed', 'completed', 'watched', 'attended'], true) ? 'success' : 'warning';
+                      ?>
+                      <tr>
+                        <td><?= htmlspecialchars($payment->title ?? 'Drama') ?></td>
+                        <td><?= htmlspecialchars($payment->payhere_order_id ?? 'N/A') ?></td>
+                        <td class="payment-amount"><?= htmlspecialchars($showingPriceText !== '' ? $showingPriceText : 'N/A') ?></td>
+                        <td><?= htmlspecialchars($paidAtValue) ?></td>
+                        <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span></td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              <?php else: ?>
+                <div class="empty-state">
+                  <div class="empty-state-icon">
+                    <i class='bx bx-receipt'></i>
+                  </div>
+                  <h3 class="empty-state-title">No Showing Payments Yet</h3>
+                  <p class="empty-state-description">Payments for approved show requests will appear here.</p>
+                </div>
+              <?php endif; ?>
+            </div>
+
+            <div class="payments-subtab-panel" data-payment-panel="classes" role="tabpanel">
+              <h4 style="margin-bottom: 12px; color: #4f3a12;">Class Payments</h4>
+              <?php if (!empty($data['class_payments'])): ?>
+                <table class="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>Class</th>
+                      <th>Order ID</th>
+                      <th>Amount</th>
+                      <th>Paid At</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($data['class_payments'] as $payment): ?>
+                      <?php
+                        $paidAtValue = !empty($payment->paid_at) ? date('M d, Y h:i A', strtotime($payment->paid_at)) : 'Pending verification';
+                        $statusRaw = strtolower((string)($payment->status ?? 'completed'));
+                        $statusClass = $statusRaw === 'completed' ? 'success' : 'warning';
+                      ?>
+                      <tr>
+                        <td><?= htmlspecialchars($payment->class_title ?? 'Class') ?></td>
+                        <td><?= htmlspecialchars($payment->order_id ?? 'N/A') ?></td>
+                        <td class="payment-amount">LKR <?= number_format((float)($payment->amount ?? 0), 2) ?></td>
+                        <td><?= htmlspecialchars($paidAtValue) ?></td>
+                        <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span></td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              <?php else: ?>
+                <div class="empty-state">
+                  <div class="empty-state-icon">
+                    <i class='bx bx-receipt'></i>
+                  </div>
+                  <h3 class="empty-state-title">No Class Payments Yet</h3>
+                  <p class="empty-state-description">Completed class enrollment payments will appear here.</p>
+                </div>
+              <?php endif; ?>
+            </div>
           </div>
         </div>
 
@@ -1098,6 +711,22 @@
             </div>
 
             <?php if (!empty($data['my_showings'])): ?>
+              <div class="my-showings-filters">
+                <div class="my-showings-filter-box">
+                  <i class='bx bx-filter-alt'></i>
+                  <select id="myShowingsStatusFilter" aria-label="Filter showings by status">
+                    <option value="all">All Bookings</option>
+                    <option value="paid">Payment Done</option>
+                    <option value="pending">Request Pending</option>
+                    <option value="rejected">Rejected Requests</option>
+                  </select>
+                </div>
+                <div class="my-showings-search-box">
+                  <i class='bx bx-search'></i>
+                  <input type="text" id="myShowingsSearchInput" placeholder="Search drama, venue, date or status" aria-label="Search my showings" />
+                </div>
+              </div>
+
               <table class="dashboard-table">
                 <thead>
                   <tr>
@@ -1147,8 +776,18 @@
                       } else {
                         $statusClass = 'warning';
                       }
+
+                      $paymentDone = in_array($statusRaw, ['confirmed', 'completed', 'watched', 'attended'], true);
+
+                      $searchBlob = strtolower(trim(
+                        ($booking->title ?? '') . ' ' .
+                        $displayShowDate . ' ' .
+                        $displayShowTime . ' ' .
+                        $displayVenue . ' ' .
+                        $statusRaw
+                      ));
                     ?>
-                    <tr>
+                    <tr class="my-showings-row" data-status="<?= htmlspecialchars($statusRaw) ?>" data-payment="<?= $paymentDone ? 'paid' : 'unpaid' ?>" data-search="<?= htmlspecialchars($searchBlob) ?>">
                       <td><?= htmlspecialchars($booking->title ?? 'Drama') ?></td>
                       <td><?= htmlspecialchars($displayShowDate) ?></td>
                       <td><?= htmlspecialchars($displayShowTime) ?></td>
@@ -1157,7 +796,7 @@
                       <td>
                         <span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span>
                         <?php if ($statusRaw === 'rejected' && !empty($booking->rejection_reason)): ?>
-                          <div style="margin-top: 6px; font-size: 12px; color: #8a1f1f;">
+                          <div style="margin-top: 6px; font-size: 12px; color: background: background: linear-gradient(135deg, #ff9a9e, #fecfef);;">
                             Reason: <?= htmlspecialchars($booking->rejection_reason) ?>
                           </div>
                         <?php endif; ?>
@@ -1176,10 +815,13 @@
                   <?php endforeach; ?>
                 </tbody>
               </table>
+              <div id="myShowingsNoResults" class="my-showings-no-results" style="display: none;">
+                No bookings match your filter.
+              </div>
             <?php else: ?>
               <div class="empty-state">
                 <div class="empty-state-icon">
-                  <span class="material-symbols-rounded">event_busy</span>
+                  <i class='bx bx-calendar-x'></i>
                 </div>
                 <h3 class="empty-state-title">No Showings Yet</h3>
                 <p class="empty-state-description">Book a drama from Browse Dramas to see your showings here.</p>
@@ -1192,7 +834,7 @@
         <div class="dashboard-view" id="settings">
           <div class="empty-state">
             <div class="empty-state-icon">
-              <span class="material-symbols-rounded">settings</span>
+              <i class='bx bx-cog'></i>
             </div>
             <h3 class="empty-state-title">Account Settings</h3>
             <p class="empty-state-description">Change your password, update profile, and manage preferences.</p>
@@ -1204,153 +846,7 @@
   </div>
 
   <script src="<?= ROOT ?>/assets/JS/audiencedashboard.js"></script>
-  <script>
-    function initAudienceClassPayments() {
-      const enrollForms = document.querySelectorAll('.class-enroll-payment-form');
-      if (!enrollForms.length) {
-        return;
-      }
-
-      enrollForms.forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-          event.preventDefault();
-
-          if (typeof payhere === 'undefined') {
-            alert('PayHere is not available right now. Please refresh and try again.');
-            return;
-          }
-
-          const submitBtn = form.querySelector('button[type="submit"]');
-          const classIdInput = form.querySelector('input[name="class_id"]');
-          if (!classIdInput || !classIdInput.value) {
-            alert('Invalid class selected.');
-            return;
-          }
-
-          if (submitBtn) {
-            submitBtn.disabled = true;
-          }
-
-          fetch(form.getAttribute('action'), {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: 'class_id=' + encodeURIComponent(classIdInput.value)
-          })
-            .then(function (response) {
-              return response.json();
-            })
-            .then(function (data) {
-              if (!data.success) {
-                alert(data.error || 'Unable to initialize class payment.');
-                if (submitBtn) {
-                  submitBtn.disabled = false;
-                }
-                return;
-              }
-
-              const payment = {
-                sandbox: !!data.sandbox,
-                merchant_id: data.merchant_id,
-                return_url: data.return_url,
-                cancel_url: data.cancel_url,
-                notify_url: data.notify_url,
-                order_id: data.order_id,
-                items: data.title || 'Drama Class',
-                amount: data.amount,
-                currency: 'LKR',
-                hash: data.hash,
-                first_name: 'Audience',
-                last_name: 'User',
-                email: 'audience@example.com',
-                phone: '0770000000',
-                address: 'Sri Lanka',
-                city: 'Colombo',
-                country: 'Sri Lanka'
-              };
-
-              payhere.onCompleted = function () {
-                window.location.href = data.return_url;
-              };
-
-              payhere.onDismissed = function () {
-                if (submitBtn) {
-                  submitBtn.disabled = false;
-                }
-              };
-
-              payhere.onError = function (error) {
-                alert('Payment error: ' + error);
-                if (submitBtn) {
-                  submitBtn.disabled = false;
-                }
-              };
-
-              payhere.startPayment(payment);
-            })
-            .catch(function () {
-              alert('Payment initialization failed. Please try again.');
-              if (submitBtn) {
-                submitBtn.disabled = false;
-              }
-            });
-        });
-      });
-    }
-
-    function initAudienceClassesTabs() {
-      const classesView = document.getElementById('classes');
-      if (!classesView) {
-        return;
-      }
-
-      const buttons = classesView.querySelectorAll('.classes-subtab-btn');
-      const panels = classesView.querySelectorAll('.classes-subtab-panel');
-
-      if (!buttons.length || !panels.length) {
-        return;
-      }
-
-            initAudienceClassPayments();
-      buttons.forEach((button) => {
-        button.addEventListener('click', function () {
-          const target = button.getAttribute('data-classes-tab');
-
-          buttons.forEach((btn) => {
-            const isActive = btn === button;
-            btn.classList.toggle('active', isActive);
-            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-          });
-
-          panels.forEach((panel) => {
-            panel.classList.toggle('active', panel.getAttribute('data-classes-panel') === target);
-          });
-        });
-      });
-    }
-
-    // Toast notification handler
-    function closeToast() {
-      const toast = document.getElementById('successToast');
-      if (toast) {
-        toast.style.animation = 'toastSlideOut 0.4s ease forwards';
-        setTimeout(() => toast.remove(), 400);
-      }
-    }
-
-    // Auto-hide toast after 4 seconds
-    window.addEventListener('load', function() {
-      initAudienceClassesTabs();
-
-      const toast = document.getElementById('successToast');
-      if (toast) {
-        setTimeout(() => {
-          closeToast();
-        }, 4000);
-      }
-    });
-  </script>
+  <script src="<?= ROOT ?>/assets/JS/audiencedashboard-page.js"></script>
 </body>
 
 </html>

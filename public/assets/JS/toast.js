@@ -31,10 +31,10 @@ function showToast(message, type = 'info', duration = 4000) {
     
     // Icon based on type
     const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-times-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
+        success: 'check_circle',
+        error: 'cancel',
+        warning: 'warning',
+        info: 'info'
     };
     
     // Titles based on type
@@ -47,14 +47,14 @@ function showToast(message, type = 'info', duration = 4000) {
     
     toast.innerHTML = `
         <div class="toast-icon">
-            <i class="fas ${icons[type] || icons.info}"></i>
+            <span class="material-symbols-rounded">${icons[type] || icons.info}</span>
         </div>
         <div class="toast-content">
             <div class="toast-title">${titles[type] || titles.info}</div>
             <div class="toast-message">${message}</div>
         </div>
         <button class="toast-close" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
+            <span class="material-symbols-rounded">close</span>
         </button>
         <div class="toast-progress">
             <div class="toast-progress-bar" style="animation-duration: ${duration}ms"></div>
@@ -120,17 +120,17 @@ function showConfirm(message, options = {}) {
         overlay.className = 'confirm-overlay';
         
         const icons = {
-            success: 'fa-check-circle',
-            error: 'fa-times-circle',
-            warning: 'fa-exclamation-triangle',
-            info: 'fa-info-circle',
-            question: 'fa-question-circle'
+            success: 'check_circle',
+            error: 'cancel',
+            warning: 'warning',
+            info: 'info',
+            question: 'help'
         };
         
         overlay.innerHTML = `
             <div class="confirm-dialog">
                 <div class="confirm-icon confirm-icon-${type}">
-                    <i class="fas ${icons[type] || icons.question}"></i>
+                    <span class="material-symbols-rounded">${icons[type] || icons.question}</span>
                 </div>
                 <h3 class="confirm-title">${title}</h3>
                 <p class="confirm-message">${message}</p>

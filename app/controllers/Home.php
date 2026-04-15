@@ -51,7 +51,7 @@ class Home
         $db = new Database();
         
         // Fetch drama details with category
-        $db->query("SELECT d.*, c.name as category_name, u.full_name as creator_name
+        $db->query("SELECT d.*, c.name as category_name, u.full_name as creator_name, u.phone as producer_phone, u.email as producer_email
                     FROM dramas d 
                     LEFT JOIN categories c ON d.category_id = c.id 
                     LEFT JOIN users u ON d.created_by = u.id

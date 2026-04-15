@@ -126,7 +126,7 @@ button {
   cursor: pointer;
 }
 .active > .material-symbols-rounded {
-  color: var(--color-primary);
+  color: var(--color-primary-solid);
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 /* ===================================
@@ -418,7 +418,7 @@ button {
 }
 .search-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-solid);
   box-shadow: 0 0 0 3px var(--color-primary-100);
 }
 .search-input::placeholder {
@@ -797,7 +797,7 @@ button {
   height: 40px;
   border-radius: var(--radius-lg);
   background: var(--color-primary-100);
-  color: var(--color-primary);
+  color: var(--color-primary-solid);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -840,7 +840,7 @@ button {
   width: 80px;
   height: 80px;
   background: var(--color-primary-50);
-  color: var(--color-primary);
+  color: var(--color-primary-solid);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -909,7 +909,7 @@ button {
   font-size: var(--text-xs);
 }
 .btn-approve:hover {
-  background: #0d9668;
+  background: linear-gradient(135deg, #d4f7dc, #a8e6a3);
   transform: translateY(-1px);
 }
 .btn-reject {
@@ -919,7 +919,7 @@ button {
   font-size: var(--text-xs);
 }
 .btn-reject:hover {
-  background: #dc2626;
+  background: linear-gradient(135deg, #ffd6d6, #ff9e9e);
   transform: translateY(-1px);
 }
 .btn-view {
@@ -1312,7 +1312,7 @@ button {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-solid);
   box-shadow: 0 0 0 3px var(--color-primary-50);
 }
 
@@ -1613,10 +1613,10 @@ button {
   gap: var(--space-sm);
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
-  color: var(--color-primary);
+  color: var(--color-primary-solid);
   margin: var(--space-lg) 0 var(--space-md) 0;
   padding-bottom: var(--space-sm);
-  border-bottom: 2px solid var(--color-primary);
+  border-bottom: 2px solid var(--color-primary-solid);
 }
 
 .details-section-header:first-child {
@@ -1625,7 +1625,7 @@ button {
 
 .details-section-header .material-symbols-rounded {
   font-size: 22px;
-  color: var(--color-primary);
+  color: var(--color-primary-solid);
 }
 
 /* Readonly Input Box for View Details Modal */
@@ -1648,7 +1648,7 @@ button {
 
 .user-form-modal .input-box.readonly input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-solid);
 }
 
 .user-form-modal .input-box.readonly i,
@@ -1657,7 +1657,7 @@ button {
   left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-primary);
+  color: var(--color-primary-solid);
   font-size: 20px;
   pointer-events: none;
 }
@@ -1669,7 +1669,7 @@ button {
   background: var(--color-surface);
   padding: 0 6px;
   font-size: var(--text-xs);
-  color: var(--color-primary);
+  color: var(--color-primary-solid);
   font-weight: var(--weight-medium);
 }
 
@@ -1690,7 +1690,7 @@ button {
 }
 
 [data-theme="dark"] .details-section-header {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-solid);
 }
 
 /* Modal Subheading */
@@ -2019,7 +2019,7 @@ button {
 
 .role-tag {
   background: var(--color-primary-light);
-  color: var(--color-primary);
+  color: var(--color-primary-solid);
   padding: 2px 10px;
   border-radius: 12px;
   font-size: 12px;
@@ -2070,13 +2070,13 @@ button {
 }
 
 .file-upload-box label:hover {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-solid);
   background: var(--color-primary-light);
 }
 
 .file-upload-box label .material-symbols-rounded {
   font-size: 40px;
-  color: var(--color-primary);
+  color: var(--color-primary-solid);
   margin-bottom: 8px;
 }
 

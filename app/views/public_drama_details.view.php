@@ -360,20 +360,6 @@
 </head>
 <body>
     <!-- Header -->
-    <header class="header">
-        <a href="<?= ROOT ?>/Home" class="header-logo">
-            <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala">
-            <span>RANGAMADALA</span>
-        </a>
-        <div class="header-actions">
-            <a href="<?= ROOT ?>/Login" class="btn btn-outline">
-                <i class="bx bx-sign-in-alt"></i> Log In
-            </a>
-            <a href="<?= ROOT ?>/Signup" class="btn btn-primary">
-                <i class="bx bx-user-plus"></i> Sign Up
-            </a>
-        </div>
-    </header>
 
     <!-- Main Content -->
     <div class="container">
@@ -381,12 +367,18 @@
             <i class="bx bx-arrow-left"></i> Back to Home
         </a>
 
-        <?php if (!empty($data['drama'])): $d = $data['drama']; ?>
+        <?php if (!empty($data['drama'])): $d = $data['drama'];
+            $dramaTitle = $d->title ?? $d->drama_name ?? 'Untitled Drama';
+            $dramaImage = $d->image ?? $d->poster_image ?? null;
+            $creatorName = $d->creator_name ?? $d->owner_name ?? null;
+            $producerPhone = $d->producer_phone ?? $d->owner_phone ?? null;
+            $producerEmail = $d->producer_email ?? $d->owner_email ?? null;
+        ?>
             <div class="drama-card">
                 <div class="drama-hero">
                     <div class="drama-image-container">
-                        <?php if (!empty($d->image)): ?>
-                            <img class="drama-image" src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($d->image) ?>" alt="<?= htmlspecialchars($d->title) ?>">
+                        <?php if (!empty($dramaImage)): ?>
+                            <img class="drama-image" src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($dramaImage) ?>" alt="<?= htmlspecialchars($dramaTitle) ?>">
                         <?php else: ?>
                             <div class="placeholder-image">
                                 <i class="bx bx-theater-masks"></i>
@@ -396,7 +388,7 @@
                     
                     <div class="drama-info">
                         <span class="drama-category"><?= htmlspecialchars($d->category_name ?? 'Drama') ?></span>
-                        <h1 class="drama-title"><?= htmlspecialchars($d->title) ?></h1>
+                        <h1 class="drama-title"><?= htmlspecialchars($dramaTitle) ?></h1>
                         
                         <div class="drama-meta">
                             <?php if (!empty($d->event_date)): ?>
@@ -420,10 +412,24 @@
                                 </div>
                             <?php endif; ?>
                             
-                            <?php if (!empty($d->creator_name)): ?>
+                            <?php if (!empty($creatorName)): ?>
                                 <div class="meta-item">
                                     <i class="bx bx-user"></i>
-                                    <span>By <?= htmlspecialchars($d->creator_name) ?></span>
+                                    <span>By <?= htmlspecialchars($creatorName) ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($producerPhone)): ?>
+                                <div class="meta-item">
+                                    <i class="bx bx-phone"></i>
+                                    <span>Producer Contact: <?= htmlspecialchars($producerPhone) ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($producerEmail)): ?>
+                                <div class="meta-item">
+                                    <i class="bx bx-envelope"></i>
+                                    <span>Producer Email: <?= htmlspecialchars($producerEmail) ?></span>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -437,18 +443,13 @@
                         <?php endif; ?>
                         
                         <div class="drama-price">
-                            LKR <?= number_format($d->ticket_price ?? 0, 2) ?>
-                            <span>/ ticket</span>
+                            <?= htmlspecialchars($d->showing_prices ?? 'Not available') ?>
+                            <span>/ showing</span>
                         </div>
-                        <?php if (!empty($d->showing_prices)): ?>
-                            <div class="form-hint" style="margin-top: 8px; color: var(--text-light);">
-                                Showing prices: <?= htmlspecialchars($d->showing_prices) ?>
-                            </div>
-                        <?php endif; ?>
                         
                         <div class="drama-actions">
                             <a href="<?= ROOT ?>/Login" class="btn btn-primary">
-                                <i class="bx bx-ticket-alt"></i> Book Tickets
+                                <i class="bx bx-ticket-alt"></i> Book Showings
                             </a>
                             <a href="<?= ROOT ?>/Signup" class="btn btn-outline">
                                 <i class="bx bx-user-plus"></i> Create Account
@@ -467,8 +468,8 @@
             
             <!-- CTA Section -->
             <div class="cta-section">
-                <h3>Want to Book Tickets or Rate This Drama?</h3>
-                <p>Create a free account to book tickets, rate dramas, and connect with Sri Lanka's drama community!</p>
+                <h3>Want to Book Showings?</h3>
+                <p>Create a free account to buy Showings and connect with Sri Lanka's drama community!</p>
                 <div class="cta-buttons">
                     <a href="<?= ROOT ?>/Signup" class="btn btn-primary">
                         <i class="bx bx-user-plus"></i> Sign Up Free

@@ -58,7 +58,7 @@
         <div class="text-box">
             <h1>RANGAMADALA</h1>
             <h1>Drama Connectivity Platform</h1>
-            <p>Connecting Sri Lanka’s Drama Talent in One Place</p>
+            <p>Connecting Sri Lanka's Drama Talent in One Place</p>
         </div>
 
         <!-- Swiper Section -->
@@ -99,7 +99,7 @@
         <div class="about-container">
             <h2>About Rangamadala</h2>
             <p>
-                Rangamadala is Sri Lanka’s first all-in-one drama connectivity platform that brings together artists, directors, audiences, and production teams. 
+                Rangamadala is Sri Lanka's first all-in-one drama connectivity platform that brings together artists, directors, audiences, and production teams. 
                 Our goal is to build a thriving community where creativity meets opportunity from performing on stage to managing behind the curtain.
             </p>
             <a href="<?= ROOT ?>/Home/learnMore" class="about-btn">Learn More</a>

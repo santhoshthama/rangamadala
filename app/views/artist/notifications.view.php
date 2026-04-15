@@ -4,20 +4,16 @@ if(isset($data) && is_array($data)) {
     extract($data);
 }
 
-// Profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
+$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
+if (isset($user->profile_image) && !empty($user->profile_image)) {
+    $imageValue = str_replace('\\', '/', $user->profile_image);
     if (strpos($imageValue, '/') !== false) {
         $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
+} elseif (isset($user->nic_photo) && !empty($user->nic_photo)) {
+    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
 }
 
 $grouped = isset($grouped_notifications) ? $grouped_notifications : [];
@@ -26,21 +22,21 @@ $allNotifications = isset($all_notifications) ? $all_notifications : [];
 
 // Notification type config
 $typeConfig = [
-    'role_assigned'         => ['icon' => 'fa-user-check',     'color' => '#28a745', 'label' => 'Role Assigned'],
-    'role_removed'          => ['icon' => 'fa-user-times',     'color' => '#dc3545', 'label' => 'Role Removed'],
-    'event_scheduled'       => ['icon' => 'fa-calendar-plus',  'color' => '#ba8e23', 'label' => 'Event Scheduled'],
-    'event_updated'         => ['icon' => 'fa-calendar-check', 'color' => '#17a2b8', 'label' => 'Event Updated'],
-    'event_cancelled'       => ['icon' => 'fa-calendar-times', 'color' => '#dc3545', 'label' => 'Event Cancelled'],
-    'application_accepted'  => ['icon' => 'fa-check-circle',   'color' => '#28a745', 'label' => 'Application Accepted'],
-    'application_rejected'  => ['icon' => 'fa-times-circle',   'color' => '#dc3545', 'label' => 'Application Rejected'],
-    'interview_scheduled'   => ['icon' => 'fa-user-clock',     'color' => '#ba8e23', 'label' => 'Interview Scheduled'],
-    'pm_provider_responded_quote' => ['icon' => 'fa-file-invoice-dollar', 'color' => '#2563eb', 'label' => 'Quote Received'],
-    'pm_provider_accepted_terms' => ['icon' => 'fa-handshake', 'color' => '#16a34a', 'label' => 'Terms Accepted'],
-    'pm_provider_rejected_terms' => ['icon' => 'fa-ban', 'color' => '#dc2626', 'label' => 'Terms Rejected'],
-    'pm_provider_marked_completed' => ['icon' => 'fa-flag-checkered', 'color' => '#0ea5e9', 'label' => 'Service Completed'],
-    'pm_provider_rejected_request' => ['icon' => 'fa-user-slash', 'color' => '#b91c1c', 'label' => 'Request Rejected'],
-    'pm_provider_confirmed_manual_payment' => ['icon' => 'fa-money-check-dollar', 'color' => '#15803d', 'label' => 'Payment Confirmed'],
-    'pm_provider_rejected_manual_payment' => ['icon' => 'fa-triangle-exclamation', 'color' => '#d97706', 'label' => 'Payment Verification Failed'],
+    'role_assigned'         => ['icon' => 'bx-user-check',   'color' => '#28a745', 'label' => 'Role Assigned'],
+    'role_removed'          => ['icon' => 'bx-user-x',       'color' => '#dc3545', 'label' => 'Role Removed'],
+    'event_scheduled'       => ['icon' => 'bx-calendar-plus','color' => '#ba8e23', 'label' => 'Event Scheduled'],
+    'event_updated'         => ['icon' => 'bx-calendar-check','color' => '#17a2b8', 'label' => 'Event Updated'],
+    'event_cancelled'       => ['icon' => 'bx-calendar-x',   'color' => '#dc3545', 'label' => 'Event Cancelled'],
+    'application_accepted'  => ['icon' => 'bx-check-circle', 'color' => '#28a745', 'label' => 'Application Accepted'],
+    'application_rejected'  => ['icon' => 'bx-x-circle',     'color' => '#dc3545', 'label' => 'Application Rejected'],
+    'interview_scheduled'   => ['icon' => 'bx-user-voice',   'color' => '#ba8e23', 'label' => 'Interview Scheduled'],
+    'pm_provider_responded_quote' => ['icon' => 'bx-receipt', 'color' => '#2563eb', 'label' => 'Quote Received'],
+    'pm_provider_accepted_terms' => ['icon' => 'bx-check-shield', 'color' => '#16a34a', 'label' => 'Terms Accepted'],
+    'pm_provider_rejected_terms' => ['icon' => 'bx-x-circle', 'color' => '#dc2626', 'label' => 'Terms Rejected'],
+    'pm_provider_marked_completed' => ['icon' => 'bx-flag', 'color' => '#0ea5e9', 'label' => 'Service Completed'],
+    'pm_provider_rejected_request' => ['icon' => 'bx-user-x', 'color' => '#b91c1c', 'label' => 'Request Rejected'],
+    'pm_provider_confirmed_manual_payment' => ['icon' => 'bx-wallet', 'color' => '#15803d', 'label' => 'Payment Confirmed'],
+    'pm_provider_rejected_manual_payment' => ['icon' => 'bx-error-circle', 'color' => '#d97706', 'label' => 'Payment Verification Failed'],
 ];
 
 $pmTypes = [
@@ -65,7 +61,9 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications - Rangamadala</title>
-    <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
+    <link rel="icon" type="image/png" href="<?=ROOT?>/assets/images/Rangamadala%20logo.png">
+    <link rel="apple-touch-icon" href="<?=ROOT?>/assets/images/Rangamadala%20logo.png">
+    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <style>
         .back-button {
@@ -262,19 +260,19 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
         <ul class="menu">
             <li>
                 <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="bx bx-home"></i>
+                    <i class="bx bxs-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="<?= ROOT ?>/artistdashboard/browse_vacancies">
-                    <i class="bx bx-bullhorn"></i>
+                    <i class="bx bxs-megaphone"></i>
                     <span>View All Vacancies</span>
                 </a>
             </li>
             <li class="active">
                 <a href="<?= ROOT ?>/artistdashboard/notifications">
-                    <i class="bx bx-bell"></i>
+                    <i class="bx bxs-bell"></i>
                     <span>Notifications</span>
                 </a>
             </li>
@@ -285,7 +283,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                 </a>
             </li>
             <li>
-                <a href="<?= ROOT ?>/artistdashboard#my-showings">
+                <a href="<?= ROOT ?>/artistdashboard?tab=my-showings#my-showings">
                     <i class="bx bx-calendar-event"></i>
                     <span>Showings</span>
                 </a>
@@ -348,7 +346,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                 <i class="bx bx-bell"></i> All Notifications
             </button>
             <button class="tab-btn" onclick="switchTab('pm', this)">
-                <i class="fas fa-briefcase"></i> Production Manager <?= $pmUnreadCount > 0 ? '(' . $pmUnreadCount . ')' : '' ?>
+                <i class="bx bx-briefcase"></i> Production Manager <?= $pmUnreadCount > 0 ? '(' . $pmUnreadCount . ')' : '' ?>
             </button>
             <button class="tab-btn" onclick="switchTab('grouped', this)">
                 <i class="bx bx-film"></i> By Drama
@@ -415,23 +413,23 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                 <div class="profile-container" style="grid-template-columns: 1fr;">
                     <div class="details">
                         <div class="card-section">
-                            <h3><i class="fas fa-briefcase"></i> Production Manager Updates</h3>
+                            <h3><i class="bx bx-briefcase"></i> Production Manager Updates</h3>
                             <?php if (empty($pmNotifications)): ?>
                                 <div class="empty-state">
-                                    <i class="fas fa-inbox"></i>
+                                    <i class="bx bx-inbox"></i>
                                     <h3>No PM Notifications Yet</h3>
                                     <p>Provider responses and request-stage updates will appear here.</p>
                                 </div>
                             <?php else: ?>
                                 <?php foreach ($pmNotifications as $n):
-                                    $tc = $typeConfig[$n->type] ?? ['icon' => 'fa-bell', 'color' => '#6c757d', 'label' => 'Notification'];
+                                    $tc = $typeConfig[$n->type] ?? ['icon' => 'bx-bell', 'color' => '#6c757d', 'label' => 'Notification'];
                                     $isUnread = !(int)$n->is_read;
                                     $timeAgo = timeAgoStr($n->created_at);
                                 ?>
                                 <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>"
                                    class="notification-item <?= $isUnread ? 'unread' : '' ?>">
                                     <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
-                                        <i class="fas <?= $tc['icon'] ?>"></i>
+                                        <i class="bx <?= $tc['icon'] ?>"></i>
                                     </div>
                                     <div class="notification-body">
                                         <div class="notification-title">
@@ -440,15 +438,15 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                                         </div>
                                         <div class="notification-message"><?= esc($n->message) ?></div>
                                         <div class="notification-time">
-                                            <i class="fas fa-clock"></i> <?= $timeAgo ?>
+                                            <i class="bx bx-clock"></i> <?= $timeAgo ?>
                                             <?php if ($n->drama_name): ?>
-                                                &nbsp;|&nbsp; <i class="fas fa-film"></i> <?= esc($n->drama_name) ?>
+                                                &nbsp;|&nbsp; <i class="bx bx-film"></i> <?= esc($n->drama_name) ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
                                     <div style="flex-shrink: 0;">
                                         <span class="notification-badge" style="background: <?= $tc['color'] ?>20; color: <?= $tc['color'] ?>;">
-                                            <i class="fas <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?>
+                                            <i class="bx <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?>
                                         </span>
                                     </div>
                                 </a>

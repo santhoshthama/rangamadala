@@ -148,15 +148,15 @@ function renderDramaRequests(requests) {
       <td>
         <div class="action-buttons">
           <button class="btn btn-secondary" onclick="showDramaRequestDetails(${req.id})">
-            <span class="material-symbols-rounded">visibility</span>
+            <span class="bx bx-show"></span>
             View
           </button>
           <button class="btn btn-approve" onclick="approveDramaRequest(${req.id}, '${escapeJsString(req.drama_name)}')">
-            <span class="material-symbols-rounded">check_circle</span>
+            <span class="bx bx-check-circle"></span>
             Approve
           </button>
           <button class="btn btn-reject" onclick="showRejectDramaModal(${req.id}, '${escapeJsString(req.drama_name)}')">
-            <span class="material-symbols-rounded">cancel</span>
+            <span class="bx bx-x"></span>
             Reject
           </button>
         </div>
@@ -201,7 +201,7 @@ function showDramaRequestDetails(requestId) {
     ? isImageFile
       ? `<img src="${certificateUrl}" alt="Certificate Image" class="nic-image" />`
       : `<div class="certificate-file-box">
-           <span class="material-symbols-rounded">description</span>
+           <span class="bx bx-description"></span>
            <p>Certificate document uploaded</p>
          </div>`
     : '<em>No certificate file uploaded</em>';
@@ -212,30 +212,30 @@ function showDramaRequestDetails(requestId) {
         <div class="modal-header">
           <h3>Drama Request Details</h3>
           <button class="modal-close" onclick="closeDramaRequestDetailsModal()">
-            <span class="material-symbols-rounded">close</span>
+            <span class="bx bx-x"></span>
           </button>
         </div>
         <div class="modal-body">
           <div class="details-section-header">
-            <span class="material-symbols-rounded">theater_comedy</span>
+            <span class="bx bx-theater-comedy"></span>
             <span>Drama Information</span>
           </div>
 
           <div class="input-box readonly">
             <input type="text" value="${escapeHtml(request.drama_name || 'N/A')}" readonly />
-            <i class="material-symbols-rounded">movie</i>
+            <i class="bx bx-movie"></i>
             <label>Drama Name</label>
           </div>
 
           <div class="input-box readonly">
             <input type="text" value="${escapeHtml(request.owner_name || 'N/A')}" readonly />
-            <i class="material-symbols-rounded">person</i>
+            <i class="bx bx-user"></i>
             <label>Producer Name</label>
           </div>
 
           <div class="input-box readonly">
             <input type="text" value="${escapeHtml(request.certificate_number || 'N/A')}" readonly />
-            <i class="material-symbols-rounded">badge</i>
+            <i class="bx bx-badge"></i>
             <label>Certificate Number</label>
           </div>
 
@@ -245,36 +245,36 @@ function showDramaRequestDetails(requestId) {
           </div>
 
           <div class="details-section-header">
-            <span class="material-symbols-rounded">person</span>
+            <span class="bx bx-user"></span>
             <span>Artist Information</span>
           </div>
 
           <div class="input-box readonly">
             <input type="text" value="${escapeHtml(request.artist_name || 'N/A')}" readonly />
-            <i class="material-symbols-rounded">account_circle</i>
+            <i class="bx bx-user"></i>
             <label>Artist Name</label>
           </div>
 
           <div class="input-box readonly">
             <input type="text" value="${escapeHtml(request.artist_email || 'N/A')}" readonly />
-            <i class="material-symbols-rounded">mail</i>
+            <i class="bx bx-envelope"></i>
             <label>Artist Email</label>
           </div>
 
           <div class="input-box readonly">
             <input type="text" value="${escapeHtml(request.artist_phone || 'N/A')}" readonly />
-            <i class="material-symbols-rounded">phone</i>
+            <i class="bx bx-phone"></i>
             <label>Artist Phone</label>
           </div>
 
           <div class="input-box readonly">
             <input type="text" value="${escapeHtml(requestDate)}" readonly />
-            <i class="material-symbols-rounded">schedule</i>
+            <i class="bx bx-schedule">schedule</i>
             <label>Requested At</label>
           </div>
 
           <div class="details-section-header">
-            <span class="material-symbols-rounded">image</span>
+            <span class="bx bx-image"></span>
             <span>Certificate File</span>
           </div>
 
@@ -290,11 +290,11 @@ function showDramaRequestDetails(requestId) {
             Close
           </button>
           <button class="btn btn-approve" onclick="closeDramaRequestDetailsModal(); approveDramaRequest(${request.id}, '${escapeJsString(request.drama_name || 'this drama')}')">
-            <span class="material-symbols-rounded">check_circle</span>
+            <span class="bx bx-check-circle"></span>
             Approve
           </button>
           <button class="btn btn-reject" onclick="closeDramaRequestDetailsModal(); showRejectDramaModal(${request.id}, '${escapeJsString(request.drama_name || 'this drama')}')">
-            <span class="material-symbols-rounded">cancel</span>
+            <span class="bx bx-x"></span>
             Reject
           </button>
         </div>
@@ -356,7 +356,7 @@ function showRejectDramaModal(requestId, dramaName) {
         <div class="modal-header">
           <h3>Reject Drama Request</h3>
           <button class="modal-close" onclick="closeRejectDramaModal()">
-            <span class="material-symbols-rounded">close</span>
+            <span class="bx bx-x"></span>
           </button>
         </div>
         <div class="modal-body">
@@ -465,15 +465,15 @@ function renderRegistrations(registrations) {
       <td>
         <div class="action-buttons">
           <button class="btn btn-secondary" onclick="showUserDetails(${user.id})">
-            <span class="material-symbols-rounded">visibility</span>
+            <span class="bx bx-show"></span>
             View
           </button>
           <button class="btn btn-approve" onclick="approveUser(${user.id}, '${user.full_name}')">
-            <span class="material-symbols-rounded">check_circle</span>
+            <span class="bx bx-check-circle"></span>
             Approve
           </button>
           <button class="btn btn-reject" onclick="showRejectModal(${user.id}, '${user.full_name}')">
-            <span class="material-symbols-rounded">cancel</span>
+            <span class="bx bx-x"></span>
             Reject
           </button>
         </div>
@@ -517,41 +517,41 @@ function showUserDetails(userId) {
 
         extraDetails = `
           <div class="details-section-header">
-            <span class="material-symbols-rounded">work</span>
+            <span class="bx bx-work">work</span>
             <span>Service Provider Details</span>
           </div>
           <div class="input-box readonly">
             <input type="text" value="${sp.professional_title || 'N/A'}" readonly />
-            <i class="material-symbols-rounded">badge</i>
+            <i class="bx bx-badge"></i>
             <label>Professional Title</label>
           </div>
           <div class="input-box readonly">
             <input type="text" value="${sp.location || 'N/A'}" readonly />
-            <i class="material-symbols-rounded">location_on</i>
+            <i class="bx bx-location"></i>
             <label>Location</label>
           </div>
           <div class="input-box readonly">
             <input type="text" value="${sp.nic_number || 'N/A'}" readonly />
-            <i class="material-symbols-rounded">credit_card</i>
+            <i class="bx bx-credit-card"></i>
             <label>NIC Number</label>
           </div>
           <div class="input-box readonly">
             <input type="text" value="${sp.years_experience || 'N/A'}" readonly />
-            <i class="material-symbols-rounded">timeline</i>
+            <i class="bx bx-timeline"></i>
             <label>Years of Experience</label>
           </div>
           <div class="input-box readonly">
             <input type="text" value="${sp.professional_summary || 'N/A'}" readonly />
-            <i class="material-symbols-rounded">description</i>
+            <i class="bx bx-description"></i>
             <label>Professional Summary</label>
           </div>
           <div class="input-box readonly">
             <input type="text" value="${sp.availability === 1 ? 'Available' : 'Not available'}" readonly />
-            <i class="material-symbols-rounded">event_available</i>
+            <i class="bx bx-event-available"></i>
             <label>Availability</label>
           </div>
           <div class="details-section-header">
-            <span class="material-symbols-rounded">badge</span>
+            <span class="bx bx-badge"></span>
             <span>NIC Verification Images</span>
           </div>
           <div class="nic-images-row">
@@ -568,7 +568,7 @@ function showUserDetails(userId) {
       } else {
         extraDetails = `
           <div class="details-section-header">
-            <span class="material-symbols-rounded">badge</span>
+            <span class="bx bx-badge"></span>
             <span>NIC / Verification</span>
           </div>
           <div class="nic-images-row">
@@ -588,52 +588,52 @@ function showUserDetails(userId) {
             <div class="modal-header">
               <h3>Registration Details</h3>
               <button class="modal-close" onclick="closeUserDetailsModal()">
-                <span class="material-symbols-rounded">close</span>
+                <span class="bx bx-x"></span>
               </button>
             </div>
             <div class="modal-body">
               <div class="details-section-header">
-                <span class="material-symbols-rounded">person</span>
+                <span class="bx bx-badge"></span>
                 <span>Personal Information</span>
               </div>
               <div class="input-box readonly">
                 <input type="text" value="${user.full_name}" readonly />
-                <i class="material-symbols-rounded">person</i>
+                <i class="bx bx-user"></i>
                 <label>Full Name</label>
               </div>
               <div class="input-box readonly">
                 <input type="email" value="${user.email}" readonly />
-                <i class="material-symbols-rounded">mail</i>
+                <i class="bx bx-envelope"></i>
                 <label>Email Address</label>
               </div>
               <div class="input-box readonly">
                 <input type="text" value="${user.phone || 'N/A'}" readonly />
-                <i class="material-symbols-rounded">phone</i>
+                <i class="bx bx-phone"></i>
                 <label>Phone Number</label>
               </div>
               <div class="input-box readonly">
                 <input type="text" value="${roleDisplay}" readonly />
-                <i class="material-symbols-rounded">badge</i>
+                <i class="bx bx-badge"></i>
                 <label>Role</label>
               </div>
               <div class="input-box readonly">
                 <input type="text" value="${statusDisplay}" readonly />
-                <i class="material-symbols-rounded">verified</i>
+                <i class="bx bx-verified"></i>
                 <label>Verification Status</label>
               </div>
               ${extraDetails}
             </div>
             <div class="modal-footer">
               <button class="btn btn-secondary" onclick="closeUserDetailsModal()">
-                <span class="material-symbols-rounded">close</span>
+                <span class="bx bx-x"></span>
                 Close
               </button>
               <button class="btn btn-approve" onclick="closeUserDetailsModal(); approveUser(${user.id}, '${user.full_name}')">
-                <span class="material-symbols-rounded">check_circle</span>
+                <span class="bx bx-check-circle"></span>
                 Approve
               </button>
               <button class="btn btn-reject" onclick="closeUserDetailsModal(); showRejectModal(${user.id}, '${user.full_name}')">
-                <span class="material-symbols-rounded">cancel</span>
+                <span class="bx bx-cancel"></span>
                 Reject
               </button>
             </div>
@@ -701,7 +701,7 @@ function showRejectModal(userId, userName) {
         <div class="modal-header">
           <h3>Reject Registration</h3>
           <button class="modal-close" onclick="closeRejectModal()">
-            <span class="material-symbols-rounded">close</span>
+            <span class="bx bx-x"></span>
           </button>
         </div>
         <div class="modal-body">

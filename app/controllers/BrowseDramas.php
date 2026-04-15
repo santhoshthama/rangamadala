@@ -358,14 +358,37 @@ class BrowseDramas
             if ($ticketPrice <= 0) {
                 $ticketPrice = (float)($drama->ticket_price ?? 0);
             }
+            $requestSenderName = trim((string)($_POST['request_sender_name'] ?? ''));
+            $requestContactPhone = trim((string)($_POST['request_contact_phone'] ?? ''));
+            $requestContactEmail = trim((string)($_POST['request_contact_email'] ?? ''));
             $requestVenue = trim((string)($_POST['request_venue'] ?? ''));
             $showDate = trim((string)($_POST['show_date'] ?? ''));
+            $showTimeStart = trim((string)($_POST['show_time_start'] ?? ''));
+            $showTimeEnd = trim((string)($_POST['show_time_end'] ?? ''));
             $showTime = trim((string)($_POST['show_time'] ?? ''));
             $presentCount = (int)($_POST['present_count'] ?? 0);
             $requestNotes = trim((string)($_POST['request_notes'] ?? ''));
 
-            if ($requestVenue === '' || $showDate === '' || $showTime === '') {
-                $_SESSION['error_message'] = 'Place, show date, and show time are required for the request.';
+            if ($requestSenderName === '' || $requestContactPhone === '' || $requestVenue === '' || $showDate === '') {
+                $_SESSION['error_message'] = 'Sender name, contact phone, place, show date, and show time are required for the request.';
+                header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
+                exit;
+            }
+
+            if (mb_strlen($requestSenderName) > 120) {
+                $_SESSION['error_message'] = 'Sender name is too long.';
+                header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
+                exit;
+            }
+
+            if (mb_strlen($requestContactPhone) > 40) {
+                $_SESSION['error_message'] = 'Contact phone is too long.';
+                header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
+                exit;
+            }
+
+            if ($requestContactEmail !== '' && !filter_var($requestContactEmail, FILTER_VALIDATE_EMAIL)) {
+                $_SESSION['error_message'] = 'Please enter a valid contact email address.';
                 header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
                 exit;
             }
@@ -373,6 +396,31 @@ class BrowseDramas
             $showDateTs = strtotime($showDate);
             if ($showDateTs === false) {
                 $_SESSION['error_message'] = 'Invalid show date.';
+                header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
+                exit;
+            }
+
+            if ($showTimeStart !== '' && $showTimeEnd !== '') {
+                $startObj = DateTime::createFromFormat('H:i', $showTimeStart);
+                $endObj = DateTime::createFromFormat('H:i', $showTimeEnd);
+
+                if (!$startObj || !$endObj) {
+                    $_SESSION['error_message'] = 'Invalid show time range.';
+                    header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
+                    exit;
+                }
+
+                if ($startObj >= $endObj) {
+                    $_SESSION['error_message'] = 'End time must be later than start time.';
+                    header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
+                    exit;
+                }
+
+                $showTime = $startObj->format('g:i A') . ' to ' . $endObj->format('g:i A');
+            }
+
+            if ($showTime === '') {
+                $_SESSION['error_message'] = 'Show time is required.';
                 header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
                 exit;
             }
@@ -388,9 +436,14 @@ class BrowseDramas
                 $drama_id,
                 $ticketPrice,
                 [
+                    'request_sender_name' => $requestSenderName,
+                    'request_contact_phone' => $requestContactPhone,
+                    'request_contact_email' => $requestContactEmail,
                     'request_venue' => $requestVenue,
                     'show_date' => date('Y-m-d', $showDateTs),
                     'show_time' => $showTime,
+                    'show_time_start' => $showTimeStart,
+                    'show_time_end' => $showTimeEnd,
                     'show_datetime' => date('Y-m-d', $showDateTs) . ' ' . $showTime,
                     'present_count' => max(0, $presentCount),
                     'request_notes' => $requestNotes,

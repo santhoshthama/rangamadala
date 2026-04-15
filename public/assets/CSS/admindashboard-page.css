@@ -1,0 +1,33 @@
+/* Match audience dashboard stat-card color style on admin overview */
+#overview .stat-card {
+  background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+  border: 1px solid #f0dfb4;
+  color: #4a3a14;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
+}
+
+#overview .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(186, 142, 35, 0.2);
+}
+
+#overview .stat-card-title {
+  color: #7a6121;
+}
+
+#overview .stat-card-icon.primary,
+#overview .stat-card-icon.info,
+#overview .stat-card-icon.success,
+#overview .stat-card-icon.warning {
+  background: rgba(186, 142, 35, 0.14);
+  color: var(--brand);
+}
+
+#overview .stat-card-value {
+  color: #5a4415;
+}
+
+#overview .stat-card-change {
+  color: #8a6a1f;
+}

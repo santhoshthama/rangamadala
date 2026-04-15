@@ -107,6 +107,7 @@ class Artistdashboard
         }
 
         $role_model = $this->getModel('M_role');
+        $artist_model = $this->getModel('M_artist');
         $user_id = $_SESSION['user_id'];
 
         // Get filter parameters
@@ -131,6 +132,7 @@ class Artistdashboard
         
         $data['filters'] = $filters;
         $data['total_vacancies'] = count($data['vacancies']);
+        $data['user'] = $artist_model ? $artist_model->get_artist_by_id($user_id) : null;
         
         $this->view('artist/browse_vacancies', $data);
     }
@@ -529,8 +531,10 @@ class Artistdashboard
         }
 
         $notification_model = $this->getModel('M_notification');
+        $artist_model = $this->getModel('M_artist');
         $user_id = $_SESSION['user_id'];
 
+        $data['user'] = $artist_model ? $artist_model->get_artist_by_id($user_id) : null;
         $data['grouped_notifications'] = $notification_model ? $notification_model->getNotificationsGroupedByDrama($user_id) : [];
         $data['unread_count'] = $notification_model ? $notification_model->getUnreadCount($user_id) : 0;
         $data['all_notifications'] = $notification_model ? $notification_model->getNotificationsByUser($user_id) : [];
@@ -556,13 +560,71 @@ class Artistdashboard
             $notification_model->markAsRead((int)$notification_id, (int)$_SESSION['user_id']);
         }
 
-        if ($redirect) {
-            header("Location: " . $redirect);
-            exit;
+        $safeRedirect = $this->sanitizeArtistRedirect($redirect, '/artistdashboard/notifications');
+        header('Location: ' . $safeRedirect);
+        exit;
+    }
+
+    /**
+     * Allow only safe in-app artist dashboard redirects and prevent mark-route loops.
+     */
+    private function sanitizeArtistRedirect($redirect, $fallbackPath = '/artistdashboard/notifications')
+    {
+        $fallback = ROOT . $fallbackPath;
+
+        if (!is_string($redirect)) {
+            return $fallback;
         }
 
-        header("Location: " . ROOT . "/artistdashboard/notifications");
-        exit;
+        $candidate = trim($redirect);
+        if ($candidate === '') {
+            return $fallback;
+        }
+
+        if (strpos($candidate, ROOT) === 0) {
+            $candidate = substr($candidate, strlen(ROOT));
+        }
+
+        if ($candidate === '') {
+            return $fallback;
+        }
+
+        if ($candidate[0] !== '/') {
+            $candidate = '/' . ltrim($candidate, '/');
+        }
+
+        $parts = parse_url($candidate);
+        if ($parts === false || !empty($parts['host']) || !empty($parts['scheme'])) {
+            return $fallback;
+        }
+
+        $path = (string)($parts['path'] ?? '');
+        if ($path === '') {
+            return $fallback;
+        }
+
+        $rootPath = (string)(parse_url(ROOT, PHP_URL_PATH) ?? '');
+        if ($rootPath !== '' && strpos($path, $rootPath) === 0) {
+            $path = substr($path, strlen($rootPath));
+            if ($path === '') {
+                $path = '/';
+            }
+        }
+
+        if (strpos($path, '/artistdashboard') !== 0) {
+            return $fallback;
+        }
+
+        if (
+            strpos($path, '/artistdashboard/mark_notification_read') === 0 ||
+            strpos($path, '/artistdashboard/mark_all_notifications_read') === 0
+        ) {
+            return $fallback;
+        }
+
+        $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+        $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+        return ROOT . $path . $query . $fragment;
     }
 
     /**

@@ -113,7 +113,7 @@ function switchView(viewId) {
 }
 function updatePageTitle(viewId) {
   const titles = {
-    overview: "Overview",
+    overview: "Dashboard",
     browse: "Browse Dramas",
     "my-showings": "My Showings",
     classes: "Classes",
