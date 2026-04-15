@@ -767,7 +767,6 @@ class M_service_provider extends M_signup {
             sp.professional_title,
             sp.location,
             sp.social_media_link,
-            sp.years_experience,
             sp.availability,
             sp.availability_notes,
             u.full_name,
