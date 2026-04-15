@@ -92,6 +92,43 @@ class M_service_provider extends M_signup {
         return (bool)$this->db->single();
     }
 
+    public function bootstrapProviderProfile($user_id): bool {
+        $providerId = (int)$user_id;
+        if ($providerId <= 0) {
+            return false;
+        }
+
+        if ($this->providerProfileExists($providerId)) {
+            return true;
+        }
+
+        $hasYears = $this->columnExists('serviceprovider', 'years_experience');
+
+        $sql = "INSERT INTO serviceprovider (user_id, professional_title, location, social_media_link, availability, availability_notes";
+        if ($hasYears) {
+            $sql .= ", years_experience";
+        }
+        $sql .= ")
+                 SELECT u.id, '', '', '', 1, ''";
+        if ($hasYears) {
+            $sql .= ", COALESCE(u.years_experience, 0)";
+        }
+        $sql .= "
+                 FROM users u
+                 WHERE u.id = :user_id AND u.role = 'service_provider'
+                 ON DUPLICATE KEY UPDATE user_id = user_id";
+
+        $this->db->query($sql);
+        $this->db->bind(':user_id', $providerId);
+
+        try {
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log('bootstrapProviderProfile failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function cleanupIncompleteRegistration($user_id) {
         $providerId = (int)$user_id;
 

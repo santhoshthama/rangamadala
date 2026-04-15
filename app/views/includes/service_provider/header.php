@@ -5,7 +5,7 @@
     </div>
     <div class="user--info">
         <div class="search--box" id="searchContainer" style="position: relative;">
-            <i class="bx-solid bx-search"></i>
+            <i class="fas fa-search"></i>
             <input 
                 type="text" 
                 id="searchInput" 

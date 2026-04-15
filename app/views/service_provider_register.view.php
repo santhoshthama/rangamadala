@@ -7,15 +7,15 @@
   <title><?= APP_NAME ?></title>
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/register.css">
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_register.css">
-  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="shortcut icon" href="<?php echo ROOT; ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+  <link rel="shortcut icon" href="<?php echo ROOT; ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
 
 <body>
   <div class="back-container">
     <a href="<?= ROOT ?>/Signup" class="back-link">
       <button type="button" class="back-btn">
-        <i class="bx bx-arrow-left"></i> Back to Selection
+        <i class="fas fa-arrow-left"></i> Back to Selection
       </button>
     </a>
   </div>
@@ -856,10 +856,10 @@
 
           <div class="form-navigation">
             <button type="button" class="nav-btn prev-btn" onclick="prevPage()" style="display:none;">
-              <i class="bx bx-arrow-left"></i> Previous
+              <i class="fas fa-arrow-left"></i> Previous
             </button>
             <button type="button" class="nav-btn next-btn" onclick="nextPage()">
-              Next <i class="bx bx-arrow-right"></i>
+              Next <i class="fas fa-arrow-right"></i>
             </button>
           </div>
         </form>
