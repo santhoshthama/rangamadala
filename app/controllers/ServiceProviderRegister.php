@@ -13,7 +13,7 @@ class ServiceProviderRegister
             $email = trim($_POST['email'] ?? '');
             $password = trim($_POST['password'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
-            $nic_photo_front = $_FILES['nic_photo_front']['name'] ?? null;
+            $nic_photo_front = $_FILES['nic_photo']['name'] ?? ($_FILES['nic_photo_front']['name'] ?? null);
             $nic_photo_back = $_FILES['nic_photo_back']['name'] ?? null;
 
             // 🔹 Basic validation
@@ -54,8 +54,10 @@ class ServiceProviderRegister
                 $frontDbPath = 'uploads/nic_photos/' . $frontName;
                 $backDbPath = 'uploads/nic_photos/' . $backName;
 
-                if (is_uploaded_file($_FILES['nic_photo_front']['tmp_name'])) {
-                    if (!move_uploaded_file($_FILES['nic_photo_front']['tmp_name'], $frontPath)) {
+                $frontUpload = $_FILES['nic_photo'] ?? $_FILES['nic_photo_front'] ?? null;
+
+                if (!empty($frontUpload['tmp_name']) && is_uploaded_file($frontUpload['tmp_name'])) {
+                    if (!move_uploaded_file($frontUpload['tmp_name'], $frontPath)) {
                         $errors[] = "Failed to upload NIC front photo.";
                     }
                 }
@@ -115,7 +117,7 @@ class ServiceProviderRegister
 
         $password = trim($_POST['password'] ?? '');
         $confirm_password = trim($_POST['confirm_password'] ?? '');
-        $existingCertFront = trim($_POST['existing_nic_photo_front'] ?? '');
+        $existingCertFront = trim($_POST['existing_nic_photo'] ?? ($_POST['existing_nic_photo_front'] ?? ''));
         $existingCertBack = trim($_POST['existing_nic_photo_back'] ?? '');
 
         // Basic validations
@@ -123,6 +125,9 @@ class ServiceProviderRegister
         if ($provider['professional_title'] === '') $errors[] = 'Professional title is required.';
         if ($provider['email'] === '' || !filter_var($provider['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
         if ($provider['phone'] === '') $errors[] = 'Phone number is required.';
+        if ($provider['years_experience'] === '' || !is_numeric($provider['years_experience']) || (int)$provider['years_experience'] < 0) {
+            $errors[] = 'Years of experience is required and must be a valid number.';
+        }
         
         // NIC number validation
         if ($provider['nic_number'] === '') {
@@ -140,24 +145,25 @@ class ServiceProviderRegister
         if ($password !== $confirm_password) $errors[] = 'Passwords do not match.';
 
         // Handle NIC photo front upload
-        if (!empty($existingCertFront) && empty($_FILES['nic_photo_front']['name'])) {
-            $provider['nic_photo_front'] = $existingCertFront;
-        } elseif (!empty($_FILES['nic_photo_front']['name'])) {
+        if (!empty($existingCertFront) && empty($_FILES['nic_photo']['name'] ?? $_FILES['nic_photo_front']['name'] ?? '')) {
+            $provider['nic_photo'] = $existingCertFront;
+        } elseif (!empty($_FILES['nic_photo']['name'] ?? $_FILES['nic_photo_front']['name'] ?? '')) {
             $targetDir = __DIR__ . '/../../public/uploads/nic_photos/';
             if (!is_dir($targetDir)) {
                 mkdir($targetDir, 0777, true);
             }
-            $fileName = uniqid() . '_front_' . basename($_FILES['nic_photo_front']['name']);
+            $frontUpload = $_FILES['nic_photo'] ?? $_FILES['nic_photo_front'];
+            $fileName = uniqid() . '_front_' . basename($frontUpload['name']);
             $targetFile = $targetDir . $fileName;
 
             $maxSize = 5 * 1024 * 1024; // 5MB
-            if ($_FILES['nic_photo_front']['size'] > $maxSize) {
+            if ($frontUpload['size'] > $maxSize) {
                 $errors[] = 'NIC front photo must be less than 5MB.';
-            } elseif (!in_array($_FILES['nic_photo_front']['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
+            } elseif (!in_array($frontUpload['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
                 $errors[] = 'NIC front photo must be JPG or PNG.';
-            } elseif (is_uploaded_file($_FILES['nic_photo_front']['tmp_name'])) {
-                if (move_uploaded_file($_FILES['nic_photo_front']['tmp_name'], $targetFile)) {
-                    $provider['nic_photo_front'] = 'uploads/nic_photos/' . $fileName;
+            } elseif (is_uploaded_file($frontUpload['tmp_name'])) {
+                if (move_uploaded_file($frontUpload['tmp_name'], $targetFile)) {
+                    $provider['nic_photo'] = 'uploads/nic_photos/' . $fileName;
                 } else {
                     $errors[] = 'Failed to upload NIC front photo.';
                 }
@@ -199,9 +205,9 @@ class ServiceProviderRegister
 
         // Duplicate checks
         if (empty($errors)) {
-            // Check email in both serviceprovider and users tables
-            if ($model->emailExists($provider['email']) || $model->emailExistsInUsers($provider['email'])) {
-                $errors[] = 'This email is already registered. Please use a different email.';
+            // Check duplicates only for the service_provider role (same email can exist for other roles)
+            if ($model->emailExists($provider['email'])) {
+                $errors[] = 'This email is already registered for service provider role. Please use a different email.';
             }
             if ($model->nameExists($provider['full_name'])) {
                 $errors[] = 'A service provider with this full name is already registered.';
@@ -217,7 +223,7 @@ class ServiceProviderRegister
                 'confirm_password' => $confirm_password,
                 'services' => $this->processServicesData($_POST['services'] ?? []),
                 'projects' => $_POST['projects'] ?? [],
-                'uploadedPhotoFront' => $provider['nic_photo_front'] ?? $existingCertFront,
+                'uploadedPhotoFront' => $provider['nic_photo'] ?? ($provider['nic_photo_front'] ?? $existingCertFront),
                 'uploadedPhotoBack' => $provider['nic_photo_back'] ?? $existingCertBack,
             ]);
             return;
@@ -232,7 +238,7 @@ class ServiceProviderRegister
         }
 
         // Get the newly created user ID
-        $user_id = $model->getUserIdByEmail($provider['email']);
+        $user_id = $model->getUserIdByEmail($provider['email'], 'service_provider');
         if (!$user_id) {
             $this->view('service_provider_register', ['errors' => ['Failed to retrieve user ID. Please try again.']]);
             return;
