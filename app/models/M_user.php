@@ -9,8 +9,8 @@ class M_user
      */
     public function getPendingUsers()
     {
-        $sql = "SELECT u.id, u.full_name, u.email, u.phone, u.role, u.nic_photo, u.created_at,
-                       sp.nic_photo_front, sp.nic_photo_back, sp.professional_title, sp.nic_number
+        $sql = "SELECT u.id, u.full_name, u.email, u.phone, u.role, u.nic_photo_front AS nic_photo, u.created_at,
+                   u.nic_photo_front, u.nic_photo_back, sp.professional_title, u.nic_number
                 FROM users u
                 LEFT JOIN serviceprovider sp ON u.id = sp.user_id
                 WHERE (u.verification_status = 'pending' OR u.verification_status IS NULL)
@@ -27,9 +27,9 @@ class M_user
     public function getUserById($id)
     {
         $sql = "SELECT u.*, 
-                       sp.professional_title, sp.nic_number, sp.location,
-                       sp.nic_photo_front, sp.nic_photo_back, sp.years_experience,
-                       sp.professional_summary
+                   sp.professional_title, sp.location,
+                   sp.years_experience,
+                   u.bio AS professional_summary
                 FROM users u
                 LEFT JOIN serviceprovider sp ON u.id = sp.user_id
                 WHERE u.id = ?";
