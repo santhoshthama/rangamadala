@@ -2083,11 +2083,26 @@ class Director{
 
         $assignmentId = (int)($_POST['assignment_id'] ?? 0);
         $roleId = (int)($_POST['role_id'] ?? 0);
+        $removeReason = trim((string)($_POST['remove_reason'] ?? ''));
 
         if (!$assignmentId || !$roleId) {
             $_SESSION['message'] = 'Invalid request. Missing assignment or role information.';
             $_SESSION['message_type'] = 'error';
             $this->redirectToManageRoles((int)$drama->id);
+        }
+
+        if ($removeReason === '') {
+            $_SESSION['message'] = 'Please provide a reason for removing this artist from the role.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/director/view_role?drama_id=" . $drama->id . "&role_id=" . $roleId);
+            exit;
+        }
+
+        if (strlen($removeReason) > 1000) {
+            $_SESSION['message'] = 'Removal reason is too long. Please keep it under 1000 characters.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/director/view_role?drama_id=" . $drama->id . "&role_id=" . $roleId);
+            exit;
         }
 
         // Verify the role belongs to this drama
@@ -2098,10 +2113,31 @@ class Director{
             $this->redirectToManageRoles((int)$drama->id);
         }
 
+        // Verify assignment exists and belongs to this role/drama
+        $assignment = $this->roleModel->getAssignmentById($assignmentId);
+        if (!$assignment || (int)$assignment->role_id !== $roleId || (int)($assignment->drama_id ?? 0) !== (int)$drama->id) {
+            $_SESSION['message'] = 'Assignment not found or inaccessible.';
+            $_SESSION['message_type'] = 'error';
+            header("Location: " . ROOT . "/director/view_role?drama_id=" . $drama->id . "&role_id=" . $roleId);
+            exit;
+        }
+
         // Remove the assignment
         $removed = $this->roleModel->removeAssignment($assignmentId);
 
         if ($removed) {
+            if ($this->notificationModel && !empty($assignment->artist_id)) {
+                $dramaLink = ROOT . '/artistdashboard/view_drama?drama_id=' . (int)$drama->id;
+                $this->notificationModel->createNotification([
+                    'user_id' => (int)$assignment->artist_id,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'role_removed',
+                    'title' => 'Role Assignment Removed: ' . ($assignment->role_name ?? 'Role'),
+                    'message' => 'Your assignment for the role "' . ($assignment->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '" has been removed by the director. Reason: ' . $removeReason,
+                    'link' => $dramaLink,
+                ]);
+            }
+
             $_SESSION['message'] = 'Artist removed from role successfully.';
             $_SESSION['message_type'] = 'success';
         } else {

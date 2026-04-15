@@ -101,6 +101,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         .interview-summary { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
         .application-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
         .decision-hint { font-size: 12px; color: #a52714; margin: 0; text-align: right; }
+        .assignment-actions { min-width: 280px; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+        .assignment-remove-form .form-group { margin-bottom: 0; }
+        .assignment-remove-form label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+        .assignment-remove-form textarea.form-control { min-height: 78px; resize: vertical; }
+        .assignment-remove-form .btn { align-self: flex-end; }
     </style>
 </head>
 <body>
@@ -277,12 +282,18 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                     <div><i class="bx bx-calendar" style="width: 16px; margin-right: 6px;"></i>Assigned on <?= esc(date('M d, Y', strtotime($assignment->assigned_at ?? 'now'))) ?></div>
                                 </div>
                             </div>
-                            <form action="<?= ROOT ?>/director/remove_assignment?drama_id=<?= esc($dramaId) ?>" method="POST" class="js-role-action" data-action="remove" data-confirm="Remove <?= esc($assignment->artist_name ?? 'this artist') ?> from this role?">
-                                <input type="hidden" name="assignment_id" value="<?= esc($assignment->id ?? 0) ?>">
-                                <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
-                                <input type="hidden" name="return_to" value="role_details">
-                                <button type="submit" class="btn btn-danger btn-sm"><i class="bx bx-user-times"></i>Remove</button>
-                            </form>
+                            <div class="assignment-actions">
+                                <form action="<?= ROOT ?>/director/remove_assignment?drama_id=<?= esc($dramaId) ?>" method="POST" class="js-role-action assignment-remove-form" data-action="remove" data-confirm="Remove <?= esc($assignment->artist_name ?? 'this artist') ?> from this role?">
+                                    <input type="hidden" name="assignment_id" value="<?= esc($assignment->id ?? 0) ?>">
+                                    <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
+                                    <input type="hidden" name="return_to" value="role_details">
+                                    <div class="form-group">
+                                        <label for="remove_reason_<?= esc($assignment->id ?? 0) ?>">Reason (required)</label>
+                                        <textarea id="remove_reason_<?= esc($assignment->id ?? 0) ?>" name="remove_reason" class="form-control" rows="3" required maxlength="1000" placeholder="Enter reason to notify the artist"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger btn-sm"><i class="bx bx-user-times"></i>Remove</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
