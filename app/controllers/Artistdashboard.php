@@ -45,9 +45,20 @@ class Artistdashboard
         $data['roles_as_actor'] = $role_model ? $role_model->getAssignmentsByArtist($user_id) : [];
 
         $data['my_applications'] = $role_model ? $role_model->getArtistApplications($user_id) : [];
-        $data['upcoming_interviews'] = array_filter($data['my_applications'], function ($app) {
-            return isset($app->interview_at) && $app->interview_at !== null && strtolower($app->status ?? '') === 'pending';
-        });
+        $nowTs = time();
+        $data['upcoming_interviews'] = array_values(array_filter($data['my_applications'], function ($app) use ($nowTs) {
+            if (!isset($app->interview_at) || $app->interview_at === null || strtolower($app->status ?? '') !== 'pending') {
+                return false;
+            }
+
+            $interviewTs = strtotime((string)$app->interview_at);
+            if ($interviewTs === false) {
+                return false;
+            }
+
+            // Keep only upcoming interviews (past dates are hidden from this tab)
+            return $interviewTs >= $nowTs;
+        }));
         
         // Get pending role requests for this artist
         $data['role_requests'] = $artist_model->get_pending_role_requests($user_id);
