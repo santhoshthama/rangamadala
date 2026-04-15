@@ -196,7 +196,7 @@
 <div id="respondModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3><i class="bx bx-edit"></i> Respond to Request</h3>
+            <h3><i class="fas fa-edit"></i> Respond to Request</h3>
             <button type="button" class="close-btn" onclick="closeRespondModal()">&times;</button>
         </div>
         <div class="modal-body">
@@ -211,7 +211,7 @@
                 <!-- Advance Payment Section -->
                 <div class="checkbox-group">
                     <input type="checkbox" id="needs_advance" name="needs_advance" value="1" onchange="toggleAdvanceFields()">
-                    <label for="needs_advance"><i class="bx bx-money-bill"></i> Requires Advance Payment</label>
+                    <label for="needs_advance"><i class="fas fa-money-bill"></i> Requires Advance Payment</label>
                 </div>
                 
                 <div id="advanceFields" class="advance-fields">
@@ -241,7 +241,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-cancel" onclick="closeRespondModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bx bx-paper-plane"></i> Submit Response
+                        <i class="fas fa-paper-plane"></i> Submit Response
                     </button>
                 </div>
             </form>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_profile.css">
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <title><?= isset($pageTitle) ? $pageTitle : 'Profile' ?> - <?php echo htmlspecialchars($provider->full_name ?? 'Rangamadala'); ?></title>
@@ -46,7 +46,7 @@
                         class="btn" 
                         title="Change profile picture"
                         style="position: absolute; bottom: 0; right: 0; padding: 8px; border-radius: 50%; width: 36px; height: 36px;">
-                    <i class="bx bx-camera"></i>
+                    <i class="fas fa-camera"></i>
                 </button>
             </div>
             
@@ -82,10 +82,10 @@
                     <!-- Buttons -->
                     <div style="display: flex; gap: 10px; justify-content: flex-end;">
                         <button type="button" onclick="closeImageUploadModal()" class="btn btn-secondary" style="padding: 10px 20px;">
-                            <i class="bx bx-times"></i> Cancel
+                            <i class="fas fa-times"></i> Cancel
                         </button>
                         <button type="button" id="uploadBtn" onclick="confirmUpload()" class="btn" style="padding: 10px 20px;" disabled>
-                            <i class="bx bx-upload"></i> Upload
+                            <i class="fas fa-upload"></i> Upload
                         </button>
                     </div>
                 </form>
@@ -93,7 +93,7 @@
                 <!-- Loading Overlay -->
                 <div id="uploadingOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); align-items: center; justify-content: center; border-radius: 10px;">
                     <div style="text-align: center;">
-                        <i class="bx bx-spinner bx-spin" style="font-size: 48px; color: #007bff; margin-bottom: 15px;"></i>
+                        <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #007bff; margin-bottom: 15px;"></i>
                         <p style="color: #333; font-size: 16px;">Uploading...</p>
                     </div>
                 </div>
@@ -105,7 +105,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 class="section-title" style="margin: 0;">Basic Information</h2>
                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/editBasicInfo?id=<?php echo $data['provider_id']; ?>" class="btn" style="text-decoration: none;">
-                    <i class="bx bx-edit"></i> Edit
+                    <i class="fas fa-edit"></i> Edit
                 </a>
             </div>
             <div class="form-row">
@@ -156,7 +156,10 @@
             <div class="form-group">
                 <label class="form-label">Professional Summary</label>
                 <div class="form-input textarea" style="background: #f8f9fa; cursor: default; min-height: 100px;">
-                    <?php echo nl2br(htmlspecialchars($data['provider']->professional_summary)); ?>
+                    <?php
+                        $professionalSummary = $data['provider']->professional_summary ?? ($data['provider']->bio ?? '');
+                        echo nl2br(htmlspecialchars((string)$professionalSummary));
+                    ?>
                 </div>
             </div>
         </div>
@@ -181,7 +184,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 class="section-title" style="margin: 0;">Password</h2>
                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/changePassword" class="btn" style="text-decoration: none;">
-                    <i class="bx bx-key"></i> Change Password
+                    <i class="fas fa-key"></i> Change Password
                 </a>
             </div>
             <p style="color: #6c757d; padding: 20px; background: #f8f9fa; border-radius: 5px;">
@@ -194,7 +197,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 class="section-title" style="margin: 0;">Services & Rates</h2>
                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/addService?provider_id=<?php echo $data['provider_id']; ?>" class="btn" style="text-decoration: none;">
-                    <i class="bx bx-plus"></i> Add Service
+                    <i class="fas fa-plus"></i> Add Service
                 </a>
             </div>
             
@@ -223,10 +226,10 @@
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/editService?id=<?php echo $service->id; ?>" class="btn btn-secondary" style="text-decoration: none; padding: 5px 10px; font-size: 14px;">
-                                    <i class="bx bx-edit"></i>
+                                    <i class="fas fa-edit"></i>
                                 </a>
                                 <button onclick="deleteService(<?php echo $service->id; ?>)" class="btn btn-danger" style="padding: 5px 10px; font-size: 14px;">
-                                    <i class="bx bx-trash"></i>
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </div>
@@ -640,7 +643,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 class="section-title" style="margin: 0;">Recent Projects</h2>
                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/addProject?provider_id=<?php echo $data['provider_id']; ?>" class="btn" style="text-decoration: none;">
-                    <i class="bx bx-plus"></i> Add Project
+                    <i class="fas fa-plus"></i> Add Project
                 </a>
             </div>
             
@@ -668,10 +671,10 @@
                             </div>
                             <div style="display: flex; gap: 10px; margin-left: 15px;">
                                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/editProject?id=<?php echo $project->id; ?>" class="btn btn-secondary" style="text-decoration: none; padding: 5px 10px; font-size: 14px;">
-                                    <i class="bx bx-edit"></i> Edit
+                                    <i class="fas fa-edit"></i> Edit
                                 </a>
                                 <button onclick="deleteProject(<?php echo $project->id; ?>)" class="btn btn-danger" style="padding: 5px 10px; font-size: 14px;">
-                                    <i class="bx bx-trash"></i> Delete
+                                    <i class="fas fa-trash"></i> Delete
                                 </button>
                             </div>
                         </div>

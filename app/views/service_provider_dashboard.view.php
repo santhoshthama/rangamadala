@@ -4,8 +4,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title><?= isset($pageTitle) ? $pageTitle : 'Dashboard' ?> - Rangamadala</title>
-        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
         <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     </head>
     <body>
@@ -28,7 +28,7 @@
                                 <span><?= number_format(abs($revenue_change ?? 0), 1) ?>%</span>
                             </div>
                         </div>
-                        <i class="bx bx-money-bill-wave icon"></i>
+                        <i class="fas fa-money-bill-wave icon"></i>
                     </div>
                     <div class="productionCount--card">
                         <div class="Count">
@@ -39,7 +39,7 @@
                                 <span><?= number_format(abs($booking_change ?? 0), 1) ?>%</span>
                             </div>
                         </div>
-                        <i class="bx bx-calendar-check icon light-gold"></i>
+                        <i class="fas fa-calendar-check icon light-gold"></i>
                     </div>
                     <div class="productionCount--card">
                         <div class="Count">
@@ -50,18 +50,17 @@
                                 <span>Live</span>
                             </div>
                         </div>
-                        <i class="bx bx-star icon"></i>
+                        <i class="fas fa-star icon"></i>
                     </div>
                     <div class="productionCount--card">
                         <div class="Count">
                             <span class="title">Completion Rate</span>
                             <span class="Count-value"><?= number_format($completion_rate ?? 0, 1) ?>%</span>
                             <div class="metric-change positive">
-                                <span class="arrow">✓</span>
                                 <span><?= (int)($completed_services ?? 0) ?> completed</span>
                             </div>
                         </div>
-                        <i class="bx bx-check-circle icon light-gold"></i>
+                        <i class="fas fa-check-circle icon light-gold"></i>
                     </div>
                 </div>
             </div>

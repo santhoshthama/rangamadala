@@ -16,31 +16,31 @@ $activePage = $activePage ?? '';
         <ul class="menu">
             <li class="<?= $activePage === 'home' ? 'active' : '' ?>">
                 <a href="<?= ROOT ?>/Home">
-                    <i class="bx bx-home"></i>
+                    <i class="fas fa-home"></i>
                     <span>Home</span>
                 </a>
             </li>
             <li class="<?= $activePage === 'dashboard' ? 'active' : '' ?>">
                 <a href="<?= ROOT ?>/ServiceProviderDashboard">
-                    <i class="bx bx-tachometer-alt"></i>
+                    <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="<?= $activePage === 'requests' ? 'active' : '' ?>">
                 <a href="<?= ROOT ?>/ServiceRequests">
-                    <i class="bx bx-clipboard-list"></i>
+                    <i class="fas fa-clipboard-list"></i>
                     <span>Service Requests</span>
                 </a>
             </li>
             <li class="<?= $activePage === 'availability' ? 'active' : '' ?>">
                 <a href="<?= ROOT ?>/ServiceAvailability">
-                    <i class="bx bx-calendar-check"></i>
+                    <i class="fas fa-calendar-check"></i>
                     <span>Availability</span>
                 </a>
             </li>
             <li class="<?= $activePage === 'payments' ? 'active' : '' ?>">
                 <a href="<?= ROOT ?>/ServicePayment">
-                    <i class="bx bx-money-bill-wave"></i>
+                    <i class="fas fa-money-bill-wave"></i>
                     <span>Payments</span>
                 </a>
             </li>
@@ -52,22 +52,16 @@ $activePage = $activePage ?? '';
             </li>
             <li class="<?= $activePage === 'reports' ? 'active' : '' ?>">
                 <a href="<?= ROOT ?>/ServiceReports">
-                    <i class="bx bx-file-alt"></i>
+                    <i class="fas fa-file-alt"></i>
                     <span>Reports</span>
                 </a>
             </li>
-            <li class="<?= $activePage === 'profile' ? 'active' : '' ?>">
+            <!-- <li class="<?= $activePage === 'profile' ? 'active' : '' ?>">
                 <a href="<?= ROOT ?>/ServiceProviderProfile">
-                    <i class="bx bx-user"></i>
+                    <i class="fas fa-user"></i>
                     <span>Profile</span>
                 </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/Logout">
-                    <i class="bx bx-right-from-bracket"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
+            </li> -->
         </ul>
     </div>
 </div>

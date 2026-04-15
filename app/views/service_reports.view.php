@@ -4,8 +4,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title><?= isset($pageTitle) ? $pageTitle : 'Reports' ?> - Rangamadala</title>
-        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
         <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_reports.css">
         <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     </head>
@@ -121,10 +121,10 @@
                             <!-- Generate Button -->
                             <div class="filter-actions">
                                 <button type="button" class="btn-reset" onclick="resetFilters()">
-                                    <i class="bx bx-undo"></i> Reset
+                                    <i class="fas fa-undo"></i> Reset
                                 </button>
                                 <button type="submit" class="btn-generate">
-                                    <i class="bx bx-chart-bar"></i> Generate Report
+                                    <i class="fas fa-chart-bar"></i> Generate Report
                                 </button>
                             </div>
                         </form>
