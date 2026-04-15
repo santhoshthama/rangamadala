@@ -155,7 +155,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         </div>
 
                         <div class="actions-inline" style="margin-top: auto; gap: 10px; display: flex;">
-                            <button type="button" class="btn btn-secondary" disabled><i class="bx bx-id-card"></i>Profile</button>
+                            <a href="<?= ROOT ?>/director/manager_profile?drama_id=<?= esc($dramaId) ?>&artist_id=<?= esc($artist->id) ?>" class="btn btn-secondary"><i class="bx bx-id-card"></i>View Profile</a>
                             <?php if ($isAssigned): ?>
                                 <button type="button" class="btn btn-secondary" disabled><i class="bx bx-lock"></i>Assigned</button>
                             <?php elseif ($hasPendingRequest): ?>

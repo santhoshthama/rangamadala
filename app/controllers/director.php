@@ -1079,6 +1079,45 @@ class Director{
                 'artist' => $artist,
                 'role' => $role,
                 'roleId' => $roleId,
+                'profileContext' => 'role_artist',
+            ];
+        });
+    }
+
+    public function manager_profile()
+    {
+        $artistId = $this->sanitizeInt($this->getQueryParam('artist_id'));
+        if (!$artistId) {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                header('Location: ' . ROOT . '/director/search_managers?drama_id=' . (int)$dramaId);
+                exit;
+            }
+            $this->dashboard();
+            return;
+        }
+
+        $this->renderDramaView('artist_profile', [], function ($drama) use ($artistId) {
+            if (!$this->artistModel) {
+                $_SESSION['message'] = 'Artist profile service is currently unavailable.';
+                $_SESSION['message_type'] = 'error';
+                header('Location: ' . ROOT . '/director/search_managers?drama_id=' . (int)$drama->id);
+                exit;
+            }
+
+            $artist = $this->artistModel->get_artist_by_id((int)$artistId);
+            if (!$artist) {
+                $_SESSION['message'] = 'Production Manager profile not found.';
+                $_SESSION['message_type'] = 'error';
+                header('Location: ' . ROOT . '/director/search_managers?drama_id=' . (int)$drama->id);
+                exit;
+            }
+
+            return [
+                'artist' => $artist,
+                'role' => null,
+                'roleId' => null,
+                'profileContext' => 'manager_search',
             ];
         });
     }
