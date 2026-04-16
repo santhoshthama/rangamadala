@@ -18,8 +18,8 @@ class ServiceProviderProfile
             exit;
         }
 
-        // Get provider ID from URL or use current user ID
-        $provider_id = $_GET['id'] ?? $_SESSION['user_id'];
+        // Service providers should only access their own profile.
+        $provider_id = (int)$_SESSION['user_id'];
 
         // Instantiate model
         $model = new M_service_provider();
@@ -28,6 +28,13 @@ class ServiceProviderProfile
         $provider = $model->getProviderById($provider_id);
 
         if (!$provider) {
+            // Create a minimal profile row when missing, then fetch again.
+            $model->bootstrapProviderProfile((int)$_SESSION['user_id']);
+            $provider = $model->getProviderById($provider_id);
+        }
+
+        if (!$provider) {
+            $_SESSION['error'] = 'Unable to load your provider profile. Please try again.';
             header("Location: " . ROOT . "/ServiceProviderDashboard");
             exit;
         }

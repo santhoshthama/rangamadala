@@ -13,11 +13,8 @@ class ServiceProviderRegister
             $email = trim($_POST['email'] ?? '');
             $password = trim($_POST['password'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
-            $nic_photo_front = $_FILES['nic_photo_front']['name'] ?? null;
+            $nic_photo_front = $_FILES['nic_photo']['name'] ?? ($_FILES['nic_photo_front']['name'] ?? null);
             $nic_photo_back = $_FILES['nic_photo_back']['name'] ?? null;
-
-            $passwordPattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/';
-            $phonePattern = '/^(?:\+94|94|0)7\d{8}$/';
 
             // 🔹 Basic validation
             if (empty($full_name)) {
@@ -28,13 +25,11 @@ class ServiceProviderRegister
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = "Invalid email format.";
             }
-            if (!preg_match($passwordPattern, $password)) {
-                $errors[] = "Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.";
+            if (strlen($password) < 6) {
+                $errors[] = "Password must be at least 6 characters.";
             }
             if (empty($phone)) {
                 $errors[] = "Phone number is required.";
-            } elseif (!preg_match($phonePattern, $phone)) {
-                $errors[] = "Enter a valid Sri Lankan mobile number (e.g. 07X XXX XXXX or +94 XXX XXX XXX).";
             }
             if (!$nic_photo_front) {
                 $errors[] = "NIC front photo is required.";
@@ -59,8 +54,10 @@ class ServiceProviderRegister
                 $frontDbPath = 'uploads/nic_photos/' . $frontName;
                 $backDbPath = 'uploads/nic_photos/' . $backName;
 
-                if (is_uploaded_file($_FILES['nic_photo_front']['tmp_name'])) {
-                    if (!move_uploaded_file($_FILES['nic_photo_front']['tmp_name'], $frontPath)) {
+                $frontUpload = $_FILES['nic_photo'] ?? $_FILES['nic_photo_front'] ?? null;
+
+                if (!empty($frontUpload['tmp_name']) && is_uploaded_file($frontUpload['tmp_name'])) {
+                    if (!move_uploaded_file($frontUpload['tmp_name'], $frontPath)) {
                         $errors[] = "Failed to upload NIC front photo.";
                     }
                 }
@@ -93,6 +90,14 @@ class ServiceProviderRegister
     public function submit()
     {
         $errors = [];
+        $fieldErrors = [];
+
+        $addFieldError = function ($field, $message) use (&$fieldErrors, &$errors) {
+            if (!isset($fieldErrors[$field])) {
+                $fieldErrors[$field] = $message;
+            }
+            $errors[] = $message;
+        };
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . ROOT . '/ServiceProviderRegister');
@@ -120,65 +125,74 @@ class ServiceProviderRegister
 
         $password = trim($_POST['password'] ?? '');
         $confirm_password = trim($_POST['confirm_password'] ?? '');
-        $existingCertFront = trim($_POST['existing_nic_photo_front'] ?? '');
+        $existingCertFront = trim($_POST['existing_nic_photo'] ?? ($_POST['existing_nic_photo_front'] ?? ''));
         $existingCertBack = trim($_POST['existing_nic_photo_back'] ?? '');
 
-        $passwordPattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/';
-        $phonePattern = '/^(?:\+94|94|0)7\d{8}$/';
-        $nicPattern = '/^(?:\d{12}|\d{9}[Vv])$/';
-
         // Basic validations
-        if ($provider['full_name'] === '') $errors[] = 'Full name is required.';
-        if ($provider['professional_title'] === '') $errors[] = 'Professional title is required.';
-        if ($provider['email'] === '' || !filter_var($provider['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
-        if ($provider['phone'] === '') $errors[] = 'Phone number is required.';
-        if ($provider['phone'] !== '' && !preg_match($phonePattern, $provider['phone'])) {
-            $errors[] = 'Enter a valid Sri Lankan mobile number (e.g. 07X XXX XXXX or +94 XXX XXX XXX).';
+        if ($provider['full_name'] === '') {
+            $addFieldError('full_name', 'Full name is required.');
+        }
+        if ($provider['email'] === '') {
+            $addFieldError('email', 'Email is required.');
+        } elseif (!filter_var($provider['email'], FILTER_VALIDATE_EMAIL)) {
+            $addFieldError('email', 'Valid email is required.');
+        }
+        if ($provider['phone'] === '') {
+            $addFieldError('phone', 'Phone number is required.');
+        }
+        if ($provider['years_experience'] === '') {
+            $addFieldError('years_experience', 'Years of experience is required.');
+        } elseif (!is_numeric($provider['years_experience']) || (int)$provider['years_experience'] < 0) {
+            $addFieldError('years_experience', 'Years of experience must be a valid non-negative number.');
         }
         
         // NIC number validation
         if ($provider['nic_number'] === '') {
-            $errors[] = 'NIC number is required.';
+            $addFieldError('nic_number', 'NIC number is required.');
         } else {
             // Validate NIC format (Old: 9 digits + V/X, New: 12 digits)
+            $nicPattern = '/^(?:\d{9}[VvXx]|\d{12})$/';
             if (!preg_match($nicPattern, $provider['nic_number'])) {
-                $errors[] = 'Invalid NIC format. Use 12 digits or old format ending with V (e.g., 951234567V).';
+                $addFieldError('nic_number', 'Invalid NIC format. Use old format (e.g., 199512345V) or new format (e.g., 200012345678).');
             }
         }
 
         // Password validations
-        if (!preg_match($passwordPattern, $password)) {
-            $errors[] = 'Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.';
+        if (empty($password) || strlen($password) < 6) {
+            $addFieldError('password', 'Password must be at least 6 characters.');
         }
-        if ($password !== $confirm_password) $errors[] = 'Passwords do not match.';
+        if ($password !== $confirm_password) {
+            $addFieldError('confirm_password', 'Passwords do not match.');
+        }
 
         // Handle NIC photo front upload
-        if (!empty($existingCertFront) && empty($_FILES['nic_photo_front']['name'])) {
-            $provider['nic_photo_front'] = $existingCertFront;
-        } elseif (!empty($_FILES['nic_photo_front']['name'])) {
+        if (!empty($existingCertFront) && empty($_FILES['nic_photo']['name'] ?? $_FILES['nic_photo_front']['name'] ?? '')) {
+            $provider['nic_photo'] = $existingCertFront;
+        } elseif (!empty($_FILES['nic_photo']['name'] ?? $_FILES['nic_photo_front']['name'] ?? '')) {
             $targetDir = __DIR__ . '/../../public/uploads/nic_photos/';
             if (!is_dir($targetDir)) {
                 mkdir($targetDir, 0777, true);
             }
-            $fileName = uniqid() . '_front_' . basename($_FILES['nic_photo_front']['name']);
+            $frontUpload = $_FILES['nic_photo'] ?? $_FILES['nic_photo_front'];
+            $fileName = uniqid() . '_front_' . basename($frontUpload['name']);
             $targetFile = $targetDir . $fileName;
 
             $maxSize = 5 * 1024 * 1024; // 5MB
-            if ($_FILES['nic_photo_front']['size'] > $maxSize) {
-                $errors[] = 'NIC front photo must be less than 5MB.';
-            } elseif (!in_array($_FILES['nic_photo_front']['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
-                $errors[] = 'NIC front photo must be JPG or PNG.';
-            } elseif (is_uploaded_file($_FILES['nic_photo_front']['tmp_name'])) {
-                if (move_uploaded_file($_FILES['nic_photo_front']['tmp_name'], $targetFile)) {
-                    $provider['nic_photo_front'] = 'uploads/nic_photos/' . $fileName;
+            if ($frontUpload['size'] > $maxSize) {
+                $addFieldError('nic_photo', 'NIC front photo must be less than 5MB.');
+            } elseif (!in_array($frontUpload['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
+                $addFieldError('nic_photo', 'NIC front photo must be JPG or PNG.');
+            } elseif (is_uploaded_file($frontUpload['tmp_name'])) {
+                if (move_uploaded_file($frontUpload['tmp_name'], $targetFile)) {
+                    $provider['nic_photo'] = 'uploads/nic_photos/' . $fileName;
                 } else {
-                    $errors[] = 'Failed to upload NIC front photo.';
+                    $addFieldError('nic_photo', 'Failed to upload NIC front photo.');
                 }
             } else {
-                $errors[] = 'Invalid file upload. Please try again.';
+                $addFieldError('nic_photo', 'Invalid NIC front file upload. Please try again.');
             }
         } else {
-            $errors[] = 'NIC front photo is required.';
+            $addFieldError('nic_photo', 'NIC front photo is required.');
         }
 
         // Handle NIC photo back upload
@@ -194,74 +208,106 @@ class ServiceProviderRegister
 
             $maxSize = 5 * 1024 * 1024; // 5MB
             if ($_FILES['nic_photo_back']['size'] > $maxSize) {
-                $errors[] = 'NIC back photo must be less than 5MB.';
+                $addFieldError('nic_photo_back', 'NIC back photo must be less than 5MB.');
             } elseif (!in_array($_FILES['nic_photo_back']['type'], ['image/jpeg', 'image/png', 'image/jpg'])) {
-                $errors[] = 'NIC back photo must be JPG or PNG.';
+                $addFieldError('nic_photo_back', 'NIC back photo must be JPG or PNG.');
             } elseif (is_uploaded_file($_FILES['nic_photo_back']['tmp_name'])) {
                 if (move_uploaded_file($_FILES['nic_photo_back']['tmp_name'], $targetFile)) {
                     $provider['nic_photo_back'] = 'uploads/nic_photos/' . $fileName;
                 } else {
-                    $errors[] = 'Failed to upload NIC back photo.';
+                    $addFieldError('nic_photo_back', 'Failed to upload NIC back photo.');
                 }
             } else {
-                $errors[] = 'Invalid file upload. Please try again.';
+                $addFieldError('nic_photo_back', 'Invalid NIC back file upload. Please try again.');
             }
         } else {
-            $errors[] = 'NIC back photo is required.';
+            $addFieldError('nic_photo_back', 'NIC back photo is required.');
         }
 
-        // Duplicate checks
-        if (empty($errors)) {
-            // Check email in both serviceprovider and users tables
-            if ($model->emailExists($provider['email']) || $model->emailExistsInUsers($provider['email'])) {
-                $errors[] = 'This email is already registered. Please use a different email.';
+        $services = $this->processServicesData($_POST['services'] ?? []);
+        $hasAtLeastOneService = false;
+        foreach ($services as $service) {
+            if (!empty($service['selected'])) {
+                $hasAtLeastOneService = true;
+                break;
             }
-            if ($model->nameExists($provider['full_name'])) {
-                $errors[] = 'A service provider with this full name is already registered.';
-            }
+        }
+        if (!$hasAtLeastOneService) {
+            $addFieldError('services', 'Please select at least one service.');
+        }
+
+        // Duplicate email check across users table
+        if (empty($errors) && $model->emailExistsInUsers($provider['email'])) {
+            $addFieldError('email', 'This email is already registered. Please use a different email.');
         }
 
         // If there are errors, return form with data preserved
         if (!empty($errors)) {
             $this->view('service_provider_register', [
                 'errors' => $errors,
+                'fieldErrors' => $fieldErrors,
+                'firstErrorField' => array_key_first($fieldErrors),
                 'formData' => $provider,
                 'password' => $password,
                 'confirm_password' => $confirm_password,
-                'services' => $this->processServicesData($_POST['services'] ?? []),
+                'services' => $services,
                 'projects' => $_POST['projects'] ?? [],
-                'uploadedPhotoFront' => $provider['nic_photo_front'] ?? $existingCertFront,
+                'uploadedPhotoFront' => $provider['nic_photo'] ?? ($provider['nic_photo_front'] ?? $existingCertFront),
                 'uploadedPhotoBack' => $provider['nic_photo_back'] ?? $existingCertBack,
             ]);
             return;
         }
 
-        // First, register user in users table
+        // Insert into users table
         $userRegistered = $model->registerUser($provider['full_name'], $provider['email'], $password, $provider['phone'], 'service_provider');
-        
-        if (!$userRegistered) {
-            $this->view('service_provider_register', ['errors' => ['Email already exists or registration failed. Please try again.']]);
+
+        // Retrieve created account id
+        $user_id = $model->getUserIdByEmail($provider['email'], 'service_provider');
+
+        if (!$userRegistered || !$user_id) {
+            $this->view('service_provider_register', [
+                'errors' => ['Registration failed while creating user account. Please try again.'],
+                'fieldErrors' => ['email' => 'Unable to create account with this email.'],
+                'firstErrorField' => 'email',
+                'formData' => $provider,
+                'services' => $services,
+                'projects' => $_POST['projects'] ?? [],
+                'uploadedPhotoFront' => $provider['nic_photo'] ?? ($provider['nic_photo_front'] ?? $existingCertFront),
+                'uploadedPhotoBack' => $provider['nic_photo_back'] ?? $existingCertBack,
+            ]);
             return;
         }
 
-        // Get the newly created user ID
-        $user_id = $model->getUserIdByEmail($provider['email']);
+        // Get the user ID for profile save
         if (!$user_id) {
             $this->view('service_provider_register', ['errors' => ['Failed to retrieve user ID. Please try again.']]);
             return;
         }
 
         // Then save serviceprovider profile with user_id
-        $services = $this->processServicesData($_POST['services'] ?? []);
         $projects = $_POST['projects'] ?? [];
 
         $savedId = $model->saveFullProfile($provider, $user_id, $services, $projects);
 
         if ($savedId) {
-            header('Location: ' . ROOT . '/Login?registered=1');
+            $_SESSION['registration_success'] = true;
+            $_SESSION['registration_message'] = 'Your service provider registration has been submitted successfully! Your account is pending admin verification. You will be able to login once your NIC and details are verified.';
+            header('Location: ' . ROOT . '/Login');
             exit;
         } else {
-            $this->view('service_provider_register', ['errors' => ['Failed to save your profile. Please try again.']]);
+            // Prevent an orphan pending user row from blocking retries with "email already exists".
+            $model->cleanupIncompleteRegistration($user_id);
+
+            $this->view('service_provider_register', [
+                'errors' => ['Failed to save your profile. Please try again.'],
+                'fieldErrors' => ['services' => 'Could not complete registration. Please review and submit again.'],
+                'firstErrorField' => 'services',
+                'formData' => $provider,
+                'services' => $services,
+                'projects' => $projects,
+                'uploadedPhotoFront' => $provider['nic_photo'] ?? ($provider['nic_photo_front'] ?? $existingCertFront),
+                'uploadedPhotoBack' => $provider['nic_photo_back'] ?? $existingCertBack,
+            ]);
         }
     }
 

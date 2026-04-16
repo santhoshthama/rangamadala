@@ -45,9 +45,20 @@ class Artistdashboard
         $data['roles_as_actor'] = $role_model ? $role_model->getAssignmentsByArtist($user_id) : [];
 
         $data['my_applications'] = $role_model ? $role_model->getArtistApplications($user_id) : [];
-        $data['upcoming_interviews'] = array_filter($data['my_applications'], function ($app) {
-            return isset($app->interview_at) && $app->interview_at !== null && strtolower($app->status ?? '') === 'pending';
-        });
+        $nowTs = time();
+        $data['upcoming_interviews'] = array_values(array_filter($data['my_applications'], function ($app) use ($nowTs) {
+            if (!isset($app->interview_at) || $app->interview_at === null || strtolower($app->status ?? '') !== 'pending') {
+                return false;
+            }
+
+            $interviewTs = strtotime((string)$app->interview_at);
+            if ($interviewTs === false) {
+                return false;
+            }
+
+            // Keep only upcoming interviews (past dates are hidden from this tab)
+            return $interviewTs >= $nowTs;
+        }));
         
         // Get pending role requests for this artist
         $data['role_requests'] = $artist_model->get_pending_role_requests($user_id);
@@ -563,6 +574,56 @@ class Artistdashboard
         $safeRedirect = $this->sanitizeArtistRedirect($redirect, '/artistdashboard/notifications');
         header('Location: ' . $safeRedirect);
         exit;
+    }
+
+    /**
+     * Show a single notification in detail (marks as read)
+     */
+    public function notification_detail()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $notificationId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($notificationId <= 0) {
+            $_SESSION['message'] = 'Invalid notification.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/notifications');
+            exit;
+        }
+
+        $notificationModel = $this->getModel('M_notification');
+        $artist_model = $this->getModel('M_artist');
+        if (!$notificationModel) {
+            $_SESSION['message'] = 'Notification service unavailable.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/notifications');
+            exit;
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $notification = $notificationModel->getNotificationByIdForUser($notificationId, $userId);
+        if (!$notification) {
+            $_SESSION['message'] = 'Notification not found.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/notifications');
+            exit;
+        }
+
+        if (!(int)($notification->is_read ?? 0)) {
+            $notificationModel->markAsRead($notificationId, $userId);
+            $notification->is_read = 1;
+        }
+
+        $data = [
+            'user' => $artist_model ? $artist_model->get_artist_by_id($userId) : null,
+            'notification' => $notification,
+            'back_url' => ROOT . '/artistdashboard/notifications',
+        ];
+
+        $this->view('artist/notification_detail', $data);
     }
 
     /**

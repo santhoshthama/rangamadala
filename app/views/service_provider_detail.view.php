@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($data['provider']->full_name) ?> - Service Provider</title>
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service_provider_detail.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
 <body>
     <?php include 'includes/header.php'; ?>
@@ -14,7 +14,7 @@
     <div class="container">
         <!-- Back Button -->
         <a href="<?= ROOT ?>/BrowseServiceProviders" class="back-link">
-            <i class="bx bx-arrow-left"></i> Back to Browse
+            <i class="fas fa-arrow-left"></i> Back to Browse
         </a>
 
         <!-- Provider Header Section -->
@@ -35,11 +35,11 @@
                             <h1><?= htmlspecialchars($data['provider']->full_name) ?></h1>
                             <?php if ($data['provider']->availability == 1): ?>
                                 <span class="availability-badge available">
-                                    <i class="bx bx-circle"></i> Available
+                                    <i class="fas fa-circle"></i> Available
                                 </span>
                             <?php else: ?>
                                 <span class="availability-badge unavailable">
-                                    <i class="bx bx-circle"></i> Unavailable
+                                    <i class="fas fa-circle"></i> Unavailable
                                 </span>
                             <?php endif; ?>
                         </div>
@@ -47,11 +47,11 @@
                         
                         <div class="provider-quick-info">
                             <span class="info-item">
-                                <i class="bx bx-map-marker-alt"></i>
+                                <i class="fas fa-map-marker-alt"></i>
                                 <?= htmlspecialchars($data['provider']->location) ?>
                             </span>
                             <span class="info-item">
-                                <i class="bx bx-briefcase"></i>
+                                <i class="fas fa-briefcase"></i>
                                 <?= (int)$data['provider']->years_experience ?> Years Experience
                             </span>
                         </div>
@@ -67,7 +67,7 @@
             <!-- About Section -->
             <div class="card">
                 <div class="card-header">
-                    <i class="bx bx-user"></i>
+                    <i class="fas fa-user"></i>
                     <h2>About</h2>
                 </div>
                 <div class="card-body">
@@ -75,7 +75,7 @@
                     
                     <?php if (!empty($data['provider']->social_media_link)): ?>
                         <div class="website-link">
-                            <i class="bx bx-share-alt"></i>
+                            <i class="fas fa-share-alt"></i>
                             <a href="<?= htmlspecialchars($data['provider']->social_media_link) ?>" target="_blank" rel="noopener">
                                 <?= htmlspecialchars($data['provider']->social_media_link) ?>
                             </a>
@@ -87,13 +87,13 @@
             <!-- Contact Information -->
             <div class="card">
                 <div class="card-header">
-                    <i class="bx bx-address-card"></i>
+                    <i class="fas fa-address-card"></i>
                     <h2>Contact Information</h2>
                 </div>
                 <div class="card-body">
                     <div class="contact-grid">
                         <div class="contact-item">
-                            <i class="bx bx-envelope"></i>
+                            <i class="fas fa-envelope"></i>
                             <div>
                                 <label>Email</label>
                                 <a href="mailto:<?= htmlspecialchars($data['provider']->email) ?>">
@@ -102,7 +102,7 @@
                             </div>
                         </div>
                         <div class="contact-item">
-                            <i class="bx bx-phone"></i>
+                            <i class="fas fa-phone"></i>
                             <div>
                                 <label>Phone</label>
                                 <a href="tel:<?= htmlspecialchars($data['provider']->phone) ?>">
@@ -111,7 +111,7 @@
                             </div>
                         </div>
                         <div class="contact-item">
-                            <i class="bx bx-map-marker-alt"></i>
+                            <i class="fas fa-map-marker-alt"></i>
                             <div>
                                 <label>Location</label>
                                 <span><?= htmlspecialchars($data['provider']->location) ?></span>
@@ -124,7 +124,7 @@
             <!-- Services Offered Section -->
                 <div class="card">
                     <div class="card-header">
-                        <i class="bx bx-tools"></i>
+                        <i class="fas fa-tools"></i>
                         <h2>Services Offered</h2>
                     </div>
                     <div class="card-body">
@@ -153,7 +153,7 @@
                                                 ?>
                                             </h3>
                                             <button class="btn-primary" onclick="attemptRequest('<?= htmlspecialchars($service->service_type ?? '') ?>', '<?= number_format($service->rate_per_hour ?? 0) ?>')">
-                                                <i class="bx bx-paper-plane"></i> Request
+                                                <i class="fas fa-paper-plane"></i> Request
                                             </button>
                                         </div>
                                         <div class="detail-item" style="margin-bottom: 12px;">
@@ -453,7 +453,7 @@
                 <!-- Recent Projects (Past Engagements) Section -->
                 <div class="card">
                     <div class="card-header">
-                        <i class="bx bx-project-diagram"></i>
+                        <i class="fas fa-project-diagram"></i>
                         <h2>Recent Projects</h2>
                     </div>
                     <div class="card-body">
@@ -467,13 +467,13 @@
                                         </div>
                                         <?php if (!empty($project->role ?? null)): ?>
                                             <p class="project-role">
-                                                <i class="bx bx-user-tag"></i>
+                                                <i class="fas fa-user-tag"></i>
                                                 <?= htmlspecialchars($project->role) ?>
                                             </p>
                                         <?php endif; ?>
                                         <?php if (!empty($project->services_provided)): ?>
                                             <p class="project-services">
-                                                <i class="bx bx-tasks"></i>
+                                                <i class="fas fa-tasks"></i>
                                                 Services: <?= htmlspecialchars($project->services_provided) ?>
                                             </p>
                                         <?php endif; ?>

@@ -543,6 +543,8 @@ class Admindashboard {
         }
 
         $db = new Database();
+
+        $nicPhotoColumn = $this->columnExists($db, 'users', 'nic_photo') ? 'u.nic_photo' : 'u.nic_photo_front';
         
         $db->query("SELECT 
                     u.id,
@@ -696,6 +698,12 @@ class Admindashboard {
         }
 
         $db = new Database();
+
+        $usersNicPhotoColumn = $this->columnExists($db, 'users', 'nic_photo') ? 'nic_photo' : 'nic_photo_front';
+        $usersNicPhotoBackColumn = $this->columnExists($db, 'users', 'nic_photo_back') ? 'nic_photo_back' : 'nic_photo';
+        $serviceProviderYearsExpr = $this->columnExists($db, 'serviceprovider', 'years_experience')
+            ? 'sp.years_experience'
+            : 'u.years_experience';
 
         // Base user info
         $db->query("SELECT id, full_name, email, phone, role, nic_number, nic_photo, nic_photo_back, created_at, verification_status 

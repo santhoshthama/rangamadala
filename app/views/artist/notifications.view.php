@@ -22,6 +22,7 @@ $allNotifications = isset($all_notifications) ? $all_notifications : [];
 $typeConfig = [
     'role_assigned'         => ['icon' => 'bx-user-check',   'color' => '#28a745', 'label' => 'Role Assigned'],
     'role_removed'          => ['icon' => 'bx-user-x',       'color' => '#dc3545', 'label' => 'Role Removed'],
+    'role_artist_removed'   => ['icon' => 'bx-user-minus',   'color' => '#b45309', 'label' => 'Artist Removed (Director)'],
     'event_scheduled'       => ['icon' => 'bx-calendar-plus','color' => '#ba8e23', 'label' => 'Event Scheduled'],
     'event_updated'         => ['icon' => 'bx-calendar-check','color' => '#17a2b8', 'label' => 'Event Updated'],
     'event_cancelled'       => ['icon' => 'bx-calendar-x',   'color' => '#dc3545', 'label' => 'Event Cancelled'],
@@ -37,20 +38,75 @@ $typeConfig = [
     'pm_provider_rejected_manual_payment' => ['icon' => 'bx-error-circle', 'color' => '#d97706', 'label' => 'Payment Verification Failed'],
 ];
 
-$pmTypes = [
-    'pm_provider_responded_quote',
-    'pm_provider_accepted_terms',
-    'pm_provider_rejected_terms',
-    'pm_provider_marked_completed',
-    'pm_provider_rejected_request',
-    'pm_provider_confirmed_manual_payment',
-    'pm_provider_rejected_manual_payment',
-];
-$pmNotifications = array_values(array_filter($allNotifications, function ($n) use ($pmTypes) {
-    return isset($n->type) && in_array($n->type, $pmTypes, true);
+function getNotificationSourceCategory($type) {
+    $type = (string)$type;
+
+    // Explicit role-removal routing
+    // role_removed        -> actor-facing message (includes reason)
+    // role_artist_removed -> director-facing action log
+    if ($type === 'role_removed' || $type === 'role_assigned') {
+        return 'actor';
+    }
+    if ($type === 'role_artist_removed') {
+        return 'director';
+    }
+
+    // PM-origin notifications
+    if (
+        strpos($type, '_by_pm') !== false ||
+        strpos($type, 'service_request_created_pm') === 0 ||
+        strpos($type, 'payment_submitted_by_pm') === 0 ||
+        strpos($type, 'payment_completed_by_pm') === 0
+    ) {
+        return 'pm';
+    }
+
+    // Actor-origin notifications (including service-provider updates to PM)
+    if (
+        strpos($type, 'pm_provider_') === 0 ||
+        strpos($type, 'actor_') === 0 ||
+        strpos($type, 'artist_') === 0
+    ) {
+        return 'actor';
+    }
+
+    // Director-origin notifications
+    if (
+        strpos($type, 'role_') === 0 ||
+        strpos($type, 'application_') === 0 ||
+        strpos($type, 'interview_') === 0 ||
+        strpos($type, 'event_') === 0
+    ) {
+        return 'director';
+    }
+
+    // Fallback
+    return 'drama';
+}
+
+$actorNotifications = [];
+$directorNotifications = [];
+$pmNotifications = [];
+
+foreach ($allNotifications as $notificationItem) {
+    $source = getNotificationSourceCategory($notificationItem->type ?? '');
+    if ($source === 'actor') {
+        $actorNotifications[] = $notificationItem;
+    } elseif ($source === 'director') {
+        $directorNotifications[] = $notificationItem;
+    } elseif ($source === 'pm') {
+        $pmNotifications[] = $notificationItem;
+    }
+}
+
+$actorUnreadCount = count(array_filter($actorNotifications, function ($n) {
+    return !(int)($n->is_read ?? 0);
+}));
+$directorUnreadCount = count(array_filter($directorNotifications, function ($n) {
+    return !(int)($n->is_read ?? 0);
 }));
 $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
-    return !(int)$n->is_read;
+    return !(int)($n->is_read ?? 0);
 }));
 ?>
 <!DOCTYPE html>
@@ -313,6 +369,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
             color: var(--muted);
             line-height: 1.5;
             display: -webkit-box;
+            line-clamp: 2;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -549,6 +606,12 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
             <button class="tab-btn active" onclick="switchTab('all', this)">
                 <i class="bx bx-bell"></i> All Notifications
             </button>
+            <button class="tab-btn" onclick="switchTab('actor', this)">
+                <i class="bx bx-user"></i> By Actor <?= $actorUnreadCount > 0 ? '(' . $actorUnreadCount . ')' : '' ?>
+            </button>
+            <button class="tab-btn" onclick="switchTab('director', this)">
+                <i class="bx bx-video"></i> By Director <?= $directorUnreadCount > 0 ? '(' . $directorUnreadCount . ')' : '' ?>
+            </button>
             <button class="tab-btn" onclick="switchTab('pm', this)">
                 <i class="bx bx-briefcase"></i> Production Manager <?= $pmUnreadCount > 0 ? '(' . $pmUnreadCount . ')' : '' ?>
             </button>
@@ -579,7 +642,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                                     $isUnread = !(int)$n->is_read;
                                     $timeAgo = timeAgoStr($n->created_at);
                                 ?>
-                                <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>" 
+                                          <a href="<?= ROOT ?>/artistdashboard/notification_detail?id=<?= (int)$n->id ?>" 
                                    class="notification-item <?= $isUnread ? 'unread' : '' ?>">
                                     <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
                                         <i class="bx <?= $tc['icon'] ?>"></i>
@@ -611,6 +674,78 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
             </div>
         </div>
 
+        <!-- Tab: By Actor -->
+        <div id="tab-actor" class="tab-panel">
+            <div class="content">
+                <div class="profile-container" style="grid-template-columns: 1fr;">
+                    <div class="details">
+                        <div class="card-section">
+                            <h3><i class="bx bx-user"></i> Notifications by Actor</h3>
+                            <?php if (empty($actorNotifications)): ?>
+                                <div class="empty-state">
+                                    <i class="bx bx-inbox"></i>
+                                    <h3>No Actor Notifications Yet</h3>
+                                    <p>Actor-origin updates will appear here.</p>
+                                </div>
+                            <?php else: ?>
+                                <?php foreach ($actorNotifications as $n):
+                                    $tc = $typeConfig[$n->type] ?? ['icon' => 'bx-bell', 'color' => '#6c757d', 'label' => 'Notification'];
+                                    $isUnread = !(int)$n->is_read;
+                                    $timeAgo = timeAgoStr($n->created_at);
+                                ?>
+                                <a href="<?= ROOT ?>/artistdashboard/notification_detail?id=<?= (int)$n->id ?>" class="notification-item <?= $isUnread ? 'unread' : '' ?>">
+                                    <div class="notification-icon" style="background: <?= $tc['color'] ?>;"><i class="bx <?= $tc['icon'] ?>"></i></div>
+                                    <div class="notification-body">
+                                        <div class="notification-title"><?php if ($isUnread): ?><span class="unread-dot"></span><?php endif; ?><?= esc($n->title) ?></div>
+                                        <div class="notification-message"><?= esc($n->message) ?></div>
+                                        <div class="notification-time"><i class="bx bx-clock"></i> <?= $timeAgo ?></div>
+                                    </div>
+                                    <div style="flex-shrink: 0;"><span class="notification-badge" style="background: <?= $tc['color'] ?>20; color: <?= $tc['color'] ?>;"><i class="bx <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?></span></div>
+                                </a>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: By Director -->
+        <div id="tab-director" class="tab-panel">
+            <div class="content">
+                <div class="profile-container" style="grid-template-columns: 1fr;">
+                    <div class="details">
+                        <div class="card-section">
+                            <h3><i class="bx bx-video"></i> Notifications by Director</h3>
+                            <?php if (empty($directorNotifications)): ?>
+                                <div class="empty-state">
+                                    <i class="bx bx-inbox"></i>
+                                    <h3>No Director Notifications Yet</h3>
+                                    <p>Director-origin updates (role, interview, event) will appear here.</p>
+                                </div>
+                            <?php else: ?>
+                                <?php foreach ($directorNotifications as $n):
+                                    $tc = $typeConfig[$n->type] ?? ['icon' => 'bx-bell', 'color' => '#6c757d', 'label' => 'Notification'];
+                                    $isUnread = !(int)$n->is_read;
+                                    $timeAgo = timeAgoStr($n->created_at);
+                                ?>
+                                <a href="<?= ROOT ?>/artistdashboard/notification_detail?id=<?= (int)$n->id ?>" class="notification-item <?= $isUnread ? 'unread' : '' ?>">
+                                    <div class="notification-icon" style="background: <?= $tc['color'] ?>;"><i class="bx <?= $tc['icon'] ?>"></i></div>
+                                    <div class="notification-body">
+                                        <div class="notification-title"><?php if ($isUnread): ?><span class="unread-dot"></span><?php endif; ?><?= esc($n->title) ?></div>
+                                        <div class="notification-message"><?= esc($n->message) ?></div>
+                                        <div class="notification-time"><i class="bx bx-clock"></i> <?= $timeAgo ?></div>
+                                    </div>
+                                    <div style="flex-shrink: 0;"><span class="notification-badge" style="background: <?= $tc['color'] ?>20; color: <?= $tc['color'] ?>;"><i class="bx <?= $tc['icon'] ?>"></i> <?= $tc['label'] ?></span></div>
+                                </a>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tab: Production Manager -->
         <div id="tab-pm" class="tab-panel">
             <div class="content">
@@ -630,7 +765,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                                     $isUnread = !(int)$n->is_read;
                                     $timeAgo = timeAgoStr($n->created_at);
                                 ?>
-                                <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>"
+                                          <a href="<?= ROOT ?>/artistdashboard/notification_detail?id=<?= (int)$n->id ?>"
                                    class="notification-item <?= $isUnread ? 'unread' : '' ?>">
                                     <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
                                         <i class="bx <?= $tc['icon'] ?>"></i>
@@ -693,7 +828,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                                         $isUnread = !(int)$n->is_read;
                                         $timeAgo = timeAgoStr($n->created_at);
                                     ?>
-                                    <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>" 
+                                                <a href="<?= ROOT ?>/artistdashboard/notification_detail?id=<?= (int)$n->id ?>" 
                                        class="notification-item <?= $isUnread ? 'unread' : '' ?>">
                                         <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
                                             <i class="bx <?= $tc['icon'] ?>"></i>
@@ -744,7 +879,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                                     $tc = $typeConfig[$n->type] ?? ['icon' => 'bx-bell', 'color' => '#6c757d', 'label' => 'Notification'];
                                     $timeAgo = timeAgoStr($n->created_at);
                                 ?>
-                                <a href="<?= ROOT ?>/artistdashboard/mark_notification_read?id=<?= (int)$n->id ?>&redirect=<?= urlencode($n->link ?? ROOT . '/artistdashboard/notifications') ?>" 
+                                          <a href="<?= ROOT ?>/artistdashboard/notification_detail?id=<?= (int)$n->id ?>" 
                                    class="notification-item unread">
                                     <div class="notification-icon" style="background: <?= $tc['color'] ?>;">
                                         <i class="bx <?= $tc['icon'] ?>"></i>

@@ -5,16 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= APP_NAME ?></title>
+  <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/register.css">
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_register.css">
-  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="shortcut icon" href="<?php echo ROOT; ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+  <link rel="shortcut icon" href="<?php echo ROOT; ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
 
 <body>
   <div class="back-container">
     <a href="<?= ROOT ?>/Signup" class="back-link">
       <button type="button" class="back-btn">
-        <i class="bx bx-arrow-left"></i> Back to Selection
+        <i class="fas fa-arrow-left"></i> Back to Selection
       </button>
     </a>
   </div>
@@ -22,34 +23,39 @@
   <div class="signup-container signup-service">
     <div class="register-card">
       <div class="register-header">
-        <h2>Register as Service Provider</h2>
-        <p>Complete the form to create your account</p>
+        <h2>Service Provider Signup</h2>
       </div>
 
+      <?php
+        $fieldErrors = $data['fieldErrors'] ?? [];
+        $firstErrorField = $data['firstErrorField'] ?? '';
+        $fieldHasError = function ($field) use ($fieldErrors) {
+          return isset($fieldErrors[$field]) && $fieldErrors[$field] !== '';
+        };
+        $fieldError = function ($field) use ($fieldErrors) {
+          return $fieldErrors[$field] ?? '';
+        };
+      ?>
+
       <?php if (!empty($data['errors'])): ?>
-        <div class="error-modal-overlay" id="errorModal">
-          <div class="error-modal">
-            <div class="error-modal-icon">!</div>
-            <h3>Submission Error</h3>
-            <ul class="error-list">
-              <?php foreach ($data['errors'] as $error): ?>
-                <li><?= htmlspecialchars($error) ?></li>
-              <?php endforeach; ?>
-            </ul>
-            <button class="error-modal-button" onclick="document.getElementById('errorModal').style.display='none'">Try Again</button>
-          </div>
+        <div class="error-modal" style="margin: 20px 48px 0;">
+          <div class="error-modal-icon">!</div>
+          <h3>Submission Error</h3>
+          <ul class="error-list">
+            <?php foreach ($data['errors'] as $error): ?>
+              <li><?= htmlspecialchars($error) ?></li>
+            <?php endforeach; ?>
+          </ul>
         </div>
       <?php endif; ?>
 
-      <div id="serviceClientErrorBox" style="display:none; margin: 12px 24px 0; background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); border-radius: 10px; color: #b02a37; padding: 12px 14px;" aria-live="polite"></div>
-
       <div class="register-content">
-        <div class="alert-info">
+        <!-- <div class="alert-info">
           <span class="alert-info-icon">i</span>
           <div class="alert-info-text">
             Fill your account, profile, NIC, service types, and past engagements now. You can add full service details after admin approval.
           </div>
-        </div>
+        </div> -->
 
         <div class="page-indicator">
           <div class="step active" data-step="1"><div class="step-number">1</div></div>
@@ -62,7 +68,7 @@
           $servicesData = $data['services'] ?? [];
           $projectsData = $data['projects'] ?? [];
           $formData = $data['formData'] ?? [];
-          $existingFront = $data['uploadedPhotoFront'] ?? ($formData['nic_photo_front'] ?? '');
+          $existingFront = $data['uploadedPhotoFront'] ?? ($formData['nic_photo'] ?? ($formData['nic_photo_front'] ?? ''));
           $existingBack = $data['uploadedPhotoBack'] ?? ($formData['nic_photo_back'] ?? '');
           $avail = isset($formData['availability']) ? (int)$formData['availability'] : 1;
         ?>
@@ -75,39 +81,45 @@
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Full Name <span class="required">*</span></label>
-                  <input type="text" name="full_name" class="form-input" value="<?= htmlspecialchars($formData['full_name'] ?? '') ?>" required>
+                  <input type="text" name="full_name" class="form-input<?= $fieldHasError('full_name') ? ' input-error' : '' ?>" value="<?= htmlspecialchars($formData['full_name'] ?? '') ?>" required>
+                  <?php if ($fieldHasError('full_name')): ?><div class="error-text"><?= htmlspecialchars($fieldError('full_name')) ?></div><?php endif; ?>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Professional Title <span class="required">*</span></label>
-                  <input type="text" name="professional_title" class="form-input" value="<?= htmlspecialchars($formData['professional_title'] ?? '') ?>" required>
+                  <label class="form-label">Professional Title</label>
+                  <input type="text" name="professional_title" class="form-input" value="<?= htmlspecialchars($formData['professional_title'] ?? '') ?>">
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Email Address <span class="required">*</span></label>
-                  <input type="email" name="email" class="form-input" value="<?= htmlspecialchars($formData['email'] ?? '') ?>" required>
+                  <input type="email" name="email" class="form-input<?= $fieldHasError('email') ? ' input-error' : '' ?>" value="<?= htmlspecialchars($formData['email'] ?? '') ?>" required>
+                  <?php if ($fieldHasError('email')): ?><div class="error-text"><?= htmlspecialchars($fieldError('email')) ?></div><?php endif; ?>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Phone Number <span class="required">*</span></label>
-                  <input type="tel" name="phone" class="form-input" value="<?= htmlspecialchars($formData['phone'] ?? '') ?>" pattern="(?:\+94|94|0)7\d{8}" title="Enter a valid Sri Lankan mobile number (07X XXX XXXX or +94 XXX XXX XXX)" required>
+                  <input type="tel" name="phone" class="form-input<?= $fieldHasError('phone') ? ' input-error' : '' ?>" value="<?= htmlspecialchars($formData['phone'] ?? '') ?>" required>
+                  <?php if ($fieldHasError('phone')): ?><div class="error-text"><?= htmlspecialchars($fieldError('phone')) ?></div><?php endif; ?>
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Password <span class="required">*</span></label>
-                  <input type="password" name="password" class="form-input" minlength="6" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}" title="At least 6 characters with uppercase, lowercase, number, and symbol" required>
+                  <input type="password" name="password" class="form-input<?= $fieldHasError('password') ? ' input-error' : '' ?>" minlength="6" required>
+                  <?php if ($fieldHasError('password')): ?><div class="error-text"><?= htmlspecialchars($fieldError('password')) ?></div><?php endif; ?>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Confirm Password <span class="required">*</span></label>
-                  <input type="password" name="confirm_password" class="form-input" minlength="6" required>
+                  <input type="password" name="confirm_password" class="form-input<?= $fieldHasError('confirm_password') ? ' input-error' : '' ?>" minlength="6" required>
+                  <?php if ($fieldHasError('confirm_password')): ?><div class="error-text"><?= htmlspecialchars($fieldError('confirm_password')) ?></div><?php endif; ?>
                 </div>
               </div>
 
               <div class="form-group">
                 <label class="form-label">NIC Number <span class="required">*</span></label>
-                <input type="text" name="nic_number" class="form-input" placeholder="e.g., 200012345678 or 199512345V" value="<?= htmlspecialchars($formData['nic_number'] ?? '') ?>" pattern="(?:\d{12}|\d{9}[Vv])" title="Use 12 digits or old NIC ending with V" required>
+                <input type="text" name="nic_number" class="form-input<?= $fieldHasError('nic_number') ? ' input-error' : '' ?>" placeholder="e.g., 200012345678 or 199512345V" value="<?= htmlspecialchars($formData['nic_number'] ?? '') ?>" required>
+                <?php if ($fieldHasError('nic_number')): ?><div class="error-text"><?= htmlspecialchars($fieldError('nic_number')) ?></div><?php endif; ?>
               </div>
 
               <div class="form-row">
@@ -116,8 +128,9 @@
                   <input type="text" name="location" class="form-input" placeholder="City, Country" value="<?= htmlspecialchars($formData['location'] ?? '') ?>">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Years of Experience</label>
-                  <input type="number" name="years_experience" class="form-input" placeholder="Enter your years of experience" value="<?= htmlspecialchars($formData['years_experience'] ?? '') ?>">
+                  <label class="form-label">Years of Experience <span class="required">*</span></label>
+                  <input type="number" name="years_experience" class="form-input<?= $fieldHasError('years_experience') ? ' input-error' : '' ?>" placeholder="Enter your years of experience" value="<?= htmlspecialchars($formData['years_experience'] ?? '') ?>" min="0" required>
+                  <?php if ($fieldHasError('years_experience')): ?><div class="error-text"><?= htmlspecialchars($fieldError('years_experience')) ?></div><?php endif; ?>
                 </div>
               </div>
 
@@ -152,9 +165,10 @@
                   <button type="button" onclick="removeCertificateFront()" class="btn" style="margin-top:8px;">Remove</button>
                 </div>
 
-                <input type="hidden" name="existing_nic_photo_front" id="existingCertPathFront" value="<?= htmlspecialchars($existingFront) ?>">
+                <input type="hidden" name="existing_nic_photo" id="existingCertPathFront" value="<?= htmlspecialchars($existingFront) ?>">
                 <div id="uploadSectionFront" style="<?= !empty($existingFront) ? 'display:none;' : '' ?>">
-                  <input type="file" name="nic_photo_front" id="nicPhotoFrontInput" accept=".jpg,.jpeg,.png" class="form-input" <?= empty($existingFront) ? 'required' : '' ?> onchange="previewCertificateFront(this)">
+                  <input type="file" name="nic_photo" id="nicPhotoFrontInput" accept=".jpg,.jpeg,.png" class="form-input<?= $fieldHasError('nic_photo') ? ' input-error' : '' ?>" <?= empty($existingFront) ? 'required' : '' ?> onchange="previewCertificateFront(this)">
+                  <?php if ($fieldHasError('nic_photo')): ?><div class="error-text"><?= htmlspecialchars($fieldError('nic_photo')) ?></div><?php endif; ?>
                 </div>
               </div>
 
@@ -169,7 +183,8 @@
 
                 <input type="hidden" name="existing_nic_photo_back" id="existingCertPathBack" value="<?= htmlspecialchars($existingBack) ?>">
                 <div id="uploadSectionBack" style="<?= !empty($existingBack) ? 'display:none;' : '' ?>">
-                  <input type="file" name="nic_photo_back" id="nicPhotoBackInput" accept=".jpg,.jpeg,.png" class="form-input" <?= empty($existingBack) ? 'required' : '' ?> onchange="previewCertificateBack(this)">
+                  <input type="file" name="nic_photo_back" id="nicPhotoBackInput" accept=".jpg,.jpeg,.png" class="form-input<?= $fieldHasError('nic_photo_back') ? ' input-error' : '' ?>" <?= empty($existingBack) ? 'required' : '' ?> onchange="previewCertificateBack(this)">
+                  <?php if ($fieldHasError('nic_photo_back')): ?><div class="error-text"><?= htmlspecialchars($fieldError('nic_photo_back')) ?></div><?php endif; ?>
                 </div>
               </div>
 
@@ -188,6 +203,7 @@
             <div class="section">
               <h3 class="section-title">Choose Service Type(s)</h3>
               <p style="margin-bottom:12px;color:#a89968;font-size:13px;">Select one or more service types. Detailed service information can be added after approval.</p>
+              <?php if ($fieldHasError('services')): ?><div class="error-text" style="margin-bottom: 12px;"><?= htmlspecialchars($fieldError('services')) ?></div><?php endif; ?>
 
               <?php $svc0 = $servicesData[0] ?? []; ?>
               <div class="service-item">
@@ -800,7 +816,7 @@
           <div class="form-page">
             <div class="section">
               <h3 class="section-title">Past Engagements</h3>
-              <p style="margin-bottom:12px;color:#a89968;font-size:13px;">Add a few recent projects if you have them. This helps verify your experience.</p>
+              <p style="margin-bottom:12px;color:#a89968;font-size:13px;">Add your past engagements. This helps verify your experience.</p>
 
               <div id="projectList">
                 <?php if (!empty($projectsData) && is_array($projectsData)): ?>
@@ -840,10 +856,10 @@
 
           <div class="form-navigation">
             <button type="button" class="nav-btn prev-btn" onclick="prevPage()" style="display:none;">
-              <i class="bx bx-arrow-left"></i> Previous
+              <i class="fas fa-arrow-left"></i> Previous
             </button>
             <button type="button" class="nav-btn next-btn" onclick="nextPage()">
-              Next <i class="bx bx-arrow-right"></i>
+              Next <i class="fas fa-arrow-right"></i>
             </button>
           </div>
         </form>
@@ -854,93 +870,25 @@
   <script>
     let currentPage = 1;
     const totalPages = 4;
-    const serviceForm = document.getElementById('serviceForm');
-    const serviceClientErrorBox = document.getElementById('serviceClientErrorBox');
-
-    function showValidationErrors(errors) {
-      if (!errors.length) return;
-      const limited = errors.slice(0, 8);
-      const suffix = errors.length > 8 ? '\n- ...and more' : '';
-
-      if (serviceClientErrorBox) {
-        const list = limited.map(function (msg) {
-          return '<li style="margin-bottom:6px;">' + msg + '</li>';
-        }).join('');
-        const more = errors.length > 8 ? '<li>...and more</li>' : '';
-
-        serviceClientErrorBox.innerHTML = '<strong>Please fix the following:</strong><ul style="margin:10px 0 0 20px;">' + list + more + '</ul>';
-        serviceClientErrorBox.style.display = 'block';
-        serviceClientErrorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-
-    function clearValidationErrors() {
-      if (serviceClientErrorBox) {
-        serviceClientErrorBox.innerHTML = '';
-        serviceClientErrorBox.style.display = 'none';
-      }
-    }
-
-    function getFieldLabel(field) {
-      const group = field.closest('.form-group');
-      const label = group?.querySelector('.form-label');
-      return (label?.textContent || field.name || 'Field').replace('*', '').trim();
-    }
-
-    function collectPageValidationErrors(pageElement) {
-      const errors = [];
-      const requiredFields = pageElement.querySelectorAll('[required]');
-
-      requiredFields.forEach((field) => {
-        const value = (field.value || '').trim();
-        const label = getFieldLabel(field);
-
-        if (!value) {
-          errors.push(`${label} is required.`);
-          return;
-        }
-
-        if (!field.checkValidity()) {
-          if (field.type === 'email') {
-            errors.push(`${label} must be a valid email address.`);
-          } else if (field.name === 'phone') {
-            errors.push('Enter a valid Sri Lankan contact number (e.g. 07X XXX XXXX or +94 XXX XXX XXX).');
-          } else if (field.name === 'nic_number') {
-            errors.push('Enter a valid Sri Lankan NIC (12 digits or old format ending with V).');
-          } else if (field.name === 'password') {
-            errors.push('Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.');
-          } else {
-            errors.push(`${label} format is invalid.`);
-          }
-        }
-      });
-
-      if (pageElement === document.querySelectorAll('.form-page')[0]) {
-        const password = serviceForm.querySelector('input[name="password"]')?.value || '';
-        const confirmPassword = serviceForm.querySelector('input[name="confirm_password"]')?.value || '';
-        const passwordStrong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/.test(password);
-
-        if (password && !passwordStrong) {
-          errors.push('Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.');
-        }
-
-        if (password !== confirmPassword) {
-          errors.push('Passwords do not match. Please check and try again.');
-        }
-      }
-
-      return errors;
-    }
 
     function validateCurrentPage() {
       const currentPageElement = document.querySelectorAll('.form-page')[currentPage - 1];
-      const errors = collectPageValidationErrors(currentPageElement);
-      if (errors.length) {
-        showValidationErrors(errors);
-        return false;
+      const requiredFields = currentPageElement.querySelectorAll('[required]');
+
+      if (currentPage === 1) {
+        const password = document.querySelector('input[name="password"]').value;
+        const confirmPassword = document.querySelector('input[name="confirm_password"]').value;
+        if (password !== confirmPassword) {
+          alert('Passwords do not match. Please check and try again.');
+          return false;
+        }
       }
 
-      clearValidationErrors();
+      for (const field of requiredFields) {
+        if (!field.reportValidity()) {
+          return false;
+        }
+      }
 
       return true;
     }
@@ -984,25 +932,6 @@
         currentPage--;
         showPage(currentPage);
       }
-    }
-
-    if (serviceForm) {
-      serviceForm.addEventListener('submit', function (e) {
-        const allPages = document.querySelectorAll('.form-page');
-        let allErrors = [];
-
-        allPages.forEach((page) => {
-          allErrors = allErrors.concat(collectPageValidationErrors(page));
-        });
-
-        if (allErrors.length) {
-          e.preventDefault();
-          showValidationErrors(allErrors);
-          return;
-        }
-
-        clearValidationErrors();
-      });
     }
 
     function wireServiceToggle(idx) {
@@ -1128,7 +1057,30 @@
 
       [1, 2, 3, 4, 5, 6, 7, 8].forEach(wireServiceToggle);
 
-      showPage(1);
+      const firstErrorField = <?= json_encode($firstErrorField) ?>;
+      const pageByField = {
+        full_name: 1,
+        email: 1,
+        phone: 1,
+        password: 1,
+        confirm_password: 1,
+        nic_number: 1,
+        years_experience: 1,
+        nic_photo: 2,
+        nic_photo_back: 2,
+        services: 3
+      };
+
+      const startPage = firstErrorField && pageByField[firstErrorField] ? pageByField[firstErrorField] : 1;
+      currentPage = startPage;
+      showPage(startPage);
+
+      if (firstErrorField) {
+        const targetField = document.querySelector(`[name="${firstErrorField}"]`);
+        if (targetField) {
+          targetField.focus();
+        }
+      }
     });
   </script>
 </body>

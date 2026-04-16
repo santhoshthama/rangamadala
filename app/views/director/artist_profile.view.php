@@ -7,6 +7,7 @@ $drama = $drama ?? null;
 $artist = $artist ?? null;
 $role = $role ?? null;
 $roleId = isset($roleId) ? (int)$roleId : (int)($_GET['role_id'] ?? 0);
+$profileContext = isset($profileContext) ? (string)$profileContext : ((isset($_GET['from']) && $_GET['from'] === 'manager') ? 'manager_search' : 'role_artist');
 
 if (!$drama || !$artist) {
     echo '<p>Artist profile details unavailable.</p>';
@@ -17,6 +18,14 @@ $dramaId = (int)($drama->id ?? 0);
 $roleName = $role->role_name ?? null;
 $artistName = $artist->full_name ?? 'Artist';
 $initial = strtoupper((function_exists('mb_substr') ? mb_substr($artistName, 0, 1) : substr($artistName, 0, 1)) ?: 'A');
+
+$isManagerContext = $profileContext === 'manager_search';
+$backUrl = $isManagerContext
+    ? ROOT . '/director/search_managers?drama_id=' . $dramaId
+    : ROOT . '/director/search_artists?drama_id=' . $dramaId . ($roleId ? '&role_id=' . $roleId : '');
+$backText = $isManagerContext ? 'Back to Manager Search' : 'Back to Artist Search';
+$requestedRoleValue = $isManagerContext ? 'Production Manager Candidate' : ($roleName ?? 'N/A');
+$visibilityText = $isManagerContext ? 'Visible in manager search' : 'Visible in artist search';
 
 $artistImageSrc = null;
 if (!empty($artist->profile_image)) {
@@ -93,7 +102,7 @@ $directorImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ??
     ?>
 
     <main class="main--content">
-        <a class="back-button" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?><?= $roleId ? '&role_id=' . esc($roleId) : '' ?>"><i class="bx bx-arrow-left"></i>Back to Artist Search</a>
+        <a class="back-button" href="<?= esc($backUrl) ?>"><i class="bx bx-arrow-left"></i><?= esc($backText) ?></a>
 
         <div class="header--wrapper" style="margin-bottom: 20px;">
             <div class="header--title">
@@ -133,7 +142,7 @@ $directorImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ??
                             </div>
                             <div class="service-info-item">
                                 <span class="service-info-label"><i class="bx bx-user-pin"></i> Requested Role</span>
-                                <span class="service-info-value"><?= esc($roleName ?? 'N/A') ?></span>
+                                <span class="service-info-value"><?= esc($requestedRoleValue) ?></span>
                             </div>
                             <div class="service-info-item">
                                 <span class="service-info-label"><i class="bx bx-tag"></i> Role Type</span>
@@ -141,7 +150,7 @@ $directorImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ??
                             </div>
                             <div class="service-info-item">
                                 <span class="service-info-label"><i class="bx bx-user-check"></i> Availability</span>
-                                <span class="service-info-value">Visible in artist search</span>
+                                <span class="service-info-value"><?= esc($visibilityText) ?></span>
                             </div>
                         </div>
                     </div>
@@ -189,8 +198,8 @@ $directorImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ??
                             </div>
 
                             <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
-                                <a href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?><?= $roleId ? '&role_id=' . esc($roleId) : '' ?>" class="btn btn-secondary">
-                                    <i class="bx bx-arrow-left"></i> Back to Artist Search
+                                <a href="<?= esc($backUrl) ?>" class="btn btn-secondary">
+                                    <i class="bx bx-arrow-left"></i> <?= esc($backText) ?>
                                 </a>
 
                                 <?php if ($nicDownload): ?>
