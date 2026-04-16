@@ -29,7 +29,9 @@ $roleTitles = [
 ];
 $pageTitle = $roleTitles[$role] ?? 'Profile';
 
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+$profileImageSrc = $role === 'artist'
+    ? ROOT . '/uploads/profile_images/user_profile.png'
+    : ROOT . '/assets/images/default-avatar.jpg';
 if ($user && !empty($user->profile_image)) {
     $imageValue = str_replace('\\', '/', $user->profile_image);
     if (strpos($imageValue, '/') !== false) {
@@ -37,7 +39,7 @@ if ($user && !empty($user->profile_image)) {
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
-} elseif ($user && !empty($user->nic_photo)) {
+} elseif ($role !== 'artist' && $user && !empty($user->nic_photo)) {
     $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
 }
 
@@ -379,7 +381,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
 
         <div class="profile-card">
             <aside class="profile-summary">
-                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= $role === 'artist' ? ROOT . '/uploads/profile_images/user_profile.png' : ROOT . '/assets/images/default-avatar.jpg' ?>'">
 
                 <div>
                     <h2><?= $user ? esc($user->full_name ?? 'User') : 'User' ?></h2>

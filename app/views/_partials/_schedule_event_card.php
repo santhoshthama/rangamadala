@@ -14,12 +14,12 @@ $badgeStyle = statusBadgeStyle($evt->status);
 <div class="event-card" data-event-id="<?= (int)$evt->id ?>">
     <div class="event-header">
         <div style="flex: 1;">
-            <strong style="font-size: 15px;">
+            <strong style="font-size: 16px; color: #2f2410;">
                 <i class="bx <?= $typeIcon ?>"></i>
                 <?= esc($evt->event_title) ?>
             </strong>
             <div class="event-meta">
-                📅 <?= esc($evtDate) ?> | ⏰ <?= esc($startTime) ?> - <?= esc($endTime) ?> | 📍 <?= esc($evt->venue) ?>
+                <i class="bx bx-calendar"></i> <?= esc($evtDate) ?> | <i class="bx bx-time"></i> <?= esc($startTime) ?> - <?= esc($endTime) ?> | <i class="bx bx-map"></i> <?= esc($evt->venue) ?>
             </div>
             <?php if (!empty($evt->role_name)): ?>
                 <div class="event-meta" style="margin-top: 4px;">
@@ -42,18 +42,18 @@ $badgeStyle = statusBadgeStyle($evt->status);
                 <?= esc(ucfirst($evt->status)) ?>
             </span>
             <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewEventDetails(<?= (int)$evt->id ?>)" title="View Details">
-                <i class="bx bx-eye"></i>
+                <i class="bx bx-show"></i> View
             </button>
             <?php if (!$isPastEvent && $evt->status !== 'cancelled'): ?>
-                <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="openEditModal(<?= (int)$evt->id ?>)" title="Edit">
-                    <i class="bx bx-edit"></i>
+                <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;" onclick="openEditModal(<?= (int)$evt->id ?>)" title="Edit Event">
+                    <i class="bx bx-edit"></i> Edit
                 </button>
                 <?php if ($evt->status === 'scheduled'): ?>
                     <form method="POST" action="<?= ROOT ?>/director/update_schedule_status?drama_id=<?= $dramaId ?>" style="display: inline;">
                         <input type="hidden" name="event_id" value="<?= (int)$evt->id ?>">
                         <input type="hidden" name="status" value="confirmed">
-                        <button type="submit" class="btn btn-success" style="font-size: 11px; padding: 6px 12px;" title="Confirm">
-                            <i class="bx bx-check"></i>
+                        <button type="submit" class="btn btn-success" style="font-size: 11px; padding: 6px 12px;" title="Confirm Event">
+                            <i class="bx bx-check"></i> Confirm
                         </button>
                     </form>
                 <?php endif; ?>
@@ -61,15 +61,15 @@ $badgeStyle = statusBadgeStyle($evt->status);
                     <form method="POST" action="<?= ROOT ?>/director/update_schedule_status?drama_id=<?= $dramaId ?>" style="display: inline;" onsubmit="return confirm('Cancel this event?');">
                         <input type="hidden" name="event_id" value="<?= (int)$evt->id ?>">
                         <input type="hidden" name="status" value="cancelled">
-                        <button type="submit" class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" title="Cancel">
-                            <i class="bx bx-times"></i>
+                        <button type="submit" class="btn btn-danger" style="font-size: 11px; padding: 6px 12px;" title="Cancel Event">
+                            <i class="bx bx-x"></i> Cancel
                         </button>
                     </form>
                 <?php endif; ?>
                 <form method="POST" action="<?= ROOT ?>/director/delete_schedule?drama_id=<?= $dramaId ?>" style="display: inline;" onsubmit="return confirm('Permanently delete this event?');">
                     <input type="hidden" name="event_id" value="<?= (int)$evt->id ?>">
-                    <button type="submit" class="btn btn-danger" style="font-size: 11px; padding: 6px 12px; background: #343a40;" title="Delete">
-                        <i class="bx bx-trash"></i>
+                    <button type="submit" class="btn btn-danger btn-delete-event" style="font-size: 11px; padding: 6px 12px;" title="Delete Event">
+                        <i class="bx bx-trash"></i> Delete
                     </button>
                 </form>
             <?php endif; ?>

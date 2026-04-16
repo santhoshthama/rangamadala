@@ -6,13 +6,45 @@
     <title>Manage Dramas - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        .search-section .search-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .search-section .filter-group {
+            flex: 1 1 220px;
+            min-width: 220px;
+        }
+
+        .search-section .filter-actions {
+            flex: 0 0 auto;
+            min-width: 170px;
+        }
+
+        .search-section .search-button {
+            width: 100%;
+            margin-top: 0;
+        }
+
+        @media (max-width: 768px) {
+            .search-section .filter-group,
+            .search-section .filter-actions {
+                min-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="logo">
-            <h2>🎭</h2>
-        </div>
+            <div class="logo">
+                <a href="dashboard.php" class="logo-link">
+                    <img src="/Rangamadala/public/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+                    <span class="logo-text"></span>
+                </a>
         <ul class="menu">
             <li>
                 <a href="dashboard.php">
@@ -40,7 +72,7 @@
             </li>
             <li>
                 <a href="role_management.php">
-                    <i class="bx bx-users"></i>
+                    <i class="bx bxs-mask"></i>
                     <span>Role Management</span>
                 </a>
             </li>
@@ -52,7 +84,7 @@
             </li>
             <li>
                 <a href="assign_managers.php">
-                    <i class="bx bx-user-tie"></i>
+                    <i class="bx bx-briefcase"></i>
                     <span>Assign Managers</span>
                 </a>
             </li>
@@ -67,10 +99,7 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
+   
 
         <!-- Header -->
         <div class="header--wrapper">
@@ -118,11 +147,14 @@
                     <label for="searchTitle">Search by Title</label>
                     <input type="text" id="searchTitle" placeholder="Enter drama title...">
                 </div>
+                <div class="filter-group filter-actions">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary search-button">
+                        <i class="bx bx-search"></i>
+                        Apply Filters
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-primary search-button">
-                <i class="bx bx-search"></i>
-                Apply Filters
-            </button>
         </div>
 
         <!-- Dramas Grid -->
@@ -136,7 +168,7 @@
                 <div class="artist-body">
                     <div class="info-row">
                         <span class="info-label">Status</span>
-                        <span class="status-badge assigned">Active</span>
+                        <span class="bx bx-check-circle">Active</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Created</span>

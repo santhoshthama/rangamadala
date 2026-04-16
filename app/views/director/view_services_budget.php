@@ -23,20 +23,8 @@ $getField = static function ($item, string $key, $default = null) {
     return $default;
 };
 
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
-}
+require_once __DIR__ . '/_profile_image_helper.php';
+$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,64 +35,17 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
+<body class="director-dashboard-page">
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h2>🎭</h2>
-        </div>
-        <ul class="menu">
-            <li>
-                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-film"></i>
-                    <span>Drama Details</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-users"></i>
-                    <span>Artist Roles</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-user-tie"></i>
-                    <span>Production Manager</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-calendar-alt"></i>
-                    <span>Schedule</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-dollar-sign"></i>
-                    <span>Services & Budget</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="bx bx-arrow-left"></i>
-                    <span>Back to Profile</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php
+    $directorSidebarDramaId = (int)$dramaId;
+    $directorSidebarActive = 'services-budget';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
+    
 
         <!-- Header -->
         <div class="header--wrapper">
@@ -113,13 +54,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <h2>Services & Budget Overview</h2>
             </div>
             <div class="user--info">
-                <div class="role-badge">
-                    <i class="bx bx-video"></i> Director
-                </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <?php
+                $directorProfileImageSrc = $profileImageSrc;
+                $directorRoleLabel = 'Director';
+                include __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
@@ -130,36 +69,56 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         </div>
 
         <!-- Budget Summary Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3><?= isset($budgetSummary['total_budget']) ? 'LKR ' . number_format((float)$budgetSummary['total_budget'], 0) : '—' ?></h3>
-                <p>Total Budget</p>
+        <div class="stats-grid director-stats-grid">
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Total Budget</div>
+                    <div class="stat-card-icon primary">
+                        <i class="bx bx-wallet"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= isset($budgetSummary['total_budget']) ? 'LKR ' . number_format((float)$budgetSummary['total_budget'], 0) : '—' ?></div>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--success), #1f9b3b);">
-                <h3><?= isset($budgetSummary['used_budget']) ? 'LKR ' . number_format((float)$budgetSummary['used_budget'], 0) : '—' ?></h3>
-                <p>Budget Used<?= isset($budgetSummary['used_percentage']) ? ' (' . (float)$budgetSummary['used_percentage'] . '%)' : '' ?></p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Budget Used<?= isset($budgetSummary['used_percentage']) ? ' (' . (float)$budgetSummary['used_percentage'] . '%)' : '' ?></div>
+                    <div class="stat-card-icon success">
+                        <i class="bx bx-trending-up"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= isset($budgetSummary['used_budget']) ? 'LKR ' . number_format((float)$budgetSummary['used_budget'], 0) : '—' ?></div>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--warning), #e0a800);">
-                <h3><?= isset($budgetSummary['remaining_budget']) ? 'LKR ' . number_format((float)$budgetSummary['remaining_budget'], 0) : '—' ?></h3>
-                <p>Remaining<?= isset($budgetSummary['remaining_percentage']) ? ' (' . (float)$budgetSummary['remaining_percentage'] . '%)' : '' ?></p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Remaining<?= isset($budgetSummary['remaining_percentage']) ? ' (' . (float)$budgetSummary['remaining_percentage'] . '%)' : '' ?></div>
+                    <div class="stat-card-icon warning">
+                        <i class="bx bx-pie-chart-alt-2"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= isset($budgetSummary['remaining_budget']) ? 'LKR ' . number_format((float)$budgetSummary['remaining_budget'], 0) : '—' ?></div>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--danger), #c82333);">
-                <h3><?= isset($budgetSummary['pending_payments']) ? 'LKR ' . number_format((float)$budgetSummary['pending_payments'], 0) : '—' ?></h3>
-                <p>Pending Payments</p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Pending Payments</div>
+                    <div class="stat-card-icon info">
+                        <i class="bx bx-time-five"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= isset($budgetSummary['pending_payments']) ? 'LKR ' . number_format((float)$budgetSummary['pending_payments'], 0) : '—' ?></div>
             </div>
         </div>
 
         <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab-button active" onclick="showTab('services')">
+        <div class="nav-tabs-bar tabs">
+            <button class="nav-tab-btn tab-button active" onclick="showServiceTab('services', this)">
                 <i class="bx bx-handshake"></i>
                 Services
             </button>
-            <button class="tab-button" onclick="showTab('budget')">
+            <button class="nav-tab-btn tab-button" onclick="showServiceTab('budget', this)">
                 <i class="bx bx-dollar-sign"></i>
                 Budget Items
             </button>
-            <button class="tab-button" onclick="showTab('theaters')">
+            <button class="nav-tab-btn tab-button" onclick="showServiceTab('theaters', this)">
                 <i class="bx bx-theater-masks"></i>
                 Theater Bookings
             </button>
@@ -341,6 +300,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         const dramaId = urlParams.get('drama_id') || 1;
         console.log('Current Drama ID:', dramaId);
     </script>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
     <script src="/Rangamadala/public/assets/JS/view-services-budget.js"></script>
 </body>
 </html>

@@ -34,19 +34,8 @@ $nicDownload = !empty($artist->nic_photo)
     ? ROOT . '/' . ltrim(str_replace('\\', '/', $artist->nic_photo), '/')
     : '';
 
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$directorImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $directorImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $directorImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $directorImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
-}
+require_once __DIR__ . '/_profile_image_helper.php';
+$directorImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,19 +85,12 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         }
     </style>
 </head>
-<body>
-    <aside class="sidebar">
-        <div class="logo"><h2>🎭</h2></div>
-        <ul class="menu">
-            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-film"></i><span>Drama Details</span></a></li>
-            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-users"></i><span>Artist Roles</span></a></li>
-            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-user-tie"></i><span>Production Manager</span></a></li>
-            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-calendar-alt"></i><span>Schedule</span></a></li>
-            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-dollar-sign"></i><span>Services & Budget</span></a></li>
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bx-arrow-left"></i><span>Back to Profile</span></a></li>
-        </ul>
-    </aside>
+<body class="director-dashboard-page">
+    <?php
+    $directorSidebarDramaId = (int)$dramaId;
+    $directorSidebarActive = 'artist-roles';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <main class="main--content">
         <a class="back-button" href="<?= ROOT ?>/director/search_artists?drama_id=<?= esc($dramaId) ?><?= $roleId ? '&role_id=' . esc($roleId) : '' ?>"><i class="bx bx-arrow-left"></i>Back to Artist Search</a>
@@ -119,11 +101,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <h2>View Profile</h2>
             </div>
             <div class="user--info">
-                <div class="role-badge"><i class="bx bx-video"></i> Director</div>
-                <img src="<?= esc($directorImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <?php
+                $directorProfileImageSrc = $directorImageSrc;
+                $directorRoleLabel = 'Director';
+                include __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
@@ -223,5 +205,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
         </div>
     </main>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
 </body>
 </html>

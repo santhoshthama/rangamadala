@@ -31,10 +31,10 @@ function showToast(message, type = 'info', duration = 4000) {
     
     // Icon based on type
     const icons = {
-        success: 'check_circle',
-        error: 'cancel',
-        warning: 'warning',
-        info: 'info'
+        success: 'bx bx-badge-check',
+        error: 'bx bxs-x-circle',
+        warning: 'bx bxs-warning',
+        info: 'bx bxs-info-circle'
     };
     
     // Titles based on type
@@ -47,7 +47,7 @@ function showToast(message, type = 'info', duration = 4000) {
     
     toast.innerHTML = `
         <div class="toast-icon">
-            <span class="material-symbols-rounded">${icons[type] || icons.info}</span>
+            <i class="${icons[type] || icons.info}"></i>
         </div>
         <div class="toast-content">
             <div class="toast-title">${titles[type] || titles.info}</div>

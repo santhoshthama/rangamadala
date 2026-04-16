@@ -41,6 +41,8 @@
         </div>
       <?php endif; ?>
 
+      <div id="serviceClientErrorBox" style="display:none; margin: 12px 24px 0; background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); border-radius: 10px; color: #b02a37; padding: 12px 14px;" aria-live="polite"></div>
+
       <div class="register-content">
         <div class="alert-info">
           <span class="alert-info-icon">i</span>
@@ -88,14 +90,14 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">Phone Number <span class="required">*</span></label>
-                  <input type="tel" name="phone" class="form-input" value="<?= htmlspecialchars($formData['phone'] ?? '') ?>" required>
+                  <input type="tel" name="phone" class="form-input" value="<?= htmlspecialchars($formData['phone'] ?? '') ?>" pattern="(?:\+94|94|0)7\d{8}" title="Enter a valid Sri Lankan mobile number (07X XXX XXXX or +94 XXX XXX XXX)" required>
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Password <span class="required">*</span></label>
-                  <input type="password" name="password" class="form-input" minlength="6" required>
+                  <input type="password" name="password" class="form-input" minlength="6" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}" title="At least 6 characters with uppercase, lowercase, number, and symbol" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Confirm Password <span class="required">*</span></label>
@@ -105,7 +107,7 @@
 
               <div class="form-group">
                 <label class="form-label">NIC Number <span class="required">*</span></label>
-                <input type="text" name="nic_number" class="form-input" placeholder="e.g., 200012345678 or 199512345V" value="<?= htmlspecialchars($formData['nic_number'] ?? '') ?>" required>
+                <input type="text" name="nic_number" class="form-input" placeholder="e.g., 200012345678 or 199512345V" value="<?= htmlspecialchars($formData['nic_number'] ?? '') ?>" pattern="(?:\d{12}|\d{9}[Vv])" title="Use 12 digits or old NIC ending with V" required>
               </div>
 
               <div class="form-row">
@@ -852,25 +854,93 @@
   <script>
     let currentPage = 1;
     const totalPages = 4;
+    const serviceForm = document.getElementById('serviceForm');
+    const serviceClientErrorBox = document.getElementById('serviceClientErrorBox');
+
+    function showValidationErrors(errors) {
+      if (!errors.length) return;
+      const limited = errors.slice(0, 8);
+      const suffix = errors.length > 8 ? '\n- ...and more' : '';
+
+      if (serviceClientErrorBox) {
+        const list = limited.map(function (msg) {
+          return '<li style="margin-bottom:6px;">' + msg + '</li>';
+        }).join('');
+        const more = errors.length > 8 ? '<li>...and more</li>' : '';
+
+        serviceClientErrorBox.innerHTML = '<strong>Please fix the following:</strong><ul style="margin:10px 0 0 20px;">' + list + more + '</ul>';
+        serviceClientErrorBox.style.display = 'block';
+        serviceClientErrorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function clearValidationErrors() {
+      if (serviceClientErrorBox) {
+        serviceClientErrorBox.innerHTML = '';
+        serviceClientErrorBox.style.display = 'none';
+      }
+    }
+
+    function getFieldLabel(field) {
+      const group = field.closest('.form-group');
+      const label = group?.querySelector('.form-label');
+      return (label?.textContent || field.name || 'Field').replace('*', '').trim();
+    }
+
+    function collectPageValidationErrors(pageElement) {
+      const errors = [];
+      const requiredFields = pageElement.querySelectorAll('[required]');
+
+      requiredFields.forEach((field) => {
+        const value = (field.value || '').trim();
+        const label = getFieldLabel(field);
+
+        if (!value) {
+          errors.push(`${label} is required.`);
+          return;
+        }
+
+        if (!field.checkValidity()) {
+          if (field.type === 'email') {
+            errors.push(`${label} must be a valid email address.`);
+          } else if (field.name === 'phone') {
+            errors.push('Enter a valid Sri Lankan contact number (e.g. 07X XXX XXXX or +94 XXX XXX XXX).');
+          } else if (field.name === 'nic_number') {
+            errors.push('Enter a valid Sri Lankan NIC (12 digits or old format ending with V).');
+          } else if (field.name === 'password') {
+            errors.push('Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.');
+          } else {
+            errors.push(`${label} format is invalid.`);
+          }
+        }
+      });
+
+      if (pageElement === document.querySelectorAll('.form-page')[0]) {
+        const password = serviceForm.querySelector('input[name="password"]')?.value || '';
+        const confirmPassword = serviceForm.querySelector('input[name="confirm_password"]')?.value || '';
+        const passwordStrong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/.test(password);
+
+        if (password && !passwordStrong) {
+          errors.push('Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.');
+        }
+
+        if (password !== confirmPassword) {
+          errors.push('Passwords do not match. Please check and try again.');
+        }
+      }
+
+      return errors;
+    }
 
     function validateCurrentPage() {
       const currentPageElement = document.querySelectorAll('.form-page')[currentPage - 1];
-      const requiredFields = currentPageElement.querySelectorAll('[required]');
-
-      if (currentPage === 1) {
-        const password = document.querySelector('input[name="password"]').value;
-        const confirmPassword = document.querySelector('input[name="confirm_password"]').value;
-        if (password !== confirmPassword) {
-          alert('Passwords do not match. Please check and try again.');
-          return false;
-        }
+      const errors = collectPageValidationErrors(currentPageElement);
+      if (errors.length) {
+        showValidationErrors(errors);
+        return false;
       }
 
-      for (const field of requiredFields) {
-        if (!field.reportValidity()) {
-          return false;
-        }
-      }
+      clearValidationErrors();
 
       return true;
     }
@@ -914,6 +984,25 @@
         currentPage--;
         showPage(currentPage);
       }
+    }
+
+    if (serviceForm) {
+      serviceForm.addEventListener('submit', function (e) {
+        const allPages = document.querySelectorAll('.form-page');
+        let allErrors = [];
+
+        allPages.forEach((page) => {
+          allErrors = allErrors.concat(collectPageValidationErrors(page));
+        });
+
+        if (allErrors.length) {
+          e.preventDefault();
+          showValidationErrors(allErrors);
+          return;
+        }
+
+        clearValidationErrors();
+      });
     }
 
     function wireServiceToggle(idx) {

@@ -16,6 +16,9 @@ class ServiceProviderRegister
             $nic_photo_front = $_FILES['nic_photo_front']['name'] ?? null;
             $nic_photo_back = $_FILES['nic_photo_back']['name'] ?? null;
 
+            $passwordPattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/';
+            $phonePattern = '/^(?:\+94|94|0)7\d{8}$/';
+
             // 🔹 Basic validation
             if (empty($full_name)) {
                 $errors[] = "Full name is required.";
@@ -25,11 +28,13 @@ class ServiceProviderRegister
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = "Invalid email format.";
             }
-            if (strlen($password) < 6) {
-                $errors[] = "Password must be at least 6 characters.";
+            if (!preg_match($passwordPattern, $password)) {
+                $errors[] = "Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.";
             }
             if (empty($phone)) {
                 $errors[] = "Phone number is required.";
+            } elseif (!preg_match($phonePattern, $phone)) {
+                $errors[] = "Enter a valid Sri Lankan mobile number (e.g. 07X XXX XXXX or +94 XXX XXX XXX).";
             }
             if (!$nic_photo_front) {
                 $errors[] = "NIC front photo is required.";
@@ -118,25 +123,33 @@ class ServiceProviderRegister
         $existingCertFront = trim($_POST['existing_nic_photo_front'] ?? '');
         $existingCertBack = trim($_POST['existing_nic_photo_back'] ?? '');
 
+        $passwordPattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/';
+        $phonePattern = '/^(?:\+94|94|0)7\d{8}$/';
+        $nicPattern = '/^(?:\d{12}|\d{9}[Vv])$/';
+
         // Basic validations
         if ($provider['full_name'] === '') $errors[] = 'Full name is required.';
         if ($provider['professional_title'] === '') $errors[] = 'Professional title is required.';
         if ($provider['email'] === '' || !filter_var($provider['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required.';
         if ($provider['phone'] === '') $errors[] = 'Phone number is required.';
+        if ($provider['phone'] !== '' && !preg_match($phonePattern, $provider['phone'])) {
+            $errors[] = 'Enter a valid Sri Lankan mobile number (e.g. 07X XXX XXXX or +94 XXX XXX XXX).';
+        }
         
         // NIC number validation
         if ($provider['nic_number'] === '') {
             $errors[] = 'NIC number is required.';
         } else {
             // Validate NIC format (Old: 9 digits + V/X, New: 12 digits)
-            $nicPattern = '/^(?:\d{9}[VvXx]|\d{12})$/';
             if (!preg_match($nicPattern, $provider['nic_number'])) {
-                $errors[] = 'Invalid NIC format. Use old format (e.g., 199512345V) or new format (e.g., 200012345678).';
+                $errors[] = 'Invalid NIC format. Use 12 digits or old format ending with V (e.g., 951234567V).';
             }
         }
 
         // Password validations
-        if (empty($password) || strlen($password) < 6) $errors[] = 'Password must be at least 6 characters.';
+        if (!preg_match($passwordPattern, $password)) {
+            $errors[] = 'Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.';
+        }
         if ($password !== $confirm_password) $errors[] = 'Passwords do not match.';
 
         // Handle NIC photo front upload

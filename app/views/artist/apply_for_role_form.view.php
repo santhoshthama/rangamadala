@@ -12,8 +12,6 @@ if ($profileUser && !empty($profileUser->profile_image)) {
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
-} elseif ($profileUser && !empty($profileUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $profileUser->nic_photo), '/');
 }
 ?>
 <!DOCTYPE html>
@@ -26,14 +24,16 @@ if ($profileUser && !empty($profileUser->profile_image)) {
     <link rel="apple-touch-icon" href="<?=ROOT?>/assets/images/Rangamadala logo.png">
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/artist-apply  for-role.css">
+    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/toast.css">
+
 </head>
 
 <body>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2><i class='bx bxs-theater'></i></h2>
-        </div>
+            <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" />
+          </div>
         <ul class="menu">
             <li>
                 <a href="<?=ROOT?>/artistdashboard">
@@ -85,7 +85,7 @@ if ($profileUser && !empty($profileUser->profile_image)) {
                 <div class="role-badge">
                     <i class="bx bx-star"></i> Artist
                 </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'">
                 <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
                     <i class="bx bx-sign-out-alt"></i>
                 </a>

@@ -11,8 +11,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
-} elseif (isset($user->nic_photo) && !empty($user->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
 }
 ?>
 <!DOCTYPE html>
@@ -21,6 +19,8 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Role Vacancies - Rangamadala</title>
+        <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
+    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/toast.css">
     <link rel="icon" type="image/png" href="<?=ROOT?>/assets/images/Rangamadala%20logo.png">
     <link rel="apple-touch-icon" href="<?=ROOT?>/assets/images/Rangamadala%20logo.png">
 
@@ -61,12 +61,13 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
         }
 
         .vacancy-banner {
-            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-            color: white;
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            color: #4a3a14;
+            border: 1px solid #f0dfb4;
             padding: 30px;
             border-radius: 12px;
             margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(186, 142, 35, 0.2);
+            box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
         }
 
         .banner-content h3 {
@@ -75,11 +76,164 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
             display: flex;
             align-items: center;
             gap: 12px;
+            color: #4a3a14;
         }
 
         .banner-content p {
-            opacity: 0.95;
+            opacity: 1;
             font-size: 16px;
+            color: #6a5120;
+        }
+
+                .header--wrapper .user--info {
+                    gap: 16px;
+                }
+
+                .header--wrapper .role-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 6px 14px;
+                    border-radius: 999px;
+                    background: linear-gradient(135deg, #be9227, #a67d1e);
+                    color: #fff;
+                    border: 1px solid rgba(145, 108, 24, 0.35);
+                    box-shadow: 0 4px 10px rgba(166, 125, 30, 0.2);
+                    font-size: 12px;
+                    font-weight: 700;
+                    letter-spacing: 0.4px;
+                    text-transform: uppercase;
+                    line-height: 1;
+                }
+
+                .header--wrapper .user-menu-trigger {
+                    width: 52px;
+                    height: 52px;
+                    border-radius: 50%;
+                    border: 3px solid #b88b22;
+                    box-shadow: 0 0 0 2px rgba(224, 191, 105, 0.45);
+                    overflow: hidden;
+                    cursor: pointer;
+                    transition: var(--transition);
+                }
+
+                .header--wrapper .user-menu-trigger:hover {
+                    transform: scale(1.04);
+                }
+
+                .header--wrapper .user-avatar-small {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 50%;
+                    background: transparent;
+                }
+
+                .header--wrapper .user-avatar-small img {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    display: block;
+                    border: 0;
+                }
+
+                .header--wrapper .user-menu {
+                    position: relative;
+                }
+
+                .header--wrapper .user-menu-dropdown {
+                    position: absolute;
+                    top: calc(100% + 8px);
+                    right: 0;
+                    z-index: 1000;
+                    background: #ffffff;
+                    border: 1px solid #f0d79d;
+                    border-radius: 14px;
+                    box-shadow: 0 16px 30px rgba(74, 58, 20, 0.18);
+                    min-width: 210px;
+                    padding: 8px;
+                    opacity: 0;
+                    visibility: hidden;
+                    transform: translateY(-10px);
+                    transition: all 0.2s ease;
+                }
+
+                .header--wrapper .user-menu.active .user-menu-dropdown {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateY(0);
+                }
+
+                .header--wrapper .user-menu-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 10px 12px;
+                    color: #2f2f2f;
+                    text-decoration: none;
+                    font-size: 15px;
+                    border-radius: 10px;
+                    transition: var(--transition);
+                    cursor: pointer;
+                }
+
+                .header--wrapper .user-menu-item:hover {
+                    background: rgba(186, 142, 35, 0.1);
+                    color: #5a4415;
+                }
+
+                .header--wrapper .user-menu-item .icon {
+                    font-size: 20px;
+                }
+
+        .card-section .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-section .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .card-section .form-row .form-group {
+            flex: 1 1 220px;
+            min-width: 220px;
+        }
+
+        .card-section .filter-actions {
+            flex: 0 0 auto;
+            min-width: 180px;
+        }
+
+        .card-section .btn-filter {
+            width: 100%;
+            min-height: 52px;
+            border-radius: 10px;
+            box-shadow: 0 6px 16px rgba(186, 142, 35, 0.18);
+        }
+
+        .card-section .btn-filter:hover {
+            transform: translateY(-2px);
+        }
+
+        .filter-topic {
+            margin: 0 0 14px;
+        }
+
+        .filter-topic span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-topic-note {
+            margin: 4px 0 0;
+            font-size: 13px;
+            color: var(--muted);
         }
 
         .vacancies-grid {
@@ -221,6 +375,11 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
 
             .vacancy-meta {
                 grid-template-columns: 1fr;
+            }
+
+            .card-section .form-row .form-group,
+            .card-section .filter-actions {
+                min-width: 100%;
             }
         }
 
@@ -575,6 +734,16 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
             box-shadow: 0 8px 20px rgba(186, 142, 35, 0.12);
         }
 
+        /* Main card to sub-card border gap */
+        .vacancies-content {
+            padding: 18px;
+        }
+
+        /* Inner gap: keep content away from card borders */
+        .vacancies-content > .card-section {
+            padding: 22px;
+        }
+
         .form-group label {
             color: #6f5a2e;
             font-weight: 600;
@@ -628,14 +797,21 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
         .btn-apply:hover {
             background: linear-gradient(135deg, #c79a29, #a67d1e);
         }
+
+        /* Add breathing room between bordered sections (filters/results/empty state) */
+        .vacancies-content > .card-section + .card-section {
+            margin-top: 18px;
+        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="logo">
-            <h2><i class='bx bxs-theater'></i></h2>
-        </div>
+                <div class="logo">
+                        <a href="<?=ROOT?>/artistdashboard" class="logo-link">
+                                <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+                        </a>
+                </div>
         <ul class="menu">
             <li>
                 <a href="<?=ROOT?>/artistdashboard">
@@ -689,18 +865,31 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                 <span>Opportunities</span>
                 <h2>Browse Role Vacancies</h2>
             </div>
-            <div class="user--info">
+                 <div class="user--info">
                 <div class="role-badge">
                     <i class="bx bx-star"></i> Artist
                 </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <div class="user-menu" id="userMenu">
+                    <div class="user-menu-trigger" id="user-menu-trigger">
+                        <div class="user-avatar-small">
+                            <img src="<?= esc($profileImageSrc) ?>" alt="Profile" onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'">
+                        </div>
+                    </div>
+                    <div class="user-menu-dropdown">
+                        <a href="<?= ROOT ?>/profile" class="user-menu-item">
+                            <i class='bx bxs-user icon'></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="<?= ROOT ?>/logout" class="user-menu-item">
+                            <i class='bx bx-log-out icon'></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="content">
+        <div class="content vacancies-content">
             <!-- Banner -->
             <div class="vacancy-banner">
                 <div class="banner-content">
@@ -711,8 +900,8 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
 
             <!-- Filters Section -->
             <div class="card-section">
-                <h3><span><i class="bx bx-filter"></i> Filters</span></h3>
-                <form method="GET" action="<?=ROOT?>/artistdashboard/browse_vacancies" class="form-container">
+                <h3 class="filter-topic"><span><i class="bx bx-search-alt-2"></i> Find Your Next Role</span></h3>
+                <form method="GET" action="<?=ROOT?>/artistdashboard/browse_vacancies" class="form-container" id="vacancyFilterForm">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="search">Search</label>
@@ -739,12 +928,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                 <option value="salary_low" <?= ($filters['sort'] ?? '') === 'salary_low' ? 'selected' : '' ?>>Lowest Salary</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div style="margin-top: 15px;">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bx bx-filter"></i> Apply Filters
-                        </button>
                     </div>
                 </form>
             </div>
@@ -822,5 +1005,57 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
             <?php endif; ?>
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const userMenu = document.getElementById('userMenu');
+            const userMenuTrigger = document.getElementById('user-menu-trigger');
+
+            if (userMenu && userMenuTrigger) {
+                userMenuTrigger.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('active');
+                });
+
+                document.addEventListener('click', function (e) {
+                    if (!userMenu.contains(e.target)) {
+                        userMenu.classList.remove('active');
+                    }
+                });
+            }
+
+            const filterForm = document.getElementById('vacancyFilterForm');
+            if (!filterForm) return;
+
+            const searchInput = filterForm.querySelector('#search');
+            const roleTypeSelect = filterForm.querySelector('#role_type');
+            const sortSelect = filterForm.querySelector('#sort');
+            let debounceTimer;
+
+            const submitFilters = function () {
+                if (typeof filterForm.requestSubmit === 'function') {
+                    filterForm.requestSubmit();
+                    return;
+                }
+
+                filterForm.submit();
+            };
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(submitFilters, 400);
+                });
+            }
+
+            if (roleTypeSelect) {
+                roleTypeSelect.addEventListener('change', submitFilters);
+            }
+
+            if (sortSelect) {
+                sortSelect.addEventListener('change', submitFilters);
+            }
+        });
+    </script>
 </body>
 </html>

@@ -115,9 +115,11 @@
         </div>
       <?php endif; ?>
 
+      <div id="clientErrorBox" class="error-box" style="display:none;" aria-live="polite"></div>
+
       <?php $old = $old ?? []; ?>
 
-      <form method="POST" enctype="multipart/form-data" action="<?= ROOT ?>/ArtistRegister">
+      <form id="artistSignupForm" method="POST" enctype="multipart/form-data" action="<?= ROOT ?>/ArtistRegister">
         <div class="step-indicator">Step <strong id="currentStep">1</strong> of 2</div>
 
         <div class="form-step active" id="step1">
@@ -133,17 +135,17 @@
 
           <div class="input-box">
             <i class="bx bx-lock"></i>
-            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="password" placeholder="Password" minlength="6" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}" title="At least 6 characters with uppercase, lowercase, number, and symbol" required>
           </div>
 
           <div class="input-box">
             <i class="bx bx-check-circle"></i>
-            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+            <input type="password" name="confirm_password" placeholder="Confirm Password" minlength="6" required>
           </div>
 
           <div class="input-box">
             <i class="bx bx-phone"></i>
-            <input type="text" name="phone" placeholder="Phone Number" value="<?= htmlspecialchars($old['phone'] ?? '') ?>" required>
+            <input type="text" name="phone" placeholder="Phone Number (07X XXX XXXX / +94 XXX XXX XXX)" value="<?= htmlspecialchars($old['phone'] ?? '') ?>" pattern="(?:\+94|94|0)7\d{8}" title="Enter a valid Sri Lankan mobile number (07X XXX XXXX or +94 XXX XXX XXX)" required>
           </div>
 
           <div class="step-actions">
@@ -154,7 +156,7 @@
         <div class="form-step" id="step2">
           <div class="input-box">
             <i class="bx bx-id-card"></i>
-            <input type="text" name="nic_number" placeholder="NIC Number (e.g. 200012345678 or 951234567V)" value="<?= htmlspecialchars($old['nic_number'] ?? '') ?>" required>
+            <input type="text" name="nic_number" placeholder="NIC Number (e.g. 200012345678 or 951234567V)" value="<?= htmlspecialchars($old['nic_number'] ?? '') ?>" pattern="(?:\d{12}|\d{9}[Vv])" title="Use 12 digits or old NIC ending with V" required>
           </div>
 
           <div class="file-upload-group">
@@ -189,6 +191,8 @@
     const nextBtn = document.getElementById('nextBtn');
     const backBtn = document.getElementById('backBtn');
     const currentStep = document.getElementById('currentStep');
+    const artistSignupForm = document.getElementById('artistSignupForm');
+    const clientErrorBox = document.getElementById('clientErrorBox');
 
     function showStep(stepNumber) {
       const showFirst = stepNumber === 1;
@@ -197,20 +201,101 @@
       currentStep.textContent = String(stepNumber);
     }
 
+    function showValidationErrors(errors) {
+      if (!errors.length) return;
+
+      if (clientErrorBox) {
+        clientErrorBox.innerHTML = errors.map(function (msg) {
+          return '<p>' + msg + '</p>';
+        }).join('');
+        clientErrorBox.style.display = 'block';
+        clientErrorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function clearValidationErrors() {
+      if (clientErrorBox) {
+        clientErrorBox.innerHTML = '';
+        clientErrorBox.style.display = 'none';
+      }
+    }
+
     function validateStepOne() {
-      const requiredFields = step1.querySelectorAll('input[required]');
-      for (const field of requiredFields) {
-        if (!field.value.trim()) {
-          field.focus();
-          return false;
-        }
+      const errors = [];
+      const fullNameInput = step1.querySelector('input[name="full_name"]');
+      const emailInput = step1.querySelector('input[name="email"]');
+      const passwordInput = step1.querySelector('input[name="password"]');
+      const confirmInput = step1.querySelector('input[name="confirm_password"]');
+      const phoneInput = step1.querySelector('input[name="phone"]');
+
+      const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/;
+      const phonePattern = /^(?:\+94|94|0)7\d{8}$/;
+
+      if (!fullNameInput?.value.trim()) {
+        errors.push('Full Name is required.');
       }
 
-      const emailInput = step1.querySelector('input[name="email"]');
-      if (emailInput && !emailInput.checkValidity()) {
-        emailInput.focus();
+      if (!emailInput?.value.trim()) {
+        errors.push('Email is required.');
+      } else if (!emailInput.checkValidity()) {
+        errors.push('Email format is invalid.');
+      }
+
+      if (!passwordInput?.value) {
+        errors.push('Password is required.');
+      } else if (!passwordPattern.test(passwordInput.value)) {
+        errors.push('Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.');
+      }
+
+      if (!confirmInput?.value) {
+        errors.push('Confirm Password is required.');
+      } else if (passwordInput?.value !== confirmInput.value) {
+        errors.push('Password confirmation does not match.');
+      }
+
+      if (!phoneInput?.value.trim()) {
+        errors.push('Phone Number is required.');
+      } else if (!phonePattern.test(phoneInput.value.trim())) {
+        errors.push('Enter a valid Sri Lankan contact number (e.g. 07X XXX XXXX or +94 XXX XXX XXX).');
+      }
+
+      if (errors.length) {
+        showValidationErrors(errors);
         return false;
       }
+
+      clearValidationErrors();
+
+      return true;
+    }
+
+    function validateStepTwo() {
+      const errors = [];
+      const nicInput = step2.querySelector('input[name="nic_number"]');
+      const frontInput = step2.querySelector('input[name="nic_photo_front"]');
+      const backInput = step2.querySelector('input[name="nic_photo_back"]');
+      const nicPattern = /^(?:\d{12}|\d{9}[Vv])$/;
+
+      if (!nicInput?.value.trim()) {
+        errors.push('NIC Number is required.');
+      } else if (!nicPattern.test(nicInput.value.trim())) {
+        errors.push('Enter a valid Sri Lankan NIC (12 digits or old format ending with V).');
+      }
+
+      if (!frontInput?.files?.length) {
+        errors.push('NIC Front Photo is required.');
+      }
+
+      if (!backInput?.files?.length) {
+        errors.push('NIC Back Photo is required.');
+      }
+
+      if (errors.length) {
+        showValidationErrors(errors);
+        return false;
+      }
+
+      clearValidationErrors();
 
       return true;
     }
@@ -226,6 +311,14 @@
     if (backBtn) {
       backBtn.addEventListener('click', function () {
         showStep(1);
+      });
+    }
+
+    if (artistSignupForm) {
+      artistSignupForm.addEventListener('submit', function (e) {
+        if (!validateStepOne() || !validateStepTwo()) {
+          e.preventDefault();
+        }
       });
     }
   </script>

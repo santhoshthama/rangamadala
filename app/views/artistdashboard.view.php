@@ -12,8 +12,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($storedValue);
     }
-} elseif (isset($user->nic_photo) && !empty($user->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
 }
 
 $requestPath = strtolower((string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? ''));
@@ -47,6 +45,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/toast.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 <style>
         .header--wrapper .user--info {
             gap: 16px;
@@ -248,6 +247,140 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
             transform: none;
         }
 
+        .vacancies-banner .btn.btn-primary.btn-compact {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            color: #4a3a14;
+            border: 1px solid #f0dfb4;
+            box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
+        }
+
+        .vacancies-banner {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            color: #4a3a14;
+            border: 1px solid #f0dfb4;
+            padding: 30px;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
+        }
+
+        .vacancies-banner h2 {
+            color: #4a3a14;
+        }
+
+        .vacancies-banner p {
+            color: #6a5120;
+        }
+
+        .vacancies-banner .btn.btn-primary.btn-compact:hover {
+            background: linear-gradient(180deg, #fffaf0 0%, #fff2da 100%);
+            color: #3f2f12;
+        }
+
+        /* Drama cards: light design style for Director/Manager/Actor tabs */
+        #director-tab .artist-card,
+        #manager-tab .artist-card,
+        #actor-tab .artist-card {
+            border: 1px solid #e8cf97;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #fffefb 0%, #fff8ea 100%);
+            box-shadow: 0 6px 16px rgba(186, 142, 35, 0.12);
+        }
+
+        #director-tab .artist-card:hover,
+        #manager-tab .artist-card:hover,
+        #actor-tab .artist-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(186, 142, 35, 0.2);
+        }
+
+        #director-tab .artist-header,
+        #manager-tab .artist-header,
+        #actor-tab .artist-header {
+            background: linear-gradient(180deg, #f7e8c1 0%, #ead094 100%) !important;
+            color: #3f2f12 !important;
+            border-bottom: 1px solid #ddbc73;
+            text-align: left;
+            padding: 20px;
+        }
+
+        #director-tab .artist-header .artist-name,
+        #manager-tab .artist-header .artist-name,
+        #actor-tab .artist-header .artist-name {
+            color: #2f2410 !important;
+            margin-bottom: 8px;
+            font-size: 22px;
+            line-height: 1.15;
+        }
+
+        #director-tab .artist-header .artist-experience,
+        #manager-tab .artist-header .artist-experience,
+        #actor-tab .artist-header .artist-experience {
+            color: #6a5120;
+            opacity: 1;
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 17px;
+        }
+
+        #director-tab .artist-body,
+        #manager-tab .artist-body,
+        #actor-tab .artist-body {
+            background: transparent;
+            padding: 18px 20px;
+        }
+
+        #director-tab .info-row,
+        #manager-tab .info-row,
+        #actor-tab .info-row {
+            margin-bottom: 0;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ead8a9;
+        }
+
+        #director-tab .artist-footer,
+        #manager-tab .artist-footer,
+        #actor-tab .artist-footer {
+            background: #fffdf7;
+            border-top: 1px solid #ecd9ad;
+            padding: 14px 20px 18px;
+        }
+
+        #director-tab .artist-footer .btn,
+        #manager-tab .artist-footer .btn,
+        #actor-tab .artist-footer .btn {
+            min-height: 44px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        #director-tab .artist-footer .btn-primary,
+        #manager-tab .artist-footer .btn-primary,
+        #actor-tab .artist-footer .btn-primary,
+        #director-tab .btn-director-publish {
+            background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%);
+            color: #2f2410;
+            border: 1px solid #c9a14a;
+            box-shadow: 0 6px 14px rgba(186, 142, 35, 0.2);
+        }
+
+        #director-tab .artist-footer .btn-primary:hover,
+        #manager-tab .artist-footer .btn-primary:hover,
+        #actor-tab .artist-footer .btn-primary:hover,
+        #director-tab .btn-director-publish:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(186, 142, 35, 0.3);
+        }
+
+        #director-tab .director-cert-link {
+            color: #9a7318;
+            font-weight: 700;
+        }
+
+        #director-tab .director-cert-link:hover {
+            color: #7f5f13;
+        }
+
         .no-results h3 {
             font-weight: 500;
             color: var(--muted);
@@ -262,35 +395,49 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
         #my-showings-tab .classes-subtabs {
             display: flex;
             gap: 0;
-            margin: 10px 0 18px;
-            flex-wrap: wrap;
-            background: linear-gradient(180deg, #f6f5f2 0%, #efede8 100%);
-            border: 1px solid #ddd9cf;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.05);
+            margin-bottom: 26px;
+            border-bottom: 2px solid var(--border);
+            background: var(--card);
+            border-radius: var(--radius) var(--radius) 0 0;
+            box-shadow: var(--shadow-sm);
+            overflow-x: auto;
+            scroll-behavior: smooth;
         }
 
         #my-showings-tab .classes-subtab-btn {
+            padding: 14px 20px;
             border: none;
             background: transparent;
-            color: #6c7484;
-            padding: 14px 18px;
-            min-height: 56px;
+            color: var(--muted);
+            min-height: 0;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: var(--transition);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             line-height: 1;
             border-bottom: 3px solid transparent;
-            border-right: 1px solid #e2dfd7;
+            white-space: nowrap;
+            position: relative;
         }
 
-        #my-showings-tab .classes-subtab-btn:last-child {
-            border-right: none;
+        #my-showings-tab .classes-subtabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        #my-showings-tab .classes-subtabs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #my-showings-tab .classes-subtabs::-webkit-scrollbar-thumb {
+            background: rgba(186, 142, 35, 0.3);
+            border-radius: 4px;
+        }
+
+        #my-showings-tab .classes-subtabs::-webkit-scrollbar-thumb:hover {
+            background: rgba(186, 142, 35, 0.6);
         }
 
         #my-showings-tab .classes-subtab-btn i {
@@ -299,15 +446,14 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
         }
 
         #my-showings-tab .classes-subtab-btn:hover {
-            background: rgba(186, 142, 35, 0.1);
-            color: #8c6c20;
+            color: var(--ink);
+            background: rgba(186, 142, 35, 0.05);
         }
 
         #my-showings-tab .classes-subtab-btn.active {
-            background: linear-gradient(180deg, #f5efe1 0%, #efe6d2 100%);
-            color: #b48218;
-            border-bottom-color: #b48218;
-            box-shadow: inset 0 -1px 0 rgba(180, 130, 24, 0.12);
+            color: var(--brand);
+            border-bottom-color: var(--brand);
+            background: rgba(186, 142, 35, 0.08);
         }
 
         #my-showings-tab .classes-subtab-panel {
@@ -375,6 +521,118 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
             color: #92400e;
             font-size: 13px;
         }
+
+        #my-showings-tab .role-info-card.pending-showing-card,
+        #my-showings-tab .role-info-card.accepted-showing-card,
+        #my-showings-tab .role-info-card.rejected-showing-card {
+            background: linear-gradient(180deg, #f3f1e9 0%, #ece8dc 100%);
+            border: 1px solid #ded4bc;
+            border-left: 4px solid #be9227;
+            border-radius: 14px;
+            padding: 18px 18px 16px;
+            box-shadow: 0 6px 14px rgba(80, 67, 36, 0.08);
+        }
+
+        #my-showings-tab .showing-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        #my-showings-tab .showing-card-title {
+            margin: 0 0 6px;
+            color: #b58514;
+            font-size: 30px;
+            line-height: 1.2;
+        }
+
+        #my-showings-tab .showing-card-audience {
+            margin: 0;
+            color: #5f6b7c;
+            font-size: 14px;
+        }
+
+        #my-showings-tab .accepted-showing-card .status-badge.success {
+            background: transparent;
+            color: #0f172a;
+            border: none;
+            padding: 0;
+            font-size: 12px;
+            letter-spacing: 0.8px;
+        }
+
+        #my-showings-tab .pending-showing-card .status-badge.requested,
+        #my-showings-tab .rejected-showing-card .status-badge.danger {
+            font-size: 12px;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-item,
+        #my-showings-tab .accepted-showing-card .role-info-item,
+        #my-showings-tab .rejected-showing-card .role-info-item {
+            display: grid;
+            grid-template-columns: minmax(250px, 42%) minmax(0, 1fr);
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid #d9cfb5;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-item:last-of-type,
+        #my-showings-tab .accepted-showing-card .role-info-item:last-of-type,
+        #my-showings-tab .rejected-showing-card .role-info-item:last-of-type {
+            border-bottom: none;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-label,
+        #my-showings-tab .accepted-showing-card .role-info-label,
+        #my-showings-tab .rejected-showing-card .role-info-label {
+            color: #0f2744;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-value,
+        #my-showings-tab .accepted-showing-card .role-info-value,
+        #my-showings-tab .rejected-showing-card .role-info-value {
+            color: #b58514;
+            text-align: right;
+            font-weight: 700;
+            font-size: 15px;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-label i,
+        #my-showings-tab .accepted-showing-card .role-info-label i,
+        #my-showings-tab .rejected-showing-card .role-info-label i {
+            color: #0f2744;
+            margin-right: 6px;
+        }
+
+        #my-showings-tab .pending-showing-card .btn-success {
+            background: linear-gradient(135deg, #be9227, #a67d1e);
+            border: 1px solid rgba(145, 108, 24, 0.35);
+            box-shadow: 0 4px 10px rgba(166, 125, 30, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            #my-showings-tab .pending-showing-card .role-info-item,
+            #my-showings-tab .accepted-showing-card .role-info-item,
+            #my-showings-tab .rejected-showing-card .role-info-item {
+                grid-template-columns: 1fr;
+                align-items: start;
+                gap: 4px;
+            }
+
+            #my-showings-tab .pending-showing-card .role-info-value,
+            #my-showings-tab .accepted-showing-card .role-info-value,
+            #my-showings-tab .rejected-showing-card .role-info-value {
+                text-align: left;
+            }
+        }
     </style>
 </head>
 <body>
@@ -400,7 +658,9 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2><i class='bx bxs-theater'></i></h2>
+            <a href="<?=ROOT?>/artistdashboard" class="logo-link">
+                <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+            </a>
         </div>
         <ul class="menu">
             <li class="<?= $sidebarActive['dashboard'] ? 'active' : '' ?>">
@@ -516,17 +776,17 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
         </div>
 
         <!-- Drama Role Vacancies Banner -->
-        <div class="card-section vacancies-banner" style="background: linear-gradient(135deg, #ba8e23, #a0781e); color: white; padding: 30px; border-radius: var(--radius); margin-bottom: 30px; box-shadow: var(--shadow-md);">
+        <div class="card-section vacancies-banner">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                 <div style="flex: 1;">
-                    <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700; color: white;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700;">
                         Drama Role Vacancies Now Open!
                     </h2>
-                    <p style="margin: 0; opacity: 0.95; font-size: 16px; line-height: 1.5; color: white;">
+                    <p style="margin: 0; opacity: 0.95; font-size: 16px; line-height: 1.5;">
                         Discover available roles and apply to be part of our upcoming drama productions.
                     </p>
                 </div>
-                <a href="<?=ROOT?>/artistdashboard/browse_vacancies" class="btn btn-primary btn-compact" style="background: white; color: var(--brand); font-weight: 600;">
+                <a href="<?=ROOT?>/artistdashboard/browse_vacancies" class="btn btn-primary btn-compact" style="font-weight: 600;">
                     <i class="bx bx-search"></i> Search Vacancies
                 </a>
             </div>
@@ -581,7 +841,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                         <div class="artists-grid">
                             <?php foreach ($dramas_as_director as $drama): ?>
                                 <div class="artist-card">
-                                    <div class="artist-header" style="background: linear-gradient(135deg, #ba8e23, #8f6d1b);">
+                                    <div class="artist-header">
                                         <h3 class="artist-name"><?= esc($drama->drama_name ?? 'Registered Drama') ?></h3>
                                         <p class="artist-experience">Certificate <?= esc($drama->certificate_number ?? 'N/A') ?></p>
                                     </div>
@@ -608,7 +868,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                             <span class="info-label">Certificate Image:</span>
                                             <span class="info-value">
                                                 <?php if (!empty($drama->certificate_image)): ?>
-                                                    <a href="<?= ROOT ?>/uploads/certificates/<?= esc(rawurlencode($drama->certificate_image)) ?>" target="_blank" style="color: var(--brand); font-weight: 600;">
+                                                    <a href="<?= ROOT ?>/uploads/certificates/<?= esc(rawurlencode($drama->certificate_image)) ?>" target="_blank" class="director-cert-link">
                                                         View
                                                     </a>
                                                 <?php else: ?>
@@ -621,7 +881,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                         <button class="btn btn-primary" style="flex: 1;" onclick="handleDirectorManage(<?=$drama->id?>)">
                                             <i class="bx bx-tachometer-alt"></i> Manage
                                         </button>
-                                        <a class="btn" style="flex: 1; text-align: center; background: linear-gradient(135deg, #8f6d1b, #6f5415); color: #fff;" href="<?= ROOT ?>/director/drama_details?drama_id=<?= (int)$drama->id ?>#publish-section">
+                                        <a class="btn btn-director-publish" style="flex: 1; text-align: center;" href="<?= ROOT ?>/director/drama_details?drama_id=<?= (int)$drama->id ?>#publish-section">
                                             <i class="bx bx-bullhorn"></i> <?= !empty($drama->is_published) ? 'Update Publish' : 'Publish' ?>
                                         </a>
                                     </div>
@@ -889,10 +1149,10 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                     $requestNotes = trim((string)($requestDetails['request_notes'] ?? ''));
                                 ?>
                                 <div class="role-info-card pending-showing-card" data-show-date="<?= esc($pendingShowDateForMatch) ?>" data-show-start="<?= esc($pendingShowTimeForMatch) ?>" data-show-end="<?= esc($pendingShowTimeEndForMatch) ?>">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 14px; gap: 12px;">
+                                    <div class="showing-card-header">
                                         <div>
-                                            <h3 style="color: var(--brand); margin-bottom: 8px;"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
-                                            <p style="color: var(--muted); font-size: 13px; margin: 0;"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
+                                            <h3 class="showing-card-title"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
+                                            <p class="showing-card-audience"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
                                         </div>
                                         <span class="status-badge requested"><i class="bx bx-time"></i> Pending</span>
                                     </div>
@@ -984,10 +1244,10 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                     $acceptedShowTimeEndForMatch = trim((string)($requestDetails['show_time_end'] ?? ''));
                                 ?>
                                 <div class="role-info-card accepted-showing-card" data-show-date="<?= esc($acceptedShowDateForMatch) ?>" data-show-start="<?= esc($acceptedShowTimeForMatch) ?>" data-show-end="<?= esc($acceptedShowTimeEndForMatch) ?>">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                                    <div class="showing-card-header">
                                         <div>
-                                            <h3 style="color: var(--brand); margin-bottom: 8px;"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
-                                            <p style="color: var(--muted); font-size: 13px; margin: 0;"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
+                                            <h3 class="showing-card-title"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
+                                            <p class="showing-card-audience"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
                                         </div>
                                         <span class="status-badge success"><i class="bx bx-check-circle"></i> Accepted</span>
                                     </div>
@@ -1024,11 +1284,11 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                     $requestContactEmail = trim((string)($requestDetails['request_contact_email'] ?? ($show_request->audience_email ?? 'Not provided')));
                                     $rejectionReason = trim((string)($show_request->rejection_reason ?? ''));
                                 ?>
-                                <div class="role-info-card" style="border-left: 4px solid #ef4444;">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                                <div class="role-info-card rejected-showing-card">
+                                    <div class="showing-card-header">
                                         <div>
-                                            <h3 style="color: var(--brand); margin-bottom: 8px;"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
-                                            <p style="color: var(--muted); font-size: 13px; margin: 0;"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
+                                            <h3 class="showing-card-title"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
+                                            <p class="showing-card-audience"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
                                         </div>
                                         <span class="status-badge danger"><i class="bx bx-x-circle"></i> Rejected</span>
                                     </div>
