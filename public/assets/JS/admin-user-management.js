@@ -94,6 +94,9 @@ function renderUsers(users) {
     const roleDisplay = user.role.replace('_', ' ');
     const roleClass = user.role.replace('_', '-');
     
+    // Determine NIC display (only for non-audience members)
+    const nicDisplay = user.role !== 'audience' ? (escapeHtml(user.nic) || 'N/A') : 'N/A';
+    
     tr.innerHTML = `
       <td>
         <div class="user-cell">
@@ -108,6 +111,7 @@ function renderUsers(users) {
         <span class="role-badge ${roleClass}">${roleDisplay}</span>
       </td>
       <td>${escapeHtml(user.phone) || 'N/A'}</td>
+      <td>${nicDisplay}</td>
       <td>${statusBadge}</td>
       <td>${formattedDate}</td>
       <td>

@@ -52,7 +52,6 @@ $dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/p
         <div class="logo">
           <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" />
         </div>
-        <span>Audience</span>
       </div>
 
       <nav class="dashboard-nav">

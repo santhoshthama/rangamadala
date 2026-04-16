@@ -12,35 +12,165 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($storedValue);
     }
-} elseif (isset($user->nic_photo) && !empty($user->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
 }
 
-$tab = $_GET['tab'] ?? 'dashboard';
+$requestPath = strtolower((string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? ''));
+$requestedTab = strtolower(trim((string)($_GET['tab'] ?? '')));
 $sidebarActive = [
-    'dashboard' => $tab !== 'my-showings',
-    'vacancies' => false,
+    'dashboard' => false,
     'notifications' => false,
+    'vacancies' => false,
     'classes' => false,
-    'showings' => $tab === 'my-showings',
+    'showings' => false,
 ];
+
+if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
+    $sidebarActive['notifications'] = true;
+} elseif (strpos($requestPath, '/artistdashboard/browse_vacancies') !== false) {
+    $sidebarActive['vacancies'] = true;
+} elseif (strpos($requestPath, '/artistdashboard/classes') !== false) {
+    $sidebarActive['classes'] = true;
+} elseif ($requestedTab === 'my-showings') {
+    $sidebarActive['showings'] = true;
+} else {
+    $sidebarActive['dashboard'] = true;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= APP_NAME ?> - Artist Dashboard</title>
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/ui-theme.css">
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css">
+    <title>Artist Dashboard - Rangamadala</title>
+    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
+    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/toast.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>
+  <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+<style>
+        .header--wrapper .user--info {
+            gap: 16px;
+        }
+
+        .header--wrapper .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #be9227, #a67d1e);
+            color: #fff;
+            border: 1px solid rgba(145, 108, 24, 0.35);
+            box-shadow: 0 4px 10px rgba(166, 125, 30, 0.2);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .header--wrapper .role-badge i {
+            font-size: 12px;
+        }
+
+        .header--wrapper .user-menu-trigger {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 3px solid #b88b22;
+            box-shadow: 0 0 0 2px rgba(224, 191, 105, 0.45);
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .header--wrapper .user-menu-trigger:hover {
+            transform: scale(1.04);
+        }
+
+        .header--wrapper .user-avatar-small {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: transparent;
+        }
+
+        .header--wrapper .user-avatar-small img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+            border: 0;
+        }
+
+        .header--wrapper .user-menu {
+            position: relative;
+        }
+
+        .header--wrapper .user-menu-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            z-index: 1000;
+            background: #ffffff;
+            border: 1px solid #f0d79d;
+            border-radius: 14px;
+            box-shadow: 0 16px 30px rgba(74, 58, 20, 0.18);
+            min-width: 210px;
+            padding: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .header--wrapper .user-menu.active .user-menu-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .header--wrapper .user-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            color: #2f2f2f;
+            text-decoration: none;
+            font-size: 15px;
+            border-radius: 10px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .header--wrapper .user-menu-item:hover {
+            background: rgba(186, 142, 35, 0.1);
+            color: #5a4415;
+        }
+
+        .header--wrapper .user-menu-item .icon {
+            font-size: 20px;
+        }
+
+        .artist-stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
         .artist-stat-card {
-            background: linear-gradient(180deg, #fffdf9 0%, #f8f3e8 100%);
-            border: 1px solid #ead7a4;
-            border-radius: 16px;
-            padding: 18px;
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            border: 1px solid #f0dfb4;
+            border-radius: var(--radius);
+            padding: 22px;
+            text-align: left;
+            color: #4a3a14;
+            box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .artist-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(186, 142, 35, 0.2);
         }
 
         .artist-stat-card .stat-card-header {
@@ -117,6 +247,140 @@ $sidebarActive = [
             transform: none;
         }
 
+        .vacancies-banner .btn.btn-primary.btn-compact {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            color: #4a3a14;
+            border: 1px solid #f0dfb4;
+            box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
+        }
+
+        .vacancies-banner {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            color: #4a3a14;
+            border: 1px solid #f0dfb4;
+            padding: 30px;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
+        }
+
+        .vacancies-banner h2 {
+            color: #4a3a14;
+        }
+
+        .vacancies-banner p {
+            color: #6a5120;
+        }
+
+        .vacancies-banner .btn.btn-primary.btn-compact:hover {
+            background: linear-gradient(180deg, #fffaf0 0%, #fff2da 100%);
+            color: #3f2f12;
+        }
+
+        /* Drama cards: light design style for Director/Manager/Actor tabs */
+        #director-tab .artist-card,
+        #manager-tab .artist-card,
+        #actor-tab .artist-card {
+            border: 1px solid #e8cf97;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #fffefb 0%, #fff8ea 100%);
+            box-shadow: 0 6px 16px rgba(186, 142, 35, 0.12);
+        }
+
+        #director-tab .artist-card:hover,
+        #manager-tab .artist-card:hover,
+        #actor-tab .artist-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(186, 142, 35, 0.2);
+        }
+
+        #director-tab .artist-header,
+        #manager-tab .artist-header,
+        #actor-tab .artist-header {
+            background: linear-gradient(180deg, #f7e8c1 0%, #ead094 100%) !important;
+            color: #3f2f12 !important;
+            border-bottom: 1px solid #ddbc73;
+            text-align: left;
+            padding: 20px;
+        }
+
+        #director-tab .artist-header .artist-name,
+        #manager-tab .artist-header .artist-name,
+        #actor-tab .artist-header .artist-name {
+            color: #2f2410 !important;
+            margin-bottom: 8px;
+            font-size: 22px;
+            line-height: 1.15;
+        }
+
+        #director-tab .artist-header .artist-experience,
+        #manager-tab .artist-header .artist-experience,
+        #actor-tab .artist-header .artist-experience {
+            color: #6a5120;
+            opacity: 1;
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 17px;
+        }
+
+        #director-tab .artist-body,
+        #manager-tab .artist-body,
+        #actor-tab .artist-body {
+            background: transparent;
+            padding: 18px 20px;
+        }
+
+        #director-tab .info-row,
+        #manager-tab .info-row,
+        #actor-tab .info-row {
+            margin-bottom: 0;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ead8a9;
+        }
+
+        #director-tab .artist-footer,
+        #manager-tab .artist-footer,
+        #actor-tab .artist-footer {
+            background: #fffdf7;
+            border-top: 1px solid #ecd9ad;
+            padding: 14px 20px 18px;
+        }
+
+        #director-tab .artist-footer .btn,
+        #manager-tab .artist-footer .btn,
+        #actor-tab .artist-footer .btn {
+            min-height: 44px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        #director-tab .artist-footer .btn-primary,
+        #manager-tab .artist-footer .btn-primary,
+        #actor-tab .artist-footer .btn-primary,
+        #director-tab .btn-director-publish {
+            background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%);
+            color: #2f2410;
+            border: 1px solid #c9a14a;
+            box-shadow: 0 6px 14px rgba(186, 142, 35, 0.2);
+        }
+
+        #director-tab .artist-footer .btn-primary:hover,
+        #manager-tab .artist-footer .btn-primary:hover,
+        #actor-tab .artist-footer .btn-primary:hover,
+        #director-tab .btn-director-publish:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(186, 142, 35, 0.3);
+        }
+
+        #director-tab .director-cert-link {
+            color: #9a7318;
+            font-weight: 700;
+        }
+
+        #director-tab .director-cert-link:hover {
+            color: #7f5f13;
+        }
+
         .no-results h3 {
             font-weight: 500;
             color: var(--muted);
@@ -131,35 +395,49 @@ $sidebarActive = [
         #my-showings-tab .classes-subtabs {
             display: flex;
             gap: 0;
-            margin: 10px 0 18px;
-            flex-wrap: wrap;
-            background: linear-gradient(180deg, #f6f5f2 0%, #efede8 100%);
-            border: 1px solid #ddd9cf;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.05);
+            margin-bottom: 26px;
+            border-bottom: 2px solid var(--border);
+            background: var(--card);
+            border-radius: var(--radius) var(--radius) 0 0;
+            box-shadow: var(--shadow-sm);
+            overflow-x: auto;
+            scroll-behavior: smooth;
         }
 
         #my-showings-tab .classes-subtab-btn {
+            padding: 14px 20px;
             border: none;
             background: transparent;
-            color: #6c7484;
-            padding: 14px 18px;
-            min-height: 56px;
+            color: var(--muted);
+            min-height: 0;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: var(--transition);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             line-height: 1;
             border-bottom: 3px solid transparent;
-            border-right: 1px solid #e2dfd7;
+            white-space: nowrap;
+            position: relative;
         }
 
-        #my-showings-tab .classes-subtab-btn:last-child {
-            border-right: none;
+        #my-showings-tab .classes-subtabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        #my-showings-tab .classes-subtabs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #my-showings-tab .classes-subtabs::-webkit-scrollbar-thumb {
+            background: rgba(186, 142, 35, 0.3);
+            border-radius: 4px;
+        }
+
+        #my-showings-tab .classes-subtabs::-webkit-scrollbar-thumb:hover {
+            background: rgba(186, 142, 35, 0.6);
         }
 
         #my-showings-tab .classes-subtab-btn i {
@@ -168,15 +446,14 @@ $sidebarActive = [
         }
 
         #my-showings-tab .classes-subtab-btn:hover {
-            background: rgba(186, 142, 35, 0.1);
-            color: #8c6c20;
+            color: var(--ink);
+            background: rgba(186, 142, 35, 0.05);
         }
 
         #my-showings-tab .classes-subtab-btn.active {
-            background: linear-gradient(180deg, #f5efe1 0%, #efe6d2 100%);
-            color: #b48218;
-            border-bottom-color: #b48218;
-            box-shadow: inset 0 -1px 0 rgba(180, 130, 24, 0.12);
+            color: var(--brand);
+            border-bottom-color: var(--brand);
+            background: rgba(186, 142, 35, 0.08);
         }
 
         #my-showings-tab .classes-subtab-panel {
@@ -244,6 +521,118 @@ $sidebarActive = [
             color: #92400e;
             font-size: 13px;
         }
+
+        #my-showings-tab .role-info-card.pending-showing-card,
+        #my-showings-tab .role-info-card.accepted-showing-card,
+        #my-showings-tab .role-info-card.rejected-showing-card {
+            background: linear-gradient(180deg, #f3f1e9 0%, #ece8dc 100%);
+            border: 1px solid #ded4bc;
+            border-left: 4px solid #be9227;
+            border-radius: 14px;
+            padding: 18px 18px 16px;
+            box-shadow: 0 6px 14px rgba(80, 67, 36, 0.08);
+        }
+
+        #my-showings-tab .showing-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        #my-showings-tab .showing-card-title {
+            margin: 0 0 6px;
+            color: #b58514;
+            font-size: 30px;
+            line-height: 1.2;
+        }
+
+        #my-showings-tab .showing-card-audience {
+            margin: 0;
+            color: #5f6b7c;
+            font-size: 14px;
+        }
+
+        #my-showings-tab .accepted-showing-card .status-badge.success {
+            background: transparent;
+            color: #0f172a;
+            border: none;
+            padding: 0;
+            font-size: 12px;
+            letter-spacing: 0.8px;
+        }
+
+        #my-showings-tab .pending-showing-card .status-badge.requested,
+        #my-showings-tab .rejected-showing-card .status-badge.danger {
+            font-size: 12px;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-item,
+        #my-showings-tab .accepted-showing-card .role-info-item,
+        #my-showings-tab .rejected-showing-card .role-info-item {
+            display: grid;
+            grid-template-columns: minmax(250px, 42%) minmax(0, 1fr);
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid #d9cfb5;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-item:last-of-type,
+        #my-showings-tab .accepted-showing-card .role-info-item:last-of-type,
+        #my-showings-tab .rejected-showing-card .role-info-item:last-of-type {
+            border-bottom: none;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-label,
+        #my-showings-tab .accepted-showing-card .role-info-label,
+        #my-showings-tab .rejected-showing-card .role-info-label {
+            color: #0f2744;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-value,
+        #my-showings-tab .accepted-showing-card .role-info-value,
+        #my-showings-tab .rejected-showing-card .role-info-value {
+            color: #b58514;
+            text-align: right;
+            font-weight: 700;
+            font-size: 15px;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        #my-showings-tab .pending-showing-card .role-info-label i,
+        #my-showings-tab .accepted-showing-card .role-info-label i,
+        #my-showings-tab .rejected-showing-card .role-info-label i {
+            color: #0f2744;
+            margin-right: 6px;
+        }
+
+        #my-showings-tab .pending-showing-card .btn-success {
+            background: linear-gradient(135deg, #be9227, #a67d1e);
+            border: 1px solid rgba(145, 108, 24, 0.35);
+            box-shadow: 0 4px 10px rgba(166, 125, 30, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            #my-showings-tab .pending-showing-card .role-info-item,
+            #my-showings-tab .accepted-showing-card .role-info-item,
+            #my-showings-tab .rejected-showing-card .role-info-item {
+                grid-template-columns: 1fr;
+                align-items: start;
+                gap: 4px;
+            }
+
+            #my-showings-tab .pending-showing-card .role-info-value,
+            #my-showings-tab .accepted-showing-card .role-info-value,
+            #my-showings-tab .rejected-showing-card .role-info-value {
+                text-align: left;
+            }
+        }
     </style>
 </head>
 <body>
@@ -269,7 +658,9 @@ $sidebarActive = [
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2><i class='bx bxs-theater'></i></h2>
+            <a href="<?=ROOT?>/artistdashboard" class="logo-link">
+                <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+            </a>
         </div>
         <ul class="menu">
             <li class="<?= $sidebarActive['dashboard'] ? 'active' : '' ?>">
@@ -385,17 +776,17 @@ $sidebarActive = [
         </div>
 
         <!-- Drama Role Vacancies Banner -->
-        <div class="card-section vacancies-banner" style="background: linear-gradient(135deg, #ba8e23, #a0781e); color: white; padding: 30px; border-radius: var(--radius); margin-bottom: 30px; box-shadow: var(--shadow-md);">
+        <div class="card-section vacancies-banner">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                 <div style="flex: 1;">
-                    <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700; color: white;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700;">
                         Drama Role Vacancies Now Open!
                     </h2>
-                    <p style="margin: 0; opacity: 0.95; font-size: 16px; line-height: 1.5; color: white;">
+                    <p style="margin: 0; opacity: 0.95; font-size: 16px; line-height: 1.5;">
                         Discover available roles and apply to be part of our upcoming drama productions.
                     </p>
                 </div>
-                <a href="<?=ROOT?>/artistdashboard/browse_vacancies" class="btn btn-primary btn-compact" style="background: white; color: var(--brand); font-weight: 600;">
+                <a href="<?=ROOT?>/artistdashboard/browse_vacancies" class="btn btn-primary btn-compact" style="font-weight: 600;">
                     <i class="bx bx-search"></i> Search Vacancies
                 </a>
             </div>
@@ -450,7 +841,7 @@ $sidebarActive = [
                         <div class="artists-grid">
                             <?php foreach ($dramas_as_director as $drama): ?>
                                 <div class="artist-card">
-                                    <div class="artist-header" style="background: linear-gradient(135deg, #ba8e23, #8f6d1b);">
+                                    <div class="artist-header">
                                         <h3 class="artist-name"><?= esc($drama->drama_name ?? 'Registered Drama') ?></h3>
                                         <p class="artist-experience">Certificate <?= esc($drama->certificate_number ?? 'N/A') ?></p>
                                     </div>
@@ -477,7 +868,7 @@ $sidebarActive = [
                                             <span class="info-label">Certificate Image:</span>
                                             <span class="info-value">
                                                 <?php if (!empty($drama->certificate_image)): ?>
-                                                    <a href="<?= ROOT ?>/uploads/certificates/<?= esc(rawurlencode($drama->certificate_image)) ?>" target="_blank" style="color: var(--brand); font-weight: 600;">
+                                                    <a href="<?= ROOT ?>/uploads/certificates/<?= esc(rawurlencode($drama->certificate_image)) ?>" target="_blank" class="director-cert-link">
                                                         View
                                                     </a>
                                                 <?php else: ?>
@@ -490,7 +881,7 @@ $sidebarActive = [
                                         <button class="btn btn-primary" style="flex: 1;" onclick="handleDirectorManage(<?=$drama->id?>)">
                                             <i class="bx bx-tachometer-alt"></i> Manage
                                         </button>
-                                        <a class="btn" style="flex: 1; text-align: center; background: linear-gradient(135deg, #8f6d1b, #6f5415); color: #fff;" href="<?= ROOT ?>/director/drama_details?drama_id=<?= (int)$drama->id ?>#publish-section">
+                                        <a class="btn btn-director-publish" style="flex: 1; text-align: center;" href="<?= ROOT ?>/director/drama_details?drama_id=<?= (int)$drama->id ?>#publish-section">
                                             <i class="bx bx-bullhorn"></i> <?= !empty($drama->is_published) ? 'Update Publish' : 'Publish' ?>
                                         </a>
                                     </div>
@@ -758,10 +1149,10 @@ $sidebarActive = [
                                     $requestNotes = trim((string)($requestDetails['request_notes'] ?? ''));
                                 ?>
                                 <div class="role-info-card pending-showing-card" data-show-date="<?= esc($pendingShowDateForMatch) ?>" data-show-start="<?= esc($pendingShowTimeForMatch) ?>" data-show-end="<?= esc($pendingShowTimeEndForMatch) ?>">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 14px; gap: 12px;">
+                                    <div class="showing-card-header">
                                         <div>
-                                            <h3 style="color: var(--brand); margin-bottom: 8px;"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
-                                            <p style="color: var(--muted); font-size: 13px; margin: 0;"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
+                                            <h3 class="showing-card-title"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
+                                            <p class="showing-card-audience"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
                                         </div>
                                         <span class="status-badge requested"><i class="bx bx-time"></i> Pending</span>
                                     </div>
@@ -853,10 +1244,10 @@ $sidebarActive = [
                                     $acceptedShowTimeEndForMatch = trim((string)($requestDetails['show_time_end'] ?? ''));
                                 ?>
                                 <div class="role-info-card accepted-showing-card" data-show-date="<?= esc($acceptedShowDateForMatch) ?>" data-show-start="<?= esc($acceptedShowTimeForMatch) ?>" data-show-end="<?= esc($acceptedShowTimeEndForMatch) ?>">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                                    <div class="showing-card-header">
                                         <div>
-                                            <h3 style="color: var(--brand); margin-bottom: 8px;"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
-                                            <p style="color: var(--muted); font-size: 13px; margin: 0;"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
+                                            <h3 class="showing-card-title"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
+                                            <p class="showing-card-audience"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
                                         </div>
                                         <span class="status-badge success"><i class="bx bx-check-circle"></i> Accepted</span>
                                     </div>
@@ -893,11 +1284,11 @@ $sidebarActive = [
                                     $requestContactEmail = trim((string)($requestDetails['request_contact_email'] ?? ($show_request->audience_email ?? 'Not provided')));
                                     $rejectionReason = trim((string)($show_request->rejection_reason ?? ''));
                                 ?>
-                                <div class="role-info-card" style="border-left: 4px solid #ef4444;">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                                <div class="role-info-card rejected-showing-card">
+                                    <div class="showing-card-header">
                                         <div>
-                                            <h3 style="color: var(--brand); margin-bottom: 8px;"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
-                                            <p style="color: var(--muted); font-size: 13px; margin: 0;"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
+                                            <h3 class="showing-card-title"><i class="bx bx-film"></i> <?= esc($show_request->drama_title ?? 'Drama') ?></h3>
+                                            <p class="showing-card-audience"><strong>Audience:</strong> <?= esc($show_request->audience_name ?? 'Audience User') ?></p>
                                         </div>
                                         <span class="status-badge danger"><i class="bx bx-x-circle"></i> Rejected</span>
                                     </div>
@@ -921,139 +1312,168 @@ $sidebarActive = [
 
                 <!-- Requests Tab -->
                 <div id="requests-tab" class="tab-content">
-                    <h3 style="margin-bottom: 20px; color: var(--ink);">
-                        <i class="bx bx-envelope"></i> Requests
-                    </h3>
-
-                    <!-- Actor Role Requests -->
-                    <div class="card-section" style="margin-bottom: 20px;">
-                        <h3 style="margin-top: 0; margin-bottom: 14px;">
-                            <span><i class="bx bx-theater-masks"></i> Actor Role Requests (<?= isset($role_requests) && is_array($role_requests) ? count($role_requests) : 0 ?>)</span>
+                    
+                    <!-- Production Manager Requests -->
+                    <?php if (isset($pm_requests) && !empty($pm_requests)): ?>
+                        <h3 style="margin-bottom: 20px; color: var(--ink);">
+                            <i class="bx bx-user-tie"></i> Production Manager Requests
                         </h3>
-                        <?php if (!isset($role_requests) || empty($role_requests)): ?>
-                            <div class="no-results">
-                                <i class="bx bx-inbox"></i>
-                                <h3>No Pending Actor Role Requests</h3>
-                                <p>You don't have actor role requests at the moment.</p>
-                            </div>
-                        <?php else: ?>
-                            <div style="display: grid; gap: 16px;">
-                                <?php foreach ($role_requests as $request): ?>
-                                    <div class="role-info-card">
-                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
-                                            <div>
-                                                <h3 style="color: var(--ink); margin-bottom: 8px;">
-                                                    <i class="bx bx-theater-masks"></i> <?= esc($request->drama_name) ?>
-                                                </h3>
-                                                <p style="color: var(--muted); font-size: 13px;"><strong>Director:</strong> <?= esc($request->director_name) ?></p>
-                                            </div>
-                                            <span class="status-badge requested"><i class="bx bx-clock"></i> Pending</span>
+                        <div style="display: grid; gap: 16px; margin-bottom: 40px;">
+                            <?php foreach ($pm_requests as $pm_request): ?>
+                                <div class="role-info-card">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                                        <div>
+                                            <h3 style="color: var(--brand); margin-bottom: 8px;">
+                                                <i class="bx bx-film"></i> <?= esc($pm_request->drama_name) ?>
+                                            </h3>
+                                            <p style="color: var(--muted); font-size: 13px;">
+                                                <strong>Director:</strong> <?= esc($pm_request->director_name) ?>
+                                            </p>
+                                            <p style="color: var(--muted); font-size: 13px;">
+                                                <strong>Certificate:</strong> <?= esc($pm_request->certificate_number) ?>
+                                            </p>
                                         </div>
-
-                                        <div class="role-info-item">
-                                            <span class="role-info-label"><i class="bx bx-user-tag"></i> Role:</span>
-                                            <span class="role-info-value"><?= esc($request->role_name) ?></span>
-                                        </div>
-
-                                        <?php if (!empty($request->role_description)): ?>
-                                            <div style="margin: 12px 0; padding: 12px; background: rgba(255,255,255,0.6); border-radius: 8px;">
-                                                <strong style="color: var(--ink);">Description:</strong>
-                                                <p style="color: #555; margin-top: 6px; font-size: 14px;"><?= esc($request->role_description) ?></p>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php if (!empty($request->salary)): ?>
-                                            <div class="role-info-item">
-                                                <span class="role-info-label"><i class="bx bx-money-bill-wave"></i> Salary:</span>
-                                                <span class="role-info-value">LKR <?= number_format($request->salary) ?></span>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <div class="role-info-item">
-                                            <span class="role-info-label"><i class="bx bx-calendar"></i> Requested:</span>
-                                            <span class="role-info-value"><?= isset($request->requested_at) && $request->requested_at ? date('M d, Y', strtotime($request->requested_at)) : 'N/A' ?></span>
-                                        </div>
-
-                                        <div style="display: flex; gap: 10px; margin-top: 16px;">
-                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_request" style="flex: 1;">
-                                                <input type="hidden" name="request_id" value="<?= $request->id ?>">
-                                                <input type="hidden" name="response" value="accept">
-                                                <button type="submit" class="btn btn-success" style="width: 100%;"><i class="bx bx-check"></i> Accept Role</button>
-                                            </form>
-                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_request" style="flex: 1;">
-                                                <input type="hidden" name="request_id" value="<?= $request->id ?>">
-                                                <input type="hidden" name="response" value="reject">
-                                                <button type="submit" class="btn btn-danger" style="width: 100%;"><i class="bx bx-times"></i> Decline</button>
-                                            </form>
-                                        </div>
+                                        <span class="status-badge requested">
+                                            <i class="bx bx-clock"></i> Pending
+                                        </span>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                                    
+                                    <div class="role-info-item">
+                                        <span class="role-info-label">
+                                            <i class="bx bx-briefcase"></i> Position:
+                                        </span>
+                                        <span class="role-info-value">Production Manager</span>
+                                    </div>
+                                    
+                                    <?php if (!empty($pm_request->message)): ?>
+                                        <div style="margin: 12px 0; padding: 12px; background: rgba(186, 142, 35, 0.08); border-radius: 8px; border-left: 3px solid var(--brand);">
+                                            <strong style="color: var(--ink);"><i class="bx bx-comment"></i> Message from Director:</strong>
+                                            <p style="color: #555; margin-top: 6px; font-size: 14px;"><?= esc($pm_request->message) ?></p>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="role-info-item">
+                                        <span class="role-info-label">
+                                            <i class="bx bx-calendar"></i> Requested:
+                                        </span>
+                                        <span class="role-info-value"><?= date('M d, Y g:i A', strtotime($pm_request->requested_at)) ?></span>
+                                    </div>
+                                    
+                                    <div style="margin-top: 12px; padding: 10px; background: rgba(33, 150, 243, 0.08); border-radius: 6px;">
+                                        <p style="color: #1976d2; font-size: 13px; margin: 0;">
+                                            <i class="bx bx-info-circle"></i> <strong>About this role:</strong> 
+                                            As Production Manager, you'll oversee services, budget management, and theater bookings for this drama.
+                                        </p>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                                        <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" style="flex: 1;">
+                                            <input type="hidden" name="request_id" value="<?= $pm_request->id ?>">
+                                            <input type="hidden" name="response" value="accept">
+                                            <button type="submit" class="btn btn-success" style="width: 100%;">
+                                                <i class="bx bx-check"></i> Accept
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" style="flex: 1;">
+                                            <input type="hidden" name="request_id" value="<?= $pm_request->id ?>">
+                                            <input type="hidden" name="response" value="reject">
+                                            <button type="submit" class="btn btn-danger" style="width: 100%;" 
+                                                    onclick="return confirm('Are you sure you want to decline this Production Manager request?');">
+                                                <i class="bx bx-times"></i> Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
 
-                    <!-- PM Role Requests -->
-                    <div class="card-section">
-                        <h3 style="margin-top: 0; margin-bottom: 14px;">
-                            <span><i class="bx bx-user-tie"></i> PM Role Requests (<?= isset($pm_requests) && is_array($pm_requests) ? count($pm_requests) : 0 ?>)</span>
-                        </h3>
+                    <!-- Role Requests -->
+                    <h3 style="margin-bottom: 20px; color: var(--ink);">
+                        <i class="bx bx-theater-masks"></i> Role Requests
+                    </h3>
+                    <?php if (!isset($role_requests) || empty($role_requests)): ?>
                         <?php if (!isset($pm_requests) || empty($pm_requests)): ?>
                             <div class="no-results">
                                 <i class="bx bx-inbox"></i>
-                                <h3>No Pending PM Requests</h3>
-                                <p>You don't have production manager requests at the moment.</p>
+                                <h3>No Pending Requests</h3>
+                                <p>You don't have any requests at the moment.</p>
                             </div>
                         <?php else: ?>
-                            <div style="display: grid; gap: 16px;">
-                                <?php foreach ($pm_requests as $pm_request): ?>
-                                    <div class="role-info-card">
-                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
-                                            <div>
-                                                <h3 style="color: var(--brand); margin-bottom: 8px;"><i class="bx bx-film"></i> <?= esc($pm_request->drama_name) ?></h3>
-                                                <p style="color: var(--muted); font-size: 13px;"><strong>Director:</strong> <?= esc($pm_request->director_name) ?></p>
-                                                <p style="color: var(--muted); font-size: 13px;"><strong>Certificate:</strong> <?= esc($pm_request->certificate_number) ?></p>
-                                            </div>
-                                            <span class="status-badge requested"><i class="bx bx-clock"></i> Pending</span>
-                                        </div>
-
-                                        <div class="role-info-item">
-                                            <span class="role-info-label"><i class="bx bx-briefcase"></i> Position:</span>
-                                            <span class="role-info-value">Production Manager</span>
-                                        </div>
-
-                                        <?php if (!empty($pm_request->message)): ?>
-                                            <div style="margin: 12px 0; padding: 12px; background: rgba(186, 142, 35, 0.08); border-radius: 8px; border-left: 3px solid var(--brand);">
-                                                <strong style="color: var(--ink);"><i class="bx bx-comment"></i> Message from Director:</strong>
-                                                <p style="color: #555; margin-top: 6px; font-size: 14px;"><?= esc($pm_request->message) ?></p>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <div class="role-info-item">
-                                            <span class="role-info-label"><i class="bx bx-calendar"></i> Requested:</span>
-                                            <span class="role-info-value"><?= date('M d, Y g:i A', strtotime($pm_request->requested_at)) ?></span>
-                                        </div>
-
-                                        <div style="margin-top: 12px; padding: 10px; background: rgba(33, 150, 243, 0.08); border-radius: 6px;">
-                                            <p style="color: #1976d2; font-size: 13px; margin: 0;"><i class="bx bx-info-circle"></i> <strong>About this role:</strong> As Production Manager, you'll oversee services, budget management, and theater bookings for this drama.</p>
-                                        </div>
-
-                                        <div style="display: flex; gap: 10px; margin-top: 16px;">
-                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" style="flex: 1;">
-                                                <input type="hidden" name="request_id" value="<?= $pm_request->id ?>">
-                                                <input type="hidden" name="response" value="accept">
-                                                <button type="submit" class="btn btn-success" style="width: 100%;"><i class="bx bx-check"></i> Accept</button>
-                                            </form>
-                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" style="flex: 1;">
-                                                <input type="hidden" name="request_id" value="<?= $pm_request->id ?>">
-                                                <input type="hidden" name="response" value="reject">
-                                                <button type="submit" class="btn btn-danger" style="width: 100%;" onclick="return confirm('Are you sure you want to decline this Production Manager request?');"><i class="bx bx-times"></i> Decline</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
+                            <div class="no-results">
+                                <i class="bx bx-inbox"></i>
+                                <h3>No Pending Role Requests</h3>
+                                <p>You don't have any role requests at the moment.</p>
                             </div>
                         <?php endif; ?>
-                    </div>
+                    <?php else: ?>
+                        <div style="display: grid; gap: 16px;">
+                            <?php foreach ($role_requests as $request): ?>
+                                <div class="role-info-card">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                                        <div>
+                                            <h3 style="color: var(--ink); margin-bottom: 8px;">
+                                                <i class="bx bx-theater-masks"></i> <?= esc($request->drama_name) ?>
+                                            </h3>
+                                            <p style="color: var(--muted); font-size: 13px;">
+                                                <strong>Director:</strong> <?= esc($request->director_name) ?>
+                                            </p>
+                                        </div>
+                                        <span class="status-badge requested">
+                                            <i class="bx bx-clock"></i> Pending
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="role-info-item">
+                                        <span class="role-info-label">
+                                            <i class="bx bx-user-tag"></i> Role:
+                                        </span>
+                                        <span class="role-info-value"><?= esc($request->role_name) ?></span>
+                                    </div>
+                                    
+                                    <?php if (!empty($request->role_description)): ?>
+                                        <div style="margin: 12px 0; padding: 12px; background: rgba(255,255,255,0.6); border-radius: 8px;">
+                                            <strong style="color: var(--ink);">Description:</strong>
+                                            <p style="color: #555; margin-top: 6px; font-size: 14px;"><?= esc($request->role_description) ?></p>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($request->salary)): ?>
+                                        <div class="role-info-item">
+                                            <span class="role-info-label">
+                                                <i class="bx bx-money-bill-wave"></i> Salary:
+                                            </span>
+                                            <span class="role-info-value">LKR <?= number_format($request->salary) ?></span>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="role-info-item">
+                                        <span class="role-info-label">
+                                            <i class="bx bx-calendar"></i> Requested:
+                                        </span>
+                                        <span class="role-info-value"><?= isset($request->requested_at) && $request->requested_at ? date('M d, Y', strtotime($request->requested_at)) : 'N/A' ?></span>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                                        <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_request" style="flex: 1;">
+                                            <input type="hidden" name="request_id" value="<?= $request->id ?>">
+                                            <input type="hidden" name="response" value="accept">
+                                            <button type="submit" class="btn btn-success" style="width: 100%;">
+                                                <i class="bx bx-check"></i> Accept Role
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_request" style="flex: 1;">
+                                            <input type="hidden" name="request_id" value="<?= $request->id ?>">
+                                            <input type="hidden" name="response" value="reject">
+                                            <button type="submit" class="btn btn-danger" style="width: 100%;">
+                                                <i class="bx bx-times"></i> Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 </div>

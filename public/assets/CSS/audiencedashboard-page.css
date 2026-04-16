@@ -122,6 +122,23 @@
   color: #8a6a1f;
 }
 
+/* Add clear gap between main container border and Booking Status/My Showings content */
+#overview .dashboard-bookings-section,
+#my-showings .dashboard-table-container {
+  padding: 16px;
+}
+
+#overview .dashboard-bookings-section > * + *,
+#my-showings .dashboard-table-container > * + * {
+  margin-top: 20px;
+}
+
+#overview .dashboard-bookings-section .dashboard-table-header,
+#my-showings .dashboard-table-container .dashboard-table-header {
+  padding: 0 0 14px;
+  margin: 0;
+}
+
 /* Browse dramas layout fixes */
 #browse .browse-dramas-container {
   width: 100%;
@@ -178,6 +195,74 @@
   width: 100%;
   font-size: 15px;
   background: transparent;
+  color: #3f3320;
+}
+
+#browse .filter-box {
+  position: relative;
+  padding-right: 36px;
+}
+
+#browse .filter-box::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #a67d1e;
+  border-bottom: 2px solid #a67d1e;
+  transform: translateY(-60%) rotate(45deg);
+  pointer-events: none;
+}
+
+#browse .filter-box:focus-within {
+  border-color: #c89b2e;
+  box-shadow: 0 0 0 3px rgba(186, 142, 35, 0.18), 0 3px 12px rgba(186, 142, 35, 0.12);
+}
+
+#browse .filter-box select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  font-weight: 700;
+  color: #3d2e12;
+  padding-right: 0;
+}
+
+#browse #categoryFilter option {
+  background: #fff9ea;
+  color: #3f3320;
+}
+
+#browse #categoryFilter option:checked,
+#browse #categoryFilter option:hover {
+  background: #ba8e23;
+  color: #fff;
+}
+
+#my-showings .my-showings-filter-box select,
+#overview .my-showings-filter-box select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  font-weight: 600;
+  padding-right: 28px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #a67d1e 50%),
+    linear-gradient(135deg, #a67d1e 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) calc(50% - 2px),
+    calc(100% - 8px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+#my-showings .my-showings-filter-box select option,
+#overview .my-showings-filter-box select option {
+  background: #fffdf8;
   color: #3f3320;
 }
 
@@ -455,10 +540,7 @@
 }
 
 #browse .drama-description {
-  margin: 0;
-  color: #6f5a2e;
-  min-height: 44px;
-  line-height: 1.5;
+  display: none;
 }
 
 #browse .drama-info {
@@ -572,7 +654,7 @@
 #my-showings .my-showings-filters,
 #overview .my-showings-filters {
   display: flex;
-  gap: 18px;
+  gap: 20px;
   flex-wrap: wrap;
   margin: 0 0 14px;
 }
@@ -587,7 +669,7 @@
   background: #fff;
   border: 1px solid #ead7a4;
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 10px 50px;
   min-height: 44px;
   box-shadow: 0 3px 10px rgba(186, 142, 35, 0.08);
 }
@@ -623,9 +705,16 @@
   font-size: 14px;
 }
 
+#my-showings .my-showings-filter-box:focus-within,
+#overview .my-showings-filter-box:focus-within,
+#browse .filter-box:focus-within {
+  border-color: #c79a2b;
+  box-shadow: 0 0 0 3px rgba(186, 142, 35, 0.14);
+}
+
 #my-showings .my-showings-no-results,
 #overview .my-showings-no-results {
-  padding: 12px;
+  padding: 30px;
   margin-top: 10px;
   border-radius: 10px;
   border: 1px dashed #dfc781;

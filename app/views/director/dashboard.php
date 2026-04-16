@@ -16,21 +16,8 @@ $filledPositions = (int)($dashboardStats['filled_positions'] ?? 0);
 $productionManagersCount = (int)($dashboardStats['production_managers'] ?? 0);
 $pendingApplicationsCount = (int)($dashboardStats['pending_applications'] ?? 0);
 
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
-}
+require_once __DIR__ . '/_profile_image_helper.php';
+$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,57 +28,13 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
+<body class="director-dashboard-page">
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h2>🎭</h2>
-        </div>
-        <ul class="menu">
-            <li class="active">
-                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-film"></i>
-                    <span>Drama Details</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-users"></i>
-                    <span>Artist Roles</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-user-tie"></i>
-                    <span>Production Manager</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-calendar-alt"></i>
-                    <span>Schedule</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-dollar-sign"></i>
-                    <span>Services & Budget</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="bx bx-arrow-left"></i>
-                    <span>Back to Profile</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php
+    $directorSidebarDramaId = $dramaId;
+    $directorSidebarActive = 'dashboard';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <!-- Main Content -->
     <main class="main--content">
@@ -110,34 +53,51 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 </p>
             </div>
             <div class="user--info">
-                <div class="role-badge">
-                    <i class="bx bx-video"></i>
-                    Director
-                </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <?php
+                $directorProfileImageSrc = $profileImageSrc;
+                $directorRoleLabel = 'Director';
+                include __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
         <!-- Statistics Cards for THIS Drama -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3 id="totalRoles"><?= $totalRoles ?></h3>
-                <p>Total Roles</p>
+        <div class="stats-grid director-stats-grid">
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Total Roles</div>
+                    <div class="stat-card-icon primary">
+                        <i class="bx bx-mask"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value" id="totalRoles"><?= $totalRoles ?></div>
             </div>
-            <div class="stat-card">
-                <h3 id="filledRoles"><?= $filledPositions . '/' . $totalPositions ?></h3>
-                <p>Filled Roles</p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Filled Roles</div>
+                    <div class="stat-card-icon info">
+                        <i class="bx bx-grid-alt"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value" id="filledRoles"><?= $filledPositions . '/' . $totalPositions ?></div>
             </div>
-            <div class="stat-card">
-                <h3 id="productionManagers"><?= $productionManagersCount ?></h3>
-                <p>Production Manager</p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Production Manager</div>
+                    <div class="stat-card-icon success">
+                        <i class="bx bx-briefcase"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value" id="productionManagers"><?= $productionManagersCount ?></div>
             </div>
-            <div class="stat-card">
-                <h3 id="pendingApplications"><?= $pendingApplicationsCount ?></h3>
-                <p>Pending Applications</p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Pending Applications</div>
+                    <div class="stat-card-icon warning">
+                        <i class="bx bx-time-five"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value" id="pendingApplications"><?= $pendingApplicationsCount ?></div>
             </div>
         </div>
 
@@ -168,74 +128,71 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             <div class="profile-container" style="grid-template-columns: 1fr;">
                 <div class="details">
                     <!-- Drama Overview Card Section -->
-                    <div class="card-section">
+                    <div class="card-section drama-overview-card">
                         <h3>
                             <span>Drama Overview</span>
-                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary btn-compact">
                                 <i class="bx bx-eye"></i>
                                 View Details
                             </a>
                         </h3>
-                        <div class="drama-info">
-                            <div class="service-info-item">
-                                <span class="service-info-label">Public Status</span>
-                                <span class="service-info-value">
-                                    <?php if (!empty($drama->is_published)): ?>
-                                        <span class="status-badge assigned">Published</span>
-                                    <?php else: ?>
-                                        <span class="status-badge pending">Not Published</span>
-                                    <?php endif; ?>
-                                </span>
-                            </div>
-                            <div class="service-info-item">
-                                <span class="service-info-label">Owner</span>
-                                <span class="service-info-value"><?= isset($drama->owner_name) ? esc($drama->owner_name) : 'N/A' ?></span>
-                            </div>
-                            <div class="service-info-item">
-                                <span class="service-info-label">Certificate Number</span>
-                                <span class="service-info-value"><?= isset($drama->certificate_number) ? esc($drama->certificate_number) : 'N/A' ?></span>
-                            </div>
-                            <div class="service-info-item">
-                                <span class="service-info-label">Certificate Document</span>
-                                <span class="service-info-value">
-                                    <?php if (!empty($drama->certificate_image)): ?>
-                                        <a href="<?= ROOT ?>/uploads/certificates/<?= esc($drama->certificate_image) ?>" target="_blank" rel="noopener">View certificate</a>
-                                    <?php else: ?>
-                                        No certificate uploaded
-                                    <?php endif; ?>
-                                </span>
-                            </div>
-                            <div class="service-info-item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-                                <span class="service-info-label">Description</span>
-                                <span class="service-info-value" style="white-space: pre-wrap;"><?= !empty($drama->description) ? esc($drama->description) : 'No description provided yet.' ?></span>
-                            </div>
-                            <div class="service-info-item">
-                                <span class="service-info-label">Created On</span>
-                                <span class="service-info-value"><?= isset($drama->created_at) ? esc(date('Y-m-d H:i', strtotime($drama->created_at))) : 'N/A' ?></span>
-                            </div>
-                            <div class="service-info-item">
-                                <span class="service-info-label">Last Updated</span>
-                                <span class="service-info-value"><?= isset($drama->updated_at) ? esc(date('Y-m-d H:i', strtotime($drama->updated_at))) : 'N/A' ?></span>
-                            </div>
-                            <?php if (!empty($drama->published_at)): ?>
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Published On</span>
-                                    <span class="service-info-value"><?= esc(date('Y-m-d H:i', strtotime($drama->published_at))) ?></span>
-                                </div>
-                            <?php endif; ?>
+                        <div class="service-info-item">
+                            <span class="service-info-label">Public Status</span>
+                            <span class="service-info-value">
+                                <?php if (!empty($drama->is_published)): ?>
+                                    <span class="drama-overview-status is-published"><i class="bx bxs-check-circle"></i> Published</span>
+                                <?php else: ?>
+                                    <span class="drama-overview-status is-unpublished"><i class="bx bxs-x-circle"></i> Not Published</span>
+                                <?php endif; ?>
+                            </span>
                         </div>
-                        <div style="margin-top:14px;">
-                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>#publish-section" class="btn btn-primary" style="font-size:12px; padding:8px 16px;">
+                        <div class="service-info-item">
+                            <span class="service-info-label"><i class="bx bx-user"></i> Owner</span>
+                            <span class="service-info-value"><?= isset($drama->owner_name) ? esc($drama->owner_name) : 'N/A' ?></span>
+                        </div>
+                        <div class="service-info-item">
+                            <span class="service-info-label"><i class="bx bx-id-card"></i> Certificate Number</span>
+                            <span class="service-info-value"><?= isset($drama->certificate_number) ? esc($drama->certificate_number) : 'N/A' ?></span>
+                        </div>
+                        <div class="service-info-item">
+                            <span class="service-info-label"><i class="bx bx-file"></i> Certificate Document</span>
+                            <span class="service-info-value">
+                                <?php if (!empty($drama->certificate_image)): ?>
+                                    <a href="<?= ROOT ?>/uploads/certificates/<?= esc($drama->certificate_image) ?>" target="_blank" rel="noopener">View certificate</a>
+                                <?php else: ?>
+                                    No certificate uploaded
+                                <?php endif; ?>
+                            </span>
+                        </div>
+                        <div class="service-info-item service-info-item--description">
+                            <span class="service-info-label"><i class="bx bx-message-dots"></i> Description</span>
+                            <span class="service-info-value service-info-value--description"><?= !empty($drama->description) ? esc($drama->description) : 'No description provided yet.' ?></span>
+                        </div>
+                        <div class="service-info-item">
+                            <span class="service-info-label"><i class="bx bx-calendar"></i> Created On</span>
+                            <span class="service-info-value"><?= isset($drama->created_at) ? esc(date('Y-m-d H:i', strtotime($drama->created_at))) : 'N/A' ?></span>
+                        </div>
+                        <div class="service-info-item">
+                            <span class="service-info-label"><i class="bx bx-refresh"></i> Last Updated</span>
+                            <span class="service-info-value"><?= isset($drama->updated_at) ? esc(date('Y-m-d H:i', strtotime($drama->updated_at))) : 'N/A' ?></span>
+                        </div>
+                        <?php if (!empty($drama->published_at)): ?>
+                            <div class="service-info-item">
+                                <span class="service-info-label"><i class="bx bx-check-circle"></i> Published On</span>
+                                <span class="service-info-value"><?= esc(date('Y-m-d H:i', strtotime($drama->published_at))) ?></span>
+                            </div>
+                        <?php endif; ?>
+                        <?php if (isset($productionManager) && $productionManager): ?>
+                            <div class="service-info-item">
+                                <span class="service-info-label"><i class="bx bx-user"></i> Production Manager</span>
+                                <span class="service-info-value"><?= esc($productionManager->manager_name ?? 'N/A') ?></span>
+                            </div>
+                        <?php endif; ?>
+                        <div class="dashboard-card-action">
+                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>#publish-section" class="btn btn-primary btn-compact">
                                 <i class="bx bx-bullhorn"></i>
                                 <?= !empty($drama->is_published) ? 'Update Publish Details' : 'Publish Drama' ?>
                             </a>
-                        </div>
-                            <?php if (isset($productionManager) && $productionManager): ?>
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Production Manager</span>
-                                    <span class="service-info-value"><?= esc($productionManager->manager_name ?? 'N/A') ?></span>
-                                </div>
-                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -244,7 +201,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <div class="card-section">
                             <h3>
                                 <span>Assigned Artists (<?= count($assignedArtists) ?>)</span>
-                                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
+                                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>" class="btn btn-primary btn-compact">
                                     <i class="bx bx-users"></i>
                                     Manage Roles
                                 </a>
@@ -261,7 +218,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                                 <?php endif; ?>
                                             </div>
                                         </div>
-                                        <span class="status-badge assigned">Active</span>
+                                        <span class="status-badge assigned"><i class="bx bxs-check-circle"></i> Active</span>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
@@ -269,16 +226,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <?php endif; ?>
 
                     <!-- Services & Budget Overview -->
-                    <div class="card-section">
-                        <h3>
-                            <span>Services & Budget Overview</span>
-                            <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">View Details</a>
-                        </h3>
-                        <div class="view-only-notice" style="margin-top: 15px;">
-                            <i class="bx bx-info-circle"></i>
-                            Budget is managed by Production Managers. You have view-only access.
-                        </div>
-                    </div>
+         
                 </div>
             </div>
         </div>
@@ -308,10 +256,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         if (currentPage === 'dashboard.php' || currentPage === 'dashboard' || currentPage === '') {
             navTabs[0]?.classList.add('active');
         }
-        
+
         console.log('Current Drama ID:', dramaId);
         // Backend will use this to load drama-specific data
     </script>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
     <script src="/Rangamadala/public/assets/JS/director-dashboard.js"></script>
 </body>
 </html>

@@ -1684,6 +1684,14 @@ class Director{
             'showing_prices' => trim($_POST['showing_prices'] ?? ''),
         ];
 
+        $rawShowingPrice = $formData['showing_prices'];
+        if ($rawShowingPrice !== '') {
+            $normalizedNumeric = str_replace(',', '', $rawShowingPrice);
+            if (is_numeric($normalizedNumeric) && (float)$normalizedNumeric >= 0) {
+                $formData['showing_prices'] = 'LKR ' . number_format((float)$normalizedNumeric, 2, '.', '');
+            }
+        }
+
         $errors = [];
 
         $categoryId = filter_var($formData['category_id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
@@ -1706,6 +1714,8 @@ class Director{
 
         if ($formData['showing_prices'] === '') {
             $errors[] = 'Showing prices are required.';
+        } elseif (!preg_match('/^LKR\s\d+(?:\.\d{2})$/', $formData['showing_prices'])) {
+            $errors[] = 'Showing prices must be a valid amount.';
         } elseif (strlen($formData['showing_prices']) > 500) {
             $errors[] = 'Showing prices cannot exceed 500 characters.';
         }

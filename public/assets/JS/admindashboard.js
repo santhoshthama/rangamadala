@@ -31,9 +31,11 @@ document.addEventListener("DOMContentLoaded", function () {
   initNavigation();
   initSearch();
   loadOverviewStats();
+  loadOverviewDramaDetails();
   initCharts();
   initRegistrationsView();
   initAdminProfile();
+  initOverviewDramaActions();
 });
 
 function loadOverviewStats() {
@@ -57,6 +59,108 @@ function loadOverviewStats() {
     })
     .catch((error) => {
       console.error("Error loading overview stats:", error);
+    });
+}
+
+function initOverviewDramaActions() {
+  const reviewBtn = document.getElementById("overviewDramaApprovalsBtn");
+  if (!reviewBtn) return;
+
+  reviewBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    switchView("drama-approvals");
+  });
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatDramaDate(value) {
+  if (!value) return "N/A";
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return "N/A";
+
+  return dt.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getDramaStageBadge(stage) {
+  switch (stage) {
+    case "published":
+      return '<span class="status-badge success">Published</span>';
+    case "pending_approval":
+      return '<span class="status-badge warning">Pending Approval</span>';
+    default:
+      return '<span class="status-badge info">In Progress</span>';
+  }
+}
+
+function loadOverviewDramaDetails() {
+  const tableBody = document.getElementById("overviewDramaTableBody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = '<tr><td colspan="5">Loading drama insights...</td></tr>';
+
+  fetch(ROOT + "/admindashboard/getOverviewDramaDetails")
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success) {
+        tableBody.innerHTML = '<tr><td colspan="6">Unable to load drama insights.</td></tr>';
+        return;
+      }
+
+      const summary = data.summary || {};
+      const pendingEl = document.getElementById("overviewDramaPending");
+      const inProgressEl = document.getElementById("overviewDramaInProgress");
+      const publishedEl = document.getElementById("overviewDramaPublished");
+      const updatedEl = document.getElementById("overviewDramaUpdatedRecently");
+
+      if (pendingEl) pendingEl.textContent = Number(summary.pending_approval || 0).toLocaleString();
+      if (inProgressEl) inProgressEl.textContent = Number(summary.in_progress || 0).toLocaleString();
+      if (publishedEl) publishedEl.textContent = Number(summary.published || 0).toLocaleString();
+      if (updatedEl) updatedEl.textContent = Number(summary.updated_recently || 0).toLocaleString();
+
+      const rows = Array.isArray(data.items) ? data.items : [];
+      if (rows.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6">No drama insights available yet.</td></tr>';
+        return;
+      }
+
+      tableBody.innerHTML = "";
+      rows.forEach((item) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <div class="project-title-cell">
+              <div class="project-icon">
+                <span class="bx bx-movie-play"></span>
+              </div>
+              <div class="project-info">
+                <div class="project-title-text">${escapeHtml(item.drama_name || "Untitled drama")}</div>
+              </div>
+            </div>
+          </td>
+          <td>${getDramaStageBadge(item.stage)}</td>
+          <td>${escapeHtml(item.producer_name || "Not specified")}</td>
+          <td>${escapeHtml(item.producer_contact || "N/A")}</td>
+          <td>${escapeHtml(formatDramaDate(item.activity_at))}</td>
+          <td>${escapeHtml(item.insight || "No additional insight available.")}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    })
+    .catch((error) => {
+      console.error("Error loading overview drama details:", error);
+      tableBody.innerHTML = '<tr><td colspan="6">Unable to load drama insights right now.</td></tr>';
     });
 }
 // ===================================
@@ -140,6 +244,7 @@ function switchView(viewId) {
     updatePageTitle(viewId);
     if (viewId === "overview") {
       loadOverviewStats();
+      loadOverviewDramaDetails();
     }
   }
   // Close sidebar on mobile after navigation

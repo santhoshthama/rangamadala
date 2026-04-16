@@ -25,20 +25,8 @@ $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
 $currentDirectorId = (int)($_SESSION['user_id'] ?? 0);
 
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
-}
+require_once __DIR__ . '/_profile_image_helper.php';
+$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
 
 $publishableRoles = array_filter($roles, function ($role) {
     $status = strtolower($role->status ?? 'open');
@@ -72,46 +60,278 @@ $publishedRoleIds = array_map(function ($role) {
         .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .message.info { background: #e9ecef; color: #383d41; border: 1px solid #d6d8db; }
 
+        .roles-overview-section {
+            border: 1px solid #ead7a4;
+            border-left: 0 !important;
+            border-radius: 16px;
+            padding: 24px;
+            background: linear-gradient(180deg, #fffefb 0%, #fff8ea 100%);
+            box-shadow: 0 6px 16px rgba(186, 142, 35, 0.10);
+        }
+
+        .roles-overview-section h3,
+        .roles-overview-section h4 {
+            color: #2f2410;
+        }
+
+        .roles-overview-section .section-subtitle {
+            color: #6a5120;
+            font-size: 13px;
+            margin-top: 6px;
+            display: block;
+        }
+
+        .director-dashboard-page .tab-buttons {
+            display: flex;
+            gap: 0;
+            margin-top: 32px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-bottom: 2px solid var(--border);
+            border-radius: var(--radius) var(--radius) 0 0;
+            box-shadow: var(--shadow-sm);
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .director-dashboard-page .tab-buttons::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .director-dashboard-page .tab-buttons::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .director-dashboard-page .tab-buttons::-webkit-scrollbar-thumb {
+            background: rgba(186, 142, 35, 0.3);
+            border-radius: 4px;
+        }
+
+        .director-dashboard-page .tab-buttons::-webkit-scrollbar-thumb:hover {
+            background: rgba(186, 142, 35, 0.6);
+        }
+
+        .director-dashboard-page .tab-buttons button,
+        .director-dashboard-page .tab-trigger {
+            padding: 14px 20px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            border-bottom: 3px solid transparent;
+        }
+
+        .director-dashboard-page .tab-buttons button:hover,
+        .director-dashboard-page .tab-trigger:hover {
+            color: var(--ink);
+            background: rgba(186, 142, 35, 0.05);
+        }
+
+        .director-dashboard-page .tab-buttons button.active,
+        .director-dashboard-page .tab-trigger.active {
+            color: var(--brand);
+            border-bottom-color: var(--brand);
+            background: rgba(186, 142, 35, 0.08);
+        }
+
+        .director-dashboard-page .tab-content {
+            display: none;
+            background: linear-gradient(180deg, #fffefb 0%, #fff8ea 100%);
+            border: 1px solid #ead7a4;
+            border-radius: 0 0 16px 16px;
+            padding: 24px;
+            box-shadow: 0 6px 16px rgba(186, 142, 35, 0.08);
+        }
+
+        .director-dashboard-page .tab-content.active {
+            display: block;
+        }
+
         .roles-table { width: 100%; border-collapse: collapse; }
         .roles-table th, .roles-table td { padding: 14px; border-bottom: 1px solid var(--border); text-align: left; }
         .roles-table th { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
         .roles-table td { font-size: 14px; }
-        .roles-table tbody tr:hover { background: rgba(0,0,0,0.02); }
+        .roles-table tbody tr:hover { background: rgba(186, 142, 35, 0.05); }
 
-        .actions-inline { display: flex; gap: 8px; flex-wrap: wrap; }
-
-        .tab-buttons { display: flex; gap: 12px; margin-top: 32px; margin-bottom: 12px; }
-        .tab-buttons button {
-            padding: 10px 18px;
-            border-radius: 30px;
-            border: 1px solid var(--border);
-            background: #fff;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-        .tab-buttons button.active {
-            background: var(--brand);
-            border-color: var(--brand);
-            color: #fff;
+        .actions-inline {
+            display: flex;
+            gap: 10px;
+            flex-wrap: nowrap;
+            align-items: center;
+            overflow-x: auto;
+            padding-bottom: 2px;
         }
 
-        .tab-content { display: none; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.05)); }
-        .tab-content.active { display: block; }
+        .actions-inline form {
+            margin: 0;
+            flex: 0 0 auto;
+        }
+
+        .roles-table td[data-label="Actions"] {
+            min-width: 320px;
+        }
+
+        .roles-table td[data-label="Actions"] .actions-inline {
+            justify-content: flex-end;
+        }
+
+        .roles-table td[data-label="Actions"] .btn {
+            white-space: nowrap;
+        }
+
+        .director-dashboard-page .roles-table .btn,
+        .director-dashboard-page .application-actions .btn,
+        .director-dashboard-page .form-inline .btn,
+        .director-dashboard-page .vacancy-card .btn,
+        .director-dashboard-page .request-card .btn {
+            border-radius: 10px;
+            min-height: 42px;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(186, 142, 35, 0.12);
+        }
+
+        .director-dashboard-page .btn-primary,
+        .director-dashboard-page .btn-success {
+            background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%);
+            border: 1px solid #c9a14a;
+            color: #2f2410;
+        }
+
+        .director-dashboard-page .btn-primary:hover,
+        .director-dashboard-page .btn-success:hover {
+            box-shadow: 0 10px 20px rgba(186, 142, 35, 0.24);
+            transform: translateY(-2px);
+        }
+
+        .director-dashboard-page .btn-secondary {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            border: 1px solid #f0dfb4;
+            color: #4a3a14;
+        }
+
+        .director-dashboard-page .btn-secondary:hover {
+            background: linear-gradient(180deg, #fffaf0 0%, #fff2da 100%);
+            color: #3f2f12;
+        }
+
+        .director-dashboard-page .btn-danger {
+            background: linear-gradient(135deg, #e7b0a9 0%, #d98d84 100%);
+            border: 1px solid #d98d84;
+            color: #4a1714;
+        }
+
+        .director-dashboard-page .btn-danger:hover {
+            box-shadow: 0 10px 20px rgba(217, 141, 132, 0.24);
+            transform: translateY(-2px);
+        }
 
         .application-card, .request-card, .vacancy-card {
             border: 1px solid var(--border);
             border-radius: 14px;
-            padding: 18px;
-            margin-bottom: 16px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
             background: #fff;
             box-shadow: var(--shadow-xs, 0 2px 6px rgba(0,0,0,0.05));
         }
-        .card-header { display: flex; justify-content: space-between; gap: 12px; }
-        .card-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--muted); }
+        .vacancy-card {
+            display: grid;
+            gap: 12px;
+        }
+        .card-header {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+        }
+        .card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
 
         .form-inline { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
         .form-inline .form-group { flex: 1 1 220px; }
+
+        #tab-vacancies .publish-vacancy-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+            margin-bottom: 10px;
+            max-width: 860px;
+        }
+
+        #tab-vacancies .publish-vacancy-form .form-group {
+            margin: 0;
+            flex: 0 0 auto;
+        }
+
+        #tab-vacancies .publish-vacancy-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #2f2410;
+        }
+
+        #tab-vacancies .publish-vacancy-form .form-control {
+            width: 100%;
+            border: 2px solid #e7d5ab;
+            border-radius: 12px;
+            background: #fffefb;
+            color: #2f2410;
+            padding: 12px 14px;
+            font-size: 15px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #tab-vacancies .publish-vacancy-form select.form-control {
+            min-height: 52px;
+        }
+
+        #tab-vacancies .publish-vacancy-form textarea.form-control {
+            min-height: 138px;
+            resize: vertical;
+            line-height: 1.45;
+        }
+
+        #tab-vacancies .publish-vacancy-form .form-control:focus {
+            outline: none;
+            border-color: #c9a14a;
+            box-shadow: 0 0 0 3px rgba(201, 161, 74, 0.16);
+        }
+
+        #tab-vacancies .publish-submit-btn {
+            min-height: 52px;
+            padding: 0 22px;
+            white-space: nowrap;
+            align-self: flex-start;
+        }
+
+        #tab-published h4 {
+            margin: 0 0 14px;
+        }
+
+        #tab-published .vacancy-card .card-header {
+            align-items: start;
+        }
+
+        #tab-published .vacancy-card .btn {
+            align-self: center;
+        }
 
         .empty-state { padding: 32px; text-align: center; border: 1px dashed var(--border); border-radius: 12px; color: var(--muted); }
 
@@ -135,25 +355,35 @@ $publishedRoleIds = array_map(function ($role) {
             .roles-table tbody tr { display: block; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; padding: 12px; }
             .roles-table td { display: flex; justify-content: space-between; padding: 8px 0; }
             .roles-table td::before { content: attr(data-label); font-weight: 600; color: var(--muted); }
+            .roles-table td[data-label="Actions"] { min-width: 0; }
+            .actions-inline { width: 100%; }
+
+            .card-header {
+                grid-template-columns: 1fr;
+            }
+
+            #tab-published .vacancy-card .btn {
+                width: 100%;
+            }
+
+            #tab-vacancies .publish-vacancy-form {
+                max-width: 100%;
+            }
+
+            #tab-vacancies .publish-submit-btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
-<body>
-    <aside class="sidebar">
-        <div class="logo"><h2>🎭</h2></div>
-        <ul class="menu">
-            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-film"></i><span>Drama Details</span></a></li>
-            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-users"></i><span>Artist Roles</span></a></li>
-            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-user-tie"></i><span>Production Manager</span></a></li>
-            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-calendar-alt"></i><span>Schedule</span></a></li>
-            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-dollar-sign"></i><span>Services & Budget</span></a></li>
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bx-arrow-left"></i><span>Back to Profile</span></a></li>
-        </ul>
-    </aside>
+<body class="director-dashboard-page">
+    <?php
+    $directorSidebarDramaId = (int)$dramaId;
+    $directorSidebarActive = 'artist-roles';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="bx bx-arrow-left"></i>Back to Dashboard</a>
 
         <div class="header--wrapper">
             <div class="header--title">
@@ -162,14 +392,11 @@ $publishedRoleIds = array_map(function ($role) {
                 <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">Review open roles, handle applications, and collaborate with artists in one place.</p>
             </div>
             <div class="user--info">
-                <a href="<?= ROOT ?>/director/create_role?drama_id=<?= esc($dramaId) ?>" class="btn btn-primary"><i class="bx bx-plus-circle"></i>Create Role</a>
-                <div class="role-badge">
-                    <i class="bx bx-video"></i> Director
-                </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <?php
+                $directorProfileImageSrc = $profileImageSrc;
+                $directorRoleLabel = 'Director';
+                include __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
@@ -182,18 +409,53 @@ $publishedRoleIds = array_map(function ($role) {
         <?php endif; ?>
 
         <?php if ($roleStats): ?>
-            <div class="stats-grid" style="margin-bottom: 24px;">
-                <div class="stat-card"><h3><?= esc($roleStats->total_roles ?? 0) ?></h3><p>Total Roles</p></div>
-                <div class="stat-card"><h3><?= esc($roleStats->open_roles ?? 0) ?></h3><p>Open Roles</p></div>
-                <div class="stat-card"><h3><?= esc($roleStats->filled_positions ?? 0) ?></h3><p>Filled Positions</p></div>
-                <div class="stat-card"><h3><?= esc($roleStats->published_roles ?? 0) ?></h3><p>Published Vacancies</p></div>
+            <div class="stats-grid director-stats-grid" style="margin-bottom: 24px;">
+                <div class="stat-card director-stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">Total Roles</div>
+                        <div class="stat-card-icon primary">
+                            <i class="bx bx-mask"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value"><?= esc($roleStats->total_roles ?? 0) ?></div>
+                </div>
+                <div class="stat-card director-stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">Open Roles</div>
+                        <div class="stat-card-icon info">
+                            <i class="bx bx-folder-open"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value"><?= esc($roleStats->open_roles ?? 0) ?></div>
+                </div>
+                <div class="stat-card director-stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">Filled Positions</div>
+                        <div class="stat-card-icon success">
+                            <i class="bx bx-check-shield"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value"><?= esc($roleStats->filled_positions ?? 0) ?></div>
+                </div>
+                <div class="stat-card director-stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">Published Vacancies</div>
+                        <div class="stat-card-icon warning">
+                            <i class="bx bx-volume-full"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value"><?= esc($roleStats->published_roles ?? 0) ?></div>
+                </div>
             </div>
         <?php endif; ?>
 
-        <section class="card-section" style="border: 1px solid var(--border); border-radius: 16px; padding: 24px; background: #fff; box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.04));">
+        <section class="card-section roles-overview-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 20px;">Roles for this Drama</h3>
-                <span style="color: var(--muted); font-size: 13px;">Click Assign to invite artists or View to manage details.</span>
+                <div>
+                    <h3 style="margin: 0; font-size: 20px;">Roles for this Drama</h3>
+                    <span class="section-subtitle">Click Assign to invite artists or View to manage details.</span>
+                </div>
+                <a href="<?= ROOT ?>/director/create_role?drama_id=<?= esc($dramaId) ?>" class="btn btn-success"><i class="bx bx-plus-circle"></i>Create New Role</a>
             </div>
 
             <?php if (empty($roles)): ?>
@@ -270,10 +532,11 @@ $publishedRoleIds = array_map(function ($role) {
             <?php endif; ?>
         </section>
 
-        <div class="tab-buttons">
-            <button class="tab-trigger active" data-tab="applications">Applications (<?= count($pendingApplications) ?>)</button>
-            <button class="tab-trigger" data-tab="vacancies">Publish Vacancy</button>
-            <button class="tab-trigger" data-tab="requests">Requests (<?= count($pendingRequests) ?>)</button>
+        <div class="tab-buttons nav-tabs-bar" role="tablist" aria-label="Role management tabs">
+            <button class="tab-trigger nav-tab-btn active" data-tab="applications">Applications (<?= count($pendingApplications) ?>)</button>
+            <button class="tab-trigger nav-tab-btn" data-tab="vacancies">Publish Vacancy</button>
+            <button class="tab-trigger nav-tab-btn" data-tab="published">Published Vacancies (<?= count($publishedRoles) ?>)</button>
+            <button class="tab-trigger nav-tab-btn" data-tab="requests">Requests (<?= count($pendingRequests) ?>)</button>
         </div>
 
         <section id="tab-applications" class="tab-content active">
@@ -368,7 +631,7 @@ $publishedRoleIds = array_map(function ($role) {
                     All roles are currently filled. Update a role to open it for new applicants.
                 </div>
             <?php else: ?>
-                <form class="form-inline js-role-action" data-action="publish" action="<?= ROOT ?>/director/publish_vacancy?drama_id=<?= esc($dramaId) ?>" method="POST">
+                <form class="form-inline publish-vacancy-form js-role-action" data-action="publish" action="<?= ROOT ?>/director/publish_vacancy?drama_id=<?= esc($dramaId) ?>" method="POST">
                     <div class="form-group">
                         <label for="publish_role_id">Role</label>
                         <select id="publish_role_id" name="role_id" class="form-control" required>
@@ -385,11 +648,13 @@ $publishedRoleIds = array_map(function ($role) {
                         <label for="publish_message">Vacancy message</label>
                         <textarea id="publish_message" name="message" class="form-control" rows="2" placeholder="Highlight requirements, audition dates, etc."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary"><i class="bx bx-bullhorn"></i>Publish Vacancy</button>
+                    <button type="submit" class="btn btn-primary publish-submit-btn"><i class="bx bx-bullhorn"></i>Publish Vacancy</button>
                 </form>
             <?php endif; ?>
+        </section>
 
-            <h4 style="margin: 24px 0 12px;">Published vacancies</h4>
+        <section id="tab-published" class="tab-content">
+            <h4 style="margin-top: 0;">Published vacancies</h4>
             <?php if (empty($publishedRoles)): ?>
                 <div class="empty-state">
                     <i class="bx bx-briefcase" style="font-size: 26px; display: block; margin-bottom: 10px;"></i>
@@ -459,6 +724,7 @@ $publishedRoleIds = array_map(function ($role) {
             const tabContents = {
                 applications: document.getElementById('tab-applications'),
                 vacancies: document.getElementById('tab-vacancies'),
+                published: document.getElementById('tab-published'),
                 requests: document.getElementById('tab-requests')
             };
 
@@ -476,6 +742,7 @@ $publishedRoleIds = array_map(function ($role) {
             });
         });
     </script>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
     <script src="/Rangamadala/public/assets/JS/manage-roles.js"></script>
 </body>
 </html>

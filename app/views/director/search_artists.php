@@ -6,12 +6,52 @@
     <title>Search Artists - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        .search-section {
+            padding: 24px;
+        }
+
+        .search-section .search-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 16px;
+            align-items: flex-end;
+        }
+
+        .search-section .filter-group {
+            flex: 1 1 220px;
+            min-width: 220px;
+        }
+
+        .search-section .search-button {
+            margin-top: 0;
+            align-self: flex-start;
+        }
+
+        @media (max-width: 768px) {
+            .search-section {
+                padding: 18px;
+            }
+
+            .search-section .filter-group {
+                min-width: 100%;
+            }
+
+            .search-section .search-button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <a href="<?= ROOT ?>/director/dashboard">
+                <img src="/Rangamadala/public/assets/images/logo.png" alt="Rangamadala Logo" class="logo-image">
+                <span class="logo-text">Rangamadala</span>
+            </a>
         </div>
         <ul class="menu">
             <li>
@@ -67,10 +107,7 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
+  
 
         <!-- Header -->
         <div class="header--wrapper">

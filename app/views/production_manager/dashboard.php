@@ -29,7 +29,9 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="logo-link">
+                <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+            </a>
         </div>
         <ul class="menu">
             <li class="active">

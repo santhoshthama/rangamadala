@@ -11,7 +11,10 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <a href="dashboard.php?drama_id=1" class="logo-link">
+                <img src="/Rangamadala/public/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+                <span class="logo-text">Rangamadala</span>
+            </a>
         </div>
         <ul class="menu">
             <li>
@@ -67,11 +70,6 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php?drama_id=1" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
-
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">

@@ -34,8 +34,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($storedValue);
     }
-} elseif (isset($user->nic_photo) && !empty($user->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $user->nic_photo), '/');
 }
 ?>
 <!DOCTYPE html>
@@ -74,7 +72,9 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
 
     <aside class="sidebar">
         <div class="logo">
-            <h2><i class='bx bxs-theater'></i></h2>
+            <a href="<?=ROOT?>/artistdashboard" class="logo-link">
+                <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+            </a>
         </div>
         <ul class="menu">
             <li>

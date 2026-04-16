@@ -6,7 +6,7 @@ const dramaId = urlParams.get('drama_id') || 1;
 console.log('View Services & Budget page initialized for Drama ID:', dramaId);
 
 // Tab switching
-function showServiceTab(tabName) {
+function showServiceTab(tabName, btn) {
     // Hide all tabs
     const tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => tab.style.display = 'none');
@@ -22,7 +22,9 @@ function showServiceTab(tabName) {
     }
     
     // Add active class to clicked button
-    event.target.classList.add('active');
+    if (btn) {
+        btn.classList.add('active');
+    }
     
     console.log('Switched to service tab:', tabName);
     loadTabData(tabName);

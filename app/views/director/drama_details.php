@@ -28,22 +28,17 @@ $publishFormValues = [
     'showing_prices' => $publish_form_data['showing_prices'] ?? ($drama->showing_prices ?? ''),
 ];
 
+$showingPriceNumericValue = '';
+if ($publishFormValues['showing_prices'] !== '') {
+    if (preg_match('/(\d+(?:\.\d+)?)/', (string)$publishFormValues['showing_prices'], $showingPriceMatch)) {
+        $showingPriceNumericValue = (string)(int)round((float)$showingPriceMatch[1]);
+    }
+}
+
 $isPublished = !empty($drama->is_published);
 
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
-}
+require_once __DIR__ . '/_profile_image_helper.php';
+$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -101,64 +96,17 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         }
     </style>
 </head>
-<body>
+<body class="director-dashboard-page">
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h2>🎭</h2>
-        </div>
-        <ul class="menu">
-            <li>
-                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-film"></i>
-                    <span>Drama Details</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-users"></i>
-                    <span>Artist Roles</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-user-tie"></i>
-                    <span>Production Manager</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-calendar-alt"></i>
-                    <span>Schedule</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-dollar-sign"></i>
-                    <span>Services & Budget</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="bx bx-arrow-left"></i>
-                    <span>Back to Profile</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php
+    $directorSidebarDramaId = $dramaId;
+    $directorSidebarActive = 'drama-details';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
+    
 
         <!-- Header -->
         <div class="header--wrapper">
@@ -167,13 +115,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <h2><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'Drama' ?></h2>
             </div>
             <div class="user--info">
-                <div class="role-badge">
-                    <i class="bx bx-video"></i> Director
-                </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <?php
+                $directorProfileImageSrc = $profileImageSrc;
+                $directorRoleLabel = 'Director';
+                include __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
@@ -310,8 +256,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                     <div class="form-group">
                         <label for="showing_prices">Showing Prices <span class="required">*</span></label>
-                        <textarea class="form-control" id="showing_prices" name="showing_prices" rows="3" maxlength="500" required><?= esc($publishFormValues['showing_prices']) ?></textarea>
-                        <div class="form-hint">Example: Normal - LKR 1500, Balcony - LKR 2500, VIP - LKR 4000.</div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-weight:700; color: var(--ink);"></span>
+                            <input type="number" class="form-control" id="showing_prices" name="showing_prices" min="0" step="1" inputmode="numeric" value="<?= esc($showingPriceNumericValue) ?>" required>
+                            <span style="font-weight:700; color: var(--ink);"></span>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -334,6 +283,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         </div>
     </main>
 
-    
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
 </body>
 </html>
