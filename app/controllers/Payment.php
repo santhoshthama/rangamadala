@@ -82,11 +82,8 @@ class Payment
      */
     public function createPayHerePayment()
     {
-        header('Content-Type: application/json');
-        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            exit;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 405);
         }
         
         $requestId = $_POST['request_id'] ?? null;
@@ -94,14 +91,12 @@ class Payment
         $type = $_POST['type'] ?? 'advance';
         
         if (!$requestId || !$amount) {
-            echo json_encode(['success' => false, 'error' => 'Invalid parameters']);
-            exit;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid parameters'], 400);
         }
         
         $request = $this->serviceRequestModel->getRequestById($requestId);
         if (!$request) {
-            echo json_encode(['success' => false, 'error' => 'Service request not found']);
-            exit;
+            $this->jsonResponse(['success' => false, 'error' => 'Service request not found'], 404);
         }
         
         $userId = $_SESSION['user_id'];
@@ -131,21 +126,19 @@ class Payment
             ]);
             
             if (!$paymentId) {
-                echo json_encode(['success' => false, 'error' => 'Unable to create payment']);
-                exit;
+                $this->jsonResponse(['success' => false, 'error' => 'Unable to create payment'], 500);
             }
         }
         
         // Generate hash for PayHere
         $hash = $this->payHereHelper->generateHash($order_id, $amount);
         
-        echo json_encode([
+        $this->jsonResponse([
             'success' => true,
             'order_id' => $order_id,
             'hash' => $hash,
             'payment_id' => $paymentId
         ]);
-        exit;
     }
 
     /**
@@ -446,49 +439,34 @@ class Payment
      */
     public function confirmCashPayment()
     {
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
         }
 
         if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
         $paymentId = $_POST['payment_id'] ?? null;
         if (!$paymentId) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing payment id']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing payment id'], 400);
         }
 
         $payment = $this->paymentModel->getPaymentById($paymentId);
         if (!$payment) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Payment not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Payment not found'], 404);
         }
 
         if (($payment->payment_gateway ?? '') !== 'cash') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid payment type']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid payment type'], 400);
         }
 
         if ((int)$payment->paid_to !== (int)$_SESSION['user_id']) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Not allowed for this payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not allowed for this payment'], 403);
         }
 
         if (($payment->payment_status ?? '') !== 'pending') {
-            echo json_encode(['success' => true, 'message' => 'Payment already confirmed']);
-            return;
+            $this->jsonResponse(['success' => true, 'message' => 'Payment already confirmed']);
         }
 
         $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
@@ -505,9 +483,7 @@ class Payment
         );
 
         if (!$ok) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to confirm payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Failed to confirm payment'], 500);
         }
 
         $this->updateServiceRequestPaymentStatus($payment->service_request_id);
@@ -524,7 +500,7 @@ class Payment
             );
         }
 
-        echo json_encode(['success' => true]);
+        $this->jsonResponse(['success' => true]);
     }
 
     /**
@@ -532,49 +508,34 @@ class Payment
      */
     public function confirmBankPayment()
     {
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
         }
 
         if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
         $paymentId = $_POST['payment_id'] ?? null;
         if (!$paymentId) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing payment id']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing payment id'], 400);
         }
 
         $payment = $this->paymentModel->getPaymentById($paymentId);
         if (!$payment) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Payment not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Payment not found'], 404);
         }
 
         if (($payment->payment_gateway ?? '') !== 'bank_transfer') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid payment type']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid payment type'], 400);
         }
 
         if ((int)$payment->paid_to !== (int)$_SESSION['user_id']) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Not allowed for this payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not allowed for this payment'], 403);
         }
 
         if (($payment->payment_status ?? '') !== 'pending') {
-            echo json_encode(['success' => true, 'message' => 'Payment already confirmed']);
-            return;
+            $this->jsonResponse(['success' => true, 'message' => 'Payment already confirmed']);
         }
 
         $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
@@ -591,9 +552,7 @@ class Payment
         );
 
         if (!$ok) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to confirm payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Failed to confirm payment'], 500);
         }
 
         $this->updateServiceRequestPaymentStatus($payment->service_request_id);
@@ -610,7 +569,7 @@ class Payment
             );
         }
 
-        echo json_encode(['success' => true]);
+        $this->jsonResponse(['success' => true]);
     }
 
     /**
@@ -618,58 +577,41 @@ class Payment
      */
     public function rejectManualPayment()
     {
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
         }
 
         if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
         $paymentId = $_POST['payment_id'] ?? null;
         $reason = trim((string)($_POST['reason'] ?? ''));
 
         if (!$paymentId) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing payment id']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing payment id'], 400);
         }
 
         if ($reason === '') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Reason is required']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Reason is required'], 400);
         }
 
         $payment = $this->paymentModel->getPaymentById($paymentId);
         if (!$payment) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Payment not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Payment not found'], 404);
         }
 
         $gateway = $payment->payment_gateway ?? '';
         if (!in_array($gateway, ['cash', 'bank_transfer'], true)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Only cash or bank transfer can be rejected']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Only cash or bank transfer can be rejected'], 400);
         }
 
         if ((int)$payment->paid_to !== (int)$_SESSION['user_id']) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Not allowed for this payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not allowed for this payment'], 403);
         }
 
         if (($payment->payment_status ?? '') !== 'pending') {
-            echo json_encode(['success' => true, 'message' => 'Payment is already finalized']);
-            return;
+            $this->jsonResponse(['success' => true, 'message' => 'Payment is already finalized']);
         }
 
         $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
@@ -689,9 +631,7 @@ class Payment
         );
 
         if (!$ok) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to update verification status']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Failed to update verification status'], 500);
         }
 
         $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
@@ -706,7 +646,7 @@ class Payment
             );
         }
 
-        echo json_encode(['success' => true]);
+        $this->jsonResponse(['success' => true]);
     }
     
     /**
