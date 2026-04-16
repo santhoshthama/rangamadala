@@ -20,6 +20,16 @@ class Payment
         $this->serviceRequestModel = $this->getModel('M_service_request');
         $this->payHereHelper = new PayHereHelper();
     }
+
+    private function jsonResponse(array $payload, int $statusCode = 200): void
+    {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+        }
+        http_response_code($statusCode);
+        echo json_encode($payload);
+        exit;
+    }
     
     /**
      * Display checkout page
@@ -82,63 +92,81 @@ class Payment
      */
     public function createPayHerePayment()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 405);
-        }
-        
-        $requestId = $_POST['request_id'] ?? null;
-        $amount = $_POST['amount'] ?? null;
-        $type = $_POST['type'] ?? 'advance';
-        
-        if (!$requestId || !$amount) {
-            $this->jsonResponse(['success' => false, 'error' => 'Invalid parameters'], 400);
-        }
-        
-        $request = $this->serviceRequestModel->getRequestById($requestId);
-        if (!$request) {
-            $this->jsonResponse(['success' => false, 'error' => 'Service request not found'], 404);
-        }
-        
-        $userId = $_SESSION['user_id'];
-        
-        // Check if a pending PayHere payment already exists for this request and type
-        $existingPayment = $this->paymentModel->getPaymentByType($requestId, $type);
-        
-        if ($existingPayment && $existingPayment->payment_status === 'pending' && $existingPayment->payment_gateway === 'payhere') {
-            // Reuse existing pending payment
-            $paymentId = $existingPayment->id;
-            $order_id = $existingPayment->gateway_order_id;
-        } else {
-            // Generate order ID
-            $order_id = 'REQ-' . $requestId . '-' . $type . '-' . time();
-            
-            // Create PayHere payment
-            $paymentId = $this->paymentModel->createPayment([
-                'service_request_id' => $requestId,
-                'payment_type' => $type,
-                'amount' => $amount,
-                'payment_gateway' => 'payhere',
-                'payment_status' => 'pending',
-                'paid_by' => $userId,
-                'paid_to' => $request->provider_id ?? null,
-                'gateway_order_id' => $order_id,
-                'transaction_response' => json_encode(['source' => 'payhere_init'])
-            ]);
-            
-            if (!$paymentId) {
-                $this->jsonResponse(['success' => false, 'error' => 'Unable to create payment'], 500);
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 405);
             }
+
+            if (!isset($_SESSION['user_id'])) {
+                $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 401);
+            }
+
+            $requestId = (int)($_POST['request_id'] ?? 0);
+            $rawAmount = $_POST['amount'] ?? null;
+            $amount = is_numeric($rawAmount) ? (float)$rawAmount : 0.0;
+            $type = trim((string)($_POST['type'] ?? 'advance'));
+
+            if ($requestId <= 0 || $amount <= 0) {
+                $this->jsonResponse(['success' => false, 'error' => 'Invalid parameters'], 400);
+            }
+
+            if (!in_array($type, ['advance', 'remaining', 'full'], true)) {
+                $type = 'advance';
+            }
+
+            $request = $this->serviceRequestModel->getRequestById($requestId);
+            if (!$request) {
+                $this->jsonResponse(['success' => false, 'error' => 'Service request not found'], 404);
+            }
+
+            $userId = (int)$_SESSION['user_id'];
+
+            // Check if a pending PayHere payment already exists for this request and type
+            $existingPayment = $this->paymentModel->getPaymentByType($requestId, $type);
+
+            if ($existingPayment && $existingPayment->payment_status === 'pending' && $existingPayment->payment_gateway === 'payhere') {
+                // Reuse existing pending payment
+                $paymentId = (int)$existingPayment->id;
+                $order_id = (string)$existingPayment->gateway_order_id;
+            } else {
+                // Generate order ID
+                $order_id = 'REQ-' . $requestId . '-' . $type . '-' . time();
+
+                // Create PayHere payment
+                $paymentId = $this->paymentModel->createPayment([
+                    'service_request_id' => $requestId,
+                    'payment_type' => $type,
+                    'amount' => $amount,
+                    'payment_gateway' => 'payhere',
+                    'payment_status' => 'pending',
+                    'paid_by' => $userId,
+                    'paid_to' => $request->provider_id ?? null,
+                    'gateway_order_id' => $order_id,
+                    'transaction_response' => json_encode(['source' => 'payhere_init'])
+                ]);
+
+                if (!$paymentId) {
+                    $this->jsonResponse(['success' => false, 'error' => 'Unable to create payment'], 500);
+                }
+            }
+
+            $formattedAmount = number_format($amount, 2, '.', '');
+
+            // Generate hash for PayHere
+            $hash = $this->payHereHelper->generateHash($order_id, $formattedAmount);
+
+            $this->jsonResponse([
+                'success' => true,
+                'order_id' => $order_id,
+                'hash' => $hash,
+                'payment_id' => $paymentId,
+                'amount' => $formattedAmount,
+                'type' => $type
+            ]);
+        } catch (Throwable $e) {
+            error_log('createPayHerePayment error: ' . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'error' => 'Unable to initialize payment'], 500);
         }
-        
-        // Generate hash for PayHere
-        $hash = $this->payHereHelper->generateHash($order_id, $amount);
-        
-        $this->jsonResponse([
-            'success' => true,
-            'order_id' => $order_id,
-            'hash' => $hash,
-            'payment_id' => $paymentId
-        ]);
     }
 
     /**

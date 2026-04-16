@@ -675,7 +675,14 @@
                 },
                 body: 'request_id=' + encodeURIComponent(requestId) + '&amount=' + encodeURIComponent(amount) + '&type=' + encodeURIComponent(type)
             })
-            .then(response => response.json())
+            .then(async (response) => {
+                const raw = await response.text();
+                try {
+                    return JSON.parse(raw);
+                } catch (e) {
+                    throw new Error((raw || 'Invalid server response').trim().slice(0, 180));
+                }
+            })
             .then(data => {
                 if (!data.success) {
                     alert(data.error || 'Failed to initialize payment');
@@ -694,7 +701,7 @@
                     "notify_url": "<?= htmlspecialchars($payhere_config['notify_url']) ?>",
                     "order_id": data.order_id,
                     "items": "<?= htmlspecialchars($request->service_type) ?> - Service Request #<?= $request->id ?>",
-                    "amount": "<?= number_format($amount, 2, '.', '') ?>",
+                    "amount": data.amount,
                     "currency": "LKR",
                     "hash": data.hash,
                     "first_name": "<?= htmlspecialchars($user->first_name ?? explode(' ', $user->full_name ?? 'Customer')[0]) ?>",
