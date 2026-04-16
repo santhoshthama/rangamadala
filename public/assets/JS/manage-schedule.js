@@ -1,36 +1,56 @@
 // Dynamic data loaded from database via manage_schedule.php
-// The 'schedules' variable is populated from PHP in the view file
 let serviceData = [];
-
-// Convert database schedules to calendar format
-if (typeof schedules !== 'undefined' && Array.isArray(schedules)) {
-    serviceData = schedules.map(schedule => {
-        // Parse the scheduled date
-        const dateObj = schedule.scheduledDate ? new Date(schedule.scheduledDate) : new Date();
-        
-        return {
-            id: schedule.id || null,
-            type: schedule.serviceName || 'Service',
-            provider: schedule.venue || 'TBD',
-            date: dateObj,
-            cost: 0, // Cost should come from budget or service request
-            status: schedule.status === 'completed' ? 'paid' : schedule.status === 'in_progress' ? 'accepted' : 'awaiting',
-            description: schedule.notes || 'No description provided',
-            startTime: schedule.startTime || '',
-            endTime: schedule.endTime || ''
-        };
-    });
-    
-    console.log('Converted ' + serviceData.length + ' database schedules to calendar format');
-} else {
-    console.warn('No schedule data available from database');
-}
 
 let currentDate = new Date();
 let currentFilter = '';
 
+function normalizeStatus(rawStatus) {
+    const status = String(rawStatus || '').toLowerCase();
+    if (status === 'paid' || status === 'completed' || status === 'completed_paid') {
+        return 'paid';
+    }
+    if (status === 'accepted' || status === 'confirmed' || status === 'in_progress') {
+        return 'accepted';
+    }
+    return 'awaiting';
+}
+
+function getPmConfig() {
+    const cfg = window.pmScheduleConfig || {};
+    return {
+        root: cfg.root || '',
+        dramaId: Number(cfg.dramaId || 0)
+    };
+}
+
+function initializeServiceData() {
+    const rawSchedules = Array.isArray(window.schedules) ? window.schedules : [];
+
+    serviceData = rawSchedules.map(schedule => {
+        const scheduledDate = schedule.scheduled_date || schedule.scheduledDate || '';
+        const dateObj = scheduledDate ? new Date(scheduledDate) : new Date();
+
+        return {
+            id: schedule.id || null,
+            requestId: schedule.service_request_id || null,
+            source: schedule.source || 'service_schedule',
+            type: schedule.service_name || schedule.serviceName || 'Service',
+            provider: schedule.provider_name || schedule.venue || 'TBD',
+            date: dateObj,
+            cost: Number(schedule.budget || 0),
+            status: normalizeStatus(schedule.status),
+            description: schedule.notes || 'No description provided',
+            startTime: schedule.start_time || schedule.startTime || '',
+            endTime: schedule.end_time || schedule.endTime || ''
+        };
+    });
+
+    console.log('Loaded and converted ' + serviceData.length + ' schedule entries');
+}
+
 // Initialize calendar on page load
 document.addEventListener('DOMContentLoaded', function() {
+    initializeServiceData();
     renderCalendar();
     renderTimeline();
 });
@@ -189,12 +209,14 @@ function nextMonth() {
     renderTimeline();
 }
 
-function switchView(view) {
+function switchView(view, triggerEl) {
     // Update buttons
     document.querySelectorAll('.view-toggle button').forEach(btn => {
         btn.classList.remove('active');
     });
-    event.target.closest('button').classList.add('active');
+    if (triggerEl) {
+        triggerEl.classList.add('active');
+    }
     
     // Update views
     const calendarView = document.getElementById('calendarView');
@@ -211,14 +233,16 @@ function switchView(view) {
     }
 }
 
-function filterByStatus(status) {
+function filterByStatus(status, triggerEl) {
     currentFilter = status;
     
     // Update filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    event.target.classList.add('active');
+    if (triggerEl) {
+        triggerEl.classList.add('active');
+    }
     
     // Re-render both views
     renderCalendar();
@@ -290,17 +314,16 @@ function closeEventModal() {
 }
 
 function viewServiceDetails(serviceId) {
-    // TODO: Implement - Redirect to manage_services.php with service_id
-    console.log('View service details for ID:', serviceId);
-    window.location.href = `manage_services.php?drama_id=1&service_id=${serviceId}`;
+    const cfg = getPmConfig();
+    const requestId = serviceId && String(serviceId).startsWith('sr-') ? String(serviceId).split('-')[1] : serviceId;
+    window.location.href = `${cfg.root}/production_manager/manage_services?drama_id=${cfg.dramaId}&service_id=${requestId}`;
 }
 
 function openPaymentModal(serviceId) {
-    // TODO: Implement - Open payment modal from manage_services.js
-    console.log('Open payment for service ID:', serviceId);
+    const cfg = getPmConfig();
+    const requestId = serviceId && String(serviceId).startsWith('sr-') ? String(serviceId).split('-')[1] : serviceId;
     closeEventModal();
-    // Redirect to manage_services.php and open payment modal
-    window.location.href = `manage_services.php?drama_id=1&service_id=${serviceId}&payment=true`;
+    window.location.href = `${cfg.root}/production_manager/manage_services?drama_id=${cfg.dramaId}&service_id=${requestId}&payment=true`;
 }
 
 function viewPaymentDetails(serviceId) {

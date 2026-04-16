@@ -191,7 +191,7 @@ class Production_manager{
     public function get_budget_items()
     {
         header('Content-Type: application/json');
-        $drama = $this->authorizeDrama();
+        $drama = $this->authorizeDrama(true);
 
         $budgetModel = $this->getModel('M_budget');
         if (!$budgetModel) {
@@ -222,7 +222,7 @@ class Production_manager{
     public function get_budget_item()
     {
         header('Content-Type: application/json');
-        $drama = $this->authorizeDrama();
+        $drama = $this->authorizeDrama(true);
 
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         if ($id <= 0) {
@@ -258,7 +258,7 @@ class Production_manager{
             return;
         }
 
-        $drama = $this->authorizeDrama();
+        $drama = $this->authorizeDrama(true);
         $budgetModel = $this->getModel('M_budget');
         if (!$budgetModel) {
             http_response_code(500);
@@ -463,7 +463,7 @@ class Production_manager{
             return;
         }
 
-        $drama = $this->authorizeDrama();
+        $drama = $this->authorizeDrama(true);
         $budgetModel = $this->getModel('M_budget');
         if (!$budgetModel) {
             http_response_code(500);
@@ -543,28 +543,145 @@ class Production_manager{
         
         // Get service schedules for this drama
         $scheduleModel = $this->getModel('M_service_schedule');
+        $serviceModel = $this->serviceRequestModel ?: $this->getModel('M_service_request');
         $schedules = [];
+        $services = $serviceModel ? $serviceModel->getServicesByDrama((int)$drama->id) : [];
         $upcomingCount = 0;
         
         if ($scheduleModel) {
             $schedules = $scheduleModel->getSchedulesByDrama($drama->id);
-            
-            // Count upcoming schedules
-            if (is_array($schedules)) {
-                $today = date('Y-m-d');
-                foreach ($schedules as $schedule) {
-                    if (isset($schedule->scheduled_date) && $schedule->scheduled_date >= $today) {
-                        $upcomingCount++;
+        }
+
+        $linkedServiceRequestIds = [];
+        if (is_array($schedules)) {
+            foreach ($schedules as $schedule) {
+                if (!empty($schedule->service_request_id)) {
+                    $linkedServiceRequestIds[] = (int)$schedule->service_request_id;
+                }
+            }
+        }
+
+        $derivedFromServices = [];
+        if (is_array($services)) {
+            foreach ($services as $service) {
+                $serviceRequestId = (int)($service->id ?? 0);
+                if ($serviceRequestId <= 0 || in_array($serviceRequestId, $linkedServiceRequestIds, true)) {
+                    continue;
+                }
+
+                $rawStatus = strtolower((string)($service->status ?? 'pending'));
+                if (in_array($rawStatus, ['rejected', 'cancelled'], true)) {
+                    continue;
+                }
+
+                $details = [];
+                if (!empty($service->service_details_json)) {
+                    $decoded = json_decode((string)$service->service_details_json, true);
+                    if (is_array($decoded)) {
+                        $details = $decoded;
                     }
                 }
+
+                $pmConfirmation = is_array($details['pm_confirmation'] ?? null) ? $details['pm_confirmation'] : [];
+                $startDate = trim((string)($pmConfirmation['final_start_date'] ?? ($service->start_date ?? '')));
+                $endDate = trim((string)($pmConfirmation['final_end_date'] ?? ($service->end_date ?? $startDate)));
+
+                if ($startDate === '') {
+                    continue;
+                }
+                if ($endDate === '') {
+                    $endDate = $startDate;
+                }
+
+                $startTs = strtotime($startDate);
+                $endTs = strtotime($endDate);
+                if ($startTs === false) {
+                    continue;
+                }
+                if ($endTs === false || $endTs < $startTs) {
+                    $endTs = $startTs;
+                }
+
+                $calendarStatus = 'awaiting';
+                if (in_array($rawStatus, ['completed', 'completed_paid'], true)) {
+                    $calendarStatus = 'paid';
+                } elseif (in_array($rawStatus, ['accepted', 'confirmed', 'in_progress'], true)) {
+                    $calendarStatus = 'accepted';
+                }
+
+                $providerName = trim((string)($service->provider_name ?? 'Service Provider'));
+                $serviceName = trim((string)($service->service_type ?? ($service->service_required ?? 'Service')));
+                $noteParts = [];
+                if (!empty($service->description)) {
+                    $noteParts[] = trim((string)$service->description);
+                }
+                if (!empty($service->notes)) {
+                    $noteParts[] = trim((string)$service->notes);
+                }
+                $noteText = trim(implode("\n", array_filter($noteParts)));
+
+                for ($cursor = $startTs; $cursor <= $endTs; $cursor += 86400) {
+                    $derivedFromServices[] = (object) [
+                        'id' => 'sr-' . $serviceRequestId . '-' . date('Ymd', $cursor),
+                        'drama_id' => (int)$drama->id,
+                        'service_request_id' => $serviceRequestId,
+                        'service_name' => $serviceName,
+                        'provider_name' => $providerName,
+                        'provider_id' => (int)($service->provider_id ?? 0),
+                        'scheduled_date' => date('Y-m-d', $cursor),
+                        'start_time' => '',
+                        'end_time' => '',
+                        'venue' => $providerName,
+                        'status' => $calendarStatus,
+                        'notes' => $noteText,
+                        'budget' => isset($service->budget) ? (float)$service->budget : 0,
+                        'source' => 'service_request',
+                    ];
+                }
+            }
+        }
+
+        $scheduleRows = is_array($schedules) ? $schedules : [];
+        foreach ($scheduleRows as $schedule) {
+            $status = strtolower((string)($schedule->status ?? 'scheduled'));
+            if (in_array($status, ['completed', 'completed_paid'], true)) {
+                $schedule->status = 'paid';
+            } elseif (in_array($status, ['accepted', 'confirmed', 'in_progress'], true)) {
+                $schedule->status = 'accepted';
+            } else {
+                $schedule->status = 'awaiting';
+            }
+
+            if (!isset($schedule->source)) {
+                $schedule->source = 'service_schedule';
+            }
+        }
+
+        $mergedSchedules = array_merge($scheduleRows, $derivedFromServices);
+        usort($mergedSchedules, function ($a, $b) {
+            $aDate = strtotime((string)($a->scheduled_date ?? '')) ?: 0;
+            $bDate = strtotime((string)($b->scheduled_date ?? '')) ?: 0;
+            if ($aDate === $bDate) {
+                $aTime = strtotime((string)($a->start_time ?? '')) ?: 0;
+                $bTime = strtotime((string)($b->start_time ?? '')) ?: 0;
+                return $aTime <=> $bTime;
+            }
+            return $aDate <=> $bDate;
+        });
+
+        $today = date('Y-m-d');
+        foreach ($mergedSchedules as $schedule) {
+            if (!empty($schedule->scheduled_date) && $schedule->scheduled_date >= $today) {
+                $upcomingCount++;
             }
         }
         
         $data = [
             'drama' => $drama,
-            'schedules' => $schedules,
+            'schedules' => $mergedSchedules,
+            'serviceRequests' => is_array($services) ? $services : [],
             'upcomingCount' => $upcomingCount,
-            'totalSchedules' => count($schedules),
+            'totalSchedules' => count($mergedSchedules),
         ];
         
         $this->view('production_manager/manage_schedule', $data);
@@ -634,20 +751,38 @@ class Production_manager{
         $this->view('production_manager/' . $view, $payload);
     }
 
-    protected function authorizeDrama()
+    protected function authorizeDrama(bool $asJson = false)
     {
+        $jsonError = function (int $statusCode, string $message): void {
+            if (!headers_sent()) {
+                http_response_code($statusCode);
+                header('Content-Type: application/json');
+            }
+            echo json_encode(['success' => false, 'error' => $message]);
+            exit;
+        };
+
         if (!isset($_SESSION['user_id'])) {
+            if ($asJson) {
+                $jsonError(401, 'Unauthorized. Please log in.');
+            }
             header("Location: " . ROOT . "/login");
             exit;
         }
 
         if (!$this->dramaModel) {
+            if ($asJson) {
+                $jsonError(500, 'Drama model not available.');
+            }
             header("Location: " . ROOT . "/artistdashboard");
             exit;
         }
 
         $dramaId = $this->getQueryParam('drama_id');
         if (!$dramaId) {
+            if ($asJson) {
+                $jsonError(400, 'Missing drama_id.');
+            }
             header("Location: " . ROOT . "/artistdashboard");
             exit;
         }
@@ -655,6 +790,9 @@ class Production_manager{
         $drama = $this->dramaModel->getDramaById((int)$dramaId);
         
         if (!$drama) {
+            if ($asJson) {
+                $jsonError(404, 'Drama not found.');
+            }
             header("Location: " . ROOT . "/artistdashboard");
             exit;
         }
@@ -664,6 +802,9 @@ class Production_manager{
         $user_id = $_SESSION['user_id'];
         
         if (!$pmModel || !$pmModel->isManagerForDrama($user_id, (int)$dramaId)) {
+            if ($asJson) {
+                $jsonError(403, 'You are not authorized to access this drama.');
+            }
             $_SESSION['message'] = 'You are not authorized to access this drama.';
             $_SESSION['message_type'] = 'error';
             header("Location: " . ROOT . "/artistdashboard");

@@ -132,119 +132,43 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <div class="content">
             <div class="profile-container" style="grid-template-columns: 1fr;">
                 <div class="details">
-                    <!-- Budget Overview Section -->
+                    <!-- Drama Details -->
                     <div class="card-section">
                         <h3>
-                            <i class="bx bx-wallet" style="color: var(--brand);"></i>
-                            <span>Budget Overview</span>
-                            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="bx bx-pencil-alt"></i>
-                                Manage Budget
-                            </a>
+                            <i class="bx bx-movie-play" style="color: var(--brand);"></i>
+                            <span>Drama Details</span>
                         </h3>
-                        <?php if (isset($totalBudget) && $totalBudget > 0): ?>
-                            <div style="display: flex; align-items: center; gap: 20px; margin-top: 16px;">
-                                <div style="flex: 1;">
-                                    <div style="background: #f0f0f0; border-radius: 10px; height: 30px; overflow: hidden;">
-                                        <div style="background: linear-gradient(90deg, var(--brand), var(--brand-strong)); width: <?= isset($budgetUsed) ? round(($budgetUsed / $totalBudget) * 100) : 0 ?>%; height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
-                                    </div>
-                                    <p style="font-size: 12px; color: var(--muted); margin-top: 6px;"><?= isset($budgetUsed) ? round(($budgetUsed / $totalBudget) * 100) : 0 ?>% of budget used (LKR <?= isset($budgetUsed) ? number_format($budgetUsed) : '0' ?> of LKR <?= isset($totalBudget) ? number_format($totalBudget) : '0' ?>)</p>
-                                </div>
+                        <div class="drama-info" style="margin-top: 16px;">
+                            <div class="service-info-item">
+                                <span class="service-info-label">Drama ID</span>
+                                <span class="service-info-value">#<?= isset($drama->id) ? (int)$drama->id : 'N/A' ?></span>
                             </div>
-                            <div class="drama-info" style="margin-top: 16px;">
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Total Budget</span>
-                                    <span class="service-info-value">LKR <?= number_format($totalBudget) ?></span>
-                                </div>
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Budget Used</span>
-                                    <span class="service-info-value">LKR <?= number_format($budgetUsed) ?></span>
-                                </div>
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Remaining Budget</span>
-                                    <span class="service-info-value">LKR <?= number_format($totalBudget - $budgetUsed) ?></span>
-                                </div>
-                                <div class="service-info-item">
-                                    <span class="service-info-label">Budget Status</span>
-                                    <span class="service-info-value"><span class="status-badge <?= ($budgetUsed / $totalBudget) < 0.9 ? 'assigned' : 'pending' ?>">On Track</span></span>
-                                </div>
+                            <div class="service-info-item">
+                                <span class="service-info-label">Drama Name</span>
+                                <span class="service-info-value"><?= isset($drama->drama_name) ? esc($drama->drama_name) : 'N/A' ?></span>
                             </div>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 30px; color: var(--muted);">
-                                <p>No budget allocated yet. <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">Set budget now</a></p>
+                            <div class="service-info-item">
+                                <span class="service-info-label">Certificate Number</span>
+                                <span class="service-info-value"><?= isset($drama->certificate_number) ? esc($drama->certificate_number) : 'N/A' ?></span>
                             </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Service Requests Section -->
-                    <div class="card-section">
-                        <h3>
-                            <span>Recent Service Requests</span>
-                            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
-                                <i class="bx bx-arrow-right"></i>
-                                View All Services
-                            </a>
-                        </h3>
-                        <?php if (isset($services) && is_array($services) && !empty($services)): ?>
-                            <ul>
-                                <?php foreach (array_slice($services, 0, 4) as $service): ?>
-                                    <li>
-                                        <div>
-                                            <strong><?= isset($service->service_required) ? esc($service->service_required) : 'Service' ?></strong>
-                                            <div class="request-info">From: <?= isset($service->requester_name) ? esc($service->requester_name) : 'N/A' ?> | Requested: <?= isset($service->created_at) ? date('Y-m-d', strtotime($service->created_at)) : 'N/A' ?></div>
-                                        </div>
-                                        <span class="status-badge <?= $service->status === 'confirmed' ? 'assigned' : ($service->status === 'pending' ? 'pending' : 'requested') ?>"><?= isset($service->status) ? ucfirst($service->status) : 'Pending' ?></span>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 30px; color: var(--muted);">
-                                <p>No service requests yet.</p>
+                            <div class="service-info-item">
+                                <span class="service-info-label">Category</span>
+                                <span class="service-info-value"><?= isset($drama->drama_category) ? esc($drama->drama_category) : 'N/A' ?></span>
                             </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Service Schedule Section -->
-                    <div class="card-section">
-                        <h3>
-                            <span>Service Schedule</span>
-                            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="btn btn-primary" style="font-size: 12px; padding: 8px 16px;">Manage Schedule</a>
-                        </h3>
-                        <?php if (isset($schedules) && is_array($schedules) && !empty($schedules)): ?>
-                            <ul id="serviceScheduleList">
-                                <?php foreach ($schedules as $schedule): ?>
-                                    <li>
-                                        <div>
-                                            <strong><?= isset($schedule->service_name) ? esc($schedule->service_name) : 'Service' ?></strong>
-                                            <div class="request-info">Date: <?= isset($schedule->scheduled_date) ? date('Y-m-d', strtotime($schedule->scheduled_date)) : 'N/A' ?> | Time: <?= isset($schedule->scheduled_time) ? esc($schedule->scheduled_time) : 'N/A' ?> | Venue: <?= isset($schedule->venue) ? esc($schedule->venue) : 'N/A' ?></div>
-                                        </div>
-                                        <span class="status-badge <?= $schedule->status === 'scheduled' ? 'assigned' : 'pending' ?>"><?= isset($schedule->status) ? ucfirst($schedule->status) : 'Pending' ?></span>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 30px; color: var(--muted);">
-                                <p>No scheduled services yet. <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>">Add a schedule</a></p>
+                            <div class="service-info-item">
+                                <span class="service-info-label">Production Period</span>
+                                <span class="service-info-value">
+                                    <?php
+                                        $start = isset($drama->start_date) && $drama->start_date ? date('Y-m-d', strtotime($drama->start_date)) : null;
+                                        $end = isset($drama->end_date) && $drama->end_date ? date('Y-m-d', strtotime($drama->end_date)) : null;
+                                        echo $start || $end ? esc(($start ?? 'N/A') . ' to ' . ($end ?? 'N/A')) : 'N/A';
+                                    ?>
+                                </span>
                             </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="card-section">
-                        <h3>Quick Actions</h3>
-                        <div class="permission-controls">
-                            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>" class="btn btn-primary">
-                                <i class="bx bx-briefcase"></i>
-                                Manage Services
-                            </a>
-                            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="btn btn-success">
-                                <i class="bx bx-chart-bar"></i>
-                                Manage Budget
-                            </a>
-                            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="btn btn-secondary">
-                                <i class="bx bx-calendar-alt"></i>
-                                Service Schedule
-                            </a>
+                            <div class="service-info-item">
+                                <span class="service-info-label">Description</span>
+                                <span class="service-info-value"><?= isset($drama->description) && $drama->description !== '' ? esc($drama->description) : 'No description available' ?></span>
+                            </div>
                         </div>
                     </div>
                 </div>
