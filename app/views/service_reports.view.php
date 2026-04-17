@@ -4,7 +4,16 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title><?= isset($pageTitle) ? $pageTitle : 'Reports' ?> - Rangamadala</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+        <!-- Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <!-- Boxicons -->
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <!-- Admin Design Library CSS -->
+        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css">
+        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/Button.css">
+        <!-- Service Provider Styles -->
         <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
         <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_reports.css">
         <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
@@ -25,7 +34,7 @@
                             <p class="report-desc">Current month earnings breakdown</p>
                         </div>
                         <button type="button" class="btn-download-report" onclick="quickReport('revenue', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                            <i class="bx bx-bolt-circle"></i> Quick Generate
                         </button>
                     </div>
                     <div class="productionCount--card report-card template-card">
@@ -34,7 +43,7 @@
                             <p class="report-desc">This month bookings</p>
                         </div>
                         <button type="button" class="btn-download-report" onclick="quickReport('bookings', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                            <i class="bx bx-bolt-circle"></i> Quick Generate
                         </button>
                     </div>
                     <div class="productionCount--card report-card template-card">
@@ -43,7 +52,7 @@
                             <p class="report-desc">Service requests for this month</p>
                         </div>
                         <button type="button" class="btn-download-report" onclick="quickReport('performance', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                            <i class="bx bx-bolt-circle"></i> Quick Generate
                         </button>
                     </div>
                     <div class="productionCount--card report-card template-card">
@@ -52,7 +61,7 @@
                             <p class="report-desc">Rejections & Cancellations in this month</p>
                         </div>
                         <button type="button" class="btn-download-report" onclick="quickReport('cancellation', 'this_month')">
-                            <i class="fas fa-bolt"></i> Quick Generate
+                            <i class="bx bx-bolt-circle"></i> Quick Generate
                         </button>
                     </div>
                 </div>
@@ -121,10 +130,10 @@
                             <!-- Generate Button -->
                             <div class="filter-actions">
                                 <button type="button" class="btn-reset" onclick="resetFilters()">
-                                    <i class="fas fa-undo"></i> Reset
+                                    <i class="bx bx-undo"></i> Reset
                                 </button>
                                 <button type="submit" class="btn-generate">
-                                    <i class="fas fa-chart-bar"></i> Generate Report
+                                    <i class="bx bx-bar-chart-alt-2"></i> Generate Report
                                 </button>
                             </div>
                         </form>
@@ -384,7 +393,7 @@
                             <input type="hidden" name="endDate" value="<?= $end_date ?>">
                             <input type="hidden" name="exportFormat" value="pdf">
                             <button type="submit" class="btn-download-report" title="Download as PDF">
-                                <i class="fas fa-file-pdf"></i> Download PDF
+                                <i class="bx bx-file"></i> Download PDF
                             </button>
                         </form>
                         <form method="POST" style="display: inline;">
@@ -394,7 +403,7 @@
                             <input type="hidden" name="endDate" value="<?= $end_date ?>">
                             <input type="hidden" name="exportFormat" value="excel">
                             <button type="submit" class="btn-download-report" title="Download as Excel">
-                                <i class="fas fa-file-excel"></i> Download Excel
+                                <i class="bx bx-file"></i> Download Excel
                             </button>
                         </form>
                         <form method="POST" style="display: inline;">
@@ -404,7 +413,7 @@
                             <input type="hidden" name="endDate" value="<?= $end_date ?>">
                             <input type="hidden" name="exportFormat" value="csv">
                             <button type="submit" class="btn-download-report" title="Download as CSV">
-                                <i class="fas fa-file-csv"></i> Download CSV
+                                <i class="bx bx-file"></i> Download CSV
                             </button>
                         </form>
                     </div>

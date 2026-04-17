@@ -254,9 +254,7 @@
   <div class="watched-page">
     <div class="top-links">
       <a class="btn btn-secondary" href="<?= ROOT ?>/BrowseDramas"><i class='bx bx-arrow-back'></i> Back to Browse Dramas</a>
-      <?php if (!empty($drama)): ?>
-        <a class="btn btn-primary" href="<?= ROOT ?>/BrowseDramas/rateReview/<?= (int)$drama->id ?>"><i class='bx bx-star'></i> Rate &amp; Review</a>
-      <?php endif; ?>
+    
     </div>
 
     <?php if (!empty($drama) && !empty($booking)): ?>

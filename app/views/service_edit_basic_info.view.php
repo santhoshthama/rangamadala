@@ -6,14 +6,14 @@
     <title>Edit Basic Information</title>
     <link rel="stylesheet" href="<?php echo ROOT; ?>/assets/CSS/service provider/service_provider_profile.css">
 </head>
-<body>
-    <div class="container">
+<body class="service-edit-basic-page">
+    <div class="container edit-basic-container">
         <button class="back-button" onclick="window.location.href='<?php echo ROOT; ?>/ServiceProviderProfile/index?id=<?php echo $data['provider']->user_id; ?>'">
             <span>←</span>
             <span>Back to Profile</span>
         </button>
 
-        <div class="register-card">
+        <div class="register-card edit-basic-card">
             <div class="register-header">
                 <h2>Edit Basic Information & Availability</h2>
                 <p>Update your professional details</p>
@@ -26,10 +26,10 @@
                     </div>
                 <?php endif; ?>
 
-                <form method="POST">
-                    <div class="section">
+                <form method="POST" class="edit-basic-form">
+                    <div class="section edit-section">
                         <h3 class="section-title">Basic Information</h3>
-                        <div class="form-row">
+                        <div class="form-row edit-basic-row">
                             <div class="form-group">
                                 <label class="form-label">Full Name <span class="required">*</span></label>
                                 <input type="text" name="full_name" class="form-input" 
@@ -42,7 +42,7 @@
                             </div>
                         </div>
                         
-                        <div class="form-row">
+                        <div class="form-row edit-basic-row">
                             <div class="form-group">
                                 <label class="form-label">Email Address <span class="required">*</span></label>
                                 <input type="email" name="email" class="form-input" 
@@ -55,7 +55,7 @@
                             </div>
                         </div>
                         
-                        <div class="form-row">
+                        <div class="form-row edit-basic-row">
                             <div class="form-group">
                                 <label class="form-label">Location <span class="required">*</span></label>
                                 <input type="text" name="location" class="form-input" 
@@ -81,7 +81,7 @@
                     </div>
 
                     <!-- Availability Section -->
-                    <div class="section">
+                    <div class="section edit-section">
                         <h3 class="section-title">Availability</h3>
                         <div class="availability-toggle">
                             <span class="toggle-label">Currently Available for New Projects</span>
@@ -99,7 +99,7 @@
                         </div>
                     </div>
 
-                    <div class="buttons-section">
+                    <div class="buttons-section edit-actions">
                         <button type="submit" class="btn">Save Changes</button>
                         <button type="button" class="btn btn-secondary" onclick="window.location.href='<?php echo ROOT; ?>/ServiceProviderProfile/index?id=<?php echo $data['provider']->user_id; ?>'">Cancel</button>
                     </div>

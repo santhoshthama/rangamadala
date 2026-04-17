@@ -156,10 +156,11 @@
 /* Browse dramas layout fixes */
 #browse .browse-dramas-container {
   width: 100%;
+  padding: 20px;
 }
 
 #browse .browse-header {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 #browse .browse-title {
@@ -176,7 +177,7 @@
 #browse .browse-search-filter {
   display: flex;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
@@ -281,15 +282,16 @@
 }
 
 #browse .browse-results-info {
-  margin: 8px 0 16px;
+  margin: 4px 0 16px;
   color: #6f5a2e;
   font-size: 18px;
 }
 
 #browse .dramas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 320px));
   gap: 20px;
+  justify-content: flex-start;
 }
 
 #classes .classes-subtabs {
@@ -354,8 +356,9 @@
 
 #classes .dramas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 320px));
   gap: 18px;
+  justify-content: flex-start;
 }
 
 #classes .drama-card {
@@ -367,6 +370,8 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   display: flex;
   flex-direction: column;
+  width: 320px;
+  max-width: 100%;
   height: 100%;
 }
 
@@ -379,20 +384,30 @@
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
 }
 
 #classes .drama-title {
   margin: 0;
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 700;
   color: #3f2f12;
   line-height: 1.3;
+  text-align: center;
+}
+
+#classes .class-level-text {
+  margin: -2px 0 0;
+  text-align: center;
+  color: #8a6a23;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
 }
 
 #classes .drama-description {
-  margin: 0;
+  margin: -1px 0 0;
   color: #6f5a2e;
   line-height: 1.5;
   min-height: 44px;
@@ -400,7 +415,7 @@
 
 #classes .drama-info {
   display: grid;
-  gap: 7px;
+  gap: 6px;
   padding-top: 10px;
   border-top: 1px dashed #ead8a9;
 }
@@ -408,7 +423,7 @@
 #classes .info-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: #5f4b23;
   font-size: 14px;
 }
@@ -457,6 +472,10 @@
 }
 
 @media (max-width: 768px) {
+  #browse .browse-dramas-container {
+    padding: 14px;
+  }
+
   #classes .classes-subtabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -481,6 +500,8 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   display: flex;
   flex-direction: column;
+  width: 320px;
+  max-width: 100%;
 }
 
 #browse .drama-card:hover {
