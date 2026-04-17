@@ -8,7 +8,7 @@ if(isset($data) && is_array($data)) {
 $userModel = new M_universal_profile();
 $currentUser = $userModel->getUserById($_SESSION['user_id']);
 
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
 if ($currentUser && !empty($currentUser->profile_image)) {
     $imageValue = str_replace('\\', '/', $currentUser->profile_image);
     if (strpos($imageValue, '/') !== false) {
@@ -16,8 +16,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
 }
 
 // Event variables
@@ -88,7 +86,9 @@ if ($event) {
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <a href="<?= ROOT ?>/artistdashboard">
+                <img src="/Rangamadala/public/assets/images/logo.png" alt="Rangamadala Logo">
+            </a>    
         </div>
         <ul class="menu">
             <li>
@@ -161,7 +161,7 @@ if ($event) {
                     <div class="role-badge">
                         <i class="bx <?= $evtType['icon'] ?>"></i> <?= $evtType['label'] ?>
                     </div>
-                    <img src="<?= esc($profileImageSrc) ?>" alt="Artist Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                    <img src="<?= esc($profileImageSrc) ?>" alt="Artist Avatar" onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'">
                     <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
                         <i class="bx bx-sign-out-alt"></i>
                     </a>

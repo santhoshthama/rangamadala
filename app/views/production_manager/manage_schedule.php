@@ -481,16 +481,16 @@
 
             <!-- Filter Section -->
             <div class="filter-section">
-                <button class="filter-btn active" onclick="filterByStatus('')">All</button>
-                <button class="filter-btn" onclick="filterByStatus('awaiting')">
+                <button class="filter-btn active" onclick="filterByStatus('', this)">All</button>
+                <button class="filter-btn" onclick="filterByStatus('awaiting', this)">
                     <i class="bx bx-hourglass-half"></i>
                     Awaiting Response
                 </button>
-                <button class="filter-btn" onclick="filterByStatus('accepted')">
+                <button class="filter-btn" onclick="filterByStatus('accepted', this)">
                     <i class="bx bx-check-circle"></i>
                     Accepted
                 </button>
-                <button class="filter-btn" onclick="filterByStatus('paid')">
+                <button class="filter-btn" onclick="filterByStatus('paid', this)">
                     <i class="bx bx-credit-card"></i>
                     Paid
                 </button>
@@ -506,11 +506,11 @@
                     <i class="bx bx-chevron-right"></i>
                 </button>
                 <div class="view-toggle">
-                    <button class="active" onclick="switchView('calendar')">
+                    <button class="active" onclick="switchView('calendar', this)">
                         <i class="bx bx-calendar-grid-3"></i>
                         Calendar
                     </button>
-                    <button onclick="switchView('timeline')">
+                    <button onclick="switchView('timeline', this)">
                         <i class="bx bx-list"></i>
                         Timeline
                     </button>
@@ -550,26 +550,13 @@
         </div>
     </div>
 
-    <script src="/Rangamadala/public/assets/JS/manage-schedule.js"></script>
     <script>
-        // Initialize schedule data from database
-        const dramatId = <?= $dramaId ?>;
-        const scheduleData = <?= isset($schedules) && is_array($schedules) ? json_encode($schedules) : '[]' ?>;
-        
-        // Convert PHP objects to JavaScript format if needed
-        const schedules = scheduleData.map(item => ({
-            id: item.id || null,
-            serviceName: item.service_name || 'Service',
-            scheduledDate: item.scheduled_date || '',
-            startTime: item.start_time || '',
-            endTime: item.end_time || '',
-            venue: item.venue || '',
-            status: item.status || 'scheduled',
-            notes: item.notes || ''
-        }));
-        
-        console.log('Loaded ' + schedules.length + ' schedules for drama ' + dramatId);
-        console.log('Schedules:', schedules);
+        window.pmScheduleConfig = {
+            root: <?= json_encode(ROOT) ?>,
+            dramaId: <?= (int)$dramaId ?>
+        };
+        window.schedules = <?= isset($schedules) && is_array($schedules) ? json_encode($schedules) : '[]' ?>;
     </script>
+    <script src="/Rangamadala/public/assets/JS/manage-schedule.js"></script>
 </body>
 </html>

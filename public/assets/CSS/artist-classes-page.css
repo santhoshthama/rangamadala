@@ -269,21 +269,48 @@
 
 #manage-tab .artist-footer .btn-secondary {
   width: 100%;
-  border: 1px solid #9f781a;
-  background: linear-gradient(135deg, #ba8e23, #9b761d);
-  color: #fff;
+  border: 1px solid #c9a14a;
+  background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%);
+  color: #2f2410;
   font-weight: 700;
-  box-shadow: 0 8px 16px rgba(186, 142, 35, 0.28);
+  box-shadow: 0 3px 10px rgba(186,142,35,0.12);
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 #manage-tab .artist-footer .btn-secondary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(186, 142, 35, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(186,142,35,0.16);
+  background: linear-gradient(135deg, #e3c17e 0%, #d0a84b 100%);
 }
 
 #manage-tab .artist-footer .btn-danger {
   width: 100%;
   font-weight: 700;
+  border: 1px solid #a63c3c;
+  background: linear-gradient(135deg, #8f2d2d 0%, #b04444 100%);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(143,45,45,0.18);
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+#manage-tab .artist-footer .btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(143,45,45,0.24);
+  background: linear-gradient(135deg, #a63c3c 0%, #c24f4f 100%);
 }
 
 @media (max-width: 768px) {

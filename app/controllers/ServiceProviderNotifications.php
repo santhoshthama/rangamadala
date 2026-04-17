@@ -110,6 +110,54 @@ class ServiceProviderNotifications
         exit;
     }
 
+    public function detail()
+    {
+        if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
+            header('Location: ' . ROOT . '/Login');
+            exit;
+        }
+
+        $notificationId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($notificationId <= 0) {
+            $_SESSION['message'] = 'Invalid notification.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/ServiceProviderNotifications');
+            exit;
+        }
+
+        $notificationModel = $this->getModel('M_notification');
+        if (!$notificationModel) {
+            $_SESSION['message'] = 'Notification service unavailable.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/ServiceProviderNotifications');
+            exit;
+        }
+
+        $notification = $notificationModel->getNotificationByIdForUser($notificationId, (int)$_SESSION['user_id']);
+        if (!$notification) {
+            $_SESSION['message'] = 'Notification not found.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/ServiceProviderNotifications');
+            exit;
+        }
+
+        if (!(int)($notification->is_read ?? 0)) {
+            $notificationModel->markAsRead($notificationId, (int)$_SESSION['user_id']);
+            $notification->is_read = 1;
+        }
+
+        $providerModel = new M_service_provider();
+        $provider = $providerModel->getProviderById($_SESSION['user_id']);
+
+        $data = [
+            'provider' => $provider,
+            'pageTitle' => 'Notification Details',
+            'notification' => $notification,
+        ];
+
+        $this->view('service_provider_notification_detail', $data);
+    }
+
     public function markAllRead()
     {
         if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {

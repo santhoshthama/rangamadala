@@ -11,7 +11,10 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+           <a href="dashboard.php?drama_id=1" class="logo-link">
+                <img src="/Rangamadala/public/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+                <span class="logo-text"></span>
+            </a>
         </div>
         <ul class="menu">
             <li>
@@ -67,11 +70,6 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php?drama_id=1" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
-
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
@@ -81,7 +79,7 @@
             <div class="header-controls">
                 <button class="btn btn-primary" onclick="openCreateRoleModal()">
                     <i class="bx bx-plus-circle"></i>
-                    Create Role
+                    Create New Role
                 </button>
                 <a href="search_artists.php?drama_id=1" class="btn btn-success">
                     <i class="bx bx-search"></i>
@@ -381,7 +379,7 @@
             <div class="modal-actions">
                 <button class="btn btn-primary" onclick="submitCreateRole()">
                     <i class="bx bx-check"></i>
-                    Create Role
+                    Create New Role
                 </button>
                 <button class="btn btn-secondary" onclick="closeCreateRoleModal()">Cancel</button>
             </div>

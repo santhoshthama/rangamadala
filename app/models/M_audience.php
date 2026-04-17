@@ -31,6 +31,9 @@ class M_audience {
     }
 
     public function register($full_name, $email, $password, $confirm_password, $phone) {
+        $passwordPattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/';
+        $phonePattern = '/^(?:\+94|94|0)7\d{8}$/';
+
         // Validate inputs
         if (empty($full_name) || empty($email) || empty($password) || empty($confirm_password) || empty($phone)) {
             return false;
@@ -43,6 +46,16 @@ class M_audience {
 
         // Validate email format
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        // Validate password strength
+        if (!preg_match($passwordPattern, $password)) {
+            return false;
+        }
+
+        // Validate Sri Lankan mobile number
+        if (!preg_match($phonePattern, $phone)) {
             return false;
         }
 

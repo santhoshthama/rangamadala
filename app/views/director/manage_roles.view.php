@@ -2,16 +2,209 @@
             margin-top: 24px;
         }
 
+        /* ─── Gold Theme Button Styling ─── */
+        .director-dashboard-page .btn-primary {
+            background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%);
+            border: 1px solid #c9a14a;
+            color: #2f2410;
+            box-shadow: 0 3px 10px rgba(186,142,35,0.12);
+        }
+        .director-dashboard-page .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(186,142,35,0.16);
+        }
+        .director-dashboard-page .btn-success {
+            background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%);
+            border: 1px solid #c9a14a;
+            color: #2f2410;
+            box-shadow: 0 3px 10px rgba(186,142,35,0.12);
+        }
+        .director-dashboard-page .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(186,142,35,0.16);
+        }
+        
+        /* Role Card Styling */
+        .role-card {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            border: 1px solid #ead7a4;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(186,142,35,0.06);
+        }
+        .role-card:hover {
+            box-shadow: 0 6px 16px rgba(186,142,35,0.12);
+            transform: translateY(-2px);
+        }
+        .role-card--active {
+            border-color: #ba8e23;
+            box-shadow: 0 4px 12px rgba(186,142,35,0.18);
+        }
+        .role-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .role-card__header h4 {
+            color: #2f2410;
+            font-size: 18px;
+        }
+        .role-card__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #7a6121;
+        }
+        .role-card__meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .role-card__meta strong {
+            color: #5a4300;
+        }
+        .role-card__actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .role-card__actions .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .role-card__actions .btn-secondary {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff2d3 100%);
+            border: 1px solid #f0d99f;
+            color: #5a4300;
+            box-shadow: 0 2px 6px rgba(186,142,35,0.08);
+        }
+        .role-card__actions .btn-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(186,142,35,0.12);
+        }
+        .role-card__actions .btn-danger {
+            background: linear-gradient(135deg, #8f2d2d 0%, #b04444 100%);
+            border: 1px solid #a63c3c;
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(143,45,45,0.18);
+        }
+        .role-card__actions .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(143,45,45,0.24);
+            background: linear-gradient(135deg, #a63c3c 0%, #c24f4f 100%);
+        }
+        
+        /* Form Section Styling */
+        .card-section {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            border: 1px solid #ead7a4;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .form-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #2f2410;
+            font-size: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #ead7a4;
+        }
+        .form-section-title i {
+            color: #ba8e23;
+            font-size: 20px;
+        }
+        
+        /* Form Controls */
+        .form-group .form-control {
+            border: 1px solid #ead7a4;
+            border-radius: 8px;
+            color: #2f2410;
+        }
+        .form-group .form-control:focus {
+            border-color: #ba8e23;
+            box-shadow: 0 0 0 3px rgba(186,142,35,0.1);
+        }
+        .form-group label {
+            color: #2f2410;
+            font-weight: 600;
+        }
+        .form-group .required {
+            color: #dc3545;
+        }
+        
+        /* Form Footer */
+        .form-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ead7a4;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .stat-card {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            border: 1px solid #ead7a4;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(186,142,35,0.12);
+        }
+        .stat-card h3 {
+            color: #ba8e23;
+            font-size: 28px;
+            margin: 0 0 8px;
+        }
+        .stat-card p {
+            color: #7a6121;
+            font-size: 13px;
+            margin: 0;
+        }
+        
         @media (max-width: 768px) {
             .role-card__header {
                 flex-direction: column;
                 align-items: stretch;
             }
+            .role-card__actions {
+                flex-direction: column;
+            }
+            .role-card__actions .btn {
+                width: 100%;
+            }
         }
     </style>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
+<body class="director-dashboard-page">
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
@@ -71,10 +264,7 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaIdForLinks) ?>" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
+    
 
         <!-- Header -->
         <div class="header--wrapper">
@@ -273,7 +463,7 @@
                             <div class="form-footer">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bx bx-check-circle"></i>
-                                    Create Role
+                                    Create New Role
                                 </button>
                                 <a href="#roles-list" class="btn btn-secondary">
                                     <i class="bx bx-list"></i>
@@ -361,13 +551,13 @@
                                     <?php endif; ?>
 
                                     <div class="role-card__actions">
-                                        <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                                        <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>" class="btn btn-secondary">
                                             <i class="bx bx-edit"></i>
                                             Edit
                                         </a>
-                                        <form action="<?= ROOT ?>/director/delete_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>" method="POST" data-confirm="Are you sure you want to remove the role '<?= esc($role->role_name ?? 'Role') ?>'?">
-                                            <button type="submit" class="btn btn-danger" style="font-size: 13px; padding: 8px 16px;">
-                                                <i class="bx bx-trash-alt"></i>
+                                        <form action="<?= ROOT ?>/director/delete_role?drama_id=<?= esc($dramaId) ?>&role_id=<?= esc($role->id) ?>" method="POST" data-confirm="Are you sure you want to remove the role '<?= esc($role->role_name ?? 'Role') ?>'?>">
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="bx bx-trash"></i>
                                                 Delete
                                             </button>
                                         </form>

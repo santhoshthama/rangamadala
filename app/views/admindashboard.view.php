@@ -46,7 +46,6 @@
           <div class="logo">
             <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" />
           </div>
-          <span>Admin</span>
         </div>
         <nav class="dashboard-nav">
           <div class="dashboard-nav-section">
@@ -60,7 +59,7 @@
             </a>
             <a href="#" class="dashboard-nav-item" data-view="registrations">
               <span class="nav-icon bx bx-user-plus"></span>
-              <span class="nav-label">Registrations</span>
+              <span class="nav-label">User Approvals</span>
             </a>
             <a href="#" class="dashboard-nav-item" data-view="drama-approvals">
               <span class="nav-icon bx bx-check-circle"></span>
@@ -73,12 +72,7 @@
           </div>
         </nav>
         <!-- Back to Site Button -->
-        <div class="sidebar-footer">
-          <a href="<?= ROOT ?>/home" class="btn btn-secondary sidebar-back-button">
-            <span class="bx bx-home"></span>
-            <span class="btn-label">Back to Site</span>
-          </a>
-        </div>
+
       </aside>
       <div class="dashboard-sidebar-overlay" id="dashboardSidebarOverlay"></div>
       <!-- Dashboard Main Content -->
@@ -102,11 +96,20 @@
             </button>
             <!-- Notification Button -->
 
+            <!-- Admin Role Badge -->
+            <div class="admin-role-badge">
+              <i class='bx bxs-star'></i>
+              <span>Admin</span>
+            </div>
+
             <!-- User Profile -->
             <div class="user-menu" id="userMenu">
               <div class="user-menu-trigger" id="user-menu-trigger">
                 <div class="user-avatar-small">
-                  <span><?= htmlspecialchars(strtoupper(substr($_SESSION['full_name'] ?? $_SESSION['user_name'] ?? 'A', 0, 1))) ?></span>
+                  <img
+                    src="<?= htmlspecialchars($data['dashboard_profile_image'] ?? (ROOT . '/uploads/profile_images/user_profile.png')) ?>"
+                    onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'"
+                    alt="Admin Avatar" />
                 </div>
               </div>
               <div class="user-menu-dropdown">
@@ -204,69 +207,44 @@
                 </div>
               </div>
             </div>
-            <!-- Recent Activity -->
-            <div class="dashboard-table-container">
+            <!-- Drama Insights -->
+            <div class="dashboard-table-container overview-drama-grid-section">
               <div class="dashboard-table-header">
-                <h3 class="dashboard-table-title">Recent User Activity</h3>
-                <a href="#" class="btn btn-primary">Manage Users</a>
+                <h3 class="dashboard-table-title">Drama Pipeline & Ongoing Insights</h3>
+                <a href="#" class="btn btn-primary" id="overviewDramaApprovalsBtn">Review Drama Approvals</a>
+              </div>
+              <div class="overview-drama-summary" id="overviewDramaSummary">
+                <div class="overview-drama-summary-item">
+                  <span class="label">Pending Approval</span>
+                  <strong id="overviewDramaPending">0</strong>
+                </div>
+                <div class="overview-drama-summary-item">
+                  <span class="label">In Progress</span>
+                  <strong id="overviewDramaInProgress">0</strong>
+                </div>
+                <div class="overview-drama-summary-item">
+                  <span class="label">Published</span>
+                  <strong id="overviewDramaPublished">0</strong>
+                </div>
+                <div class="overview-drama-summary-item">
+                  <span class="label">Updated Last 14 Days</span>
+                  <strong id="overviewDramaUpdatedRecently">0</strong>
+                </div>
               </div>
               <table class="dashboard-table">
                 <thead>
                   <tr>
-                    <th>User</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined Date</th>
+                    <th>Drama</th>
+                    <th>Stage</th>
+                    <th>Producer</th>
+                    <th>Producer Contact</th>
+                    <th>Last Update</th>
+                    <th>Insight</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="overviewDramaTableBody">
                   <tr>
-                    <td>
-                      <div class="project-title-cell">
-                        <div class="project-icon">
-                          <span class="bx bx-user"></span>
-                        </div>
-                        <div class="project-info">
-                          <div class="project-title-text">Rajesh Kumar</div>
-                          <div class="project-meta-text">rajesh@example.com</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>Artist</td>
-                    <td><span class="status-badge success">Active</span></td>
-                    <td>Jan 15, 2025</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="project-title-cell">
-                        <div class="project-icon">
-                          <span class="bx bx-user"></span>
-                        </div>
-                        <div class="project-info">
-                          <div class="project-title-text">Priya Sharma</div>
-                          <div class="project-meta-text">priya@example.com</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>Service Provider</td>
-                    <td><span class="status-badge success">Active</span></td>
-                    <td>Jan 10, 2025</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="project-title-cell">
-                        <div class="project-icon">
-                          <span class="bx bx-user"></span>
-                        </div>
-                        <div class="project-info">
-                          <div class="project-title-text">Aman Singh</div>
-                          <div class="project-meta-text">aman@example.com</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>Audience</td>
-                    <td><span class="status-badge warning">Pending Approval</span></td>
-                    <td>Jan 18, 2025</td>
+                    <td colspan="6">Loading drama insights...</td>
                   </tr>
                 </tbody>
               </table>
@@ -318,6 +296,7 @@
                       <th>User Details</th>
                       <th>Role</th>
                       <th>Contact</th>
+                      <th>NIC Number</th>
                       <th>Status</th>
                       <th>Joined Date</th>
                       <th>Actions</th>

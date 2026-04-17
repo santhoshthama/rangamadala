@@ -508,7 +508,9 @@ function showUserDetails(userId) {
       const user = data.user;
       const sp = data.service_provider || null;
 
-      const nicImage = user.nic_photo ? `<img src="${ROOT}/${user.nic_photo}" alt="NIC" class="nic-image" />` : '<em>No NIC image uploaded</em>';
+      const artistNicNumber = user.nic_number && user.nic_number !== 'TEMP_VALUE' ? user.nic_number : 'N/A';
+      const artistFrontImg = user.nic_photo ? `<img src="${ROOT}/${user.nic_photo}" alt="NIC Front" class="nic-image" />` : '<em>No front image</em>';
+      const artistBackImg = user.nic_photo_back ? `<img src="${ROOT}/${user.nic_photo_back}" alt="NIC Back" class="nic-image" />` : '<em>No back image</em>';
 
       let extraDetails = '';
       if (sp) {
@@ -531,7 +533,7 @@ function showUserDetails(userId) {
             <label>Location</label>
           </div>
           <div class="input-box readonly">
-            <input type="text" value="${sp.nic_number || 'N/A'}" readonly />
+            <input type="text" value="${sp.nic_number || artistNicNumber}" readonly />
             <i class="bx bx-credit-card"></i>
             <label>NIC Number</label>
           </div>
@@ -571,9 +573,19 @@ function showUserDetails(userId) {
             <span class="bx bx-badge"></span>
             <span>NIC / Verification</span>
           </div>
+          <div class="input-box readonly">
+            <input type="text" value="${artistNicNumber}" readonly />
+            <i class="bx bx-credit-card"></i>
+            <label>NIC Number</label>
+          </div>
           <div class="nic-images-row">
             <div class="nic-image-box">
-              ${nicImage}
+              <h5>NIC Front</h5>
+              ${artistFrontImg}
+            </div>
+            <div class="nic-image-box">
+              <h5>NIC Back</h5>
+              ${artistBackImg}
             </div>
           </div>
         `;

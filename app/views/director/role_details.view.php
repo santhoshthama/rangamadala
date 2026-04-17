@@ -58,20 +58,8 @@ function groupByStatus(array $items, $statusKey = 'status') {
 $groupedApplications = groupByStatus($roleApplications, 'status');
 $groupedRequests = groupByStatus($roleRequests, 'status');
 
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
-}
+require_once __DIR__ . '/_profile_image_helper.php';
+$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -101,21 +89,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         .interview-summary { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
         .application-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
         .decision-hint { font-size: 12px; color: #a52714; margin: 0; text-align: right; }
+        .assignment-actions { min-width: 280px; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+        .assignment-remove-form .form-group { margin-bottom: 0; }
+        .assignment-remove-form label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+        .assignment-remove-form textarea.form-control { min-height: 78px; resize: vertical; }
+        .assignment-remove-form .btn { align-self: flex-end; }
     </style>
 </head>
-<body>
-    <aside class="sidebar">
-        <div class="logo"><h2>🎭</h2></div>
-        <ul class="menu">
-            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-film"></i><span>Drama Details</span></a></li>
-            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-users"></i><span>Artist Roles</span></a></li>
-            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-user-tie"></i><span>Production Manager</span></a></li>
-            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-calendar-alt"></i><span>Schedule</span></a></li>
-            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-dollar-sign"></i><span>Services & Budget</span></a></li>
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bx-arrow-left"></i><span>Back to Profile</span></a></li>
-        </ul>
-    </aside>
+<body class="director-dashboard-page">
+    <?php
+    $directorSidebarDramaId = (int)$dramaId;
+    $directorSidebarActive = 'artist-roles';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <main class="main--content">
         <a class="back-button" href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-arrow-left"></i>Back to Manage Roles</a>
@@ -126,13 +112,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <h2>Role Details</h2>
             </div>
             <div class="user--info">
-                <div class="role-badge">
-                    <i class="bx bx-video"></i> Director
-                </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <?php
+                $directorProfileImageSrc = $profileImageSrc;
+                $directorRoleLabel = 'Director';
+                include __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
@@ -277,12 +261,18 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                     <div><i class="bx bx-calendar" style="width: 16px; margin-right: 6px;"></i>Assigned on <?= esc(date('M d, Y', strtotime($assignment->assigned_at ?? 'now'))) ?></div>
                                 </div>
                             </div>
-                            <form action="<?= ROOT ?>/director/remove_assignment?drama_id=<?= esc($dramaId) ?>" method="POST" class="js-role-action" data-action="remove" data-confirm="Remove <?= esc($assignment->artist_name ?? 'this artist') ?> from this role?">
-                                <input type="hidden" name="assignment_id" value="<?= esc($assignment->id ?? 0) ?>">
-                                <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
-                                <input type="hidden" name="return_to" value="role_details">
-                                <button type="submit" class="btn btn-danger btn-sm"><i class="bx bx-user-times"></i>Remove</button>
-                            </form>
+                            <div class="assignment-actions">
+                                <form action="<?= ROOT ?>/director/remove_assignment?drama_id=<?= esc($dramaId) ?>" method="POST" class="js-role-action assignment-remove-form" data-action="remove" data-confirm="Remove <?= esc($assignment->artist_name ?? 'this artist') ?> from this role?">
+                                    <input type="hidden" name="assignment_id" value="<?= esc($assignment->id ?? 0) ?>">
+                                    <input type="hidden" name="role_id" value="<?= esc($roleId) ?>">
+                                    <input type="hidden" name="return_to" value="role_details">
+                                    <div class="form-group">
+                                        <label for="remove_reason_<?= esc($assignment->id ?? 0) ?>">Reason (required)</label>
+                                        <textarea id="remove_reason_<?= esc($assignment->id ?? 0) ?>" name="remove_reason" class="form-control" rows="3" required maxlength="1000" placeholder="Enter reason to notify the artist"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger btn-sm"><i class="bx bx-user-times"></i>Remove</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -396,6 +386,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         </section>
     </main>
 
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
     <script src="/Rangamadala/public/assets/JS/manage-roles.js"></script>
 </body>
 </html>

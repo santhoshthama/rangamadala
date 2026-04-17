@@ -11,8 +11,10 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
-        </div>
+            <a href="dashboard.php?drama_id=1" class="logo-link">
+                <img src="/Rangamadala/public/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+                <span class="logo-text"></span>
+            </a>
         <ul class="menu">
             <li>
                 <a href="dashboard.php?drama_id=1">
@@ -28,13 +30,13 @@
             </li>
             <li>
                 <a href="manage_roles.php?drama_id=1">
-                    <i class="bx bx-users"></i>
+                    <i class="bx bxs-mask"></i>
                     <span>Artist Roles</span>
                 </a>
             </li>
             <li class="active">
                 <a href="assign_managers.php?drama_id=1">
-                    <i class="bx bx-user-tie"></i>
+                    <i class="bx bx-briefcase"></i>
                     <span>Production Manager</span>
                 </a>
             </li>
@@ -46,31 +48,17 @@
             </li>
             <li>
                 <a href="view_services_budget.php?drama_id=1">
-                    <i class="bx bx-dollar-sign"></i>
+                    <i class="bx bx-money"></i>
                     <span>Services & Budget</span>
                 </a>
             </li>
-            <li>
-                <a href="../artist/profile.php">
-                    <i class="bx bx-arrow-left"></i>
-                    <span>Back to Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="../../public/index.php">
-                    <i class="bx bx-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
+
         </ul>
     </aside>
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php?drama_id=1" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
+
 
         <!-- Header -->
         <div class="header--wrapper">
@@ -93,7 +81,7 @@
                     <!-- Current Manager -->
                     <div class="card-section">
                         <h3>
-                            <span><i class="bx bx-user-tie"></i> Current Production Manager</span>
+                            <span><i class="bx bx-briefcase"></i> Current Production Manager</span>
                             <button class="btn btn-success" style="font-size: 12px; padding: 8px 16px;" onclick="openAssignManagerModal()">
                                 <i class="bx bx-user-plus"></i>
                                 Change Manager
@@ -111,7 +99,7 @@
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 8px; align-items: center;">
-                                    <span class="status-badge assigned">Active</span>
+                                    <span class="bx bx-check-circle">Active</span>
                                     <button class="btn btn-primary" style="font-size: 11px; padding: 6px 12px;" onclick="viewManagerDetails()">
                                         <i class="bx bx-eye"></i>
                                         View Profile
@@ -166,19 +154,19 @@
                         <div class="drama-info">
                             <div class="service-info-item">
                                 <span class="service-info-label">Services Management</span>
-                                <span class="service-info-value"><span class="status-badge assigned">Full Access</span></span>
+                                <span class="service-info-value"><span class="bx bx-check-circle">Full Access</span></span>
                             </div>
                             <div class="service-info-item">
                                 <span class="service-info-label">Budget Management</span>
-                                <span class="service-info-value"><span class="status-badge assigned">Full Access</span></span>
+                                <span class="service-info-value"><span class="bx bx-check-circle">Full Access</span></span>
                             </div>
                             <div class="service-info-item">
                                 <span class="service-info-label">Theater Bookings</span>
-                                <span class="service-info-value"><span class="status-badge assigned">Full Access</span></span>
+                                <span class="service-info-value"><span class="bx bx-check-circle">Full Access</span></span>
                             </div>
                             <div class="service-info-item">
                                 <span class="service-info-label">Payment Tracking</span>
-                                <span class="service-info-value"><span class="status-badge assigned">Full Access</span></span>
+                                <span class="service-info-value"><span class="bx bx-check-circle">Full Access</span></span>
                             </div>
                         </div>
                     </div>

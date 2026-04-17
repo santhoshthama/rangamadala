@@ -184,7 +184,16 @@ class Admindashboard {
             exit;
         }
 
-        $this->view('admindashboard');
+        // Get admin profile image if available
+        $dashboardProfileImage = ROOT . '/uploads/profile_images/user_profile.png';
+        if (!empty($_SESSION['user_id'])) {
+            $userImagePath = ROOT . '/uploads/profile_images/' . $_SESSION['user_id'] . '.jpg';
+            if (file_exists($userImagePath)) {
+                $dashboardProfileImage = ROOT . '/uploads/profile_images/' . $_SESSION['user_id'] . '.jpg';
+            }
+        }
+
+        $this->view('admindashboard', ['dashboard_profile_image' => $dashboardProfileImage]);
     }
 
     /**
@@ -215,7 +224,7 @@ class Admindashboard {
             $db->query("SELECT COUNT(*) AS pending_user_approvals
                         FROM users
                         WHERE role IN ('artist', 'service_provider')
-                        AND is_verified = 0");
+                        AND (verification_status = 'pending' OR verification_status IS NULL)");
             $pendingUsers = $db->single();
             $stats['pending_user_approvals'] = (int)($pendingUsers->pending_user_approvals ?? 0);
 
@@ -346,6 +355,182 @@ class Admindashboard {
     }
 
     /**
+     * Get drama-focused overview details for admin overview table.
+     */
+    public function getOverviewDramaDetails()
+    {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $db = new Database();
+
+        $summary = [
+            'pending_approval' => 0,
+            'in_progress' => 0,
+            'published' => 0,
+            'updated_recently' => 0,
+        ];
+        $items = [];
+
+        try {
+            $hasDramasTable = $this->tableExists($db, 'dramas');
+            $hasRequestsTable = $this->tableExists($db, 'drama_creation_requests');
+
+            if ($hasRequestsTable) {
+                $db->query("SELECT COUNT(*) AS total_pending
+                            FROM drama_creation_requests
+                            WHERE status = 'pending'");
+                $pending = $db->single();
+                $summary['pending_approval'] = (int)($pending->total_pending ?? 0);
+
+                $db->query("SELECT drama_name,
+                                   owner_name,
+                            requested_by,
+                                   created_at
+                            FROM drama_creation_requests
+                            WHERE status = 'pending'
+                            ORDER BY created_at DESC
+                            LIMIT 5");
+                $pendingRows = $db->resultSet();
+
+                foreach ($pendingRows as $row) {
+                    $producerName = trim((string)($row->owner_name ?? ''));
+                    $producerContact = 'N/A';
+
+                    if (!empty($row->requested_by)) {
+                        $db->query("SELECT full_name, phone FROM users WHERE id = :user_id LIMIT 1");
+                        $db->bind(':user_id', (int)$row->requested_by);
+                        $producerUser = $db->single();
+
+                        if ($producerName === '' && !empty($producerUser->full_name)) {
+                            $producerName = (string)$producerUser->full_name;
+                        }
+                        if (!empty($producerUser->phone)) {
+                            $producerContact = (string)$producerUser->phone;
+                        }
+                    }
+
+                    if ($producerName === '') {
+                        $producerName = 'Not specified';
+                    }
+
+                    $items[] = [
+                        'drama_name' => $row->drama_name ?? 'Untitled drama',
+                        'stage' => 'pending_approval',
+                        'producer_name' => $producerName,
+                        'producer_contact' => $producerContact,
+                        'activity_at' => $row->created_at ?? null,
+                        'insight' => 'Waiting for admin approval before entering production workflow.',
+                    ];
+                }
+            }
+
+            if ($hasDramasTable) {
+                $hasPublished = $this->columnExists($db, 'dramas', 'is_published');
+                $hasUpdatedAt = $this->columnExists($db, 'dramas', 'updated_at');
+                $recentColumn = $hasUpdatedAt ? 'updated_at' : 'created_at';
+
+                if ($hasPublished) {
+                    $db->query("SELECT
+                                    SUM(CASE WHEN COALESCE(is_published, 0) = 1 THEN 1 ELSE 0 END) AS published_count,
+                                    SUM(CASE WHEN COALESCE(is_published, 0) = 0 THEN 1 ELSE 0 END) AS in_progress_count,
+                                    SUM(CASE WHEN {$recentColumn} >= DATE_SUB(NOW(), INTERVAL 14 DAY) THEN 1 ELSE 0 END) AS updated_recently_count
+                                FROM dramas");
+                    $dramaCounts = $db->single();
+
+                          $summary['published'] = (int)($dramaCounts->published_count ?? 0);
+                    $summary['in_progress'] = (int)($dramaCounts->in_progress_count ?? 0);
+                    $summary['updated_recently'] = (int)($dramaCounts->updated_recently_count ?? 0);
+
+                    $db->query("SELECT drama_name,
+                                       owner_name,
+                                    created_by,
+                                       COALESCE(published_at, {$recentColumn}, created_at) AS activity_at,
+                                    CASE WHEN COALESCE(is_published, 0) = 1 THEN 'published' ELSE 'in_progress' END AS stage
+                                FROM dramas
+                                ORDER BY COALESCE(published_at, {$recentColumn}, created_at) DESC
+                                LIMIT 8");
+                } else {
+                    $db->query("SELECT
+                                    COUNT(*) AS in_progress_count,
+                                    SUM(CASE WHEN {$recentColumn} >= DATE_SUB(NOW(), INTERVAL 14 DAY) THEN 1 ELSE 0 END) AS updated_recently_count
+                                FROM dramas");
+                    $dramaCounts = $db->single();
+
+                    $summary['in_progress'] = (int)($dramaCounts->in_progress_count ?? 0);
+                    $summary['updated_recently'] = (int)($dramaCounts->updated_recently_count ?? 0);
+
+                    $db->query("SELECT drama_name,
+                                       owner_name,
+                                    created_by,
+                                       COALESCE({$recentColumn}, created_at) AS activity_at,
+                                       'in_progress' AS stage
+                                FROM dramas
+                                ORDER BY COALESCE({$recentColumn}, created_at) DESC
+                                LIMIT 8");
+                }
+
+                $dramaRows = $db->resultSet();
+                foreach ($dramaRows as $row) {
+                    $stage = (string)($row->stage ?? 'in_progress');
+                    $producerName = trim((string)($row->owner_name ?? ''));
+                    $producerContact = 'N/A';
+
+                    if (!empty($row->created_by)) {
+                        $db->query("SELECT full_name, phone FROM users WHERE id = :user_id LIMIT 1");
+                        $db->bind(':user_id', (int)$row->created_by);
+                        $producerUser = $db->single();
+
+                        if ($producerName === '' && !empty($producerUser->full_name)) {
+                            $producerName = (string)$producerUser->full_name;
+                        }
+                        if (!empty($producerUser->phone)) {
+                            $producerContact = (string)$producerUser->phone;
+                        }
+                    }
+
+                    if ($producerName === '') {
+                        $producerName = 'Not specified';
+                    }
+
+                    $items[] = [
+                        'drama_name' => $row->drama_name ?? 'Untitled drama',
+                        'stage' => $stage,
+                        'producer_name' => $producerName,
+                        'producer_contact' => $producerContact,
+                        'activity_at' => $row->activity_at ?? null,
+                        'insight' => $stage === 'published'
+                            ? 'Live for audience browsing and booking visibility.'
+                            : 'Drama setup is ongoing and not yet audience-visible.',
+                    ];
+                }
+            }
+
+            usort($items, function ($a, $b) {
+                return strtotime((string)($b['activity_at'] ?? '1970-01-01')) <=> strtotime((string)($a['activity_at'] ?? '1970-01-01'));
+            });
+
+            $items = array_slice($items, 0, 10);
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'summary' => $summary,
+                'items' => $items,
+            ]);
+            exit;
+        } catch (Throwable $e) {
+            error_log('Admindashboard::getOverviewDramaDetails error: ' . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Failed to load drama overview insights']);
+            exit;
+        }
+    }
+
+    /**
      * Get pending registrations (artists and service providers)
      */
     public function getPendingRegistrations()
@@ -367,10 +552,10 @@ class Admindashboard {
                     u.email,
                     u.phone,
                     u.role,
-                    {$nicPhotoColumn} AS nic_photo,
+                    u.nic_photo,
                     u.created_at
                 FROM users u
-                WHERE u.is_verified = 0 
+                WHERE (u.verification_status = 'pending' OR u.verification_status IS NULL)
                 AND u.role IN ('artist', 'service_provider')
                 ORDER BY u.created_at ASC");
         
@@ -521,7 +706,7 @@ class Admindashboard {
             : 'u.years_experience';
 
         // Base user info
-        $db->query("SELECT id, full_name, email, phone, role, {$usersNicPhotoColumn} AS nic_photo, created_at, verification_status 
+        $db->query("SELECT id, full_name, email, phone, role, nic_number, nic_photo, nic_photo_back, created_at, verification_status 
                     FROM users WHERE id = :user_id");
         $db->bind(':user_id', $userId);
         $user = $db->single();
@@ -540,7 +725,9 @@ class Admindashboard {
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'role' => $user->role,
+                'nic_number' => $user->nic_number,
                 'nic_photo' => $user->nic_photo,
+                'nic_photo_back' => $user->nic_photo_back,
                 'created_at' => $user->created_at,
                 'verification_status' => $user->verification_status
             ],
@@ -548,12 +735,10 @@ class Admindashboard {
 
         // Role-specific extra details
         if ($user->role === 'service_provider') {
-                 $db->query("SELECT u.full_name, sp.professional_title, u.email, u.phone, sp.location, u.nic_number,
-                           sp.social_media_link, {$serviceProviderYearsExpr} AS years_experience, u.bio AS professional_summary,
-                           sp.availability, sp.availability_notes, u.{$usersNicPhotoColumn} AS nic_photo_front, u.{$usersNicPhotoBackColumn} AS nic_photo_back
-                       FROM serviceprovider sp
-                       INNER JOIN users u ON u.id = sp.user_id
-                       WHERE sp.user_id = :user_id");
+            $db->query("SELECT full_name, professional_title, email, phone, location, nic_number,
+                               social_media_link, years_experience, professional_summary,
+                               availability, availability_notes, nic_photo_front, nic_photo_back
+                        FROM serviceprovider WHERE user_id = :user_id");
             $db->bind(':user_id', $userId);
             $spData = $db->single();
             if ($spData) {

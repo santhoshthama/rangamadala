@@ -11,20 +11,8 @@ $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 $roleId = isset($role->id) ? (int)$role->id : (int)($_GET['role_id'] ?? 0);
 $roleName = $role->role_name ?? 'Role';
 
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
-}
+require_once __DIR__ . '/_profile_image_helper.php';
+$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,16 +28,31 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         .form-group { display: flex; flex-direction: column; }
         label { font-weight: 600; margin-bottom: 6px; }
         .artist-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-        .artist-card { background: #fff; border-radius: 16px; border: 1px solid var(--border); padding: 20px; box-shadow: var(--shadow-xs, 0 2px 10px rgba(15,23,42,.05)); display: flex; flex-direction: column; gap: 12px; }
+        .artist-card {
+            background: linear-gradient(180deg, #fffefb 0%, #fff8ea 100%);
+            border: 1px solid #ead7a4;
+            border-left: 4px solid var(--brand);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 6px 16px rgba(186, 142, 35, 0.10);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 100%;
+        }
+        .artist-card:hover {
+            box-shadow: 0 12px 24px rgba(186, 142, 35, 0.18);
+            transform: translateY(-3px);
+        }
         .artist-card-header { display: flex; align-items: center; gap: 14px; }
-        .artist-avatar { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; border: 2px solid var(--border); }
-        .artist-status { font-size: 12px; color: var(--muted); }
+        .artist-avatar { width: 72px; height: 72px; border-radius: 14px; object-fit: cover; border: 2px solid #f0dfb4; box-shadow: 0 4px 10px rgba(186, 142, 35, 0.08); }
+        .artist-status { font-size: 12px; color: #6a5120; }
         .badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-        .badge-available { background: rgba(76,175,80,.15); color: #256029; }
-        .badge-requested { background: rgba(255,193,7,.18); color: #7a4f02; }
-        .badge-assigned { background: rgba(0,123,255,.15); color: #0b5394; }
-        .empty-state { padding: 40px; text-align: center; border: 1px dashed var(--border); border-radius: 16px; color: var(--muted); background: rgba(248,249,252,.6); }
-        .search-card { background: #fff; border-radius: 16px; border: 1px solid var(--border); padding: 18px 24px; margin-bottom: 24px; box-shadow: var(--shadow-xs, 0 2px 10px rgba(15,23,42,.05)); }
+        .badge-available { background: rgba(76,175,80,.12); color: #256029; }
+        .badge-requested { background: rgba(255,193,7,.16); color: #7a4f02; }
+        .badge-assigned { background: rgba(0,123,255,.12); color: #0b5394; }
+        .empty-state { padding: 40px; text-align: center; border: 1px dashed #ead7a4; border-radius: 16px; color: #6a5120; background: linear-gradient(180deg, #fffefb 0%, #fff8ea 100%); }
+        .search-card { background: linear-gradient(180deg, #fffefb 0%, #fff8ea 100%); border-radius: 16px; border: 1px solid #ead7a4; padding: 18px 24px; margin-bottom: 24px; box-shadow: 0 6px 16px rgba(186, 142, 35, 0.08); }
         .search-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
         .search-input-wrapper { flex: 1; min-width: 240px; position: relative; }
         .search-input-wrapper i { position: absolute; top: 50%; left: 14px; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
@@ -59,22 +62,50 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         .search-button:hover { background: var(--brand-dark, #574bff); }
         .search-clear { padding: 11px 18px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--muted-strong, #3f4860); font-weight: 600; font-size: 14px; text-decoration: none; transition: border-color .2s ease, color .2s ease, background .2s ease; }
         .search-clear:hover { border-color: var(--brand, #6c63ff); color: var(--brand, #6c63ff); background: rgba(108,99,255,.08); }
-        .results-hint { margin: -8px 0 18px; color: var(--muted); font-size: 13px; }
+        .results-hint { margin: -8px 0 18px; color: #6a5120; font-size: 13px; }
+
+        .artist-card .actions-inline {
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .artist-card .actions-inline .btn {
+            min-height: 42px;
+            border-radius: 10px;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(186, 142, 35, 0.10);
+        }
+
+        .artist-card .actions-inline .btn-secondary {
+            background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+            border: 1px solid #f0dfb4;
+            color: #4a3a14;
+        }
+
+        .artist-card .actions-inline .btn-secondary:hover {
+            background: linear-gradient(180deg, #fffaf0 0%, #fff2da 100%);
+            color: #3f2f12;
+        }
+
+        .artist-card .actions-inline .btn-success {
+            background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%);
+            border: 1px solid #c9a14a;
+            color: #2f2410;
+        }
+
+        .artist-card .actions-inline .btn-success:hover {
+            box-shadow: 0 10px 20px rgba(186, 142, 35, 0.18);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
-<body>
-    <aside class="sidebar">
-        <div class="logo"><h2>🎭</h2></div>
-        <ul class="menu">
-            <li><a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-home"></i><span>Dashboard</span></a></li>
-            <li><a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-film"></i><span>Drama Details</span></a></li>
-            <li class="active"><a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-users"></i><span>Artist Roles</span></a></li>
-            <li><a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-user-tie"></i><span>Production Manager</span></a></li>
-            <li><a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-calendar-alt"></i><span>Schedule</span></a></li>
-            <li><a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-dollar-sign"></i><span>Services & Budget</span></a></li>
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bx-arrow-left"></i><span>Back to Profile</span></a></li>
-        </ul>
-    </aside>
+<body class="director-dashboard-page">
+    <?php
+    $directorSidebarDramaId = (int)$dramaId;
+    $directorSidebarActive = 'artist-roles';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <main class="main--content">
         <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="bx bx-arrow-left"></i>Back to Manage Roles</a>
@@ -94,13 +125,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">Browse artists, review experience, and send collaboration requests.</p>
             </div>
             <div class="user--info">
-                <div class="role-badge">
-                    <i class="bx bx-video"></i> Director
-                </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <?php
+                $directorProfileImageSrc = $profileImageSrc;
+                $directorRoleLabel = 'Director';
+                include __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
@@ -217,6 +246,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <?php endif; ?>
     </main>
 
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
     <script src="/Rangamadala/public/assets/JS/manage-roles.js"></script>
 </body>
 </html>

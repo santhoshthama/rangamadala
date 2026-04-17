@@ -279,6 +279,26 @@ class M_role {
         }
     }
 
+    public function getAssignmentById($assignment_id) {
+        try {
+            $this->db->query("SELECT a.*, 
+                             r.drama_id,
+                             r.role_name,
+                             u.full_name as artist_name,
+                             u.email as artist_email
+                             FROM role_assignments a
+                             INNER JOIN drama_roles r ON a.role_id = r.id
+                             INNER JOIN users u ON a.artist_id = u.id
+                             WHERE a.id = :assignment_id
+                             LIMIT 1");
+            $this->db->bind(':assignment_id', $assignment_id);
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log("Error in getAssignmentById: " . $e->getMessage());
+            return null;
+        }
+    }
+
     // Accept application and assign role
     public function acceptApplication($application_id, $reviewed_by) {
         try {
@@ -1096,8 +1116,13 @@ class M_role {
             $this->db->bind(':id', $assignment_id);
             $this->db->execute();
             
-            // Decrement positions_filled counter
-            $this->db->query("UPDATE drama_roles SET positions_filled = positions_filled - 1 
+            // Decrement positions_filled and reopen role if it was previously filled
+            $this->db->query("UPDATE drama_roles 
+                             SET positions_filled = positions_filled - 1,
+                                 status = CASE
+                                     WHEN status = 'filled' AND (positions_filled - 1) < positions_available THEN 'open'
+                                     ELSE status
+                                 END
                              WHERE id = :role_id AND positions_filled > 0");
             $this->db->bind(':role_id', $assignment->role_id);
             $this->db->execute();

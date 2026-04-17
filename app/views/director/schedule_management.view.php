@@ -98,20 +98,8 @@ function statusBadgeStyle($status) {
     return '';
 }
 
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
-}
+require_once __DIR__ . '/_profile_image_helper.php';
+$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -126,68 +114,72 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         .date-availability.available { background: rgba(40, 167, 69, 0.12); color: #155724; border-left: 4px solid #28a745; }
         .date-availability.conflict { background: rgba(220, 53, 69, 0.12); color: #721c24; border-left: 4px solid #dc3545; }
         .date-availability.checking { background: rgba(255, 193, 7, 0.12); color: #856404; border-left: 4px solid #ffc107; }
-        .event-card { background: var(--bg-card, #fff); border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border, #e0e0e0); transition: box-shadow 0.15s; }
-        .event-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .event-meta { font-size: 13px; color: var(--muted, #888); margin-top: 4px; }
-        .event-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .event-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+        .event-card { background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; border: 1px solid #ead7a4; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(186,142,35,0.06); }
+        .event-card:hover { box-shadow: 0 6px 16px rgba(186,142,35,0.12); transform: translateY(-2px); }
+        .schedule-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .schedule-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            border: 1px solid #ead7a4;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 3px 10px rgba(186,142,35,0.10);
+            white-space: nowrap;
+        }
+        .schedule-action-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(186,142,35,0.16); }
+        .schedule-action-btn i { font-size: 16px; }
+        .schedule-action-btn.rehearsal { background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%); color: #2f2410; border-color: #c9a14a; }
+        .schedule-action-btn.interview { background: linear-gradient(180deg, #fffdf7 0%, #fff2d3 100%); color: #5a4300; border-color: #ead7a4; }
+        .schedule-action-btn.secondary { background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%); color: #4a3a14; }
+        .event-meta { font-size: 13px; color: #7a6121; margin-top: 6px; display: flex; align-items: center; gap: 8px; }
+        .event-meta i { color: #ba8e23; font-size: 14px; }
+        .event-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .event-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+        .event-card .status-badge { display: inline-flex; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+        .event-card .status-badge.pending { background: #fff3cd; color: #856404; }
+        .event-card .status-badge.scheduled { background: linear-gradient(135deg, #ffd89b 0%, #ffcb70 100%); color: #5a4300; }
+        .event-card .status-badge.confirmed { background: rgba(76,175,80,0.15); color: #256029; }
+        .event-card .status-badge.assigned { background: rgba(76,175,80,0.15); color: #256029; }
+        .event-card .status-badge.cancelled { background: #f8d7da; color: #721c24; }
+        .event-card .btn { font-size: 12px; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s ease; }
+        .event-card .btn:hover { transform: translateY(-1px); }
+        .event-card .btn { min-width: 34px; min-height: 34px; }
+        .event-card .btn-primary { background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%); border: 1px solid #c9a14a; color: #2f2410; box-shadow: 0 3px 8px rgba(186,142,35,0.12); }
+        .event-card .btn-secondary { background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%); border: 1px solid #f0dfb4; color: #4a3a14; box-shadow: 0 2px 6px rgba(186,142,35,0.08); }
+        .event-card .btn-success { background: linear-gradient(135deg, #d8b566 0%, #c59b3d 100%); border: 1px solid #c9a14a; color: #2f2410; box-shadow: 0 3px 8px rgba(186,142,35,0.12); }
+        .event-card .btn-danger { background: linear-gradient(135deg, #e7b0a9 0%, #d98d84 100%); border: 1px solid #d98d84; color: #4a1714; box-shadow: 0 3px 8px rgba(217,141,132,0.12); }
+        .event-card .btn-delete-event { background: linear-gradient(135deg, #8f2d2d 0%, #b04444 100%); border: 1px solid #a63c3c; color: #fff; box-shadow: 0 3px 8px rgba(143,45,45,0.18); }
+        .event-card .btn-delete-event:hover { background: linear-gradient(135deg, #a63c3c 0%, #c24f4f 100%); }
+        .event-card .btn-primary i,
+        .event-card .btn-secondary i,
+        .event-card .btn-success i,
+        .event-card .btn-danger i,
+        .event-card .btn-delete-event i { font-size: 15px; }
         .stats-mini { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-        .stat-mini { padding: 12px 20px; border-radius: 8px; text-align: center; min-width: 100px; }
-        .stat-mini h4 { margin: 0; font-size: 22px; }
-        .stat-mini p { margin: 4px 0 0; font-size: 12px; opacity: 0.85; }
+        .stat-mini { padding: 12px 20px; border-radius: 10px; text-align: center; min-width: 100px; background: #fffdf7; border: 1px solid #ead7a4; color: #2f2410; }
+        .stat-mini h4 { margin: 0; font-size: 22px; color: #ba8e23; }
+        .stat-mini p { margin: 4px 0 0; font-size: 12px; color: #8a6a1f; }
     </style>
 </head>
-<body>
+<body class="director-dashboard-page">
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h2>🎭</h2>
-        </div>
-        <ul class="menu">
-            <li>
-                <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= esc($dramaId) ?>">
-                    <i class="bx bx-home"></i><span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= esc($dramaId) ?>">
-                    <i class="bx bx-film"></i><span>Drama Details</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>">
-                    <i class="bx bx-users"></i><span>Artist Roles</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= esc($dramaId) ?>">
-                    <i class="bx bx-user-tie"></i><span>Production Manager</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= esc($dramaId) ?>">
-                    <i class="bx bx-calendar-alt"></i><span>Schedule</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= esc($dramaId) ?>">
-                    <i class="bx bx-dollar-sign"></i><span>Services & Budget</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="bx bx-arrow-left"></i><span>Back to Profile</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php
+    $directorSidebarDramaId = (int)$dramaId;
+    $directorSidebarActive = 'schedule';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
-            <i class="bx bx-arrow-left"></i> Back to Dashboard
-        </a>
-
+    
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
@@ -195,19 +187,11 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <h2>Schedule Management</h2>
             </div>
             <div class="user--info">
-                <button class="btn btn-primary" onclick="openCreateModal('rehearsal')">
-                    <i class="bx bx-theater-masks"></i> Schedule Rehearsal
-                </button>
-                <button class="btn btn-success" onclick="openCreateModal('interview')">
-                    <i class="bx bx-user-check"></i> Schedule Interview
-                </button>
-                <div class="role-badge">
-                    <i class="bx bx-video"></i> Director
-                </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Director Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <?php
+                $directorProfileImageSrc = $profileImageSrc;
+                $directorRoleLabel = 'Director';
+                include __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
@@ -219,38 +203,63 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         <?php endif; ?>
 
         <!-- Stats -->
-        <div class="stats-mini">
-            <div class="stat-mini" style="background: linear-gradient(135deg, #007bff, #0056b3); color: #fff;">
-                <h4><?= $scheduleStats ? (int)$scheduleStats->rehearsals : 0 ?></h4>
-                <p>Rehearsals</p>
+        <div class="stats-grid director-stats-grid schedule-stats-grid" style="margin-bottom: 24px;">
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Rehearsals</div>
+                    <div class="stat-card-icon primary">
+                        <i class="bx bx-movie-play"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $scheduleStats ? (int)$scheduleStats->rehearsals : 0 ?></div>
             </div>
-            <div class="stat-mini" style="background: linear-gradient(135deg, #28a745, #1e7e34); color: #fff;">
-                <h4><?= $scheduleStats ? (int)$scheduleStats->interviews : 0 ?></h4>
-                <p>Interviews</p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Interviews</div>
+                    <div class="stat-card-icon success">
+                        <i class="bx bx-user-check"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $scheduleStats ? (int)$scheduleStats->interviews : 0 ?></div>
             </div>
-            <div class="stat-mini" style="background: linear-gradient(135deg, #ffc107, #d39e00); color: #fff;">
-                <h4><?= $scheduleStats ? (int)$scheduleStats->meetings : 0 ?></h4>
-                <p>Meetings</p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Meetings</div>
+                    <div class="stat-card-icon info">
+                        <i class="bx bx-group"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $scheduleStats ? (int)$scheduleStats->meetings : 0 ?></div>
             </div>
-            <div class="stat-mini" style="background: linear-gradient(135deg, #ba8e23, #a0781e); color: #fff;">
-                <h4><?= $scheduleStats ? (int)$scheduleStats->upcoming : 0 ?></h4>
-                <p>Upcoming</p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Upcoming</div>
+                    <div class="stat-card-icon warning">
+                        <i class="bx bx-calendar-event"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $scheduleStats ? (int)$scheduleStats->upcoming : 0 ?></div>
             </div>
-            <div class="stat-mini" style="background: linear-gradient(135deg, #6c757d, #545b62); color: #fff;">
-                <h4><?= $scheduleStats ? (int)$scheduleStats->past : 0 ?></h4>
-                <p>Past</p>
+            <div class="stat-card director-stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Past</div>
+                    <div class="stat-card-icon info">
+                        <i class="bx bx-history"></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $scheduleStats ? (int)$scheduleStats->past : 0 ?></div>
             </div>
         </div>
 
         <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab-button active" onclick="showScheduleTab('upcoming', this)">
+        <div class="nav-tabs-bar tabs">
+            <button class="nav-tab-btn tab-button active" onclick="showScheduleTab('upcoming', this)">
                 <i class="bx bx-calendar-day"></i> Upcoming Events
             </button>
-            <button class="tab-button" onclick="showScheduleTab('past', this)">
+            <button class="nav-tab-btn tab-button" onclick="showScheduleTab('past', this)">
                 <i class="bx bx-history"></i> Past Events
             </button>
-            <button class="tab-button" onclick="showScheduleTab('calendar', this)">
+            <button class="nav-tab-btn tab-button" onclick="showScheduleTab('calendar', this)">
                 <i class="bx bx-calendar"></i> Calendar View
             </button>
         </div>
@@ -262,19 +271,37 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="details">
                         <?php if (empty($upcomingEvents)): ?>
                             <div class="card-section">
-                                <div style="text-align: center; padding: 40px; color: var(--muted);">
-                                    <i class="bx bx-calendar-plus" style="font-size: 40px; display: block; margin-bottom: 16px;"></i>
-                                    <h3>No Upcoming Events</h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                    <h3 style="margin: 0;"><span>Upcoming Events</span></h3>
+                                    <div class="schedule-toolbar">
+                                        <button class="schedule-action-btn rehearsal" onclick="openCreateModal('rehearsal')">
+                                            <i class="bx bx-theater-masks"></i> Schedule Rehearsal
+                                        </button>
+                                        <button class="schedule-action-btn interview" onclick="openCreateModal('interview')">
+                                            <i class="bx bx-user-check"></i> Schedule Interview
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="text-align: center; padding: 40px; color: var(--muted); background: linear-gradient(180deg, #fffdfb 0%, #fff8f0 100%); border: 1px dashed #ead7a4; border-radius: 12px;">
+                                    <i class="bx bx-calendar-plus" style="font-size: 40px; display: block; margin-bottom: 16px; color: #ba8e23;"></i>
+                                    <h3 style="color: #2f2410;">No Upcoming Events</h3>
                                     <p>Schedule a rehearsal or interview to get started.</p>
-                                    <button class="btn btn-primary" style="margin-top: 12px;" onclick="openCreateModal()">
-                                        <i class="bx bx-plus"></i> Schedule Event
-                                    </button>
                                 </div>
                             </div>
                         <?php else: ?>
                             <?php if (!empty($thisWeek)): ?>
                             <div class="card-section">
-                                <h3><span>This Week</span></h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h3 style="margin: 0;"><span>This Week</span></h3>
+                                    <div class="schedule-toolbar">
+                                        <button class="schedule-action-btn rehearsal" onclick="openCreateModal('rehearsal')">
+                                            <i class="bx bx-theater-masks"></i> Schedule Rehearsal
+                                        </button>
+                                        <button class="schedule-action-btn interview" onclick="openCreateModal('interview')">
+                                            <i class="bx bx-user-check"></i> Schedule Interview
+                                        </button>
+                                    </div>
+                                </div>
                                 <?php foreach ($thisWeek as $evt): ?>
                                     <?php include __DIR__ . '/../_partials/_schedule_event_card.php'; ?>
                                 <?php endforeach; ?>
@@ -283,7 +310,17 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                             <?php if (!empty($nextWeek)): ?>
                             <div class="card-section">
-                                <h3><span>Next Week</span></h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h3 style="margin: 0;"><span>Next Week</span></h3>
+                                    <div class="schedule-toolbar">
+                                        <button class="schedule-action-btn rehearsal" onclick="openCreateModal('rehearsal')">
+                                            <i class="bx bx-theater-masks"></i> Schedule Rehearsal
+                                        </button>
+                                        <button class="schedule-action-btn interview" onclick="openCreateModal('interview')">
+                                            <i class="bx bx-user-check"></i> Schedule Interview
+                                        </button>
+                                    </div>
+                                </div>
                                 <?php foreach ($nextWeek as $evt): ?>
                                     <?php include __DIR__ . '/../_partials/_schedule_event_card.php'; ?>
                                 <?php endforeach; ?>
@@ -292,7 +329,17 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 
                             <?php if (!empty($laterEvents)): ?>
                             <div class="card-section">
-                                <h3><span>Later</span></h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h3 style="margin: 0;"><span>Later</span></h3>
+                                    <div class="schedule-toolbar">
+                                        <button class="schedule-action-btn rehearsal" onclick="openCreateModal('rehearsal')">
+                                            <i class="bx bx-theater-masks"></i> Schedule Rehearsal
+                                        </button>
+                                        <button class="schedule-action-btn interview" onclick="openCreateModal('interview')">
+                                            <i class="bx bx-user-check"></i> Schedule Interview
+                                        </button>
+                                    </div>
+                                </div>
                                 <?php foreach ($laterEvents as $evt): ?>
                                     <?php include __DIR__ . '/../_partials/_schedule_event_card.php'; ?>
                                 <?php endforeach; ?>
@@ -310,11 +357,16 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <div class="profile-container" style="grid-template-columns: 1fr;">
                     <div class="details">
                         <div class="card-section">
-                            <h3>Past Events</h3>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h3 style="margin: 0;">Past Events</h3>
+                                <button class="schedule-action-btn rehearsal" onclick="openCreateModal()">
+                                    <i class="bx bx-plus"></i> Create Event
+                                </button>
+                            </div>
                             <?php if (empty($pastEvents)): ?>
-                                <div style="text-align: center; padding: 40px; color: var(--muted);">
-                                    <i class="bx bx-history" style="font-size: 40px; display: block; margin-bottom: 16px;"></i>
-                                    <h3>No Past Events</h3>
+                                <div style="text-align: center; padding: 40px; color: #8a6a1f; background: linear-gradient(180deg, #fffdfb 0%, #fff8f0 100%); border: 1px dashed #ead7a4; border-radius: 12px;">
+                                    <i class="bx bx-history" style="font-size: 40px; display: block; margin-bottom: 16px; color: #ba8e23;"></i>
+                                    <h3 style="color: #2f2410;">No Past Events</h3>
                                     <p>Completed events will appear here.</p>
                                 </div>
                             <?php else: ?>
@@ -337,13 +389,24 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <div class="details">
                         <div class="card-section">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <button class="btn btn-secondary" onclick="previousMonth()">
-                                    <i class="bx bx-chevron-left"></i>
-                                </button>
-                                <h3 id="calendarMonthYear" style="margin: 0;"></h3>
-                                <button class="btn btn-secondary" onclick="nextMonth()">
-                                    <i class="bx bx-chevron-right"></i>
-                                </button>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <button class="btn btn-secondary" onclick="previousMonth()" style="padding: 10px 14px;">
+                                        <i class="bx bx-chevron-left"></i>
+                                    </button>
+                                    <h3 id="calendarMonthYear" style="margin: 0; min-width: 200px; text-align: center; color: #2f2410;"></h3>
+                                    <button class="btn btn-secondary" onclick="nextMonth()" style="padding: 10px 14px;">
+                                        <i class="bx bx-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <div class="schedule-toolbar">
+                                    <button class="schedule-action-btn rehearsal" onclick="openCreateModal('rehearsal')">
+                                        <i class="bx bx-theater-masks"></i> Schedule Rehearsal
+                                    </button>
+                                    <button class="schedule-action-btn interview" onclick="openCreateModal('interview')">
+                                        <i class="bx bx-user-check"></i> Schedule Interview
+                                    </button>
+                                </div>
+                            </div>
                             </div>
 
                             <!-- Calendar Grid -->
@@ -384,11 +447,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 </div>
                             </div>
 
-                            <div style="margin-top: 20px;">
-                                <button class="btn btn-success" onclick="openCreateModal()">
-                                    <i class="bx bx-plus"></i> Add Event
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -493,6 +551,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
         const DRAMA_ID = <?= (int)$dramaId ?>;
         const CALENDAR_EVENTS = <?= json_encode($calendarEvents, JSON_UNESCAPED_UNICODE) ?>;
     </script>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
     <script src="/Rangamadala/public/assets/JS/schedule-management.js"></script>
 </body>
 </html>

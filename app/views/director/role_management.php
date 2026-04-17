@@ -67,10 +67,6 @@
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="dashboard.php" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
 
         <!-- Header -->
         <div class="header--wrapper">
@@ -377,7 +373,7 @@
             <div class="modal-actions">
                 <button class="btn btn-primary" onclick="submitCreateRole()">
                     <i class="bx bx-check"></i>
-                    Create Role
+                    Create New Role
                 </button>
                 <button class="btn btn-secondary" onclick="closeCreateRoleModal()">Cancel</button>
             </div>

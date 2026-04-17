@@ -90,8 +90,8 @@
             
             <div class="details-actions">
               <a class="btn btn-primary" href="<?= ROOT ?>/BrowseDramas/bookShowings/<?= (int)$d->id ?>"><i class='bx bx-cart-add'></i> Buy Show Ticket</a>
-              <a class="btn btn-outline" href="<?= ROOT ?>/BrowseDramas/rateReview/<?= (int)$d->id ?>"><span class="material-symbols-rounded">reviews</span> Rate &amp; Review Page</a>
-              <button class="btn btn-outline" id="rateBtn" type="button"><span class="material-symbols-rounded">star</span> Rate Drama</button>
+              <a class="btn btn-outline" href="<?= ROOT ?>/BrowseDramas/rateReview/<?= (int)$d->id ?>"><span class="bx bx-revision">reviews</span> Rate &amp; Review Page</a>
+              <button class="btn btn-outline" id="rateBtn" type="button"><span class="bx bx-star"></span> Rate Drama</button>
             </div>
             <?php if (isset($_GET['book']) && $_GET['book'] === '1'): ?>
               <div style="margin-top:10px; padding:10px 12px; border:1px solid rgba(212,175,55,.35); border-radius:10px; color:#f5f0e8; background:rgba(212,175,55,.10);">
@@ -186,7 +186,7 @@
         <!-- Already Rated Notice -->
         <?php if ($data['has_rated'] && !empty($data['user_rating'])): ?>
           <div class="already-rated-notice">
-            <span class="material-symbols-rounded">info</span>
+            <span class="bx bx-info-circle"></span>
             <p>You already rated this drama with <strong><?= $data['user_rating']->rating ?> stars</strong>. Updating your rating will replace your previous review.</p>
           </div>
         <?php endif; ?>
@@ -199,7 +199,7 @@
 
   <!-- Success Message Toast -->
   <div class="toast-notification" id="successToast">
-    <span class="material-symbols-rounded">check_circle</span>
+    <span class="bx bx-check-circle"></span>
     <p id="toastMessage">Rating submitted successfully!</p>
   </div>
 

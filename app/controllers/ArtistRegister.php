@@ -18,6 +18,10 @@ class ArtistRegister
             $nic_photo_front = $_FILES['nic_photo_front']['name'] ?? null;
             $nic_photo_back = $_FILES['nic_photo_back']['name'] ?? null;
 
+            $passwordPattern = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/';
+            $phonePattern = '/^(?:\+94|94|0)7\d{8}$/';
+            $nicPattern = '/^(?:\d{12}|\d{9}[Vv])$/';
+
             // 🔹 Basic validation
             if (empty($full_name)) {
                 $errors[] = "Full name is required.";
@@ -27,22 +31,21 @@ class ArtistRegister
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = "Invalid email format.";
             }
-            if (strlen($password) < 6) {
-                $errors[] = "Password must be at least 6 characters.";
+            if (!preg_match($passwordPattern, $password)) {
+                $errors[] = "Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.";
             }
             if ($password !== $confirm_password) {
                 $errors[] = "Password confirmation does not match.";
             }
             if (empty($phone)) {
                 $errors[] = "Phone number is required.";
+            } elseif (!preg_match($phonePattern, $phone)) {
+                $errors[] = "Enter a valid Sri Lankan mobile number (e.g. 07X XXX XXXX or +94 XXX XXX XXX).";
             }
             if (empty($nic_number)) {
                 $errors[] = "NIC number is required.";
-            } else {
-                $nicPattern = '/^([0-9]{9}[vVxX]|[0-9]{12})$/';
-                if (!preg_match($nicPattern, $nic_number)) {
-                    $errors[] = "Please enter a valid NIC number.";
-                }
+            } elseif (!preg_match($nicPattern, $nic_number)) {
+                $errors[] = "Enter a valid Sri Lankan NIC (12 digits or old format ending with V).";
             }
             if (!$nic_photo_front) {
                 $errors[] = "NIC front photo is required.";

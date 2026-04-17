@@ -8,7 +8,7 @@ if(isset($data) && is_array($data)) {
 $userModel = new M_universal_profile();
 $currentUser = $userModel->getUserById($_SESSION['user_id']);
 
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
+$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
 if ($currentUser && !empty($currentUser->profile_image)) {
     $imageValue = str_replace('\\', '/', $currentUser->profile_image);
     if (strpos($imageValue, '/') !== false) {
@@ -16,8 +16,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     } else {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
 }
 ?>
 <!DOCTYPE html>
@@ -29,19 +27,17 @@ if ($currentUser && !empty($currentUser->profile_image)) {
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
+<body class="director-dashboard-page">
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <a href="<?=ROOT?>/artistdashboard" class="logo-link">
+                <img src="/Rangamadala/public/assets/IMAGES/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+                <span class="logo-text">Rangamadala</span>
+            </a>
         </div>
         <ul class="menu">
-            <li>
-                <a href="<?=ROOT?>/artistdashboard">
-                    <i class="bx bx-arrow-left"></i>
-                    <span>Back to Dashboard</span>
-                </a>
-            </li>
+
             <li class="active">
                 <a href="#">
                     <i class="bx bx-film"></i>
@@ -54,21 +50,12 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                     <span>Notifications</span>
                 </a>
             </li>
-            <li>
-                <a href="<?=ROOT?>/profile">
-                    <i class="bx bx-user"></i>
-                    <span>Profile</span>
-                </a>
-            </li>
         </ul>
     </aside>
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?=ROOT?>/artistdashboard" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
+
 
         <!-- Header -->
         <div class="header--wrapper">
@@ -81,12 +68,25 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
             <div class="user--info">
                 <div class="role-badge">
-                    <i class="bx bx-user-tie"></i> Actor
+                    <i class="bx bx-star"></i> Actor
                 </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="Artist Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
-                <a href="<?= ROOT ?>/logout" class="logout-btn" title="Logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                </a>
+                <div class="user-menu" id="userMenu">
+                    <button type="button" class="user-menu-trigger" id="user-menu-trigger" aria-label="Open user menu">
+                        <div class="user-avatar-small">
+                            <img src="<?= esc($profileImageSrc) ?>" alt="Artist Avatar" onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'">
+                        </div>
+                    </button>
+                    <div class="user-menu-dropdown">
+                        <a href="<?= ROOT ?>/profile" class="user-menu-item">
+                            <i class="bx bx-user icon"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="<?= ROOT ?>/logout" class="user-menu-item">
+                            <i class="bx bx-log-out icon"></i>
+                            <span>Log Out</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -249,19 +249,19 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                         <!-- Mini Stats -->
                         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px;">
                             <?php if ((int)$schedule_stats->upcoming_rehearsals > 0): ?>
-                            <div style="background: linear-gradient(135deg, #007bff, #0056b3); color: #fff; padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 90px;">
+                            <div style="background: linear-gradient(135deg, #d2ae56, #b88b22); color: #2f2410; padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 90px; border: 1px solid #c79a2b; box-shadow: 0 5px 12px rgba(186, 142, 35, 0.2);">
                                 <strong style="font-size: 20px;"><?= (int)$schedule_stats->upcoming_rehearsals ?></strong>
                                 <div style="font-size: 11px; opacity: 0.9;">Rehearsals</div>
                             </div>
                             <?php endif; ?>
                             <?php if ((int)$schedule_stats->upcoming_performances > 0): ?>
-                            <div style="background: linear-gradient(135deg, #ba8e23, #a0781e); color: #fff; padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 90px;">
+                            <div style="background: linear-gradient(135deg, #ba8e23, #a0781e); color: #fff; padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 90px; border: 1px solid #9f781a; box-shadow: 0 5px 12px rgba(186, 142, 35, 0.25);">
                                 <strong style="font-size: 20px;"><?= (int)$schedule_stats->upcoming_performances ?></strong>
                                 <div style="font-size: 11px; opacity: 0.9;">Performances</div>
                             </div>
                             <?php endif; ?>
                             <?php if ((int)$schedule_stats->upcoming_meetings > 0): ?>
-                            <div style="background: linear-gradient(135deg, #ffc107, #d39e00); color: #fff; padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 90px;">
+                            <div style="background: linear-gradient(135deg, #f0ddb1, #e5c980); color: #5a4415; padding: 10px 18px; border-radius: 8px; text-align: center; min-width: 90px; border: 1px solid #d7ba74; box-shadow: 0 5px 12px rgba(186, 142, 35, 0.16);">
                                 <strong style="font-size: 20px;"><?= (int)$schedule_stats->upcoming_meetings ?></strong>
                                 <div style="font-size: 11px; opacity: 0.9;">Meetings</div>
                             </div>
@@ -285,7 +285,7 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 <?php foreach ($my_interviews as $interview): ?>
                                 <li>
                                     <div>
-                                        <strong style="color: #28a745;">
+                                        <strong style="color: var(--brand);">
                                             <i class="bx bx-user-check"></i> 
                                             Interview for: <?= esc($interview->role_name) ?>
                                         </strong>
@@ -353,9 +353,9 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                     <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
                                         <?php
                                         $typeBadgeColors = [
-                                            'rehearsal' => 'background: #007bff; color: #fff;',
-                                            'performance' => 'background: #ba8e23; color: #fff;',
-                                            'meeting' => 'background: #ffc107; color: #333;',
+                                            'rehearsal' => 'background: #d2ae56; color: #2f2410; border: 1px solid #c79a2b;',
+                                            'performance' => 'background: #ba8e23; color: #fff; border: 1px solid #9f781a;',
+                                            'meeting' => 'background: #f0ddb1; color: #5a4415; border: 1px solid #d7ba74;',
                                         ];
                                         $statusBadge = [
                                             'scheduled' => 'pending',
@@ -417,8 +417,8 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                                 <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
                                     <?php
                                     $pastStatusStyle = '';
-                                    if ($pastEvt->status === 'completed') $pastStatusStyle = 'background: #6c757d; color: #fff;';
-                                    if ($pastEvt->status === 'cancelled') $pastStatusStyle = 'background: #dc3545; color: #fff;';
+                                    if ($pastEvt->status === 'completed') $pastStatusStyle = 'background: #d9c08c; color: #4a3a14; border: 1px solid #caa968;';
+                                    if ($pastEvt->status === 'cancelled') $pastStatusStyle = 'background: #f2dfdf; color: #7a2c2c; border: 1px solid #d7b1b1;';
                                     ?>
                                     <span class="status-badge" style="<?= $pastStatusStyle ?>; font-size: 11px; padding: 3px 10px; border-radius: 12px;">
                                         <?= esc(ucfirst($pastEvt->status)) ?>
@@ -438,5 +438,6 @@ if ($currentUser && !empty($currentUser->profile_image)) {
             </div>
         </div>
     </main>
+    <script src="<?= ROOT ?>/assets/JS/director-user-menu.js"></script>
 </body>
 </html>

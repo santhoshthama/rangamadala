@@ -6,12 +6,26 @@
     <title>Create Drama - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        /* Keep only one visible card wrapper on this page */
+        .create-drama-page .container {
+            background: transparent;
+            box-shadow: none;
+            border-radius: 0;
+            padding: 0;
+            width: 100%;
+            max-width: 900px;
+        }
+    </style>
 </head>
-<body>
+<body class="create-drama-page">
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <a href="<?= ROOT ?>/artistdashboard">
+                <img src="/Rangamadala/public/assets/Images/logo.png" alt="Rangamadala Logo">
+                <span>Rangamadala</span>
+            </a>
         </div>
         <ul class="menu">
             <li>
@@ -49,7 +63,7 @@
         </a>
 
         <div class="content">
-            <div class="container" style="max-width: 900px;">
+            <div class="container">
                 <div class="header">
                     <h1>Create New Drama</h1>
                     <p>Fill in the details to create your drama production. Admin approval required.</p>
@@ -128,6 +142,7 @@
                     <div class="form-group">
                         <label for="certificateNumber">Certificate Number *</label>
                         <input type="text" id="certificateNumber" name="certificateNumber" required placeholder="Enter certificate number">
+                        <span class="error-message" id="certificateNumberError">Please enter a valid certificate number</span>
                     </div>
 
                     <div class="form-group">
