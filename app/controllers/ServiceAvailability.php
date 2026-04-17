@@ -4,6 +4,16 @@ class ServiceAvailability
 {
     use Controller;
 
+    private function jsonResponse(array $payload, int $statusCode = 200): void
+    {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+        }
+        http_response_code($statusCode);
+        echo json_encode($payload);
+        exit;
+    }
+
     public function index()
     {
         // Check if user is logged in
@@ -96,9 +106,7 @@ class ServiceAvailability
     public function addDate()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id'])) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
             $date = $_POST['date'] ?? null;
@@ -106,9 +114,7 @@ class ServiceAvailability
             $title = $_POST['title'] ?? null;
 
             if (!$date || !$description || !$title) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing date or description']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing date or description'], 400);
         }
 
         // Convert JS date format (M/D/YYYY) to database format (Y-m-d)
@@ -126,10 +132,9 @@ class ServiceAvailability
             );
 
         if ($result) {
-            echo json_encode(['success' => true, 'date' => $date, 'description' => $description]);
+            $this->jsonResponse(['success' => true, 'date' => $date, 'description' => $description]);
         } else {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to add date']);
+            $this->jsonResponse(['success' => false, 'error' => 'Failed to add date'], 500);
         }
     }
 
@@ -139,17 +144,13 @@ class ServiceAvailability
     public function removeDate()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id'])) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
         $date = $_POST['date'] ?? null;
 
         if (!$date) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing date']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing date'], 400);
         }
 
         // Convert JS date format to database format
@@ -159,10 +160,9 @@ class ServiceAvailability
         $result = $availabilityModel->removeAvailableDate($_SESSION['user_id'], $dbDate);
 
         if ($result) {
-            echo json_encode(['success' => true, 'date' => $date]);
+            $this->jsonResponse(['success' => true, 'date' => $date]);
         } else {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to remove date']);
+            $this->jsonResponse(['success' => false, 'error' => 'Failed to remove date'], 500);
         }
     }
 
@@ -172,18 +172,14 @@ class ServiceAvailability
     public function updateDate()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id'])) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
         $date = $_POST['date'] ?? null;
         $description = $_POST['description'] ?? null;
 
         if (!$date || !$description) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing date or description']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing date or description'], 400);
         }
 
         // Convert JS date format to database format
@@ -193,10 +189,9 @@ class ServiceAvailability
         $result = $availabilityModel->updateAvailableDate($_SESSION['user_id'], $dbDate, $description, 'available');
 
         if ($result) {
-            echo json_encode(['success' => true, 'date' => $date, 'description' => $description]);
+            $this->jsonResponse(['success' => true, 'date' => $date, 'description' => $description]);
         } else {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to update date']);
+            $this->jsonResponse(['success' => false, 'error' => 'Failed to update date'], 500);
         }
     }
 

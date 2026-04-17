@@ -7,6 +7,16 @@ class Production_manager{
     protected $serviceRequestModel;
     protected $paymentModel;
 
+    private function jsonResponse(array $payload, int $statusCode = 200): void
+    {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+        }
+        http_response_code($statusCode);
+        echo json_encode($payload);
+        exit;
+    }
+
     public function __construct()
     {
         $this->dramaModel = $this->getModel('M_drama');
@@ -190,14 +200,11 @@ class Production_manager{
 
     public function get_budget_items()
     {
-        header('Content-Type: application/json');
         $drama = $this->authorizeDrama();
 
         $budgetModel = $this->getModel('M_budget');
         if (!$budgetModel) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Budget model not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Budget model not found'], 500);
         }
 
         $items = $budgetModel->getBudgetByDrama($drama->id);
@@ -206,7 +213,7 @@ class Production_manager{
         $remainingBudget = $totalBudget - $totalSpent;
         $categorySummary = $budgetModel->getBudgetSummaryByCategory($drama->id);
 
-        echo json_encode([
+        $this->jsonResponse([
             'success' => true,
             'items' => $items,
             'summary' => [
@@ -221,49 +228,36 @@ class Production_manager{
 
     public function get_budget_item()
     {
-        header('Content-Type: application/json');
         $drama = $this->authorizeDrama();
 
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         if ($id <= 0) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid budget item id']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid budget item id'], 400);
         }
 
         $budgetModel = $this->getModel('M_budget');
         if (!$budgetModel) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Budget model not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Budget model not found'], 500);
         }
 
         $item = $budgetModel->getBudgetItemById($id);
         if (!$item || (int)$item->drama_id !== (int)$drama->id) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Budget item not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Budget item not found'], 404);
         }
 
-        echo json_encode(['success' => true, 'item' => $item]);
+        $this->jsonResponse(['success' => true, 'item' => $item]);
     }
 
     public function save_budget_item()
     {
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 400);
         }
 
-        $drama = $this->authorizeDrama();
+        $drama = $this->authorizeDrama(true);
         $budgetModel = $this->getModel('M_budget');
         if (!$budgetModel) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Budget model not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Budget model not found'], 500);
         }
 
         $id = isset($_POST['id']) && $_POST['id'] !== '' ? (int)$_POST['id'] : null;
@@ -280,24 +274,18 @@ class Production_manager{
         $linkedRequest = null;
 
         if ($itemName === '') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Item name is required']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Item name is required'], 400);
         }
 
         if ($serviceRequestId !== null) {
             $serviceModel = $this->serviceRequestModel ?: $this->getModel('M_service_request');
             if (!$serviceModel) {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'error' => 'Service request model not found']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Service request model not found'], 500);
             }
 
             $linkedRequest = $serviceModel->getRequestById($serviceRequestId);
             if (!$linkedRequest || (int)($linkedRequest->drama_id ?? 0) !== (int)$drama->id) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Selected service request is invalid for this drama']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Selected service request is invalid for this drama'], 400);
             }
 
             $requestType = trim((string)($linkedRequest->service_type ?? ''));
@@ -320,42 +308,30 @@ class Production_manager{
         }
 
         if (!in_array($category, $allowedCategories, true)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid category']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid category'], 400);
         }
 
         if ($allocatedAmount === null || $allocatedAmount < 0) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Allocated amount must be a valid non-negative number']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Allocated amount must be a valid non-negative number'], 400);
         }
 
         if ($spentAmount < 0) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Spent amount must be non-negative']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Spent amount must be non-negative'], 400);
         }
 
         if ($spentAmount > $allocatedAmount) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Spent amount cannot exceed allocated amount']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Spent amount cannot exceed allocated amount'], 400);
         }
 
         if (!in_array($status, $allowedStatuses, true)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid status']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid status'], 400);
         }
 
         if ($serviceRequestId !== null && $linkedRequest && $status === 'completed') {
             $calcPaymentStatus = strtolower((string)($linkedRequest->calculated_payment_status ?? 'unpaid'));
             $requestStatus = strtolower((string)($linkedRequest->status ?? 'pending'));
             if (!($requestStatus === 'completed_paid' || $calcPaymentStatus === 'paid')) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Linked request is not fully paid. Budget status cannot be completed yet.']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Linked request is not fully paid. Budget status cannot be completed yet.'], 400);
             }
         }
 
@@ -375,21 +351,18 @@ class Production_manager{
         if ($id) {
             $existing = $budgetModel->getBudgetItemById($id);
             if (!$existing || (int)$existing->drama_id !== (int)$drama->id) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Budget item not found']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Budget item not found'], 404);
             }
 
             $ok = $budgetModel->updateBudgetItem($id, $payload);
-            echo json_encode([
+            $this->jsonResponse([
                 'success' => (bool)$ok,
                 'message' => $ok ? 'Budget item updated successfully' : 'Failed to update budget item'
             ]);
-            return;
         }
 
         $ok = $budgetModel->createBudgetItem($payload);
-        echo json_encode([
+        $this->jsonResponse([
             'success' => (bool)$ok,
             'message' => $ok ? 'Budget item created successfully' : 'Failed to create budget item'
         ]);
@@ -455,38 +428,28 @@ class Production_manager{
 
     public function delete_budget_item()
     {
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 400);
         }
 
-        $drama = $this->authorizeDrama();
+        $drama = $this->authorizeDrama(true);
         $budgetModel = $this->getModel('M_budget');
         if (!$budgetModel) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Budget model not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Budget model not found'], 500);
         }
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         if ($id <= 0) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid budget item id']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid budget item id'], 400);
         }
 
         $existing = $budgetModel->getBudgetItemById($id);
         if (!$existing || (int)$existing->drama_id !== (int)$drama->id) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Budget item not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Budget item not found'], 404);
         }
 
         $ok = $budgetModel->deleteBudgetItem($id);
-        echo json_encode([
+        $this->jsonResponse([
             'success' => (bool)$ok,
             'message' => $ok ? 'Budget item deleted successfully' : 'Failed to delete budget item'
         ]);
@@ -543,28 +506,145 @@ class Production_manager{
         
         // Get service schedules for this drama
         $scheduleModel = $this->getModel('M_service_schedule');
+        $serviceModel = $this->serviceRequestModel ?: $this->getModel('M_service_request');
         $schedules = [];
+        $services = $serviceModel ? $serviceModel->getServicesByDrama((int)$drama->id) : [];
         $upcomingCount = 0;
         
         if ($scheduleModel) {
             $schedules = $scheduleModel->getSchedulesByDrama($drama->id);
-            
-            // Count upcoming schedules
-            if (is_array($schedules)) {
-                $today = date('Y-m-d');
-                foreach ($schedules as $schedule) {
-                    if (isset($schedule->scheduled_date) && $schedule->scheduled_date >= $today) {
-                        $upcomingCount++;
+        }
+
+        $linkedServiceRequestIds = [];
+        if (is_array($schedules)) {
+            foreach ($schedules as $schedule) {
+                if (!empty($schedule->service_request_id)) {
+                    $linkedServiceRequestIds[] = (int)$schedule->service_request_id;
+                }
+            }
+        }
+
+        $derivedFromServices = [];
+        if (is_array($services)) {
+            foreach ($services as $service) {
+                $serviceRequestId = (int)($service->id ?? 0);
+                if ($serviceRequestId <= 0 || in_array($serviceRequestId, $linkedServiceRequestIds, true)) {
+                    continue;
+                }
+
+                $rawStatus = strtolower((string)($service->status ?? 'pending'));
+                if (in_array($rawStatus, ['rejected', 'cancelled'], true)) {
+                    continue;
+                }
+
+                $details = [];
+                if (!empty($service->service_details_json)) {
+                    $decoded = json_decode((string)$service->service_details_json, true);
+                    if (is_array($decoded)) {
+                        $details = $decoded;
                     }
                 }
+
+                $pmConfirmation = is_array($details['pm_confirmation'] ?? null) ? $details['pm_confirmation'] : [];
+                $startDate = trim((string)($pmConfirmation['final_start_date'] ?? ($service->start_date ?? '')));
+                $endDate = trim((string)($pmConfirmation['final_end_date'] ?? ($service->end_date ?? $startDate)));
+
+                if ($startDate === '') {
+                    continue;
+                }
+                if ($endDate === '') {
+                    $endDate = $startDate;
+                }
+
+                $startTs = strtotime($startDate);
+                $endTs = strtotime($endDate);
+                if ($startTs === false) {
+                    continue;
+                }
+                if ($endTs === false || $endTs < $startTs) {
+                    $endTs = $startTs;
+                }
+
+                $calendarStatus = 'awaiting';
+                if (in_array($rawStatus, ['completed', 'completed_paid'], true)) {
+                    $calendarStatus = 'paid';
+                } elseif (in_array($rawStatus, ['accepted', 'confirmed', 'in_progress'], true)) {
+                    $calendarStatus = 'accepted';
+                }
+
+                $providerName = trim((string)($service->provider_name ?? 'Service Provider'));
+                $serviceName = trim((string)($service->service_type ?? ($service->service_required ?? 'Service')));
+                $noteParts = [];
+                if (!empty($service->description)) {
+                    $noteParts[] = trim((string)$service->description);
+                }
+                if (!empty($service->notes)) {
+                    $noteParts[] = trim((string)$service->notes);
+                }
+                $noteText = trim(implode("\n", array_filter($noteParts)));
+
+                for ($cursor = $startTs; $cursor <= $endTs; $cursor += 86400) {
+                    $derivedFromServices[] = (object) [
+                        'id' => 'sr-' . $serviceRequestId . '-' . date('Ymd', $cursor),
+                        'drama_id' => (int)$drama->id,
+                        'service_request_id' => $serviceRequestId,
+                        'service_name' => $serviceName,
+                        'provider_name' => $providerName,
+                        'provider_id' => (int)($service->provider_id ?? 0),
+                        'scheduled_date' => date('Y-m-d', $cursor),
+                        'start_time' => '',
+                        'end_time' => '',
+                        'venue' => $providerName,
+                        'status' => $calendarStatus,
+                        'notes' => $noteText,
+                        'budget' => isset($service->budget) ? (float)$service->budget : 0,
+                        'source' => 'service_request',
+                    ];
+                }
+            }
+        }
+
+        $scheduleRows = is_array($schedules) ? $schedules : [];
+        foreach ($scheduleRows as $schedule) {
+            $status = strtolower((string)($schedule->status ?? 'scheduled'));
+            if (in_array($status, ['completed', 'completed_paid'], true)) {
+                $schedule->status = 'paid';
+            } elseif (in_array($status, ['accepted', 'confirmed', 'in_progress'], true)) {
+                $schedule->status = 'accepted';
+            } else {
+                $schedule->status = 'awaiting';
+            }
+
+            if (!isset($schedule->source)) {
+                $schedule->source = 'service_schedule';
+            }
+        }
+
+        $mergedSchedules = array_merge($scheduleRows, $derivedFromServices);
+        usort($mergedSchedules, function ($a, $b) {
+            $aDate = strtotime((string)($a->scheduled_date ?? '')) ?: 0;
+            $bDate = strtotime((string)($b->scheduled_date ?? '')) ?: 0;
+            if ($aDate === $bDate) {
+                $aTime = strtotime((string)($a->start_time ?? '')) ?: 0;
+                $bTime = strtotime((string)($b->start_time ?? '')) ?: 0;
+                return $aTime <=> $bTime;
+            }
+            return $aDate <=> $bDate;
+        });
+
+        $today = date('Y-m-d');
+        foreach ($mergedSchedules as $schedule) {
+            if (!empty($schedule->scheduled_date) && $schedule->scheduled_date >= $today) {
+                $upcomingCount++;
             }
         }
         
         $data = [
             'drama' => $drama,
-            'schedules' => $schedules,
+            'schedules' => $mergedSchedules,
+            'serviceRequests' => is_array($services) ? $services : [],
             'upcomingCount' => $upcomingCount,
-            'totalSchedules' => count($schedules),
+            'totalSchedules' => count($mergedSchedules),
         ];
         
         $this->view('production_manager/manage_schedule', $data);
@@ -634,20 +714,38 @@ class Production_manager{
         $this->view('production_manager/' . $view, $payload);
     }
 
-    protected function authorizeDrama()
+    protected function authorizeDrama(bool $asJson = false)
     {
+        $jsonError = function (int $statusCode, string $message): void {
+            if (!headers_sent()) {
+                http_response_code($statusCode);
+                header('Content-Type: application/json');
+            }
+            echo json_encode(['success' => false, 'error' => $message]);
+            exit;
+        };
+
         if (!isset($_SESSION['user_id'])) {
+            if ($asJson) {
+                $jsonError(401, 'Unauthorized. Please log in.');
+            }
             header("Location: " . ROOT . "/login");
             exit;
         }
 
         if (!$this->dramaModel) {
+            if ($asJson) {
+                $jsonError(500, 'Drama model not available.');
+            }
             header("Location: " . ROOT . "/artistdashboard");
             exit;
         }
 
         $dramaId = $this->getQueryParam('drama_id');
         if (!$dramaId) {
+            if ($asJson) {
+                $jsonError(400, 'Missing drama_id.');
+            }
             header("Location: " . ROOT . "/artistdashboard");
             exit;
         }
@@ -655,6 +753,9 @@ class Production_manager{
         $drama = $this->dramaModel->getDramaById((int)$dramaId);
         
         if (!$drama) {
+            if ($asJson) {
+                $jsonError(404, 'Drama not found.');
+            }
             header("Location: " . ROOT . "/artistdashboard");
             exit;
         }
@@ -664,6 +765,9 @@ class Production_manager{
         $user_id = $_SESSION['user_id'];
         
         if (!$pmModel || !$pmModel->isManagerForDrama($user_id, (int)$dramaId)) {
+            if ($asJson) {
+                $jsonError(403, 'You are not authorized to access this drama.');
+            }
             $_SESSION['message'] = 'You are not authorized to access this drama.';
             $_SESSION['message_type'] = 'error';
             header("Location: " . ROOT . "/artistdashboard");
@@ -675,21 +779,19 @@ class Production_manager{
 
     public function cancelServiceRequest()
     {
-        header('Content-Type: application/json');
-        
+        if (!isset($_SESSION['user_id'])) {
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 401);
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 400);
         }
 
         $id = $_POST['id']  ?? null;
         $status = $_POST['status'] ?? null;
 
         if (!$id || !$status) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing id or status']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing id or status'], 400);
         }
 
         try {
@@ -698,24 +800,18 @@ class Production_manager{
             $request = $serviceModel->getRequestById((int)$id);
             
             if (!$request) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Request not found']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Request not found'], 404);
             }
 
             // Verify user is manager for this drama
             $pmModel = $this->getModel('M_production_manager');
             if (!$pmModel->isManagerForDrama($_SESSION['user_id'], (int)$request->drama_id)) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
             }
 
             // Simplest rule: only pending requests can be cancelled
             if (strtolower((string)$request->status) !== 'pending') {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Only pending requests can be cancelled']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Only pending requests can be cancelled'], 400);
             }
 
             // Update status to cancelled (no payment logic here)
@@ -730,15 +826,13 @@ class Production_manager{
                     ROOT . '/ServiceRequests'
                 );
 
-                echo json_encode(['success' => true, 'status' => 'cancelled']);
+                $this->jsonResponse(['success' => true, 'status' => 'cancelled']);
             } else {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'error' => 'Failed to update status']);
+                $this->jsonResponse(['success' => false, 'error' => 'Failed to update status'], 500);
             }
         } catch (Exception $e) {
             error_log("Error in cancelServiceRequest: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Server error']);
+            $this->jsonResponse(['success' => false, 'error' => 'Server error'], 500);
         }
     }
 
@@ -747,12 +841,12 @@ class Production_manager{
      */
     public function confirmProviderResponse()
     {
-        header('Content-Type: application/json');
-        
+        if (!isset($_SESSION['user_id'])) {
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 401);
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 400);
         }
 
         $request_id = $_POST['request_id'] ?? null;
@@ -762,9 +856,7 @@ class Production_manager{
         $note = $_POST['note'] ?? '';
 
         if (!$request_id) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing request ID']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing request ID'], 400);
         }
 
         try {
@@ -772,9 +864,7 @@ class Production_manager{
             $request = $serviceModel->getRequestById((int)$request_id);
 
             if (!$request) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Request not found']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Request not found'], 404);
             }
 
             $result = $serviceModel->confirmByPM(
@@ -798,15 +888,13 @@ class Production_manager{
                     ROOT . '/ServiceRequests'
                 );
 
-                echo json_encode(['success' => true, 'message' => 'Provider response confirmed']);
+                $this->jsonResponse(['success' => true, 'message' => 'Provider response confirmed']);
             } else {
-                http_response_code(400);
-                echo json_encode($result);
+                $this->jsonResponse(is_array($result) ? $result : ['success' => false, 'error' => 'Invalid response'], 400);
             }
         } catch (Exception $e) {
             error_log("Error in confirmProviderResponse: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Server error']);
+            $this->jsonResponse(['success' => false, 'error' => 'Server error'], 500);
         }
     }
 
@@ -815,21 +903,19 @@ class Production_manager{
      */
     public function rejectProviderResponse()
     {
-        header('Content-Type: application/json');
-        
+        if (!isset($_SESSION['user_id'])) {
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 401);
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 400);
         }
 
         $request_id = $_POST['request_id'] ?? null;
         $reason = $_POST['reason'] ?? 'Terms not acceptable';
 
         if (!$request_id) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing request ID']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing request ID'], 400);
         }
 
         try {
@@ -837,17 +923,13 @@ class Production_manager{
             $request = $serviceModel->getRequestById((int)$request_id);
             
             if (!$request) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'error' => 'Request not found']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Request not found'], 404);
             }
 
             // Verify user is manager for this drama
             $pmModel = $this->getModel('M_production_manager');
             if (!$pmModel->isManagerForDrama($_SESSION['user_id'], (int)$request->drama_id)) {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-                return;
+                $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
             }
 
             $ok = $serviceModel->updateStatusDetailed((int)$request_id, 'rejected', $reason);
@@ -861,15 +943,13 @@ class Production_manager{
                     ROOT . '/ServiceRequests'
                 );
 
-                echo json_encode(['success' => true, 'message' => 'Provider response rejected']);
+                $this->jsonResponse(['success' => true, 'message' => 'Provider response rejected']);
             } else {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'error' => 'Failed to reject']);
+                $this->jsonResponse(['success' => false, 'error' => 'Failed to reject'], 500);
             }
         } catch (Exception $e) {
             error_log("Error in rejectProviderResponse: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Server error']);
+            $this->jsonResponse(['success' => false, 'error' => 'Server error'], 500);
         }
     }
 

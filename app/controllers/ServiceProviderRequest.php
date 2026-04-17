@@ -4,6 +4,16 @@ class ServiceProviderRequest
 {
     use Controller;
 
+    private function jsonResponse(array $payload, int $statusCode = 200): void
+    {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+        }
+        http_response_code($statusCode);
+        echo json_encode($payload);
+        exit;
+    }
+
     public function submit()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -180,18 +190,12 @@ class ServiceProviderRequest
      */
     public function respond()
     {
-        header('Content-Type: application/json');
-        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 400);
         }
 
         if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'error' => 'Not authenticated']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not authenticated'], 401);
         }
 
         $request_id = $_POST['request_id'] ?? null;
@@ -203,9 +207,7 @@ class ServiceProviderRequest
         $note = $_POST['note'] ?? '';
 
         if (!$request_id) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing request ID']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing request ID'], 400);
         }
 
         try {
@@ -236,15 +238,13 @@ class ServiceProviderRequest
                     );
                 }
 
-                echo json_encode(['success' => true, 'message' => 'Response submitted successfully']);
+                $this->jsonResponse(['success' => true, 'message' => 'Response submitted successfully']);
             } else {
-                http_response_code(400);
-                echo json_encode($result);
+                $this->jsonResponse(is_array($result) ? $result : ['success' => false, 'error' => 'Invalid response'], 400);
             }
         } catch (Exception $e) {
             error_log("Error in respond: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Server error']);
+            $this->jsonResponse(['success' => false, 'error' => 'Server error'], 500);
         }
     }
 
@@ -253,27 +253,19 @@ class ServiceProviderRequest
      */
     public function acceptConfirmed()
     {
-        header('Content-Type: application/json');
-        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 400);
         }
 
         if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'error' => 'Not authenticated']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not authenticated'], 401);
         }
 
         $request_id = $_POST['request_id'] ?? null;
         $allow_more = isset($_POST['allow_more']) ? (int)$_POST['allow_more'] : 0;
 
         if (!$request_id) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing request ID']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing request ID'], 400);
         }
 
         try {
@@ -293,15 +285,13 @@ class ServiceProviderRequest
                     );
                 }
 
-                echo json_encode(['success' => true, 'message' => 'Request accepted successfully']);
+                $this->jsonResponse(['success' => true, 'message' => 'Request accepted successfully']);
             } else {
-                http_response_code(400);
-                echo json_encode($result);
+                $this->jsonResponse(is_array($result) ? $result : ['success' => false, 'error' => 'Invalid response'], 400);
             }
         } catch (Exception $e) {
             error_log("Error in acceptConfirmed: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Server error']);
+            $this->jsonResponse(['success' => false, 'error' => 'Server error'], 500);
         }
     }
 
@@ -310,18 +300,12 @@ class ServiceProviderRequest
      */
     public function getOverlappingBookings()
     {
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 400);
         }
 
         if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'error' => 'Not authenticated']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not authenticated'], 401);
         }
 
         $start_date = $_POST['start_date'] ?? null;
@@ -329,9 +313,7 @@ class ServiceProviderRequest
         $exclude_request_id = $_POST['request_id'] ?? null;
 
         if (!$start_date || !$end_date) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing date range']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing date range'], 400);
         }
 
         try {
@@ -370,11 +352,10 @@ class ServiceProviderRequest
                 ];
             }
 
-            echo json_encode(['success' => true, 'bookings' => $bookings]);
+            $this->jsonResponse(['success' => true, 'bookings' => $bookings]);
         } catch (Exception $e) {
             error_log('Error in getOverlappingBookings: ' . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Server error']);
+            $this->jsonResponse(['success' => false, 'error' => 'Server error'], 500);
         }
     }
 
@@ -383,27 +364,19 @@ class ServiceProviderRequest
      */
     public function rejectConfirmed()
     {
-        header('Content-Type: application/json');
-        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 400);
         }
 
         if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'error' => 'Not authenticated']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not authenticated'], 401);
         }
 
         $request_id = $_POST['request_id'] ?? null;
         $reason = $_POST['reason'] ?? 'Terms not acceptable';
 
         if (!$request_id) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing request ID']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing request ID'], 400);
         }
 
         try {
@@ -423,15 +396,13 @@ class ServiceProviderRequest
                     );
                 }
 
-                echo json_encode(['success' => true, 'message' => 'Request rejected']);
+                $this->jsonResponse(['success' => true, 'message' => 'Request rejected']);
             } else {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'error' => 'Failed to reject']);
+                $this->jsonResponse(['success' => false, 'error' => 'Failed to reject'], 500);
             }
         } catch (Exception $e) {
             error_log("Error in rejectConfirmed: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Server error']);
+            $this->jsonResponse(['success' => false, 'error' => 'Server error'], 500);
         }
     }
 

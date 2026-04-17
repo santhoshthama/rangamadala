@@ -1,5 +1,38 @@
 <?php
 $dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/profile_images/user_profile.png');
+
+$allShowings = $data['my_showings'] ?? [];
+$activeShowings = [];
+$watchedShowings = [];
+$todayYmd = date('Y-m-d');
+
+foreach ($allShowings as $bookingItem) {
+  $requestDetails = [];
+  if (!empty($bookingItem->request_details_json)) {
+    $decodedRequestDetails = json_decode((string)$bookingItem->request_details_json, true);
+    if (is_array($decodedRequestDetails)) {
+      $requestDetails = $decodedRequestDetails;
+    }
+  }
+
+  $requestedShowDateRaw = trim((string)($requestDetails['show_date'] ?? ''));
+  $fallbackEventDateRaw = trim((string)($bookingItem->event_date ?? ''));
+  $resolvedShowDateRaw = $requestedShowDateRaw !== '' ? $requestedShowDateRaw : $fallbackEventDateRaw;
+  $resolvedShowDateYmd = '';
+  if ($resolvedShowDateRaw !== '' && strtotime($resolvedShowDateRaw) !== false) {
+    $resolvedShowDateYmd = date('Y-m-d', strtotime($resolvedShowDateRaw));
+  }
+
+  $isPastShowing = $resolvedShowDateYmd !== '' && $resolvedShowDateYmd < $todayYmd;
+  $hasPaymentRecord = !empty($bookingItem->paid_at) || !empty($bookingItem->payhere_order_id);
+  $isWatchedByPaymentAndDate = $hasPaymentRecord && $isPastShowing;
+
+  if ($isWatchedByPaymentAndDate) {
+    $watchedShowings[] = $bookingItem;
+  } else {
+    $activeShowings[] = $bookingItem;
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,6 +112,11 @@ $dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/p
           <a href="#" class="dashboard-nav-item" data-view="classes">
             <i class='bx bx-book-reader nav-icon'></i>
             <span class="nav-label">Classes</span>
+          </a>
+
+          <a href="#" class="dashboard-nav-item" data-view="watched-dramas">
+            <i class='bx bx-mask nav-icon'></i>
+            <span class="nav-label">Watched Dramas</span>
           </a>
 
           <!-- Payment History -->
@@ -230,7 +268,7 @@ $dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/p
               <h3 class="dashboard-table-title">Booking Status</h3>
             </div>
 
-            <?php if (!empty($data['my_showings'])): ?>
+            <?php if (!empty($activeShowings)): ?>
               <div class="my-showings-filters">
                 <div class="my-showings-filter-box">
                   <i class='bx bx-filter-alt'></i>
@@ -258,7 +296,7 @@ $dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/p
                   </tr>
                 </thead>
                 <tbody>
-                  <?php foreach ($data['my_showings'] as $booking): ?>
+                  <?php foreach ($activeShowings as $booking): ?>
                     <?php
                       $statusRaw = strtolower((string)($booking->booking_status ?? 'pending'));
 
@@ -709,7 +747,7 @@ $dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/p
               <h3 class="dashboard-table-title">My Showings</h3>
             </div>
 
-            <?php if (!empty($data['my_showings'])): ?>
+            <?php if (!empty($activeShowings)): ?>
               <div class="my-showings-filters">
                 <div class="my-showings-filter-box">
                   <i class='bx bx-filter-alt'></i>
@@ -739,7 +777,7 @@ $dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/p
                   </tr>
                 </thead>
                 <tbody>
-                  <?php foreach ($data['my_showings'] as $booking): ?>
+                  <?php foreach ($activeShowings as $booking): ?>
                     <?php
                       $statusRaw = strtolower((string)($booking->booking_status ?? 'pending'));
                       $requestDetails = [];
@@ -795,7 +833,7 @@ $dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/p
                       <td>
                         <span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span>
                         <?php if ($statusRaw === 'rejected' && !empty($booking->rejection_reason)): ?>
-                          <div style="margin-top: 6px; font-size: 12px; color: background: background: linear-gradient(135deg, #ff9a9e, #fecfef);;">
+                          <div style="margin-top: 6px; font-size: 12px; color: #a3202c;">
                             Reason: <?= htmlspecialchars($booking->rejection_reason) ?>
                           </div>
                         <?php endif; ?>
@@ -824,6 +862,78 @@ $dashboardProfileImage = $data['dashboard_profile_image'] ?? (ROOT . '/uploads/p
                 </div>
                 <h3 class="empty-state-title">No Showings Yet</h3>
                 <p class="empty-state-description">Book a drama from Browse Dramas to see your showings here.</p>
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <!-- Watched Dramas -->
+        <div class="dashboard-view" id="watched-dramas">
+          <div class="dashboard-table-container">
+            <div class="dashboard-table-header">
+              <h3 class="dashboard-table-title">Watched Dramas</h3>
+            </div>
+
+            <?php if (!empty($watchedShowings)): ?>
+              <table class="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>Drama</th>
+                    <th>Show Date</th>
+                    <th>Time</th>
+                    <th>Venue</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($watchedShowings as $booking): ?>
+                    <?php
+                      $requestDetails = [];
+                      if (!empty($booking->request_details_json)) {
+                        $decodedRequestDetails = json_decode((string)$booking->request_details_json, true);
+                        if (is_array($decodedRequestDetails)) {
+                          $requestDetails = $decodedRequestDetails;
+                        }
+                      }
+
+                      $requestedShowDateRaw = trim((string)($requestDetails['show_date'] ?? ''));
+                      $requestedShowTime = trim((string)($requestDetails['show_time'] ?? ''));
+                      $requestedVenue = trim((string)($requestDetails['request_venue'] ?? ''));
+
+                      $displayShowDate = !empty($requestedShowDateRaw)
+                        ? date('M d, Y', strtotime($requestedShowDateRaw))
+                        : (!empty($booking->event_date) ? date('M d, Y', strtotime($booking->event_date)) : 'TBA');
+
+                      $displayShowTime = $requestedShowTime !== ''
+                        ? $requestedShowTime
+                        : (!empty($booking->event_time) ? (string)$booking->event_time : 'TBA');
+
+                      $displayVenue = $requestedVenue !== ''
+                        ? $requestedVenue
+                        : (string)($booking->venue ?? 'TBA');
+                    ?>
+                    <tr>
+                      <td><?= htmlspecialchars($booking->title ?? 'Drama') ?></td>
+                      <td><?= htmlspecialchars($displayShowDate) ?></td>
+                      <td><?= htmlspecialchars($displayShowTime) ?></td>
+                      <td><?= htmlspecialchars($displayVenue) ?></td>
+                      <td>
+                        <div class="watched-actions">
+                            <a class="btn btn-secondary" href="<?= ROOT ?>/BrowseDramas/watchedDetails/<?= (int)$booking->id ?>">View Details</a>
+                          <a class="btn btn-pay-now" href="<?= ROOT ?>/BrowseDramas/rateReview/<?= (int)$booking->drama_id ?>">Rate &amp; Review</a>
+                        </div>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            <?php else: ?>
+              <div class="empty-state">
+                <div class="empty-state-icon">
+                  <i class='bx bx-mask'></i>
+                </div>
+                <h3 class="empty-state-title">No Watched Dramas Yet</h3>
+                <p class="empty-state-description">Only paid bookings with a passed show date will appear here with details and review options.</p>
               </div>
             <?php endif; ?>
           </div>

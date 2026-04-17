@@ -23,8 +23,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/toast.css">
     <link rel="icon" type="image/png" href="<?=ROOT?>/assets/images/Rangamadala%20logo.png">
     <link rel="apple-touch-icon" href="<?=ROOT?>/assets/images/Rangamadala%20logo.png">
-
-    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 <style>
         .alert {
@@ -954,7 +952,7 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
 
                             <div class="drama-info">
                                 <span class="drama-name"><i class="bx bx-film"></i> <?= htmlspecialchars($vacancy->drama_name) ?></span>
-                                <span><i class="bx bx-user-tie"></i> Director: <?= htmlspecialchars($vacancy->director_name) ?></span>
+                                <span><i class="bx bx-movie-play"></i> Director: <?= htmlspecialchars($vacancy->director_name) ?></span>
                             </div>
 
                             <?php if (!empty($vacancy->role_description)): ?>
@@ -965,11 +963,11 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
 
                             <div class="vacancy-meta">
                                 <div class="meta-item">
-                                    <i class="bx bx-money-bill-wave"></i>
+                                    <i class="bx bx-money"></i>
                                     <span class="meta-value">LKR <?= isset($vacancy->salary) && $vacancy->salary !== null ? number_format($vacancy->salary) : '0' ?></span>
                                 </div>
                                 <div class="meta-item">
-                                    <i class="bx bx-users"></i>
+                                    <i class="bx bx-user"></i>
                                     <span class="meta-value"><?= $vacancy->positions_remaining ?> opening<?= $vacancy->positions_remaining > 1 ? 's' : '' ?></span>
                                 </div>
                                 <div class="meta-item">

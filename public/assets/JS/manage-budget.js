@@ -11,6 +11,20 @@ const serviceRequestMap = Object.fromEntries(
 );
 let editingBudgetId = null;
 
+async function parseJsonResponse(response) {
+    const raw = await response.text();
+    let json = null;
+
+    try {
+        json = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        const shortRaw = raw ? raw.substring(0, 180) : '';
+        throw new Error(`Server returned invalid JSON (${response.status}). ${shortRaw}`);
+    }
+
+    return { json, raw };
+}
+
 console.log('Budget Management initialized for Drama ID:', dramaId);
 
 // Open add budget modal
@@ -136,23 +150,30 @@ function saveBudgetItem() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
         },
         body: payload.toString(),
     })
-    .then((res) => res.json())
-    .then((json) => {
-        if (json.success) {
+    .then(async (res) => {
+        const { json } = await parseJsonResponse(res);
+        if (!json) {
+            throw new Error(`Empty response from server (${res.status})`);
+        }
+
+        if (res.ok && json.success) {
             alert(json.message || 'Budget item saved successfully');
             closeBudgetModal();
             window.location.reload();
             return;
         }
 
-        alert(json.error || json.message || 'Failed to save budget item');
+        const serverError = json.error || json.message || `Failed to save budget item (HTTP ${res.status})`;
+        throw new Error(serverError);
     })
     .catch((error) => {
         console.error('saveBudgetItem error:', error);
-        alert('Network error while saving budget item.');
+        alert(`Failed to save budget item: ${error.message}`);
     });
 }
 
@@ -163,8 +184,24 @@ function editBudgetItem(itemId) {
         return;
     }
 
-    fetch(`${apiBase}/get_budget_item?drama_id=${encodeURIComponent(dramaId)}&id=${encodeURIComponent(itemId)}`)
-        .then((res) => res.json())
+    fetch(`${apiBase}/get_budget_item?drama_id=${encodeURIComponent(dramaId)}&id=${encodeURIComponent(itemId)}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+        .then(async (res) => {
+            const { json } = await parseJsonResponse(res);
+            if (!json) {
+                throw new Error(`Empty response from server (${res.status})`);
+            }
+
+            if (!res.ok || !json.success || !json.item) {
+                throw new Error(json.error || json.message || 'Budget item not found');
+            }
+
+            return json;
+        })
         .then((json) => {
             if (!json.success || !json.item) {
                 alert(json.error || 'Budget item not found');
@@ -197,7 +234,7 @@ function editBudgetItem(itemId) {
         })
         .catch((error) => {
             console.error('editBudgetItem error:', error);
-            alert('Failed to load budget item for editing');
+            alert(`Failed to load budget item for editing: ${error.message}`);
         });
 }
 
@@ -214,22 +251,28 @@ function deleteBudgetItem(itemId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
             body: payload.toString(),
         })
-        .then((res) => res.json())
-        .then((json) => {
-            if (json.success) {
+        .then(async (res) => {
+            const { json } = await parseJsonResponse(res);
+            if (!json) {
+                throw new Error(`Empty response from server (${res.status})`);
+            }
+
+            if (res.ok && json.success) {
                 alert(json.message || 'Budget item deleted');
                 window.location.reload();
                 return;
             }
 
-            alert(json.error || json.message || 'Failed to delete budget item');
+            throw new Error(json.error || json.message || `Failed to delete budget item (HTTP ${res.status})`);
         })
         .catch((error) => {
             console.error('deleteBudgetItem error:', error);
-            alert('Network error while deleting budget item.');
+            alert(`Failed to delete budget item: ${error.message}`);
         });
     }
 }

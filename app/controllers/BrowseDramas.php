@@ -46,7 +46,8 @@ class BrowseDramas
             'rating_summary' => null,
             'user_rating' => null,
             'ratings' => [],
-            'has_rated' => false
+            'has_rated' => false,
+            'can_rate' => false
         ];
 
         if (!$data['drama']) {
@@ -66,6 +67,10 @@ class BrowseDramas
                 $data['user_rating'] = null;
                 $data['has_rated'] = false;
                 $data['ratings'] = [];
+            }
+
+            if (!empty($this->bookingModel) && (($_SESSION['role'] ?? '') === 'audience')) {
+                $data['can_rate'] = $this->bookingModel->canRateDrama((int)$_SESSION['user_id'], (int)$drama_id);
             }
         }
 
@@ -111,7 +116,7 @@ class BrowseDramas
 
             if (!$this->bookingModel || !$this->bookingModel->canRateDrama((int)$_SESSION['user_id'], (int)$drama_id)) {
                 $_SESSION['error_message'] = 'You can rate this drama only after buying and watching the show.';
-                header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . (int)$drama_id);
+                header('Location: ' . ROOT . '/Audiencedashboard#watched-dramas');
                 exit;
             }
         }
@@ -132,6 +137,94 @@ class BrowseDramas
         }
 
         $this->renderView('drama_rate_review', $data);
+    }
+
+    public function watchedDetails($booking_id = null)
+    {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . ROOT . '/Login');
+            exit;
+        }
+
+        if (($_SESSION['role'] ?? '') !== 'audience') {
+            $_SESSION['error_message'] = 'Only audience users can view watched drama details.';
+            header('Location: ' . ROOT . '/Audiencedashboard');
+            exit;
+        }
+
+        $bookingId = (int)($booking_id ?? ($_GET['booking_id'] ?? 0));
+        if ($bookingId <= 0) {
+            $_SESSION['error_message'] = 'Invalid watched drama selected.';
+            header('Location: ' . ROOT . '/Audiencedashboard#watched-dramas');
+            exit;
+        }
+
+        if (!$this->bookingModel) {
+            $_SESSION['error_message'] = 'Booking service is currently unavailable.';
+            header('Location: ' . ROOT . '/Audiencedashboard#watched-dramas');
+            exit;
+        }
+
+        $userId = (int)$_SESSION['user_id'];
+        $booking = $this->bookingModel->getBookingByIdForAudience($bookingId, $userId);
+        if (!$booking) {
+            $_SESSION['error_message'] = 'Watched drama not found.';
+            header('Location: ' . ROOT . '/Audiencedashboard#watched-dramas');
+            exit;
+        }
+
+        $requestDetails = [];
+        if (!empty($booking->request_details_json)) {
+            $decodedRequestDetails = json_decode((string)$booking->request_details_json, true);
+            if (is_array($decodedRequestDetails)) {
+                $requestDetails = $decodedRequestDetails;
+            }
+        }
+
+        $showDateRaw = trim((string)($requestDetails['show_date'] ?? ''));
+        $showDateYmd = '';
+        if ($showDateRaw !== '' && strtotime($showDateRaw) !== false) {
+            $showDateYmd = date('Y-m-d', strtotime($showDateRaw));
+        }
+
+        $hasPaymentRecord = !empty($booking->paid_at) || !empty($booking->payhere_order_id);
+        $isPastShowing = $showDateYmd !== '' && $showDateYmd < date('Y-m-d');
+        $bookingStatus = strtolower((string)($booking->booking_status ?? ''));
+        $isWatchedBooking = $hasPaymentRecord && ($isPastShowing || in_array($bookingStatus, ['watched', 'completed', 'attended', 'confirmed'], true));
+
+        if (!$isWatchedBooking) {
+            $_SESSION['error_message'] = 'This booking is not yet available in watched dramas.';
+            header('Location: ' . ROOT . '/Audiencedashboard#watched-dramas');
+            exit;
+        }
+
+        $dramaId = (int)($booking->drama_id ?? 0);
+        $data = [
+            'drama' => $this->model ? $this->model->getDramaById($dramaId) : null,
+            'booking' => $booking,
+            'request_details' => $requestDetails,
+            'booking_status' => $bookingStatus,
+            'has_payment_record' => $hasPaymentRecord,
+            'is_past_showing' => $isPastShowing,
+            'can_rate' => $this->bookingModel->canRateDrama($userId, $dramaId),
+            'rating_summary' => null,
+            'ratings' => [],
+            'user_rating' => null,
+            'has_rated' => false,
+        ];
+
+        if (!empty($data['drama']) && $this->ratingModel) {
+            try {
+                $data['rating_summary'] = $this->ratingModel->getDramaRatingSummary($dramaId);
+                $data['user_rating'] = $this->ratingModel->getUserDramaRating($dramaId, $userId);
+                $data['has_rated'] = !empty($data['user_rating']);
+                $data['ratings'] = $this->ratingModel->getDramaRatings($dramaId, 10, 0);
+            } catch (Throwable $e) {
+                error_log('BrowseDramas::watchedDetails rating data load failed: ' . $e->getMessage());
+            }
+        }
+
+        $this->renderView('watched_drama_details', $data);
     }
 
     /**
