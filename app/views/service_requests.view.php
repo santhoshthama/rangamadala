@@ -157,6 +157,16 @@
             rejectManualPayment: '<?= ROOT ?>/Payment/rejectManualPayment',
         };
 
+        async function parseJsonResponse(res) {
+            const raw = await res.text();
+            try {
+                return JSON.parse(raw);
+            } catch (e) {
+                const preview = (raw || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+                throw new Error(preview || 'Invalid server response');
+            }
+        }
+
         function switchTab(category) {
             // Remove active class from all tabs
             document.querySelectorAll('.tab').forEach(tab => {
@@ -225,7 +235,7 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ id, status: 'rejected', reason }),
                 });
-                const json = await res.json();
+                const json = await parseJsonResponse(res);
                 if (json.success) {
                     button.classList.add('selected');
                     button.textContent = 'Rejected';
@@ -249,7 +259,7 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ payment_id: paymentId }),
                 });
-                const json = await res.json();
+                const json = await parseJsonResponse(res);
                 if (json.success) {
                     showMessage('Cash payment confirmed successfully!', 'success');
                     setTimeout(() => location.reload(), 1200);
@@ -270,7 +280,7 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ payment_id: paymentId }),
                 });
-                const json = await res.json();
+                const json = await parseJsonResponse(res);
                 if (json.success) {
                     showMessage('Bank payment confirmed successfully!', 'success');
                     setTimeout(() => location.reload(), 1200);
@@ -296,7 +306,7 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ payment_id: paymentId, reason: reason.trim() }),
                 });
-                const json = await res.json();
+                const json = await parseJsonResponse(res);
                 if (json.success) {
                     showMessage('Marked as verification failed. PM has been notified.', 'success');
                     setTimeout(() => location.reload(), 1200);
@@ -316,7 +326,7 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ id, status: 'completed' }),
                 });
-                const json = await res.json();
+                const json = await parseJsonResponse(res);
                 if (json.success) {
                     button.classList.add('selected');
                     button.textContent = 'Completed';
@@ -661,7 +671,7 @@
                     end_date: endDate
                 })
             })
-            .then(res => res.json())
+            .then(parseJsonResponse)
             .then(data => {
                 if (data.success && Array.isArray(data.bookings) && data.bookings.length > 0) {
                     let html = '<strong>Existing bookings in this date range:</strong><ul style="margin-top: 8px; padding-left: 20px;">';
@@ -729,7 +739,7 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ request_id: id, reason }),
                 });
-                const json = await res.json();
+                const json = await parseJsonResponse(res);
                 if (json.success) {
                     showMessage('Request rejected', 'error');
                     setTimeout(() => location.reload(), 1500);
@@ -754,7 +764,7 @@
                             method: 'POST',
                             body: formData
                         });
-                        const json = await res.json();
+                        const json = await parseJsonResponse(res);
                         if (json.success) {
                             showMessage('Response submitted successfully!', 'success');
                             closeRespondModal();

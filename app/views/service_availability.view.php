@@ -735,7 +735,7 @@
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ start_date: dbDate, end_date: dbDate })
             })
-            .then(res => res.json())
+            .then(parseJsonResponse)
             .then(data => {
                 if (data.success && Array.isArray(data.bookings) && data.bookings.length > 0) {
                     dateBookingsCache[date] = data.bookings;
@@ -890,7 +890,7 @@
                     reason: 'Cancelled from availability calendar'
                 })
             })
-            .then(res => res.json())
+            .then(parseJsonResponse)
             .then(data => {
                 if (data.success) {
                     showMessage('Booking removed', 'success');
@@ -917,7 +917,7 @@
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
+                .then(parseJsonResponse)
                 .then(data => {
                     if (data.success) {
                         delete availableDatesData[dateToRemove];
@@ -936,6 +936,16 @@
         }
 
         // Update availability (save to server)
+
+        async function parseJsonResponse(response) {
+            const raw = await response.text();
+            try {
+                return JSON.parse(raw);
+            } catch (e) {
+                const preview = (raw || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+                throw new Error(preview || 'Invalid server response');
+            }
+        }
 
         // Show notification messages
         function showMessage(text, type) {

@@ -4,6 +4,16 @@ class ServiceRequests
 {
 	use Controller;
 
+	private function jsonResponse(array $payload, int $statusCode = 200): void
+	{
+		if (!headers_sent()) {
+			header('Content-Type: application/json');
+		}
+		http_response_code($statusCode);
+		echo json_encode($payload);
+		exit;
+	}
+
 	public function index()
 	{
 		// Check if user is logged in
@@ -39,9 +49,7 @@ class ServiceRequests
 	{
 		// Must be logged in as service provider
 		if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
-			http_response_code(403);
-			echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-			return;
+			$this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
 		}
 
 		$id = $_POST['id'] ?? null;
@@ -49,9 +57,7 @@ class ServiceRequests
 		$reason = $_POST['reason'] ?? null;
 
 		if (!$id || !$status) {
-			http_response_code(400);
-			echo json_encode(['success' => false, 'error' => 'Missing id or status']);
-			return;
+			$this->jsonResponse(['success' => false, 'error' => 'Missing id or status'], 400);
 		}
 
 		try {
@@ -86,41 +92,34 @@ class ServiceRequests
 					}
 				}
 
-				echo json_encode(['success' => true, 'status' => $status]);
+				$this->jsonResponse(['success' => true, 'status' => $status]);
 			} else {
-				http_response_code(500);
-				echo json_encode(['success' => false, 'error' => 'Failed to update status']);
+				$this->jsonResponse(['success' => false, 'error' => 'Failed to update status'], 500);
 			}
 		} catch (Exception $e) {
 			error_log("Error in updateStatus: " . $e->getMessage());
-			http_response_code(500);
-			echo json_encode(['success' => false, 'error' => 'Server error: ' . $e->getMessage()]);
+			$this->jsonResponse(['success' => false, 'error' => 'Server error: ' . $e->getMessage()], 500);
 		}
 	}
 
 	public function updatePayment()
 	{
 		if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
-			http_response_code(403);
-			echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-			return;
+			$this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
 		}
 
 		$id = $_POST['id'] ?? null;
 		$payment_status = $_POST['payment_status'] ?? null;
 		if (!$id || !$payment_status) {
-			http_response_code(400);
-			echo json_encode(['success' => false, 'error' => 'Missing id or payment_status']);
-			return;
+			$this->jsonResponse(['success' => false, 'error' => 'Missing id or payment_status'], 400);
 		}
 
 		$reqModel = new M_service_request();
 		$ok = $reqModel->updatePaymentStatus((int)$id, (string)$payment_status, (int)$_SESSION['user_id']);
 		if ($ok) {
-			echo json_encode(['success' => true, 'payment_status' => $payment_status]);
+			$this->jsonResponse(['success' => true, 'payment_status' => $payment_status]);
 		} else {
-			http_response_code(500);
-			echo json_encode(['success' => false, 'error' => 'Failed to update payment status']);
+			$this->jsonResponse(['success' => false, 'error' => 'Failed to update payment status'], 500);
 		}
 	}
 

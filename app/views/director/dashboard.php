@@ -101,27 +101,7 @@ $profileImageSrc = directorResolveProfileImageSrc();
             </div>
         </div>
 
-        <!-- Navigation Tab Bar -->
-        <div class="nav-tabs-bar">
-            <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $dramaId ?>" class="nav-tab-btn active">
-                <i class="bx bx-home"></i> Dashboard
-            </a>
-            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="nav-tab-btn">
-                <i class="bx bx-film"></i>  Drama Details
-            </a>
-            <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="bx bx-users"></i> Artist Roles
-            </a>
-            <a href="<?= ROOT ?>/director/assign_managers?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="bx bx-user-tie"></i> Production Manager
-            </a>
-            <a href="<?= ROOT ?>/director/schedule_management?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="bx bx-calendar-alt"></i> Schedule
-            </a>
-            <a href="<?= ROOT ?>/director/view_services_budget?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="bx bx-dollar-sign"></i> Services & Budget
-            </a>
-        </div>
+
 
         <!-- Recent Dramas -->
         <div class="content">
