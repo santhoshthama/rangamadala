@@ -514,6 +514,16 @@
             document.getElementById('detailsModal').style.display = 'none';
         }
 
+        async function parseJsonResponse(res) {
+            const raw = await res.text();
+            try {
+                return JSON.parse(raw);
+            } catch (e) {
+                const preview = (raw || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+                throw new Error(preview || 'Invalid server response');
+            }
+        }
+
         function cancelServiceRequest(button) {
             const requestId = button.getAttribute('data-id');
             if (!requestId) {
@@ -530,7 +540,7 @@
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ id: requestId })
             })
-            .then(res => res.json())
+            .then(parseJsonResponse)
             .then(json => {
                 if (json.success) {
                     showMessage('Request cancelled successfully', 'success');
@@ -708,7 +718,7 @@
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ request_id: requestId })
             })
-            .then(res => res.json())
+            .then(parseJsonResponse)
             .then(json => {
                 if (json.success) {
                     closeConfirmModal();
@@ -740,7 +750,7 @@
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ request_id: requestId, reason })
             })
-            .then(res => res.json())
+            .then(parseJsonResponse)
             .then(json => {
                 if (json.success) {
                     showMessage('Response rejected', 'error');
