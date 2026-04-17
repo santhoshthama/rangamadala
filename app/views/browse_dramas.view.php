@@ -6,8 +6,7 @@
     <title>Browse Dramas - <?= APP_NAME ?></title>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css">
 </head>
 <body>
@@ -40,8 +39,10 @@
                 </button>
             </a>
         </div>
-        <h1 class="page-title">Browse Dramas</h1>
-        <p class="subtitle">Discover amazing theatrical performances</p>
+        <div class="title-wrap">
+            <h1 class="page-title">Browse Dramas</h1>
+            <p class="subtitle">Discover amazing theatrical performances</p>
+        </div>
     </div>
 
     <!-- Search & Filter -->
@@ -147,11 +148,11 @@
                                 <span>LKR <?= number_format($drama->ticket_price ?? 0, 2) ?></span>
                             </div>
                             <?php if (!empty($drama->showing_prices)): ?>
-                                <div class="form-hint" style="margin: 6px 0 0; width: 100%; color: #666;">
+                                <div class="form-hint">
                                     Showing prices: <?= htmlspecialchars($drama->showing_prices) ?>
                                 </div>
                             <?php endif; ?>
-                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+                            <div class="drama-actions">
                                 <a href="<?= ROOT ?>/BrowseDramas/bookShowings/<?= $drama->id ?>" class="btn-view" style="background:#1f7a8c;">Book Showings</a>
                                 <a href="<?= ROOT ?>/BrowseDramas/view/<?= $drama->id ?>" class="btn-view">View Details</a>
                             </div>

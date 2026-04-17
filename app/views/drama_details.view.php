@@ -31,6 +31,7 @@
     $successMessage = $_SESSION['success_message'] ?? '';
     $errorMessage = $_SESSION['error_message'] ?? '';
     unset($_SESSION['success_message'], $_SESSION['error_message']);
+    $canRate = !empty($data['can_rate']);
   ?>
 
   <div class="container">
@@ -90,8 +91,12 @@
             
             <div class="details-actions">
               <a class="btn btn-primary" href="<?= ROOT ?>/BrowseDramas/bookShowings/<?= (int)$d->id ?>"><i class='bx bx-cart-add'></i> Buy Show Ticket</a>
-              <a class="btn btn-outline" href="<?= ROOT ?>/BrowseDramas/rateReview/<?= (int)$d->id ?>"><span class="bx bx-revision">reviews</span> Rate &amp; Review Page</a>
-              <button class="btn btn-outline" id="rateBtn" type="button"><span class="bx bx-star"></span> Rate Drama</button>
+              <?php if ($canRate): ?>
+                <a class="btn btn-outline" href="<?= ROOT ?>/BrowseDramas/rateReview/<?= (int)$d->id ?>"><span class="bx bx-revision">reviews</span> Rate &amp; Review Page</a>
+                <button class="btn btn-outline" id="rateBtn" type="button"><span class="bx bx-star"></span> Rate Drama</button>
+              <?php else: ?>
+                <button class="btn btn-outline" type="button" disabled title="Available after the drama is watched"><span class="bx bx-star"></span> Rate Drama</button>
+              <?php endif; ?>
             </div>
             <?php if (isset($_GET['book']) && $_GET['book'] === '1'): ?>
               <div style="margin-top:10px; padding:10px 12px; border:1px solid rgba(212,175,55,.35); border-radius:10px; color:#f5f0e8; background:rgba(212,175,55,.10);">

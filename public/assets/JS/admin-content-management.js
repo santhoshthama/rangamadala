@@ -41,6 +41,7 @@ function initContentManagement() {
 
 function loadSwiperSlides() {
   const grid = document.getElementById('swiperGrid');
+  grid.classList.remove('is-empty');
   grid.innerHTML = `<div class="loading-state" id="swiperLoading">
     <span class="material-symbols-rounded spinning">progress_activity</span>
     <p>Loading slides...</p>
@@ -65,13 +66,16 @@ function renderSwiperSlides(slides) {
   const grid = document.getElementById('swiperGrid');
   
   if (slides.length === 0) {
+    grid.classList.add('is-empty');
     grid.innerHTML = `<div class="empty-state">
-      <div class="empty-state-icon"><span class="material-symbols-rounded">view_carousel</span></div>
+      <div class="empty-state-icon"><span class="bx bxs-carousel"></span></div>
       <h3 class="empty-state-title">No Slides Yet</h3>
       <p class="empty-state-description">Add drama slides to display on the home page swiper.</p>
     </div>`;
     return;
   }
+
+  grid.classList.remove('is-empty');
 
   grid.innerHTML = slides.map(slide => `
     ${(() => {

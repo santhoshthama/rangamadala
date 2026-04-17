@@ -186,15 +186,62 @@ class M_audience_show_booking
         }
 
         try {
-            $this->db->query("SELECT COUNT(*) AS cnt
-                             FROM audience_show_bookings
-                             WHERE audience_id = :audience_id
-                               AND drama_id = :drama_id
-                               AND LOWER(booking_status) IN ('watched', 'completed', 'attended')");
+            $selectRequestDetails = $this->tableHasColumn('request_details_json') ? 'b.request_details_json,' : "NULL AS request_details_json,";
+            $selectPaidAt = $this->tableHasColumn('paid_at') ? 'b.paid_at,' : "NULL AS paid_at,";
+            $selectPayOrder = $this->tableHasColumn('payhere_order_id') ? 'b.payhere_order_id,' : "NULL AS payhere_order_id,";
+
+            $this->db->query("SELECT b.booking_status,
+                                     {$selectRequestDetails}
+                                     {$selectPaidAt}
+                                     {$selectPayOrder}
+                                     d.event_date
+                              FROM audience_show_bookings b
+                              LEFT JOIN dramas d ON d.id = b.drama_id
+                              WHERE b.audience_id = :audience_id
+                                AND b.drama_id = :drama_id");
             $this->db->bind(':audience_id', (int)$audienceId);
             $this->db->bind(':drama_id', (int)$dramaId);
-            $row = $this->db->single();
-            return !empty($row) && (int)($row->cnt ?? 0) > 0;
+
+            $rows = $this->db->resultSet();
+            if (empty($rows)) {
+                return false;
+            }
+
+            $todayYmd = date('Y-m-d');
+
+            foreach ($rows as $row) {
+                $status = strtolower(trim((string)($row->booking_status ?? '')));
+                $hasPaymentRecord = !empty($row->paid_at) || !empty($row->payhere_order_id);
+
+                if (in_array($status, ['watched', 'completed', 'attended'], true)) {
+                    return true;
+                }
+
+                if (!$hasPaymentRecord) {
+                    continue;
+                }
+
+                $showDateRaw = '';
+                if (!empty($row->request_details_json)) {
+                    $decodedRequestDetails = json_decode((string)$row->request_details_json, true);
+                    if (is_array($decodedRequestDetails) && !empty($decodedRequestDetails['show_date'])) {
+                        $showDateRaw = trim((string)$decodedRequestDetails['show_date']);
+                    }
+                }
+
+                if ($showDateRaw === '' && !empty($row->event_date)) {
+                    $showDateRaw = trim((string)$row->event_date);
+                }
+
+                if ($showDateRaw !== '' && strtotime($showDateRaw) !== false) {
+                    $showDateYmd = date('Y-m-d', strtotime($showDateRaw));
+                    if ($showDateYmd < $todayYmd) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         } catch (Exception $e) {
             error_log('Error in M_audience_show_booking::canRateDrama: ' . $e->getMessage());
             return false;
