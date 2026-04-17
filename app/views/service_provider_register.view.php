@@ -38,7 +38,7 @@
       ?>
 
       <?php if (!empty($data['errors'])): ?>
-        <div class="error-modal" style="margin: 20px 48px 0;">
+        <div class="error-modal" style="margin: 20px 0 0;">
           <div class="error-modal-icon">!</div>
           <h3>Submission Error</h3>
           <ul class="error-list">
@@ -48,6 +48,8 @@
           </ul>
         </div>
       <?php endif; ?>
+
+      <div id="clientErrorBox" class="error-modal" style="display:none; margin: 20px 0 0;" aria-live="polite"></div>
 
       <div class="register-content">
         <!-- <div class="alert-info">
@@ -73,7 +75,7 @@
           $avail = isset($formData['availability']) ? (int)$formData['availability'] : 1;
         ?>
 
-        <form id="serviceForm" action="<?= ROOT ?>/ServiceProviderRegister/submit" method="POST" enctype="multipart/form-data">
+        <form id="serviceForm" action="<?= ROOT ?>/ServiceProviderRegister/submit" method="POST" enctype="multipart/form-data" novalidate>
           <div class="form-page active">
             <div class="section">
               <h3 class="section-title">Basic Information</h3>
@@ -98,7 +100,7 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">Phone Number <span class="required">*</span></label>
-                  <input type="tel" name="phone" class="form-input<?= $fieldHasError('phone') ? ' input-error' : '' ?>" value="<?= htmlspecialchars($formData['phone'] ?? '') ?>" pattern="^\+?[0-9\s\-\(\)]{10,20}$" title="Enter a valid phone number (10-15 digits, optional +, spaces, dashes, or parentheses)." inputmode="tel" required>
+                  <input type="tel" name="phone" class="form-input<?= $fieldHasError('phone') ? ' input-error' : '' ?>" value="<?= htmlspecialchars($formData['phone'] ?? '') ?>" pattern="(?:\+94|94|0)7\d{8}" title="Enter a valid Sri Lankan mobile number (07X XXX XXXX or +94 XXX XXX XXX)" inputmode="tel" required>
                   <?php if ($fieldHasError('phone')): ?><div class="error-text"><?= htmlspecialchars($fieldError('phone')) ?></div><?php endif; ?>
                 </div>
               </div>
@@ -106,7 +108,7 @@
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Password <span class="required">*</span></label>
-                  <input type="password" name="password" class="form-input<?= $fieldHasError('password') ? ' input-error' : '' ?>" minlength="6" required>
+                  <input type="password" name="password" class="form-input<?= $fieldHasError('password') ? ' input-error' : '' ?>" minlength="6" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}" title="At least 6 characters with uppercase, lowercase, number, and symbol" required>
                   <?php if ($fieldHasError('password')): ?><div class="error-text"><?= htmlspecialchars($fieldError('password')) ?></div><?php endif; ?>
                 </div>
                 <div class="form-group">
@@ -118,7 +120,7 @@
 
               <div class="form-group">
                 <label class="form-label">NIC Number <span class="required">*</span></label>
-                <input type="text" name="nic_number" class="form-input<?= $fieldHasError('nic_number') ? ' input-error' : '' ?>" placeholder="e.g., 200012345678 or 199512345V" value="<?= htmlspecialchars($formData['nic_number'] ?? '') ?>" required>
+                <input type="text" name="nic_number" class="form-input<?= $fieldHasError('nic_number') ? ' input-error' : '' ?>" placeholder="e.g., 200012345678 or 199512345V" value="<?= htmlspecialchars($formData['nic_number'] ?? '') ?>" pattern="(?:\d{12}|\d{9}[Vv])" title="Use 12 digits or old NIC ending with V" required>
                 <?php if ($fieldHasError('nic_number')): ?><div class="error-text"><?= htmlspecialchars($fieldError('nic_number')) ?></div><?php endif; ?>
               </div>
 
@@ -871,36 +873,94 @@
     let currentPage = 1;
     const totalPages = 4;
 
+    function showValidationErrors(errors) {
+      const box = document.getElementById('clientErrorBox');
+      if (!box) return;
+
+      if (!errors.length) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+
+      box.innerHTML = `
+        <div class="error-modal-icon">!</div>
+        <h3>Submission Error</h3>
+        <ul class="error-list">${errors.map(err => `<li>${err}</li>`).join('')}</ul>
+      `;
+      box.style.display = 'block';
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function getFieldLabel(field) {
+      const label = field.closest('.form-group')?.querySelector('label');
+      if (!label) return field.name || 'This field';
+      return (label.textContent || '').replace('*', '').trim() || field.name || 'This field';
+    }
+
+    function collectRequiredFieldErrors(currentPageElement) {
+      const errors = [];
+      const requiredFields = currentPageElement.querySelectorAll('[required]');
+
+      for (const field of requiredFields) {
+        const value = (field.value || '').trim();
+        if (value === '') {
+          errors.push(`${getFieldLabel(field)} is required.`);
+          continue;
+        }
+
+        if (field.type === 'email' && !field.checkValidity()) {
+          errors.push('Email format is invalid.');
+          continue;
+        }
+
+        if (field.getAttribute('pattern') && !['password', 'phone', 'nic_number'].includes(field.name)) {
+          const pattern = new RegExp('^' + field.getAttribute('pattern') + '$');
+          if (!pattern.test(value)) {
+            errors.push(field.title || `${getFieldLabel(field)} format is invalid.`);
+          }
+        }
+      }
+
+      return errors;
+    }
+
     function validateCurrentPage() {
       const currentPageElement = document.querySelectorAll('.form-page')[currentPage - 1];
-      const requiredFields = currentPageElement.querySelectorAll('[required]');
+      const errors = collectRequiredFieldErrors(currentPageElement);
 
       if (currentPage === 1) {
         const password = document.querySelector('input[name="password"]').value;
         const confirmPassword = document.querySelector('input[name="confirm_password"]').value;
         const phoneInput = document.querySelector('input[name="phone"]');
-        if (password !== confirmPassword) {
-          alert('Passwords do not match. Please check and try again.');
-          return false;
+        const nicInput = document.querySelector('input[name="nic_number"]');
+        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{6,}$/;
+        const phonePattern = /^(?:\+94|94|0)7\d{8}$/;
+        const nicPattern = /^(?:\d{12}|\d{9}[Vv])$/;
+
+        if (password && !passwordPattern.test(password)) {
+          errors.push('Password must be at least 6 characters and include uppercase, lowercase, number, and symbol.');
         }
 
-        if (phoneInput) {
-          const normalizedPhone = phoneInput.value.replace(/[\s\-\(\)]/g, '');
-          const phonePattern = /^\+?[0-9]{10,15}$/;
-          if (!phonePattern.test(normalizedPhone)) {
-            alert('Enter a valid phone number (10-15 digits, optional +).');
-            phoneInput.focus();
-            return false;
-          }
+        if (password && confirmPassword && password !== confirmPassword) {
+          errors.push('Password confirmation does not match.');
+        }
+
+        if (phoneInput && phoneInput.value.trim() && !phonePattern.test(phoneInput.value.trim())) {
+          errors.push('Enter a valid Sri Lankan mobile number (e.g. 07X XXX XXXX or +94 XXX XXX XXX).');
+        }
+
+        if (nicInput && nicInput.value.trim() && !nicPattern.test(nicInput.value.trim())) {
+          errors.push('Enter a valid Sri Lankan NIC (12 digits or old format ending with V).');
         }
       }
 
-      for (const field of requiredFields) {
-        if (!field.reportValidity()) {
-          return false;
-        }
+      if (errors.length > 0) {
+        showValidationErrors([...new Set(errors)]);
+        return false;
       }
 
+      showValidationErrors([]);
       return true;
     }
 
@@ -1058,6 +1118,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       const availabilityToggle = document.getElementById('availabilityToggle');
       const availabilityInput = document.getElementById('availabilityInput');
+      const serviceForm = document.getElementById('serviceForm');
       if (availabilityToggle && availabilityInput) {
         if (availabilityInput.value === '1') {
           availabilityToggle.classList.add('active');
@@ -1091,6 +1152,14 @@
         if (targetField) {
           targetField.focus();
         }
+      }
+
+      if (serviceForm) {
+        serviceForm.addEventListener('submit', (event) => {
+          if (!validateCurrentPage()) {
+            event.preventDefault();
+          }
+        });
       }
     });
   </script>
