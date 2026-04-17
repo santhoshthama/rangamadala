@@ -30,7 +30,7 @@ $artistInitial = strtoupper((function_exists('mb_substr') ? mb_substr($nameSourc
 $profileImage = !empty($artist->profile_image) ? ROOT . '/uploads/profile_images/' . $artist->profile_image : null;
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$directorImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$directorImageSrc = directorResolveProfileImageSrc();
 ?>
 <!DOCTYPE html>
 <html lang="en">

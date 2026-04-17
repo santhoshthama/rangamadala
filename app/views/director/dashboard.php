@@ -17,7 +17,7 @@ $productionManagersCount = (int)($dashboardStats['production_managers'] ?? 0);
 $pendingApplicationsCount = (int)($dashboardStats['pending_applications'] ?? 0);
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$profileImageSrc = directorResolveProfileImageSrc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -185,7 +185,7 @@ $profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 
                         <?php if (isset($productionManager) && $productionManager): ?>
                             <div class="service-info-item">
                                 <span class="service-info-label"><i class="bx bx-user"></i> Production Manager</span>
-                                <span class="service-info-value"><?= esc($productionManager->manager_name ?? 'N/A') ?></span>
+                                <span class="service-info-value"><?= esc((is_object($productionManager) && isset($productionManager->manager_name)) ? (string)$productionManager->manager_name : 'N/A') ?></span>
                             </div>
                         <?php endif; ?>
                         <div class="dashboard-card-action">

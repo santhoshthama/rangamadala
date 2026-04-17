@@ -1,0 +1,139 @@
+.pm-budget-card-spent {
+    background: linear-gradient(135deg, var(--success), #1f9b3b);
+}
+
+.pm-budget-card-remaining {
+    background: linear-gradient(135deg, var(--warning), #e0a800);
+}
+
+.pm-budget-card-total-items {
+    background: linear-gradient(135deg, var(--info), #138496);
+}
+
+.pm-budget-overview,
+.pm-budget-table-section {
+    padding: 28px;
+}
+
+.pm-budget-overview {
+    margin-bottom: 26px;
+}
+
+.pm-budget-section-title {
+    margin-bottom: 16px;
+}
+
+.pm-budget-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.pm-budget-chart-card {
+    background: linear-gradient(135deg, rgba(186, 142, 35, 0.1) 0%, rgba(186, 142, 35, 0.05) 100%);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.pm-budget-chart-canvas {
+    max-width: 100%;
+    height: 250px;
+}
+
+.pm-budget-category-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.pm-budget-category-list {
+    list-style: none;
+    padding: 0;
+}
+
+.pm-budget-category-item {
+    padding: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #eee;
+}
+
+.pm-budget-category-item--last {
+    border-bottom: none;
+}
+
+.pm-budget-muted {
+    color: var(--muted);
+}
+
+.pm-budget-category-value {
+    font-weight: 700;
+    color: var(--brand);
+}
+
+.pm-budget-empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 20px;
+}
+
+.pm-budget-table-wrap {
+    overflow-x: auto;
+}
+
+.pm-budget-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pm-budget-table thead tr {
+    background: #f8f9fa;
+    border-bottom: 2px solid var(--border-strong);
+}
+
+.pm-budget-table-header-cell {
+    padding: 14px;
+    text-align: left;
+    font-weight: 700;
+}
+
+.pm-budget-table-header-cell--right {
+    text-align: right;
+}
+
+.pm-budget-table-header-cell--center {
+    text-align: center;
+}
+
+.pm-budget-row {
+    border-bottom: 1px solid var(--border);
+}
+
+.pm-budget-cell {
+    padding: 14px;
+}
+
+.pm-budget-cell--right {
+    text-align: right;
+    font-weight: 700;
+}
+
+.pm-budget-cell--center {
+    text-align: center;
+}
+
+.pm-budget-action-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.pm-budget-empty-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.pm-budget-note {
+    color: var(--muted);
+}

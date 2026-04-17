@@ -12,7 +12,7 @@ $roleId = isset($role->id) ? (int)$role->id : (int)($_GET['role_id'] ?? 0);
 $roleName = $role->role_name ?? 'Role';
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$profileImageSrc = directorResolveProfileImageSrc();
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -9,6 +9,7 @@ class Director{
     protected $pmModel;
     protected $scheduleModel;
     protected $notificationModel;
+    protected $profileModel;
 
     public function __construct()
     {
@@ -18,6 +19,7 @@ class Director{
         $this->pmModel = $this->getModel('M_production_manager');
         $this->scheduleModel = $this->getModel('M_schedule');
         $this->notificationModel = $this->getModel('M_notification');
+        $this->profileModel = $this->getModel('M_universal_profile');
     }
 
     public function index()
@@ -1788,8 +1790,40 @@ class Director{
             }
         }
 
-        $payload = array_merge(['drama' => $drama, 'categories' => $categories], $data);
+        $payload = array_merge([
+            'drama' => $drama,
+            'categories' => $categories,
+            'profileImageSrc' => $this->resolveCurrentDirectorProfileImageSrc(),
+        ], $data);
         $this->view('director/' . $view, $payload);
+    }
+
+    protected function resolveCurrentDirectorProfileImageSrc(): string
+    {
+        $fallback = ROOT . '/assets/images/default-avatar.jpg';
+        $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        if ($userId <= 0 || !$this->profileModel || !method_exists($this->profileModel, 'getUserById')) {
+            return $fallback;
+        }
+
+        $currentUser = $this->profileModel->getUserById($userId);
+        if (!$currentUser) {
+            return $fallback;
+        }
+
+        if (!empty($currentUser->profile_image)) {
+            $imageValue = str_replace('\\', '/', (string)$currentUser->profile_image);
+            if (strpos($imageValue, '/') !== false) {
+                return ROOT . '/' . ltrim($imageValue, '/');
+            }
+            return ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+        }
+
+        if (!empty($currentUser->nic_photo)) {
+            return ROOT . '/' . ltrim(str_replace('\\', '/', (string)$currentUser->nic_photo), '/');
+        }
+
+        return $fallback;
     }
 
     protected function redirectToManageRoles(int $dramaId, array $params = [])

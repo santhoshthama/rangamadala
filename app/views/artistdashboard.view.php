@@ -4,19 +4,11 @@ if(isset($data) && is_array($data)) {
     extract($data);
 }
 
-$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
-if (isset($user->profile_image) && !empty($user->profile_image)) {
-    $storedValue = str_replace('\\', '/', $user->profile_image);
-    if (strpos($storedValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($storedValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($storedValue);
-    }
-}
+$profileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
+    ? $profileImageSrc
+    : ROOT . '/uploads/profile_images/user_profile.png';
 
-$requestPath = strtolower((string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? ''));
-$requestedTab = strtolower(trim((string)($_GET['tab'] ?? '')));
-$sidebarActive = [
+$sidebarActiveDefaults = [
     'dashboard' => false,
     'notifications' => false,
     'vacancies' => false,
@@ -24,17 +16,15 @@ $sidebarActive = [
     'showings' => false,
 ];
 
-if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
-    $sidebarActive['notifications'] = true;
-} elseif (strpos($requestPath, '/artistdashboard/browse_vacancies') !== false) {
-    $sidebarActive['vacancies'] = true;
-} elseif (strpos($requestPath, '/artistdashboard/classes') !== false) {
-    $sidebarActive['classes'] = true;
-} elseif ($requestedTab === 'my-showings') {
-    $sidebarActive['showings'] = true;
-} else {
-    $sidebarActive['dashboard'] = true;
-}
+$sidebarActive = (isset($sidebarActive) && is_array($sidebarActive))
+    ? array_merge($sidebarActiveDefaults, $sidebarActive)
+    : $sidebarActiveDefaults;
+
+$toastSuccessMessage = isset($toastSuccessMessage) ? (string)$toastSuccessMessage : '';
+$toastErrorMessage = isset($toastErrorMessage) ? (string)$toastErrorMessage : '';
+$infoMessage = isset($infoMessage) ? (string)$infoMessage : '';
+$infoMessageType = isset($infoMessageType) ? (string)$infoMessageType : 'info';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -44,8 +34,10 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
     <title>Artist Dashboard - Rangamadala</title>
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/toast.css">
+        <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/artistdashboard-page.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
+<?php if (false): ?>
 <style>
         .header--wrapper .user--info {
             gap: 16px;
@@ -634,25 +626,24 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
             }
         }
     </style>
+<?php endif; ?>
 </head>
 <body>
         <!-- Toast Notification Script -->
         <script src="<?= ROOT ?>/assets/JS/toast.js"></script>
-        <?php if (!empty($_SESSION['success_message'])): ?>
+        <?php if ($toastSuccessMessage !== ''): ?>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                toastSuccess('<?= addslashes($_SESSION['success_message']); ?>');
+                toastSuccess('<?= addslashes($toastSuccessMessage); ?>');
             });
         </script>
-        <?php unset($_SESSION['success_message']); ?>
         <?php endif; ?>
-        <?php if (!empty($_SESSION['error_message'])): ?>
+        <?php if ($toastErrorMessage !== ''): ?>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                toastError('<?= addslashes($_SESSION['error_message']); ?>');
+                toastError('<?= addslashes($toastErrorMessage); ?>');
             });
         </script>
-        <?php unset($_SESSION['error_message']); ?>
         <?php endif; ?>
 
     <!-- Sidebar -->
@@ -728,11 +719,10 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
             </div>
         </div>
 
-        <?php if (isset($_SESSION['message'])): ?>
-            <div class="info-box" style="background: <?= $_SESSION['message_type'] === 'success' ? '#d4edda' : '#f8d7da' ?>; color: <?= $_SESSION['message_type'] === 'success' ? '#155724' : '#721c24' ?>;">
-                <?= esc($_SESSION['message']) ?>
+        <?php if ($infoMessage !== ''): ?>
+            <div class="info-box <?= $infoMessageType === 'success' ? 'artist-info-box--success' : 'artist-info-box--error' ?>">
+                <?= esc($infoMessage) ?>
             </div>
-            <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
         <?php endif; ?>
 
         <!-- Statistics -->
@@ -777,16 +767,16 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
 
         <!-- Drama Role Vacancies Banner -->
         <div class="card-section vacancies-banner">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-                <div style="flex: 1;">
-                    <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700;">
+            <div class="artist-flex-between-wrap">
+                <div class="artist-flex-1">
+                    <h2 class="artist-vacancies-title">
                         Drama Role Vacancies Now Open!
                     </h2>
-                    <p style="margin: 0; opacity: 0.95; font-size: 16px; line-height: 1.5;">
+                    <p class="artist-vacancies-description">
                         Discover available roles and apply to be part of our upcoming drama productions.
                     </p>
                 </div>
-                <a href="<?=ROOT?>/artistdashboard/browse_vacancies" class="btn btn-primary btn-compact" style="font-weight: 600;">
+                <a href="<?=ROOT?>/artistdashboard/browse_vacancies" class="btn btn-primary btn-compact artist-font-semibold">
                     <i class="bx bx-search"></i> Search Vacancies
                 </a>
             </div>
@@ -814,7 +804,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
 
         <!-- Tabs for Drama Categories -->
         <div class="content">
-            <div class="profile-container" style="grid-template-columns: 1fr;">
+            <div class="profile-container artist-profile-single-col">
                 <div class="details">
 
                 <!-- As Director Tab -->
@@ -833,7 +823,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                             <i class="bx bx-film"></i>
                             <h3>No Dramas Yet</h3>
                             <p>You haven't created any dramas. Start your journey as a director!</p>
-                            <button class="btn btn-primary btn-compact" style="margin-top: 16px;" onclick="window.location.href='<?=ROOT?>/createDrama'">
+                            <button class="btn btn-primary btn-compact artist-mt-16" onclick="window.location.href='<?=ROOT?>/createDrama'">
                                 <i class="bx bx-plus"></i> Create Drama
                             </button>
                         </div>
@@ -878,10 +868,10 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                         </div>
                                     </div>
                                     <div class="artist-footer">
-                                        <button class="btn btn-primary" style="flex: 1;" onclick="handleDirectorManage(<?=$drama->id?>)">
+                                        <button class="btn btn-primary artist-flex-btn" onclick="handleDirectorManage(<?=$drama->id?>)">
                                             <i class="bx bx-tachometer-alt"></i> Manage
                                         </button>
-                                        <a class="btn btn-director-publish" style="flex: 1; text-align: center;" href="<?= ROOT ?>/director/drama_details?drama_id=<?= (int)$drama->id ?>#publish-section">
+                                        <a class="btn btn-director-publish artist-flex-btn artist-text-center" href="<?= ROOT ?>/director/drama_details?drama_id=<?= (int)$drama->id ?>#publish-section">
                                             <i class="bx bx-bullhorn"></i> <?= !empty($drama->is_published) ? 'Update Publish' : 'Publish' ?>
                                         </a>
                                     </div>
@@ -908,7 +898,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                         <div class="artists-grid">
                             <?php foreach ($dramas_as_manager as $drama): ?>
                                 <div class="artist-card">
-                                    <div class="artist-header" style="background: linear-gradient(135deg, #b88920, #8a6718);">
+                                    <div class="artist-header artist-manager-header">
                                         <h3 class="artist-name"><?= esc($drama->drama_name ?? 'Drama') ?></h3>
                                         <p class="artist-experience"><?= esc($drama->description ?? 'Production Manager') ?></p>
                                     </div>
@@ -931,7 +921,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                         </div>
                                     </div>
                                     <div class="artist-footer">
-                                        <button class="btn btn-primary" style="flex: 1;" onclick="handlePMManage(<?=$drama->id?>)">
+                                        <button class="btn btn-primary artist-flex-btn" onclick="handlePMManage(<?=$drama->id?>)">
                                             <i class="bx bx-tasks"></i> Manage
                                         </button>
                                     </div>
@@ -953,7 +943,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                             <i class="bx bx-user-tie"></i>
                             <h3>No Acting Roles</h3>
                             <p>You haven't been cast in any roles yet. Browse available vacancies!</p>
-                            <button class="btn btn-primary btn-compact" style="margin-top: 16px;" onclick="window.location.href='<?=ROOT?>/artistdashboard/browse_vacancies'">
+                            <button class="btn btn-primary btn-compact artist-mt-16" onclick="window.location.href='<?=ROOT?>/artistdashboard/browse_vacancies'">
                                 <i class="bx bx-search"></i> Browse Vacancies
                             </button>
                         </div>
@@ -961,14 +951,14 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                         <div class="artists-grid">
                             <?php foreach ($roles_as_actor as $role): ?>
                                 <div class="artist-card">
-                                    <div class="artist-header" style="background: linear-gradient(135deg, #d3a635, #b7881f); color: #2a1f08;">
-                                        <h3 class="artist-name" style="color: #2a1f08;"><?= esc($role->role_name) ?></h3>
+                                    <div class="artist-header artist-actor-header">
+                                        <h3 class="artist-name artist-actor-name"><?= esc($role->role_name) ?></h3>
                                         <p class="artist-experience"><?= esc(ucfirst($role->role_type)) ?> Role</p>
                                     </div>
                                     <div class="artist-body">
                                         <div class="info-row">
                                             <span class="info-label">Drama:</span>
-                                            <span class="info-value" style="color: var(--brand);">
+                                            <span class="info-value artist-brand-value">
                                                 <strong><?= esc($role->drama_name) ?></strong>
                                             </span>
                                         </div>
@@ -996,7 +986,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                         </div>
                                     </div>
                                     <div class="artist-footer">
-                                        <button class="btn btn-primary" style="flex: 1;" onclick="window.location.href='<?=ROOT?>/artistdashboard/view_drama?drama_id=<?=$role->drama_id?>'">
+                                        <button class="btn btn-primary artist-flex-btn" onclick="window.location.href='<?=ROOT?>/artistdashboard/view_drama?drama_id=<?=$role->drama_id?>'">
                                             <i class="bx bx-eye"></i> View Drama
                                         </button>
                                     </div>
@@ -1014,60 +1004,60 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                             <span><i class="bx bx-calendar-check"></i> View Interview Schedules</span>
                         </h3>
                         <?php if (isset($upcoming_interviews) && !empty($upcoming_interviews)): ?>
-                            <p style="margin-bottom: 16px; color: #5a4b10;">Confirm your participation so the director knows you are joining.</p>
-                            <div style="display: grid; gap: 16px;">
+                            <p class="artist-note">Confirm your participation so the director knows you are joining.</p>
+                            <div class="artist-grid-gap-16">
                                 <?php foreach ($upcoming_interviews as $application): ?>
                                     <?php
                                         $interviewTime = date('M d, Y g:i A', strtotime($application->interview_at));
                                         $confirmationStatus = strtolower($application->interview_confirmation_status ?? 'pending');
                                         $statusPalette = [
-                                            'confirmed' => 'background: rgba(40, 167, 69, 0.15); color: #155724;',
-                                            'declined' => 'background: rgba(220, 53, 69, 0.15); color: #721c24;',
-                                            'pending' => 'background: rgba(255, 193, 7, 0.2); color: #8a6d1a;',
+                                            'confirmed' => 'artist-status-pill--confirmed',
+                                            'declined' => 'artist-status-pill--declined',
+                                            'pending' => 'artist-status-pill--pending',
                                         ];
-                                        $badgeStyle = $statusPalette[$confirmationStatus] ?? $statusPalette['pending'];
+                                        $badgeClass = $statusPalette[$confirmationStatus] ?? $statusPalette['pending'];
                                     ?>
-                                    <div class="role-info-card" style="border-left: 4px solid #e0a800;">
-                                        <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                                    <div class="role-info-card artist-card-highlight-left">
+                                        <div class="artist-flex-between-start-wrap">
                                             <div>
-                                                <h4 style="margin: 0;"><?= esc($application->role_name ?? 'Role') ?> <small style="color: var(--muted); font-weight: normal;">in <?= esc($application->drama_name ?? 'Drama') ?></small></h4>
-                                                <div style="font-size: 13px; color: var(--muted);">
+                                                <h4 class="artist-heading-zero"><?= esc($application->role_name ?? 'Role') ?> <small class="artist-muted-small-normal">in <?= esc($application->drama_name ?? 'Drama') ?></small></h4>
+                                                <div class="artist-muted-small">
                                                     Directed by <?= esc($application->director_name ?? 'Director') ?>
                                                 </div>
                                             </div>
-                                            <span class="status-badge" style="<?= $badgeStyle ?> text-transform: capitalize;">
+                                            <span class="status-badge artist-status-pill <?= esc($badgeClass) ?>">
                                                 <?= esc($confirmationStatus) ?>
                                             </span>
                                         </div>
-                                        <div class="role-info-item" style="margin-top: 12px;">
+                                        <div class="role-info-item artist-role-info-item-mt12">
                                             <span class="role-info-label"><i class="bx bx-calendar"></i> Interview:</span>
                                             <span class="role-info-value"><?= esc($interviewTime) ?></span>
                                         </div>
                                         <?php if (!empty($application->interview_notes)): ?>
-                                            <div style="margin-top: 12px; padding: 12px; background: rgba(0, 0, 0, 0.04); border-radius: 6px;">
+                                            <div class="artist-note-box">
                                                 <strong>Director notes:</strong>
-                                                <p style="margin: 6px 0 0; color: #4a4a4a; white-space: pre-wrap;"><?= nl2br(esc($application->interview_notes)) ?></p>
+                                                <p class="artist-note-text"><?= nl2br(esc($application->interview_notes)) ?></p>
                                             </div>
                                         <?php endif; ?>
                                         <?php if ($confirmationStatus === 'pending'): ?>
-                                            <form method="POST" action="<?= ROOT ?>/artistdashboard/confirm_interview" class="interview-response" style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+                                            <form method="POST" action="<?= ROOT ?>/artistdashboard/confirm_interview" class="interview-response artist-form-stack-mt16">
                                                 <input type="hidden" name="application_id" value="<?= (int)$application->id ?>">
-                                                <label style="font-size: 13px; color: var(--muted);">Send an optional note to the director</label>
+                                                <label class="artist-label-muted-small">Send an optional note to the director</label>
                                                 <textarea name="note" rows="2" class="form-control" placeholder="Add details about your availability (optional)"></textarea>
-                                                <div style="display: flex; flex-wrap: wrap; gap: 12px;">
-                                                    <button type="submit" name="response" value="confirm" class="btn btn-success" style="flex: 1; min-width: 140px;">
+                                                <div class="artist-flex-wrap-gap-12">
+                                                    <button type="submit" name="response" value="confirm" class="btn btn-success artist-btn-flex-min-140">
                                                         <i class="bx bx-check"></i> Confirm Attendance
                                                     </button>
-                                                    <button type="submit" name="response" value="decline" class="btn btn-danger" style="flex: 1; min-width: 120px;">
+                                                    <button type="submit" name="response" value="decline" class="btn btn-danger artist-btn-flex-min-120">
                                                         <i class="bx bx-times"></i> Decline
                                                     </button>
                                                 </div>
                                             </form>
                                         <?php else: ?>
-                                            <div style="margin-top: 12px; font-size: 13px; color: #555;">
+                                            <div class="artist-response-meta">
                                                 Response sent <?= !empty($application->interview_confirmed_at) ? esc(date('M d, Y g:i A', strtotime($application->interview_confirmed_at))) : 'recently' ?>
                                                 <?php if (!empty($application->interview_confirmation_note)): ?>
-                                                    <div style="margin-top: 6px; padding: 10px; background: rgba(0, 0, 0, 0.04); border-radius: 4px;">"<?= esc($application->interview_confirmation_note) ?>"</div>
+                                                    <div class="artist-response-note">"<?= esc($application->interview_confirmation_note) ?>"</div>
                                                 <?php endif; ?>
                                             </div>
                                         <?php endif; ?>
@@ -1079,7 +1069,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                 <i class="bx bx-calendar-check"></i>
                                 <h3>No Interview Schedules</h3>
                                 <p>You don't have any upcoming interview schedules at the moment.</p>
-                                <button class="btn btn-primary btn-compact" style="margin-top: 16px;" onclick="window.location.href='<?=ROOT?>/artistdashboard/browse_vacancies'">
+                                <button class="btn btn-primary btn-compact artist-mt-16" onclick="window.location.href='<?=ROOT?>/artistdashboard/browse_vacancies'">
                                     <i class="bx bx-search"></i> Browse Vacancies
                                 </button>
                             </div>
@@ -1089,7 +1079,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
 
                 <!-- My Showings Tab -->
                 <div id="my-showings-tab" class="tab-content">
-                    <h3 style="margin-bottom: 20px; color: var(--ink);">
+                    <h3 class="artist-tab-title">
                         <i class="bx bx-calendar-event"></i> My Showings
                     </h3>
 
@@ -1107,7 +1097,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
 
                     <div class="classes-subtab-panel active" data-showings-panel="requests" role="tabpanel">
                     <?php if (!empty($show_requests_pending)): ?>
-                        <div style="display: grid; gap: 16px; margin-bottom: 18px;">
+                        <div class="artist-grid-gap-16-mb18">
                             <?php foreach ($show_requests_pending as $show_request): ?>
                                 <?php
                                     $requestDetails = [];
@@ -1165,35 +1155,35 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                     <div class="pending-slot-conflict" data-conflict-hint></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-group"></i> Expected Present Count:</span><span class="role-info-value"><?= $presentCount > 0 ? (int)$presentCount : 'Not specified' ?></span></div>
                                     <?php if ($requestNotes !== ''): ?>
-                                        <div style="margin: 12px 0; padding: 12px; background: rgba(255,255,255,0.65); border-radius: 8px; border-left: 3px solid var(--brand);">
-                                            <strong style="color: var(--ink);"><i class="bx bx-note"></i> Additional Notes:</strong>
-                                            <p style="color: #555; margin-top: 6px; font-size: 14px;"><?= esc($requestNotes) ?></p>
+                                        <div class="artist-note-highlight">
+                                            <strong class="artist-note-highlight-title"><i class="bx bx-note"></i> Additional Notes:</strong>
+                                            <p class="artist-note-highlight-text"><?= esc($requestNotes) ?></p>
                                         </div>
                                     <?php endif; ?>
-                                    <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
-                                        <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_show_request" style="flex: 1; min-width: 180px;">
+                                    <div class="artist-flex-wrap-gap-10-mt16">
+                                        <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_show_request" class="artist-form-flex-min-180">
                                             <input type="hidden" name="request_id" value="<?= (int)$show_request->id ?>">
                                             <input type="hidden" name="response" value="accept">
-                                            <button type="submit" class="btn btn-success" style="width: 100%;"><i class="bx bx-check"></i> Accept Show</button>
+                                            <button type="submit" class="btn btn-success artist-btn-w-full"><i class="bx bx-check"></i> Accept Show</button>
                                         </form>
-                                        <button type="button" class="btn btn-danger show-reject-reason-btn" data-target="reject-form-<?= (int)$show_request->id ?>" style="flex: 1; min-width: 180px;">
+                                        <button type="button" class="btn btn-danger show-reject-reason-btn artist-form-flex-min-180" data-target="reject-form-<?= (int)$show_request->id ?>">
                                             <i class="bx bx-x"></i> Reject
                                         </button>
                                     </div>
-                                    <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_show_request" id="reject-form-<?= (int)$show_request->id ?>" class="showings-reject-form" style="display: none; margin-top: 12px; gap: 8px;">
+                                    <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_show_request" id="reject-form-<?= (int)$show_request->id ?>" class="showings-reject-form artist-reject-form">
                                         <input type="hidden" name="request_id" value="<?= (int)$show_request->id ?>">
                                         <input type="hidden" name="response" value="reject">
                                         <textarea name="rejection_reason" class="form-control" rows="3" placeholder="Add reason for rejection" required></textarea>
-                                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                            <button type="submit" class="btn btn-danger" style="white-space: nowrap;" onclick="return confirm('Reject this show request with this reason?');"><i class="bx bx-send"></i> Submit Rejection</button>
-                                            <button type="button" class="btn btn-outline reject-cancel-btn" data-target="reject-form-<?= (int)$show_request->id ?>" style="white-space: nowrap;">Cancel</button>
+                                        <div class="artist-flex-wrap-gap-8">
+                                            <button type="submit" class="btn btn-danger artist-nowrap" onclick="return confirm('Reject this show request with this reason?');"><i class="bx bx-send"></i> Submit Rejection</button>
+                                            <button type="button" class="btn btn-outline reject-cancel-btn artist-nowrap" data-target="reject-form-<?= (int)$show_request->id ?>">Cancel</button>
                                         </div>
                                     </form>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <div class="no-results" style="margin-bottom: 18px;">
+                        <div class="no-results artist-no-results-mb18">
                             <i class="bx bx-inbox"></i>
                             <h3>No Pending Show Requests</h3>
                             <p>No audience show requests are waiting for your decision.</p>
@@ -1223,7 +1213,7 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                         <div class="accepted-showings-empty" id="accepted-showings-empty">
                             No accepted showings found for the selected date/time filter.
                         </div>
-                        <div style="display: grid; gap: 16px; margin-bottom: 18px;">
+                        <div class="artist-grid-gap-16-mb18">
                             <?php foreach ($show_requests_accepted as $show_request): ?>
                                 <?php
                                     $requestDetails = [];
@@ -1260,13 +1250,13 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <div class="no-results" style="margin-bottom: 18px;"><i class="bx bx-check-shield"></i><h3>No Accepted Showings</h3><p>You have not accepted any audience showings yet.</p></div>
+                        <div class="no-results artist-no-results-mb18"><i class="bx bx-check-shield"></i><h3>No Accepted Showings</h3><p>You have not accepted any audience showings yet.</p></div>
                     <?php endif; ?>
                     </div>
 
                     <div class="classes-subtab-panel" data-showings-panel="rejected" role="tabpanel">
                     <?php if (!empty($show_requests_rejected)): ?>
-                        <div style="display: grid; gap: 16px; margin-bottom: 10px;">
+                        <div class="artist-grid-gap-16-mb10">
                             <?php foreach ($show_requests_rejected as $show_request): ?>
                                 <?php
                                     $requestDetails = [];
@@ -1297,15 +1287,15 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-envelope"></i> Contact Email:</span><span class="role-info-value"><?= esc($requestContactEmail !== '' ? $requestContactEmail : 'Not provided') ?></span></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-calendar"></i> Show Date:</span><span class="role-info-value"><?= esc($requestedShowDate) ?></span></div>
                                     <div class="role-info-item"><span class="role-info-label"><i class="bx bx-time-five"></i> Show Time:</span><span class="role-info-value"><?= esc($requestedShowTime !== '' ? $requestedShowTime : 'Not specified') ?></span></div>
-                                    <div style="margin-top: 12px; padding: 10px; background: rgba(239, 68, 68, 0.08); border-radius: 8px; border-left: 3px solid #ef4444;">
-                                        <strong style="color: #9f1239;"><i class="bx bx-error-circle"></i> Rejection Reason:</strong>
-                                        <p style="margin: 6px 0 0; color: #7f1d1d;"><?= esc($rejectionReason !== '' ? $rejectionReason : 'No reason provided.') ?></p>
+                                    <div class="artist-rejection-box">
+                                        <strong class="artist-rejection-title"><i class="bx bx-error-circle"></i> Rejection Reason:</strong>
+                                        <p class="artist-rejection-text"><?= esc($rejectionReason !== '' ? $rejectionReason : 'No reason provided.') ?></p>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <div class="no-results" style="margin-bottom: 10px;"><i class="bx bx-smile"></i><h3>No Rejected Showings</h3><p>No rejected audience show requests found.</p></div>
+                        <div class="no-results artist-no-results-mb10"><i class="bx bx-smile"></i><h3>No Rejected Showings</h3><p>No rejected audience show requests found.</p></div>
                     <?php endif; ?>
                     </div>
                 </div>
@@ -1318,27 +1308,27 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                     ?>
 
                     <!-- Category: PM Requests -->
-                    <div class="card-section" style="margin-bottom: 24px;">
-                        <h3 style="margin-bottom: 20px; color: var(--ink);">
+                    <div class="card-section artist-card-section-mb24">
+                        <h3 class="artist-section-title">
                             <i class="bx bx-user-tie"></i> PM Requests
-                            <span style="font-size: 13px; color: var(--muted); font-weight: 600; margin-left: 8px;">
+                            <span class="artist-section-count">
                                 (<?= isset($pm_requests) ? count($pm_requests) : 0 ?>)
                             </span>
                         </h3>
 
                         <?php if ($hasPmRequests): ?>
-                            <div style="display: grid; gap: 16px;">
+                            <div class="artist-grid-gap-16">
                                 <?php foreach ($pm_requests as $pm_request): ?>
                                     <div class="role-info-card">
-                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                                        <div class="artist-card-header-row">
                                             <div>
-                                                <h3 style="color: var(--brand); margin-bottom: 8px;">
+                                                <h3 class="artist-card-title-brand">
                                                     <i class="bx bx-film"></i> <?= esc($pm_request->drama_name) ?>
                                                 </h3>
-                                                <p style="color: var(--muted); font-size: 13px;">
+                                                <p class="artist-muted-small">
                                                     <strong>Director:</strong> <?= esc($pm_request->director_name) ?>
                                                 </p>
-                                                <p style="color: var(--muted); font-size: 13px;">
+                                                <p class="artist-muted-small">
                                                     <strong>Certificate:</strong> <?= esc($pm_request->certificate_number) ?>
                                                 </p>
                                             </div>
@@ -1355,9 +1345,9 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                         </div>
                                         
                                         <?php if (!empty($pm_request->message)): ?>
-                                            <div style="margin: 12px 0; padding: 12px; background: rgba(186, 142, 35, 0.08); border-radius: 8px; border-left: 3px solid var(--brand);">
-                                                <strong style="color: var(--ink);"><i class="bx bx-comment"></i> Message from Director:</strong>
-                                                <p style="color: #555; margin-top: 6px; font-size: 14px;"><?= esc($pm_request->message) ?></p>
+                                            <div class="artist-message-box">
+                                                <strong class="artist-message-title"><i class="bx bx-comment"></i> Message from Director:</strong>
+                                                <p class="artist-message-text"><?= esc($pm_request->message) ?></p>
                                             </div>
                                         <?php endif; ?>
                                         
@@ -1368,25 +1358,25 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                             <span class="role-info-value"><?= date('M d, Y g:i A', strtotime($pm_request->requested_at)) ?></span>
                                         </div>
                                         
-                                        <div style="margin-top: 12px; padding: 10px; background: rgba(33, 150, 243, 0.08); border-radius: 6px;">
-                                            <p style="color: #1976d2; font-size: 13px; margin: 0;">
+                                        <div class="artist-info-box-blue">
+                                            <p class="artist-info-text-blue">
                                                 <i class="bx bx-info-circle"></i> <strong>About this role:</strong> 
                                                 As Production Manager, you'll oversee services, budget management, and theater bookings for this drama.
                                             </p>
                                         </div>
                                         
-                                        <div style="display: flex; gap: 10px; margin-top: 16px;">
-                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" style="flex: 1;">
+                                        <div class="artist-flex-gap-10-mt16">
+                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" class="artist-form-flex-1">
                                                 <input type="hidden" name="request_id" value="<?= $pm_request->id ?>">
                                                 <input type="hidden" name="response" value="accept">
-                                                <button type="submit" class="btn btn-success" style="width: 100%;">
+                                                <button type="submit" class="btn btn-success artist-btn-w-full">
                                                     <i class="bx bx-check"></i> Accept
                                                 </button>
                                             </form>
-                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" style="flex: 1;">
+                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_manager_request" class="artist-form-flex-1">
                                                 <input type="hidden" name="request_id" value="<?= $pm_request->id ?>">
                                                 <input type="hidden" name="response" value="reject">
-                                                <button type="submit" class="btn btn-danger" style="width: 100%;" 
+                                                <button type="submit" class="btn btn-danger artist-btn-w-full" 
                                                         onclick="return confirm('Are you sure you want to decline this Production Manager request?');">
                                                     <i class="bx bx-times"></i> Decline
                                                 </button>
@@ -1406,9 +1396,9 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
 
                     <!-- Category: Actor Requests -->
                     <div class="card-section">
-                        <h3 style="margin-bottom: 20px; color: var(--ink);">
+                        <h3 class="artist-section-title">
                             <i class="bx bx-theater-masks"></i> Actor Requests
-                            <span style="font-size: 13px; color: var(--muted); font-weight: 600; margin-left: 8px;">
+                            <span class="artist-section-count">
                                 (<?= isset($role_requests) ? count($role_requests) : 0 ?>)
                             </span>
                         </h3>
@@ -1420,15 +1410,15 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                 <p>You don't have any actor role requests at the moment.</p>
                             </div>
                         <?php else: ?>
-                            <div style="display: grid; gap: 16px;">
+                            <div class="artist-grid-gap-16">
                                 <?php foreach ($role_requests as $request): ?>
                                     <div class="role-info-card">
-                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                                        <div class="artist-card-header-row">
                                             <div>
-                                                <h3 style="color: var(--ink); margin-bottom: 8px;">
+                                                <h3 class="artist-card-title-ink">
                                                     <i class="bx bx-theater-masks"></i> <?= esc($request->drama_name) ?>
                                                 </h3>
-                                                <p style="color: var(--muted); font-size: 13px;">
+                                                <p class="artist-muted-small">
                                                     <strong>Director:</strong> <?= esc($request->director_name) ?>
                                                 </p>
                                             </div>
@@ -1445,9 +1435,9 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                         </div>
                                         
                                         <?php if (!empty($request->role_description)): ?>
-                                            <div style="margin: 12px 0; padding: 12px; background: rgba(255,255,255,0.6); border-radius: 8px;">
-                                                <strong style="color: var(--ink);">Description:</strong>
-                                                <p style="color: #555; margin-top: 6px; font-size: 14px;"><?= esc($request->role_description) ?></p>
+                                            <div class="artist-description-box">
+                                                <strong class="artist-description-title">Description:</strong>
+                                                <p class="artist-message-text"><?= esc($request->role_description) ?></p>
                                             </div>
                                         <?php endif; ?>
                                         
@@ -1467,18 +1457,18 @@ if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
                                             <span class="role-info-value"><?= isset($request->requested_at) && $request->requested_at ? date('M d, Y', strtotime($request->requested_at)) : 'N/A' ?></span>
                                         </div>
                                         
-                                        <div style="display: flex; gap: 10px; margin-top: 16px;">
-                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_request" style="flex: 1;">
+                                        <div class="artist-flex-gap-10-mt16">
+                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_request" class="artist-form-flex-1">
                                                 <input type="hidden" name="request_id" value="<?= $request->id ?>">
                                                 <input type="hidden" name="response" value="accept">
-                                                <button type="submit" class="btn btn-success" style="width: 100%;">
+                                                <button type="submit" class="btn btn-success artist-btn-w-full">
                                                     <i class="bx bx-check"></i> Accept Role
                                                 </button>
                                             </form>
-                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_request" style="flex: 1;">
+                                            <form method="POST" action="<?=ROOT?>/artistdashboard/respond_to_request" class="artist-form-flex-1">
                                                 <input type="hidden" name="request_id" value="<?= $request->id ?>">
                                                 <input type="hidden" name="response" value="reject">
-                                                <button type="submit" class="btn btn-danger" style="width: 100%;">
+                                                <button type="submit" class="btn btn-danger artist-btn-w-full">
                                                     <i class="bx bx-times"></i> Decline
                                                 </button>
                                             </form>

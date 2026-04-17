@@ -5,6 +5,53 @@ class Artistdashboard
     use Controller;
     protected $payHereHelper = null;
 
+    private function buildSidebarActive(string $requestPath, string $requestedTab): array
+    {
+        $sidebarActive = [
+            'dashboard' => false,
+            'notifications' => false,
+            'vacancies' => false,
+            'classes' => false,
+            'showings' => false,
+        ];
+
+        if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
+            $sidebarActive['notifications'] = true;
+        } elseif (strpos($requestPath, '/artistdashboard/browse_vacancies') !== false) {
+            $sidebarActive['vacancies'] = true;
+        } elseif (strpos($requestPath, '/artistdashboard/classes') !== false) {
+            $sidebarActive['classes'] = true;
+        } elseif ($requestedTab === 'my-showings') {
+            $sidebarActive['showings'] = true;
+        } else {
+            $sidebarActive['dashboard'] = true;
+        }
+
+        return $sidebarActive;
+    }
+
+    private function resolveProfileImageSrc($artist): string
+    {
+        $fallback = ROOT . '/uploads/profile_images/user_profile.png';
+        if (!$artist || !is_object($artist)) {
+            return $fallback;
+        }
+
+        if (!empty($artist->profile_image)) {
+            $storedValue = str_replace('\\', '/', (string)$artist->profile_image);
+            if (strpos($storedValue, '/') !== false) {
+                return ROOT . '/' . ltrim($storedValue, '/');
+            }
+            return ROOT . '/uploads/profile_images/' . rawurlencode($storedValue);
+        }
+
+        if (!empty($artist->nic_photo)) {
+            return ROOT . '/' . ltrim(str_replace('\\', '/', (string)$artist->nic_photo), '/');
+        }
+
+        return $fallback;
+    }
+
     public function __construct()
     {
         try {
@@ -34,6 +81,7 @@ class Artistdashboard
         
         // Get artist profile data
         $data['user'] = $artist_model->get_artist_by_id($user_id);
+        $data['profileImageSrc'] = $this->resolveProfileImageSrc($data['user']);
         
         // Get dramas where user is the director (creator)
         $data['dramas_as_director'] = $drama_model->get_dramas_by_director($user_id);
@@ -89,6 +137,31 @@ class Artistdashboard
         $data['my_classes'] = $class_model ? $class_model->getClassesByCreator($user_id) : [];
         $data['available_classes'] = $class_model ? $class_model->getPublishedClasses($user_id) : [];
         $data['enrolled_classes'] = $class_model ? $class_model->getEnrolledClassesByUser($user_id) : [];
+
+        $requestPath = strtolower((string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? ''));
+        $requestedTab = strtolower(trim((string)($_GET['tab'] ?? '')));
+        $data['requestedTab'] = $requestedTab;
+        $data['sidebarActive'] = $this->buildSidebarActive($requestPath, $requestedTab);
+
+        $data['toastSuccessMessage'] = '';
+        if (!empty($_SESSION['success_message'])) {
+            $data['toastSuccessMessage'] = (string)$_SESSION['success_message'];
+            unset($_SESSION['success_message']);
+        }
+
+        $data['toastErrorMessage'] = '';
+        if (!empty($_SESSION['error_message'])) {
+            $data['toastErrorMessage'] = (string)$_SESSION['error_message'];
+            unset($_SESSION['error_message']);
+        }
+
+        $data['infoMessage'] = '';
+        $data['infoMessageType'] = 'info';
+        if (isset($_SESSION['message'])) {
+            $data['infoMessage'] = (string)$_SESSION['message'];
+            $data['infoMessageType'] = isset($_SESSION['message_type']) ? (string)$_SESSION['message_type'] : 'info';
+            unset($_SESSION['message'], $_SESSION['message_type']);
+        }
         
         // Count statistics
         $data['stats'] = [
@@ -462,6 +535,10 @@ class Artistdashboard
         
         // Get artist's role in this drama
         $data['my_role'] = $role_model ? $role_model->getArtistRoleInDrama($user_id, $drama_id) : null;
+
+        $artist_model = $this->getModel('M_artist');
+        $artistProfile = $artist_model ? $artist_model->get_artist_by_id($user_id) : null;
+        $data['profileImageSrc'] = $this->resolveProfileImageSrc($artistProfile);
         
         // Get schedule/rehearsal data from drama_schedules table
         $schedule_model = $this->getModel('M_schedule');
@@ -527,6 +604,10 @@ class Artistdashboard
 
         // Get artist's own role in this drama
         $data['my_role'] = $role_model ? $role_model->getArtistRoleInDrama($user_id, $drama_id) : null;
+        
+        $artist_model = $this->getModel('M_artist');
+        $artistProfile = $artist_model ? $artist_model->get_artist_by_id($user_id) : null;
+        $data['profileImageSrc'] = $this->resolveProfileImageSrc($artistProfile);
 
         $this->view('artist_event_detail', $data);
     }

@@ -26,7 +26,7 @@ $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
 $currentDirectorId = (int)($_SESSION['user_id'] ?? 0);
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$profileImageSrc = directorResolveProfileImageSrc();
 
 $publishableRoles = array_filter($roles, function ($role) {
     $status = strtolower($role->status ?? 'open');
