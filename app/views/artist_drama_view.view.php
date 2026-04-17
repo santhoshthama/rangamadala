@@ -29,29 +29,10 @@ if ($currentUser && !empty($currentUser->profile_image)) {
 </head>
 <body class="director-dashboard-page">
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <a href="<?=ROOT?>/artistdashboard" class="logo-link">
-                <img src="/Rangamadala/public/assets/IMAGES/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
-                <span class="logo-text">Rangamadala</span>
-            </a>
-        </div>
-        <ul class="menu">
-
-            <li class="active">
-                <a href="#">
-                    <i class="bx bx-film"></i>
-                    <span>Drama Details</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class="bx bx-bell"></i>
-                    <span>Notifications</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php
+    $artistSidebarActive = 'dashboard';
+    include __DIR__ . '/artist/_partials/sidebar.php';
+    ?>
 
     <!-- Main Content -->
     <main class="main--content">

@@ -265,7 +265,7 @@ if(isset($data) && is_array($data)) {
 
         <div class="header">
             <h1><i class="bx bx-certificate"></i> Register Drama with Certificate</h1>
-            <p>Step 1: Submit certificate details for admin approval. Step 2: Publish to audience from your dashboard.</p>
+            <p>Step 1: Submit certificate details for admin approval. <br> Step 2: Publish to audience from your dashboard.</p>
         </div>
 
         <?php if (isset($_SESSION['message'])): ?>

@@ -34,6 +34,7 @@ class Artistdashboard
         
         // Get artist profile data
         $data['user'] = $artist_model->get_artist_by_id($user_id);
+        $data['profileImageSrc'] = $this->buildProfileImageSrc($data['user'] ?? null);
         
         // Get dramas where user is the director (creator)
         $data['dramas_as_director'] = $drama_model->get_dramas_by_director($user_id);
@@ -82,6 +83,8 @@ class Artistdashboard
                 $data['show_requests_pending'][] = $showRequest;
             }
         }
+
+        $data = array_merge($data, $this->buildDashboardViewState($data['show_requests_accepted']));
         
         // Get total published vacancies count
         $data['total_published_vacancies'] = $role_model ? $role_model->countPublishedVacancies() : 0;
@@ -107,6 +110,147 @@ class Artistdashboard
         ];
         
         $this->view('artistdashboard', $data);
+    }
+
+    private function buildDashboardViewState(array $showRequestsAccepted): array
+    {
+        $requestPath = strtolower((string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? ''));
+        $requestedTab = strtolower(trim((string)($_GET['tab'] ?? '')));
+        $tabAliases = ['my-showings' => 'showings'];
+        $activeTab = $tabAliases[$requestedTab] ?? $requestedTab;
+        $allowedTabs = ['director', 'manager', 'actor', 'interviews', 'requests', 'showings'];
+        if (!in_array($activeTab, $allowedTabs, true)) {
+            $activeTab = 'director';
+        }
+
+        $requestedShowingsTab = strtolower(trim((string)($_GET['showings_tab'] ?? 'requests')));
+        $allowedShowingsTabs = ['requests', 'accepted', 'rejected'];
+        $activeShowingsTab = in_array($requestedShowingsTab, $allowedShowingsTabs, true) ? $requestedShowingsTab : 'requests';
+
+        $acceptedFilterDate = trim((string)($_GET['accepted_date'] ?? ''));
+        $acceptedFilterStartTime = trim((string)($_GET['accepted_start_time'] ?? ''));
+        $acceptedFilterEndTime = trim((string)($_GET['accepted_end_time'] ?? ''));
+        $selectedStartMins = $this->parseTimeToMinutes($acceptedFilterStartTime);
+        $selectedEndMins = $this->parseTimeToMinutes($acceptedFilterEndTime);
+
+        $filteredAcceptedShowRequests = [];
+        $acceptedSlotCounts = [];
+
+        foreach ($showRequestsAccepted as $acceptedShowRequest) {
+            $requestDetails = [];
+            if (!empty($acceptedShowRequest->request_details_json)) {
+                $decoded = json_decode((string)$acceptedShowRequest->request_details_json, true);
+                if (is_array($decoded)) {
+                    $requestDetails = $decoded;
+                }
+            }
+
+            $slotDate = trim((string)($requestDetails['show_date'] ?? ''));
+            $slotStart = trim((string)($requestDetails['show_time_start'] ?? ($requestDetails['show_time'] ?? '')));
+            $slotEnd = trim((string)($requestDetails['show_time_end'] ?? ''));
+
+            if ($slotDate !== '' && $slotStart !== '') {
+                $slotKey = $slotDate . '|' . $slotStart . '|' . $slotEnd;
+                if (!isset($acceptedSlotCounts[$slotKey])) {
+                    $acceptedSlotCounts[$slotKey] = 0;
+                }
+                $acceptedSlotCounts[$slotKey]++;
+            }
+
+            $dateMatches = ($acceptedFilterDate === '') || ($slotDate !== '' && $slotDate === $acceptedFilterDate);
+
+            $cardStartMins = $this->parseTimeToMinutes($slotStart);
+            $startMatches = ($selectedStartMins === null) || ($cardStartMins !== null && $cardStartMins === $selectedStartMins);
+
+            $cardEndMins = $this->parseTimeToMinutes($slotEnd);
+            $endMatches = ($selectedEndMins === null) || ($cardEndMins !== null && $cardEndMins === $selectedEndMins);
+
+            if ($dateMatches && $startMatches && $endMatches) {
+                $filteredAcceptedShowRequests[] = $acceptedShowRequest;
+            }
+        }
+
+        $sidebarActive = [
+            'dashboard' => false,
+            'notifications' => false,
+            'vacancies' => false,
+            'classes' => false,
+            'showings' => false,
+        ];
+
+        if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
+            $sidebarActive['notifications'] = true;
+        } elseif (strpos($requestPath, '/artistdashboard/browse_vacancies') !== false) {
+            $sidebarActive['vacancies'] = true;
+        } elseif (strpos($requestPath, '/artistdashboard/classes') !== false) {
+            $sidebarActive['classes'] = true;
+        } elseif ($activeTab === 'showings') {
+            $sidebarActive['showings'] = true;
+        } else {
+            $sidebarActive['dashboard'] = true;
+        }
+
+        return [
+            'activeTab' => $activeTab,
+            'activeShowingsTab' => $activeShowingsTab,
+            'acceptedFilterDate' => $acceptedFilterDate,
+            'acceptedFilterStartTime' => $acceptedFilterStartTime,
+            'acceptedFilterEndTime' => $acceptedFilterEndTime,
+            'showRequestsAcceptedList' => $showRequestsAccepted,
+            'filteredAcceptedShowRequests' => $filteredAcceptedShowRequests,
+            'acceptedSlotCounts' => $acceptedSlotCounts,
+            'sidebarActive' => $sidebarActive,
+        ];
+    }
+
+    private function buildProfileImageSrc($user): string
+    {
+        $default = ROOT . '/uploads/profile_images/user_profile.png';
+        if (!is_object($user) || empty($user->profile_image)) {
+            return $default;
+        }
+
+        $storedValue = str_replace('\\', '/', (string)$user->profile_image);
+        if (strpos($storedValue, '/') !== false) {
+            return ROOT . '/' . ltrim($storedValue, '/');
+        }
+
+        return ROOT . '/uploads/profile_images/' . rawurlencode($storedValue);
+    }
+
+    private function parseTimeToMinutes($value): ?int
+    {
+        $input = trim((string)$value);
+        if ($input === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d{1,2}):(\d{2})$/', $input, $matches)) {
+            $hh = (int)$matches[1];
+            $mm = (int)$matches[2];
+            if ($hh >= 0 && $hh <= 23 && $mm >= 0 && $mm <= 59) {
+                return ($hh * 60) + $mm;
+            }
+        }
+
+        if (preg_match('/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i', $input, $matches)) {
+            $hh = (int)$matches[1];
+            $mm = (int)$matches[2];
+            $meridiem = strtoupper($matches[3]);
+
+            if ($hh === 12) {
+                $hh = 0;
+            }
+            if ($meridiem === 'PM') {
+                $hh += 12;
+            }
+
+            if ($hh >= 0 && $hh <= 23 && $mm >= 0 && $mm <= 59) {
+                return ($hh * 60) + $mm;
+            }
+        }
+
+        return null;
     }
 
     public function browse_vacancies()
@@ -277,7 +421,7 @@ class Artistdashboard
     public function confirm_interview()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . ROOT . '/artistdashboard#actor');
+            header('Location: ' . ROOT . '/artistdashboard?tab=interviews');
             exit;
         }
 
@@ -293,7 +437,7 @@ class Artistdashboard
         if ($applicationId <= 0 || !in_array($response, ['confirm', 'decline'], true)) {
             $_SESSION['message'] = 'Invalid interview confirmation request.';
             $_SESSION['message_type'] = 'error';
-            header('Location: ' . ROOT . '/artistdashboard#actor');
+            header('Location: ' . ROOT . '/artistdashboard?tab=interviews');
             exit;
         }
 
@@ -301,7 +445,7 @@ class Artistdashboard
         if (!$role_model) {
             $_SESSION['message'] = 'Interview system is unavailable right now.';
             $_SESSION['message_type'] = 'error';
-            header('Location: ' . ROOT . '/artistdashboard#actor');
+            header('Location: ' . ROOT . '/artistdashboard?tab=interviews');
             exit;
         }
 
@@ -321,7 +465,7 @@ class Artistdashboard
             $_SESSION['message_type'] = 'error';
         }
 
-        header('Location: ' . ROOT . '/artistdashboard#actor');
+        header('Location: ' . ROOT . '/artistdashboard?tab=interviews');
         exit;
     }
     
@@ -388,7 +532,7 @@ class Artistdashboard
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . ROOT . '/artistdashboard#requests');
+            header('Location: ' . ROOT . '/artistdashboard?tab=showings&showings_tab=requests');
             exit;
         }
 
@@ -399,7 +543,7 @@ class Artistdashboard
         if ($request_id <= 0 || !in_array($response, ['accept', 'reject'], true)) {
             $_SESSION['message'] = 'Invalid show request response.';
             $_SESSION['message_type'] = 'error';
-            header('Location: ' . ROOT . '/artistdashboard#requests');
+            header('Location: ' . ROOT . '/artistdashboard?tab=showings&showings_tab=requests');
             exit;
         }
 
@@ -407,7 +551,7 @@ class Artistdashboard
         if (!$show_booking_model) {
             $_SESSION['message'] = 'Show request system is unavailable right now.';
             $_SESSION['message_type'] = 'error';
-            header('Location: ' . ROOT . '/artistdashboard#requests');
+            header('Location: ' . ROOT . '/artistdashboard?tab=showings&showings_tab=requests');
             exit;
         }
 
@@ -420,7 +564,7 @@ class Artistdashboard
 
         $_SESSION['message'] = $result['message'];
         $_SESSION['message_type'] = $result['success'] ? 'success' : 'error';
-        header('Location: ' . ROOT . '/artistdashboard#requests');
+        header('Location: ' . ROOT . '/artistdashboard?tab=showings&showings_tab=requests');
         exit;
     }
 

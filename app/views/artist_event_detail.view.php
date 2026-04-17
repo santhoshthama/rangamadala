@@ -84,45 +84,10 @@ if ($event) {
 </head>
 <body>
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <a href="<?= ROOT ?>/artistdashboard">
-                <img src="/Rangamadala/public/assets/images/logo.png" alt="Rangamadala Logo">
-            </a>    
-        </div>
-        <ul class="menu">
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="bx bx-arrow-left"></i>
-                    <span>Back to Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard/view_drama?drama_id=<?= (int)$dramaId ?>">
-                    <i class="bx bx-film"></i>
-                    <span>Drama Details</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="#">
-                    <i class="bx bx-calendar-alt"></i>
-                    <span>Event Details</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard/notifications">
-                    <i class="bx bx-bell"></i>
-                    <span>Notifications</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/profile">
-                    <i class="bx bx-user"></i>
-                    <span>Profile</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php
+    $artistSidebarActive = 'dashboard';
+    include __DIR__ . '/artist/_partials/sidebar.php';
+    ?>
 
     <!-- Main Content -->
     <main class="main--content">

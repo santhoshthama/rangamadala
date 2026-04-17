@@ -63,13 +63,10 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     </style>
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="logo"><h2><i class='bx bxs-theater'></i></h2></div>
-        <ul class="menu">
-            <li><a href="<?= ROOT ?>/artistdashboard"><i class="bx bxs-home"></i><span>Dashboard</span></a></li>
-            <li class="active"><a href="<?= ROOT ?>/artistdashboard/notifications"><i class="bx bxs-bell"></i><span>Notifications</span></a></li>
-        </ul>
-    </aside>
+    <?php
+    $artistSidebarActive = 'notifications';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <main class="main--content">
         <a href="<?= esc($backUrl) ?>" class="back-button"><i class="bx bx-arrow-left"></i>Back to Notifications</a>
