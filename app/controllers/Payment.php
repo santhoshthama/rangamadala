@@ -20,6 +20,16 @@ class Payment
         $this->serviceRequestModel = $this->getModel('M_service_request');
         $this->payHereHelper = new PayHereHelper();
     }
+
+    private function jsonResponse(array $payload, int $statusCode = 200): void
+    {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+        }
+        http_response_code($statusCode);
+        echo json_encode($payload);
+        exit;
+    }
     
     /**
      * Display checkout page
@@ -82,70 +92,81 @@ class Payment
      */
     public function createPayHerePayment()
     {
-        header('Content-Type: application/json');
-        
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-            exit;
-        }
-        
-        $requestId = $_POST['request_id'] ?? null;
-        $amount = $_POST['amount'] ?? null;
-        $type = $_POST['type'] ?? 'advance';
-        
-        if (!$requestId || !$amount) {
-            echo json_encode(['success' => false, 'error' => 'Invalid parameters']);
-            exit;
-        }
-        
-        $request = $this->serviceRequestModel->getRequestById($requestId);
-        if (!$request) {
-            echo json_encode(['success' => false, 'error' => 'Service request not found']);
-            exit;
-        }
-        
-        $userId = $_SESSION['user_id'];
-        
-        // Check if a pending PayHere payment already exists for this request and type
-        $existingPayment = $this->paymentModel->getPaymentByType($requestId, $type);
-        
-        if ($existingPayment && $existingPayment->payment_status === 'pending' && $existingPayment->payment_gateway === 'payhere') {
-            // Reuse existing pending payment
-            $paymentId = $existingPayment->id;
-            $order_id = $existingPayment->gateway_order_id;
-        } else {
-            // Generate order ID
-            $order_id = 'REQ-' . $requestId . '-' . $type . '-' . time();
-            
-            // Create PayHere payment
-            $paymentId = $this->paymentModel->createPayment([
-                'service_request_id' => $requestId,
-                'payment_type' => $type,
-                'amount' => $amount,
-                'payment_gateway' => 'payhere',
-                'payment_status' => 'pending',
-                'paid_by' => $userId,
-                'paid_to' => $request->provider_id ?? null,
-                'gateway_order_id' => $order_id,
-                'transaction_response' => json_encode(['source' => 'payhere_init'])
-            ]);
-            
-            if (!$paymentId) {
-                echo json_encode(['success' => false, 'error' => 'Unable to create payment']);
-                exit;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                $this->jsonResponse(['success' => false, 'error' => 'Invalid request method'], 405);
             }
+
+            if (!isset($_SESSION['user_id'])) {
+                $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 401);
+            }
+
+            $requestId = (int)($_POST['request_id'] ?? 0);
+            $rawAmount = $_POST['amount'] ?? null;
+            $amount = is_numeric($rawAmount) ? (float)$rawAmount : 0.0;
+            $type = trim((string)($_POST['type'] ?? 'advance'));
+
+            if ($requestId <= 0 || $amount <= 0) {
+                $this->jsonResponse(['success' => false, 'error' => 'Invalid parameters'], 400);
+            }
+
+            if (!in_array($type, ['advance', 'remaining', 'full'], true)) {
+                $type = 'advance';
+            }
+
+            $request = $this->serviceRequestModel->getRequestById($requestId);
+            if (!$request) {
+                $this->jsonResponse(['success' => false, 'error' => 'Service request not found'], 404);
+            }
+
+            $userId = (int)$_SESSION['user_id'];
+
+            // Check if a pending PayHere payment already exists for this request and type
+            $existingPayment = $this->paymentModel->getPaymentByType($requestId, $type);
+
+            if ($existingPayment && $existingPayment->payment_status === 'pending' && $existingPayment->payment_gateway === 'payhere') {
+                // Reuse existing pending payment
+                $paymentId = (int)$existingPayment->id;
+                $order_id = (string)$existingPayment->gateway_order_id;
+            } else {
+                // Generate order ID
+                $order_id = 'REQ-' . $requestId . '-' . $type . '-' . time();
+
+                // Create PayHere payment
+                $paymentId = $this->paymentModel->createPayment([
+                    'service_request_id' => $requestId,
+                    'payment_type' => $type,
+                    'amount' => $amount,
+                    'payment_gateway' => 'payhere',
+                    'payment_status' => 'pending',
+                    'paid_by' => $userId,
+                    'paid_to' => $request->provider_id ?? null,
+                    'gateway_order_id' => $order_id,
+                    'transaction_response' => json_encode(['source' => 'payhere_init'])
+                ]);
+
+                if (!$paymentId) {
+                    $this->jsonResponse(['success' => false, 'error' => 'Unable to create payment'], 500);
+                }
+            }
+
+            $formattedAmount = number_format($amount, 2, '.', '');
+
+            // Generate hash for PayHere
+            $hash = $this->payHereHelper->generateHash($order_id, $formattedAmount);
+
+            $this->jsonResponse([
+                'success' => true,
+                'order_id' => $order_id,
+                'hash' => $hash,
+                'payment_id' => $paymentId,
+                'amount' => $formattedAmount,
+                'type' => $type
+            ]);
+        } catch (Throwable $e) {
+            error_log('createPayHerePayment error: ' . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'error' => 'Unable to initialize payment'], 500);
         }
-        
-        // Generate hash for PayHere
-        $hash = $this->payHereHelper->generateHash($order_id, $amount);
-        
-        echo json_encode([
-            'success' => true,
-            'order_id' => $order_id,
-            'hash' => $hash,
-            'payment_id' => $paymentId
-        ]);
-        exit;
     }
 
     /**
@@ -446,49 +467,34 @@ class Payment
      */
     public function confirmCashPayment()
     {
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
         }
 
         if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
         $paymentId = $_POST['payment_id'] ?? null;
         if (!$paymentId) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing payment id']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing payment id'], 400);
         }
 
         $payment = $this->paymentModel->getPaymentById($paymentId);
         if (!$payment) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Payment not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Payment not found'], 404);
         }
 
         if (($payment->payment_gateway ?? '') !== 'cash') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid payment type']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid payment type'], 400);
         }
 
         if ((int)$payment->paid_to !== (int)$_SESSION['user_id']) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Not allowed for this payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not allowed for this payment'], 403);
         }
 
         if (($payment->payment_status ?? '') !== 'pending') {
-            echo json_encode(['success' => true, 'message' => 'Payment already confirmed']);
-            return;
+            $this->jsonResponse(['success' => true, 'message' => 'Payment already confirmed']);
         }
 
         $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
@@ -505,9 +511,7 @@ class Payment
         );
 
         if (!$ok) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to confirm payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Failed to confirm payment'], 500);
         }
 
         $this->updateServiceRequestPaymentStatus($payment->service_request_id);
@@ -524,7 +528,7 @@ class Payment
             );
         }
 
-        echo json_encode(['success' => true]);
+        $this->jsonResponse(['success' => true]);
     }
 
     /**
@@ -532,49 +536,34 @@ class Payment
      */
     public function confirmBankPayment()
     {
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
         }
 
         if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
         $paymentId = $_POST['payment_id'] ?? null;
         if (!$paymentId) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing payment id']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing payment id'], 400);
         }
 
         $payment = $this->paymentModel->getPaymentById($paymentId);
         if (!$payment) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Payment not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Payment not found'], 404);
         }
 
         if (($payment->payment_gateway ?? '') !== 'bank_transfer') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid payment type']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Invalid payment type'], 400);
         }
 
         if ((int)$payment->paid_to !== (int)$_SESSION['user_id']) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Not allowed for this payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not allowed for this payment'], 403);
         }
 
         if (($payment->payment_status ?? '') !== 'pending') {
-            echo json_encode(['success' => true, 'message' => 'Payment already confirmed']);
-            return;
+            $this->jsonResponse(['success' => true, 'message' => 'Payment already confirmed']);
         }
 
         $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
@@ -591,9 +580,7 @@ class Payment
         );
 
         if (!$ok) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to confirm payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Failed to confirm payment'], 500);
         }
 
         $this->updateServiceRequestPaymentStatus($payment->service_request_id);
@@ -610,7 +597,7 @@ class Payment
             );
         }
 
-        echo json_encode(['success' => true]);
+        $this->jsonResponse(['success' => true]);
     }
 
     /**
@@ -618,58 +605,41 @@ class Payment
      */
     public function rejectManualPayment()
     {
-        header('Content-Type: application/json');
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Method not allowed'], 405);
         }
 
         if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'service_provider') {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
         $paymentId = $_POST['payment_id'] ?? null;
         $reason = trim((string)($_POST['reason'] ?? ''));
 
         if (!$paymentId) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing payment id']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Missing payment id'], 400);
         }
 
         if ($reason === '') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Reason is required']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Reason is required'], 400);
         }
 
         $payment = $this->paymentModel->getPaymentById($paymentId);
         if (!$payment) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Payment not found']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Payment not found'], 404);
         }
 
         $gateway = $payment->payment_gateway ?? '';
         if (!in_array($gateway, ['cash', 'bank_transfer'], true)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Only cash or bank transfer can be rejected']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Only cash or bank transfer can be rejected'], 400);
         }
 
         if ((int)$payment->paid_to !== (int)$_SESSION['user_id']) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Not allowed for this payment']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Not allowed for this payment'], 403);
         }
 
         if (($payment->payment_status ?? '') !== 'pending') {
-            echo json_encode(['success' => true, 'message' => 'Payment is already finalized']);
-            return;
+            $this->jsonResponse(['success' => true, 'message' => 'Payment is already finalized']);
         }
 
         $transactionData = $payment->transaction_response ? json_decode($payment->transaction_response, true) : [];
@@ -689,9 +659,7 @@ class Payment
         );
 
         if (!$ok) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Failed to update verification status']);
-            return;
+            $this->jsonResponse(['success' => false, 'error' => 'Failed to update verification status'], 500);
         }
 
         $request = $this->serviceRequestModel->getRequestById($payment->service_request_id);
@@ -706,7 +674,7 @@ class Payment
             );
         }
 
-        echo json_encode(['success' => true]);
+        $this->jsonResponse(['success' => true]);
     }
     
     /**

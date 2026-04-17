@@ -98,7 +98,7 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">Phone Number <span class="required">*</span></label>
-                  <input type="tel" name="phone" class="form-input<?= $fieldHasError('phone') ? ' input-error' : '' ?>" value="<?= htmlspecialchars($formData['phone'] ?? '') ?>" required>
+                  <input type="tel" name="phone" class="form-input<?= $fieldHasError('phone') ? ' input-error' : '' ?>" value="<?= htmlspecialchars($formData['phone'] ?? '') ?>" pattern="^\+?[0-9\s\-\(\)]{10,20}$" title="Enter a valid phone number (10-15 digits, optional +, spaces, dashes, or parentheses)." inputmode="tel" required>
                   <?php if ($fieldHasError('phone')): ?><div class="error-text"><?= htmlspecialchars($fieldError('phone')) ?></div><?php endif; ?>
                 </div>
               </div>
@@ -878,9 +878,20 @@
       if (currentPage === 1) {
         const password = document.querySelector('input[name="password"]').value;
         const confirmPassword = document.querySelector('input[name="confirm_password"]').value;
+        const phoneInput = document.querySelector('input[name="phone"]');
         if (password !== confirmPassword) {
           alert('Passwords do not match. Please check and try again.');
           return false;
+        }
+
+        if (phoneInput) {
+          const normalizedPhone = phoneInput.value.replace(/[\s\-\(\)]/g, '');
+          const phonePattern = /^\+?[0-9]{10,15}$/;
+          if (!phonePattern.test(normalizedPhone)) {
+            alert('Enter a valid phone number (10-15 digits, optional +).');
+            phoneInput.focus();
+            return false;
+          }
         }
       }
 

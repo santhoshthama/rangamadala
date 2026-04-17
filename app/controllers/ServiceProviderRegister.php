@@ -30,6 +30,11 @@ class ServiceProviderRegister
             }
             if (empty($phone)) {
                 $errors[] = "Phone number is required.";
+            } else {
+                $normalizedPhone = preg_replace('/[\s\-\(\)]/', '', $phone);
+                if (!preg_match('/^\+?[0-9]{10,15}$/', $normalizedPhone)) {
+                    $errors[] = "Phone number must contain only digits and may start with + (10-15 digits).";
+                }
             }
             if (!$nic_photo_front) {
                 $errors[] = "NIC front photo is required.";
@@ -139,6 +144,11 @@ class ServiceProviderRegister
         }
         if ($provider['phone'] === '') {
             $addFieldError('phone', 'Phone number is required.');
+        } else {
+            $normalizedPhone = preg_replace('/[\s\-\(\)]/', '', $provider['phone']);
+            if (!preg_match('/^\+?[0-9]{10,15}$/', $normalizedPhone)) {
+                $addFieldError('phone', 'Phone number must contain only digits and may start with + (10-15 digits).');
+            }
         }
         if ($provider['years_experience'] === '') {
             $addFieldError('years_experience', 'Years of experience is required.');
