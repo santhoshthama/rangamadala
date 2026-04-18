@@ -4,19 +4,9 @@ if(isset($data) && is_array($data)) {
     extract($data);
 }
 
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-
-$profileImageSrc = ROOT . '/uploads/profile_images/user_profile.png';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-}
+$profileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
+    ? $profileImageSrc
+    : ROOT . '/uploads/profile_images/user_profile.png';
 ?>
 <!DOCTYPE html>
 <html lang="en">

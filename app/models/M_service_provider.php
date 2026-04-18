@@ -46,12 +46,37 @@ class M_service_provider extends M_signup {
     }
 
     public function getProviderById($user_id) {
+        $usersHasYears = $this->columnExists('users', 'years_experience');
+        $serviceProviderHasYears = $this->columnExists('serviceprovider', 'years_experience');
+        $usersHasBio = $this->columnExists('users', 'bio');
+        $serviceProviderHasSummary = $this->columnExists('serviceprovider', 'professional_summary');
+
+        if ($usersHasYears && $serviceProviderHasYears) {
+            $yearsExpr = 'COALESCE(sp.years_experience, u.years_experience)';
+        } elseif ($serviceProviderHasYears) {
+            $yearsExpr = 'sp.years_experience';
+        } elseif ($usersHasYears) {
+            $yearsExpr = 'u.years_experience';
+        } else {
+            $yearsExpr = 'NULL';
+        }
+
+        if ($usersHasBio && $serviceProviderHasSummary) {
+            $summaryExpr = "COALESCE(NULLIF(u.bio, ''), sp.professional_summary)";
+        } elseif ($usersHasBio) {
+            $summaryExpr = 'u.bio';
+        } elseif ($serviceProviderHasSummary) {
+            $summaryExpr = 'sp.professional_summary';
+        } else {
+            $summaryExpr = 'NULL';
+        }
+
         $this->db->query("SELECT
                             sp.user_id,
                             sp.professional_title,
                             sp.location,
                             sp.social_media_link,
-                            u.years_experience,
+                            {$yearsExpr} AS years_experience,
                             sp.availability,
                             sp.availability_notes,
                             sp.created_at,
@@ -63,7 +88,7 @@ class M_service_provider extends M_signup {
                             u.nic_photo,
                             u.nic_photo_back,
                             u.profile_image,
-                            u.bio AS professional_summary
+                            {$summaryExpr} AS professional_summary
                           FROM serviceprovider sp
                           INNER JOIN users u ON u.id = sp.user_id
                           WHERE sp.user_id = :user_id");
@@ -668,32 +693,56 @@ class M_service_provider extends M_signup {
         try {
             $this->db->beginTransaction();
 
-            $this->db->query("UPDATE users SET
+            $usersHasBio = $this->columnExists('users', 'bio');
+            $serviceProviderHasYears = $this->columnExists('serviceprovider', 'years_experience');
+            $serviceProviderHasSummary = $this->columnExists('serviceprovider', 'professional_summary');
+
+            $usersUpdateSql = "UPDATE users SET
                              full_name = :full_name,
                              email = :email,
-                             phone = :phone,
-                             bio = :bio
-                             WHERE id = :user_id AND role = 'service_provider'");
+                             phone = :phone";
+            if ($usersHasBio) {
+                $usersUpdateSql .= ", bio = :bio";
+            }
+            $usersUpdateSql .= "
+                             WHERE id = :user_id AND role = 'service_provider'";
+
+            $this->db->query($usersUpdateSql);
             $this->db->bind(':full_name', $full_name);
             $this->db->bind(':email', $email);
             $this->db->bind(':phone', $phone);
-            $this->db->bind(':bio', $professional_summary);
+            if ($usersHasBio) {
+                $this->db->bind(':bio', $professional_summary);
+            }
             $this->db->bind(':user_id', $provider_id);
             $this->db->execute();
 
-            $this->db->query("UPDATE serviceprovider SET
+            $serviceProviderUpdateSql = "UPDATE serviceprovider SET
                              professional_title = :professional_title,
                              location = :location,
                              social_media_link = :social_media_link,
-                             years_experience = :years_experience,
                              availability = :availability,
-                             availability_notes = :availability_notes
-                             WHERE user_id = :user_id");
+                             availability_notes = :availability_notes";
+            if ($serviceProviderHasYears) {
+                $serviceProviderUpdateSql .= ", years_experience = :years_experience";
+            }
+            if ($serviceProviderHasSummary) {
+                $serviceProviderUpdateSql .= ", professional_summary = :professional_summary";
+            }
+            $serviceProviderUpdateSql .= "
+                             WHERE user_id = :user_id";
+
+            $this->db->query($serviceProviderUpdateSql);
             $this->db->bind(':professional_title', $professional_title);
             $this->db->bind(':location', $location);
             $this->db->bind(':social_media_link', $website);
-            $this->db->bind(':years_experience', $years_experience);
-            $this->db->bind(':availability', $availability);
+            if ($serviceProviderHasYears) {
+                $this->db->bind(':years_experience', $years_experience);
+            }
+            if ($serviceProviderHasSummary) {
+                $this->db->bind(':professional_summary', $professional_summary);
+            }
+            $this->db->bind(':availability', (int)$availability);
             $this->db->bind(':availability_notes', $availability_notes);
             $this->db->bind(':user_id', $provider_id);
             $this->db->execute();

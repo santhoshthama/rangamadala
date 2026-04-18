@@ -7,7 +7,8 @@ if (!isset($drama) && isset($data['drama'])) {
     $drama = $data['drama'];
 }
 
-$dramaId = isset($drama->id) ? (int)$drama->id : (isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0);
+$dramaId = isset($drama->id) ? (int)$drama->id : 0;
+$flash = isset($flash) && is_array($flash) ? $flash : null;
 
 $formValues = [
     'drama_name' => $form_data['drama_name'] ?? ($drama->drama_name ?? ''),
@@ -38,7 +39,7 @@ if ($publishFormValues['showing_prices'] !== '') {
 $isPublished = !empty($drama->is_published);
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$profileImageSrc = directorResolveProfileImageSrc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -126,12 +127,8 @@ $profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 
         <!-- Drama Information -->
         <div class="content">
             <div class="container" style="max-width: 900px;">
-                <?php if (isset($_SESSION['message'])): ?>
-                    <div class="message <?= $_SESSION['message_type'] ?? 'info' ?>">
-                        <i class="bx bx-<?= ($_SESSION['message_type'] ?? '') === 'success' ? 'check-circle' : 'exclamation-circle' ?>"></i>
-                        <?= esc($_SESSION['message']) ?>
-                    </div>
-                    <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+                <?php if (!empty($flash)): ?>
+                    <?php include APPROOT . '/views/_partials/flash.php'; ?>
                 <?php endif; ?>
 
                 <form id="dramaDetailsForm">

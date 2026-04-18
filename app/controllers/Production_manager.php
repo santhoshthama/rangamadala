@@ -52,18 +52,54 @@ class Production_manager{
         
         $data = [
             'drama' => $drama,
+            'dramaId' => (int)$drama->id,
             'services' => $allServices,
             'schedules' => $schedules,
             'totalBudget' => $totalBudget,
             'budgetUsed' => $budgetUsed,
+            'profileImageSrc' => $this->resolveCurrentUserProfileImageSrc(),
         ];
         
         $this->view('production_manager/dashboard', $data);
     }
 
+    private function resolveCurrentUserProfileImageSrc(): string
+    {
+        $fallback = ROOT . '/assets/images/default-avatar.jpg';
+        $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        if ($userId <= 0) {
+            return $fallback;
+        }
+
+        $profileModel = $this->getModel('M_universal_profile');
+        if (!$profileModel || !method_exists($profileModel, 'getUserById')) {
+            return $fallback;
+        }
+
+        $currentUser = $profileModel->getUserById($userId);
+        if (!$currentUser) {
+            return $fallback;
+        }
+
+        if (!empty($currentUser->profile_image)) {
+            $imageValue = str_replace('\\', '/', (string)$currentUser->profile_image);
+            if (strpos($imageValue, '/') !== false) {
+                return ROOT . '/' . ltrim($imageValue, '/');
+            }
+            return ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
+        }
+
+        if (!empty($currentUser->nic_photo)) {
+            return ROOT . '/' . ltrim(str_replace('\\', '/', (string)$currentUser->nic_photo), '/');
+        }
+
+        return $fallback;
+    }
+
     public function manage_services()
     {
         $drama = $this->authorizeDrama();
+        $dramaId = (int)($drama->id ?? 0);
         
         // Get service requests for this drama
         $serviceModel = $this->getModel('M_service_request');
@@ -117,17 +153,179 @@ class Production_manager{
         // Get drama services configuration from DB
         $dramaServicesModel = $this->getModel('M_drama_services');
         $dramaServices = $dramaServicesModel ? $dramaServicesModel->getServicesByDrama($drama->id) : [];
+
+        $viewData = $this->buildManageServicesViewData(
+            is_array($services) ? $services : [],
+            is_array($dramaServices) ? $dramaServices : [],
+            $dramaId
+        );
+
+        $serviceMissing = (bool)$this->getQueryParam('service_missing', false);
+        $prefillService = trim((string)$this->getQueryParam('prefill_service', ''));
+        $showAddModal = (bool)$this->getQueryParam('show_add_modal', false);
+        $returnUrl = trim((string)$this->getQueryParam('return_url', ''));
+        if ($returnUrl !== '' && strpos($returnUrl, ROOT) !== 0 && (!isset($returnUrl[0]) || $returnUrl[0] !== '/')) {
+            $returnUrl = '';
+        }
         
         $data = [
             'drama' => $drama,
             'services' => $services,
             'dramaServices' => $dramaServices,
+            'dramaId' => $dramaId,
+            'serviceMissing' => $serviceMissing,
+            'prefillService' => $prefillService,
+            'showAddModal' => $showAddModal,
+            'returnUrl' => $returnUrl,
             'confirmedCount' => $confirmedCount,
             'pendingCount' => $pendingCount,
             'totalCount' => count($services),
+            'groupedServiceCards' => $viewData['groupedServiceCards'],
+            'allServiceTypes' => $viewData['allServiceTypes'],
+            'existingServiceTypes' => $viewData['existingServiceTypes'],
         ];
         
         $this->view('production_manager/manage_services', $data);
+    }
+
+    private function buildManageServicesViewData(array $services, array $dramaServices, int $dramaId): array
+    {
+        $allServiceTypes = [
+            'Theater Production',
+            'Lighting Design',
+            'Sound Systems',
+            'Video Production',
+            'Set Design',
+            'Costume Design',
+            'Other',
+            'Makeup & Hair',
+        ];
+
+        $existingServiceTypes = [];
+        $serviceMetaMap = [];
+        foreach ($dramaServices as $dramaSvc) {
+            $type = trim((string)($dramaSvc->service_type ?? ''));
+            if ($type === '') {
+                continue;
+            }
+            if (!in_array($type, $existingServiceTypes, true)) {
+                $existingServiceTypes[] = $type;
+            }
+            $serviceMetaMap[$type] = [
+                'budget' => $dramaSvc->budget ?? null,
+                'description' => $dramaSvc->description ?? null,
+            ];
+        }
+
+        $grouped = [];
+        foreach ($services as $srv) {
+            if (!is_object($srv)) {
+                continue;
+            }
+
+            $type = trim((string)($srv->service_type ?? ''));
+            if ($type === '') {
+                $type = 'Other';
+            }
+
+            if (!isset($grouped[$type])) {
+                $grouped[$type] = [];
+            }
+
+            $grouped[$type][] = $this->enrichServiceForManageServicesView($srv);
+        }
+
+        foreach ($existingServiceTypes as $type) {
+            if (!isset($grouped[$type])) {
+                $grouped[$type] = [];
+            }
+        }
+
+        $groupedServiceCards = [];
+        foreach ($grouped as $type => $items) {
+            $groupedServiceCards[] = [
+                'type' => $type,
+                'items' => $items,
+                'count' => count($items),
+                'canRemove' => in_array($type, $existingServiceTypes, true),
+                'meta' => $serviceMetaMap[$type] ?? null,
+                'browseUrl' => ROOT . '/BrowseServiceProviders?drama_id=' . $dramaId . '&service_type=' . urlencode($type),
+                'removeUrl' => ROOT . '/production_manager/save_required_services?drama_id=' . $dramaId,
+            ];
+        }
+
+        return [
+            'groupedServiceCards' => $groupedServiceCards,
+            'allServiceTypes' => $allServiceTypes,
+            'existingServiceTypes' => $existingServiceTypes,
+        ];
+    }
+
+    private function enrichServiceForManageServicesView(object $service): object
+    {
+        $status = strtolower((string)($service->status ?? 'pending'));
+        $statusText = ucfirst($status);
+        $statusClass = 'status-badge status-' . $status;
+        $hideGenericBadge = false;
+
+        $serviceDetails = [];
+        if (!empty($service->service_details_json)) {
+            $decoded = json_decode((string)$service->service_details_json, true);
+            if (is_array($decoded)) {
+                $serviceDetails = $decoded;
+            }
+        }
+        $providerResponse = is_array($serviceDetails['provider_response'] ?? null) ? $serviceDetails['provider_response'] : [];
+
+        if ($status === 'provider_responded') {
+            $advanceDueDate = $providerResponse['advance_due_date'] ?? null;
+            $needsAdvance = ($providerResponse['needs_advance'] ?? false) === true
+                || ($providerResponse['needs_advance'] ?? false) === 'true'
+                || (int)($providerResponse['needs_advance'] ?? 0) === 1;
+
+            if (!empty($advanceDueDate) && $needsAdvance) {
+                $dueDate = new DateTime((string)$advanceDueDate);
+                $today = new DateTime();
+                $today->setTime(0, 0, 0);
+                $dueDate->setTime(0, 0, 0);
+                if ($dueDate < $today) {
+                    $statusText = 'Payment date overdue';
+                    $statusClass .= ' status-overdue';
+                }
+            }
+        }
+
+        if ($status === 'completed') {
+            $paymentGateway = (string)($service->payment_gateway ?? '');
+            $advancePaymentStatus = strtolower((string)($service->advance_payment_status ?? ''));
+            $hasPendingCashBankPayment = in_array($paymentGateway, ['cash', 'bank_transfer'], true)
+                && $advancePaymentStatus === 'pending';
+            if ($hasPendingCashBankPayment) {
+                $hideGenericBadge = true;
+            }
+        }
+
+        if ($status === 'completed_paid') {
+            $hideGenericBadge = true;
+        }
+
+        $dateLabel = '';
+        if (!empty($service->service_date)) {
+            $dateLabel = 'Service Date: ' . (string)$service->service_date;
+        } elseif (!empty($service->start_date) || !empty($service->end_date)) {
+            $dateLabel = 'Schedule: ' . (string)($service->start_date ?? '-') . ' to ' . (string)($service->end_date ?? '-');
+        }
+
+        $service->view_status = $status;
+        $service->view_status_text = $statusText;
+        $service->view_status_class = $statusClass;
+        $service->view_hide_generic_badge = $hideGenericBadge;
+        $service->view_date_label = $dateLabel;
+        $service->view_budget = isset($service->budget) && $service->budget !== null ? number_format((float)$service->budget, 2) : null;
+        $service->view_provider_name = (string)($service->provider_name ?? 'Provider');
+        $service->view_provider_response = $providerResponse;
+
+        return $service;
     }
 
     public function browse_services()
@@ -184,6 +382,7 @@ class Production_manager{
         
         $data = [
             'drama' => $drama,
+            'dramaId' => (int)$drama->id,
             'budgetItems' => $budgetItems,
             'totalBudget' => $totalBudget,
             'totalSpent' => $totalSpent,
@@ -641,6 +840,7 @@ class Production_manager{
         
         $data = [
             'drama' => $drama,
+            'dramaId' => (int)$drama->id,
             'schedules' => $mergedSchedules,
             'serviceRequests' => is_array($services) ? $services : [],
             'upcomingCount' => $upcomingCount,

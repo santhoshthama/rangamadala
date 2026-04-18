@@ -21,21 +21,17 @@ $roleStatuses = [
     'closed' => 'Closed',
 ];
 
-$dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
+$dramaId = isset($dramaId) ? (int)$dramaId : (isset($drama->id) ? (int)$drama->id : 0);
 $dramaName = isset($drama->drama_name) ? $drama->drama_name : 'Drama';
-$currentDirectorId = (int)($_SESSION['user_id'] ?? 0);
+$currentDirectorId = isset($currentDirectorId) ? (int)$currentDirectorId : 0;
+$flash = isset($flash) && is_array($flash) ? $flash : null;
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$profileImageSrc = directorResolveProfileImageSrc();
 
-$publishableRoles = array_filter($roles, function ($role) {
-    $status = strtolower($role->status ?? 'open');
-    return $status !== 'filled';
-});
+$publishableRoles = isset($publishableRoles) && is_array($publishableRoles) ? $publishableRoles : [];
 
-$publishedRoleIds = array_map(function ($role) {
-    return (int)$role->id;
-}, $publishedRoles);
+$publishedRoleIds = isset($publishedRoleIds) && is_array($publishedRoleIds) ? $publishedRoleIds : [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -400,12 +396,8 @@ $publishedRoleIds = array_map(function ($role) {
             </div>
         </div>
 
-        <?php if (isset($_SESSION['message'])): ?>
-            <div class="message <?= $_SESSION['message_type'] ?? 'info' ?>">
-                <i class="bx bx-<?= ($_SESSION['message_type'] ?? '') === 'success' ? 'check-circle' : (($_SESSION['message_type'] ?? '') === 'error' ? 'exclamation-circle' : 'info-circle') ?>"></i>
-                <?= esc($_SESSION['message']) ?>
-            </div>
-            <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+        <?php if (!empty($flash)): ?>
+            <?php include APPROOT . '/views/_partials/flash.php'; ?>
         <?php endif; ?>
 
         <?php if ($roleStats): ?>

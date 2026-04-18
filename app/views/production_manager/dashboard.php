@@ -1,20 +1,8 @@
 <?php
-// Get current user profile image
-$userModel = new M_universal_profile();
-$currentUser = $userModel->getUserById($_SESSION['user_id']);
-$dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1);
-
-$profileImageSrc = ROOT . '/assets/images/default-avatar.jpg';
-if ($currentUser && !empty($currentUser->profile_image)) {
-    $imageValue = str_replace('\\', '/', $currentUser->profile_image);
-    if (strpos($imageValue, '/') !== false) {
-        $profileImageSrc = ROOT . '/' . ltrim($imageValue, '/');
-    } else {
-        $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
-    }
-} elseif ($currentUser && !empty($currentUser->nic_photo)) {
-    $profileImageSrc = ROOT . '/' . ltrim(str_replace('\\', '/', $currentUser->nic_photo), '/');
-}
+$dramaId = isset($dramaId) ? (int)$dramaId : (int)($drama->id ?? 0);
+$profileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
+    ? $profileImageSrc
+    : ROOT . '/assets/images/default-avatar.jpg';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -56,6 +44,12 @@ if ($currentUser && !empty($currentUser->profile_image)) {
                 <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>">
                     <i class="bx bx-calendar-alt"></i>
                     <span>Service Schedule</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?= ROOT ?>/artistdashboard/calendar">
+                    <i class="bx bx-calendar-week"></i>
+                    <span>Artist Calendar</span>
                 </a>
             </li>
             <li>

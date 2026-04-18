@@ -4,12 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Service</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_register.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_profile.css">
+    <style>
+        /* Page-only light color overrides */
+        body {
+            background: #f5f7fb !important;
+            background-image: none !important;
+        }
+
+        .container {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .register-card {
+            background: #ffffff !important;
+            border: 1px solid #e6d6b2 !important;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .register-header {
+            background: linear-gradient(135deg, #b8860b 0%, #daa520 100%) !important;
+        }
+
+        .register-header h2,
+        .register-header p {
+            color: #ffffff !important;
+        }
+
+        .register-content {
+            background: #fffdf8 !important;
+        }
+
+        .section-title {
+            color: #8a6608 !important;
+            border-bottom-color: #d8b24c !important;
+        }
+
+        .service-item {
+            background: #fffaf0 !important;
+            border: 1px solid #e8d6ac !important;
+        }
+
+        .service-item:hover {
+            background: #fff6e4 !important;
+            border-color: #d7b04a !important;
+        }
+
+        .service-name,
+        .form-label {
+            color: #5f4b28 !important;
+        }
+
+        .form-input,
+        .textarea,
+        .service-rate {
+            background: #ffffff !important;
+            border-color: #e5d7b9 !important;
+            color: #3d3122 !important;
+        }
+
+        .form-input:focus,
+        .textarea:focus,
+        .service-rate:focus {
+            border-color: #d4af37 !important;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12) !important;
+        }
+
+        .error-modal {
+            background: #fff9ee !important;
+            border: 1px solid #ecd7a5 !important;
+            border-left: 4px solid #d4af37 !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .error-modal-icon {
+            background: #fdf1cf !important;
+            color: #8a6608 !important;
+        }
+
+        .error-modal h3,
+        .error-list li,
+        .error-text {
+            color: #6b4f06 !important;
+        }
+    </style>
 </head>
-<body class="service-provider-add-service-page">
+<body>
     <div class="container">
         <button class="back-button" onclick="window.location.href='<?= ROOT ?>/ServiceProviderProfile/index?id=<?= htmlspecialchars($data['provider_id'] ?? '') ?>'">
             <span>←</span>
@@ -699,22 +782,9 @@
                 const rate = document.getElementById(`service${idx}Rate`);
                 const desc = document.getElementById(`service${idx}Desc`);
                 const details = document.getElementById(`service${idx}Details`);
-                const item = checkbox.closest('.service-item');
-                if (item) {
-                    item.classList.toggle('service-selected', visible);
-                }
-
-                [rate, desc, details].forEach((el) => {
-                    if (!el) return;
-                    el.style.display = visible ? '' : 'none';
-                    if (visible) {
-                        el.classList.remove('service-visible');
-                        void el.offsetWidth;
-                        el.classList.add('service-visible');
-                    } else {
-                        el.classList.remove('service-visible');
-                    }
-                });
+                if (rate) rate.style.display = visible ? '' : 'none';
+                if (desc) desc.style.display = visible ? '' : 'none';
+                if (details) details.style.display = visible ? '' : 'none';
             }
             checkbox.addEventListener('change', updateVisibility);
             updateVisibility();

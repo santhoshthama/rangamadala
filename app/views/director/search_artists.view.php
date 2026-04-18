@@ -7,12 +7,13 @@ $role = $role ?? null;
 $artists = isset($artists) && is_array($artists) ? $artists : [];
 $searchTerm = isset($searchTerm) ? (string)$searchTerm : '';
 
-$dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
-$roleId = isset($role->id) ? (int)$role->id : (int)($_GET['role_id'] ?? 0);
+$dramaId = isset($dramaId) ? (int)$dramaId : (isset($drama->id) ? (int)$drama->id : 0);
+$roleId = isset($roleId) ? (int)$roleId : (isset($role->id) ? (int)$role->id : 0);
 $roleName = $role->role_name ?? 'Role';
+$flash = isset($flash) && is_array($flash) ? $flash : null;
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$profileImageSrc = directorResolveProfileImageSrc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -110,12 +111,8 @@ $profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 
     <main class="main--content">
         <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>" class="back-button"><i class="bx bx-arrow-left"></i>Back to Manage Roles</a>
 
-        <?php if (isset($_SESSION['message'])): ?>
-            <div class="message <?= $_SESSION['message_type'] ?? 'info' ?>" style="padding: 16px; border-radius: 12px; margin-bottom: 20px; background: <?= ($_SESSION['message_type'] ?? '') === 'success' ? '#d4edda' : (($_SESSION['message_type'] ?? '') === 'error' ? '#f8d7da' : '#d1ecf1') ?>; color: <?= ($_SESSION['message_type'] ?? '') === 'success' ? '#155724' : (($_SESSION['message_type'] ?? '') === 'error' ? '#721c24' : '#0c5460') ?>; border: 1px solid <?= ($_SESSION['message_type'] ?? '') === 'success' ? '#c3e6cb' : (($_SESSION['message_type'] ?? '') === 'error' ? '#f5c6cb' : '#bee5eb') ?>;">
-                <i class="bx bx-<?= ($_SESSION['message_type'] ?? '') === 'success' ? 'check-circle' : (($_SESSION['message_type'] ?? '') === 'error' ? 'exclamation-circle' : 'info-circle') ?>"></i>
-                <?= esc($_SESSION['message']) ?>
-            </div>
-            <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+        <?php if (!empty($flash)): ?>
+            <?php include APPROOT . '/views/_partials/flash.php'; ?>
         <?php endif; ?>
 
         <div class="header--wrapper">

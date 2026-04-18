@@ -70,7 +70,7 @@
 
                         <div class="form-group">
                             <label class="form-label">Years of Experience <span class="required">*</span></label>
-                            <input type="number" name="years_experience" class="form-input" 
+                            <input type="number" name="years_experience" class="form-input" min="0" step="1"
                                 value="<?php echo htmlspecialchars($data['provider']->years_experience); ?>" required>
                         </div>
 

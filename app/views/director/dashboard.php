@@ -7,7 +7,7 @@ if (!isset($drama) && isset($data['drama'])) {
     $drama = $data['drama'];
 }
 
-$dramaId = isset($drama->id) ? (int)$drama->id : (isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0);
+$dramaId = isset($drama->id) ? (int)$drama->id : 0;
 $dashboardStats = isset($dashboardStats) && is_array($dashboardStats) ? $dashboardStats : [];
 
 $totalRoles = (int)($dashboardStats['total_roles'] ?? 0);
@@ -17,7 +17,7 @@ $productionManagersCount = (int)($dashboardStats['production_managers'] ?? 0);
 $pendingApplicationsCount = (int)($dashboardStats['pending_applications'] ?? 0);
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$profileImageSrc = directorResolveProfileImageSrc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -111,7 +111,7 @@ $profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 
                     <div class="card-section drama-overview-card">
                         <h3>
                             <span>Drama Overview</span>
-                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary btn-compact">
+                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>" class="btn btn-primary btn-compact">
                                 <i class="bx bx-eye"></i>
                                 View Details
                             </a>
@@ -165,7 +165,7 @@ $profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 
                         <?php if (isset($productionManager) && $productionManager): ?>
                             <div class="service-info-item">
                                 <span class="service-info-label"><i class="bx bx-user"></i> Production Manager</span>
-                                <span class="service-info-value"><?= esc($productionManager->manager_name ?? 'N/A') ?></span>
+                                <span class="service-info-value"><?= esc((is_object($productionManager) && isset($productionManager->manager_name)) ? (string)$productionManager->manager_name : 'N/A') ?></span>
                             </div>
                         <?php endif; ?>
                         <div class="dashboard-card-action">
