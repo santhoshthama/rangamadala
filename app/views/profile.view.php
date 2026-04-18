@@ -396,14 +396,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
                         <strong><?= $user && isset($user->years_experience) && $user->years_experience !== null ? esc($user->years_experience) . ' years' : 'Not added yet' ?></strong>
                     </div>
 
-                    <?php if ($nicDownload): ?>
-                        <div class="summary-actions">
-                            <a href="<?= esc($nicDownload) ?>" target="_blank" rel="noopener">
-                                <i class="bx bx-id-card"></i>
-                                View NIC Upload
-                            </a>
-                        </div>
-                    <?php endif; ?>
+
                 </div>
             </aside>
 
@@ -448,6 +441,11 @@ $currentImageLabel = $user && !empty($user->profile_image)
                     <div class="form-group">
                         <label for="years_experience">Years of Experience</label>
                         <input id="years_experience" name="years_experience" type="number" min="0" placeholder="e.g. 5" value="<?= esc($form['years_experience'] ?? '') ?>">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input id="location" name="location" type="text" placeholder="e.g. Colombo, Sri Lanka" value="<?= esc($form['location'] ?? '') ?>">
                     </div>
 
                     <div class="form-group">
