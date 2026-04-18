@@ -217,7 +217,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Number of Days Needed</label>
-                        <input type="number" name="theater_num_days" class="form-input">
+                        <input type="number" name="theater_num_days" class="form-input" min="0" step="1">
                     </div>
                     <div class="form-group">
                         <label>Time</label>
@@ -253,7 +253,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Number of Lights</label>
-                        <input type="number" name="lighting_num_lights" class="form-input">
+                        <input type="number" name="lighting_num_lights" class="form-input" min="0" step="1">
                     </div>
                     <div class="form-group">
                         <label>Effects</label>
@@ -298,7 +298,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Number of Mics</label>
-                        <input type="number" name="sound_num_mics" class="form-input">
+                        <input type="number" name="sound_num_mics" class="form-input" min="0" step="1">
                     </div>
                     <div class="form-group">
                         <label>Stage Monitor</label>
@@ -345,7 +345,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Number of Cameras</label>
-                        <input type="number" name="video_num_cameras" class="form-input">
+                        <input type="number" name="video_num_cameras" class="form-input" min="0" step="1">
                     </div>
                     <div class="form-group">
                         <label>Drone Coverage</label>
@@ -447,11 +447,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Number of Characters</label>
-                        <input type="number" name="costume_num_characters" class="form-input">
+                        <input type="number" name="costume_num_characters" class="form-input" min="0" step="1">
                     </div>
                     <div class="form-group">
                         <label>Number of Costumes</label>
-                        <input type="number" name="costume_num_costumes" class="form-input">
+                        <input type="number" name="costume_num_costumes" class="form-input" min="0" step="1">
                     </div>
                 </div>
                 <div class="form-group">
@@ -502,7 +502,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Number of Artists/Actors</label>
-                        <input type="number" name="makeup_num_artists" class="form-input">
+                        <input type="number" name="makeup_num_artists" class="form-input" min="0" step="1">
                     </div>
                     <div class="form-group">
                         <label>Application Time Per Person</label>
@@ -520,7 +520,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Number of Days Needed</label>
-                        <input type="number" name="makeup_num_days" class="form-input">
+                        <input type="number" name="makeup_num_days" class="form-input" min="0" step="1">
                     </div>
                     <div class="form-group">
                         <label>Service Time</label>
@@ -546,7 +546,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeRequestModal()">Cancel</button>
                 <button type="submit" class="btn-primary">
-                    <i class="fas fa-paper-plane"></i> Send Request
+                    <i class="bx bx-send"></i> Send Request
                 </button>
             </div>
         </form>

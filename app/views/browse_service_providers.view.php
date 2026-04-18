@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Service Providers - <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_service_providers.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
 <body>
@@ -21,12 +21,12 @@
             <!-- Filter Sidebar -->
             <aside class="filter-sidebar">
                 <div class="filter-card">
-                    <h3><i class="fas fa-filter"></i> Filters</h3>
+                    <h3><i class="bx bx-filter"></i> Filters</h3>
                     
                     <form method="GET" action="<?= ROOT ?>/BrowseServiceProviders">
                         <!-- Service Type Filter -->
                         <div class="filter-group">
-                            <label><i class="fas fa-briefcase"></i> Service Type</label>
+                            <label><i class="bx bx-briefcase"></i> Service Type</label>
                             <select name="service_type" class="filter-input">
                                 <option value="">All Services</option>
                                 <option value="Theater Production" <?= ($data['filters']['service_type'] ?? '') === 'Theater Production' ? 'selected' : '' ?>>Theater Production</option>
@@ -42,7 +42,7 @@
 
                         <!-- Location Filter -->
                         <div class="filter-group">
-                            <label><i class="fas fa-map-marker-alt"></i> Location</label>
+                            <label><i class="bx bx-map"></i> Location</label>
                             <select name="location" class="filter-input">
                                 <option value="">All Locations</option>
                                 <?php foreach ($data['locations'] as $loc): ?>
@@ -55,11 +55,11 @@
 
                         <!-- Rate Range Filter -->
                         <div class="filter-group">
-                            <label><i class="fas fa-dollar-sign"></i> Hourly Rate (Rs)</label>
+                            <label><i class="bx bx-dollar"></i> Hourly Rate (Rs)</label>
                             <div class="rate-range">
-                                <input type="number" name="min_rate" placeholder="Min" class="filter-input" value="<?= htmlspecialchars($data['filters']['min_rate'] ?? '') ?>">
+                                <input type="number" name="min_rate" min="0" step="1" placeholder="Min" class="filter-input" value="<?= htmlspecialchars($data['filters']['min_rate'] ?? '') ?>">
                                 <span>to</span>
-                                <input type="number" name="max_rate" placeholder="Max" class="filter-input" value="<?= htmlspecialchars($data['filters']['max_rate'] ?? '') ?>">
+                                <input type="number" name="max_rate" min="0" step="1" placeholder="Max" class="filter-input" value="<?= htmlspecialchars($data['filters']['max_rate'] ?? '') ?>">
                             </div>
                         </div>
 
@@ -67,11 +67,11 @@
                         <div class="filter-group">
                             <label class="checkbox-label">
                                 <input type="checkbox" name="availability" value="1" <?= !empty($data['filters']['availability']) ? 'checked' : '' ?>>
-                                <span><i class="fas fa-calendar-check"></i> Available Now Only</span>
+                                <span><i class="bx bx-calendar-check"></i> Available Now Only</span>
                             </label>
                         </div>
 
-                        <button type="submit" class="btn-filter"><i class="fas fa-search"></i> Apply Filters</button>
+                        <button type="submit" class="btn-filter"><i class="bx bx-search"></i> Apply Filters</button>
                         <a href="<?= ROOT ?>/BrowseServiceProviders" class="btn-clear">Clear All</a>
                     </form>
                 </div>
@@ -86,7 +86,7 @@
                 <div class="providers-grid">
                     <?php if (empty($data['providers'])): ?>
                         <div class="no-results">
-                            <i class="fas fa-search" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                            <i class="bx bx-search" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
                             <h3>No service providers found</h3>
                             <p>Try adjusting your filters or browse all providers</p>
                         </div>
@@ -138,13 +138,13 @@
                                     <p class="provider-title"><?= htmlspecialchars($provider->professional_title) ?></p>
                                     
                                     <div class="provider-meta">
-                                        <span><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($provider->location) ?></span>
-                                        <span><i class="fas fa-briefcase"></i> <?= (int)$provider->years_experience ?> years exp.</span>
+                                        <span><i class="bx bx-map"></i> <?= htmlspecialchars($provider->location) ?></span>
+                                        <span><i class="bx bx-briefcase"></i> <?= (int)$provider->years_experience ?> years exp.</span>
                                     </div>
 
                                     <?php if (!empty($provider->services)): ?>
                                         <div class="provider-services">
-                                            <div class="services-label"><i class="fas fa-tools"></i> Services</div>
+                                            <div class="services-label"><i class="bx bx-wrench"></i> Services</div>
                                             <p class="services-text"><?= htmlspecialchars($provider->services) ?></p>
                                         </div>
                                     <?php endif; ?>
@@ -159,7 +159,7 @@
 
                                 <div class="provider-footer">
                                     <a href="<?= ROOT ?>/BrowseServiceProviders/viewProfile/<?= $provider->user_id ?><?= !empty($data['drama_id']) ? '?drama_id=' . (int)$data['drama_id'] : '' ?>" class="btn-view-profile">
-                                        View Profile <i class="fas fa-arrow-right"></i>
+                                        View Profile <i class="bx bx-right-arrow-alt"></i>
                                     </a>
                                 </div>
                             </div>

@@ -43,7 +43,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Rate (Rs)</label>
-                            <input type="number" name="rate" class="form-input" placeholder="0.00" step="0.01" value="<?php echo htmlspecialchars($data['service']->rate_per_hour ?? ''); ?>">
+                            <input type="number" name="rate" class="form-input" min="0" step="1" placeholder="0.00" value="<?php echo htmlspecialchars($data['service']->rate_per_hour ?? ''); ?>">
                         </div>
                     </div>
 
@@ -67,7 +67,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Seating Capacity</label>
-                            <input type="number" name="seating_capacity" class="form-input" placeholder="Total audience capacity" value="<?php echo htmlspecialchars($details->seating_capacity ?? ''); ?>">
+                            <input type="number" name="seating_capacity" class="form-input" min="0" step="1" placeholder="Total audience capacity" value="<?php echo htmlspecialchars($details->seating_capacity ?? ''); ?>">
                         </div>
                     </div>
 
@@ -221,7 +221,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Maximum Audience Size Supported</label>
-                                <input type="number" name="max_audience_size" class="form-input" placeholder="e.g., 500" value="<?php echo htmlspecialchars($details->max_audience_size ?? ''); ?>">
+                                <input type="number" name="max_audience_size" class="form-input" min="0" step="1" placeholder="e.g., 500" value="<?php echo htmlspecialchars($details->max_audience_size ?? ''); ?>">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Equipment Brands</label>
@@ -262,7 +262,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Number of Crew Members</label>
-                                <input type="number" name="num_crew_members" class="form-input" placeholder="e.g., 3" value="<?php echo htmlspecialchars($details->num_crew_members ?? ''); ?>">
+                                <input type="number" name="num_crew_members" class="form-input" min="0" step="1" placeholder="e.g., 3" value="<?php echo htmlspecialchars($details->num_crew_members ?? ''); ?>">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Editing Software Used</label>
@@ -404,7 +404,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Number of Costumes Available</label>
-                                <input type="number" name="number_of_costumes_available" class="form-input" placeholder="e.g., 50" value="<?php echo htmlspecialchars($details->number_of_costumes_available ?? ''); ?>">
+                                <input type="number" name="number_of_costumes_available" class="form-input" min="0" step="1" placeholder="e.g., 50" value="<?php echo htmlspecialchars($details->number_of_costumes_available ?? ''); ?>">
                             </div>
                         </div>
                         <?php endif; ?>
@@ -419,11 +419,11 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Experience in Stage Make-up (years)</label>
-                                <input type="number" name="experience_stage_makeup_years" class="form-input" placeholder="e.g., 5" value="<?php echo htmlspecialchars($details->experience_stage_makeup_years ?? ''); ?>">
+                                <input type="number" name="experience_stage_makeup_years" class="form-input" min="0" step="1" placeholder="e.g., 5" value="<?php echo htmlspecialchars($details->experience_stage_makeup_years ?? ''); ?>">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Maximum Actors Per Show</label>
-                                <input type="number" name="maximum_actors_per_show" class="form-input" placeholder="e.g., 50" value="<?php echo htmlspecialchars($details->maximum_actors_per_show ?? ''); ?>">
+                                <input type="number" name="maximum_actors_per_show" class="form-input" min="0" step="1" placeholder="e.g., 50" value="<?php echo htmlspecialchars($details->maximum_actors_per_show ?? ''); ?>">
                             </div>
                         </div>
 

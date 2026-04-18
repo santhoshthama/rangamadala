@@ -496,6 +496,8 @@ foreach ($allShowings as $bookingItem) {
                   <?php foreach ($data['classes'] as $class): ?>
                     <?php
                       $classTime = 'TBA';
+                      $levelRaw = strtolower(trim((string)($class->class_level ?? 'all_levels')));
+                      $levelLabel = $levelRaw !== '' ? ucwords(str_replace('_', ' ', $levelRaw)) : 'All Levels';
                       if (!empty($class->start_time)) {
                         $startTs = strtotime($class->start_time);
                         if ($startTs !== false) {
@@ -513,6 +515,7 @@ foreach ($allShowings as $bookingItem) {
                     <div class="drama-card">
                       <div class="drama-content">
                         <h3 class="drama-title"><?= htmlspecialchars($class->title ?? 'Class') ?></h3>
+                        <p class="class-level-text"><?= htmlspecialchars($levelLabel) ?></p>
                         <p class="drama-description"><?= htmlspecialchars(substr((string)($class->description ?? ''), 0, 120)) ?><?= !empty($class->description) && strlen((string)$class->description) > 120 ? '...' : '' ?></p>
                         <div class="drama-info">
                           <div class="info-item">
@@ -573,6 +576,8 @@ foreach ($allShowings as $bookingItem) {
                   <?php foreach ($data['my_classes'] as $class): ?>
                     <?php
                       $classTime = 'TBA';
+                      $levelRaw = strtolower(trim((string)($class->class_level ?? 'all_levels')));
+                      $levelLabel = $levelRaw !== '' ? ucwords(str_replace('_', ' ', $levelRaw)) : 'All Levels';
                       if (!empty($class->start_time)) {
                         $startTs = strtotime($class->start_time);
                         if ($startTs !== false) {
@@ -590,6 +595,7 @@ foreach ($allShowings as $bookingItem) {
                     <div class="drama-card">
                       <div class="drama-content">
                         <h3 class="drama-title"><?= htmlspecialchars($class->title ?? 'Class') ?></h3>
+                        <p class="class-level-text"><?= htmlspecialchars($levelLabel) ?></p>
                         <p class="drama-description"><?= htmlspecialchars(substr((string)($class->description ?? ''), 0, 120)) ?><?= !empty($class->description) && strlen((string)$class->description) > 120 ? '...' : '' ?></p>
                         <div class="drama-info">
                           <div class="info-item">
