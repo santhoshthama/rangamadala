@@ -6,10 +6,9 @@
     <title>Add Service</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_register.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_profile.css">
 </head>
-<body class="service-provider-add-service-page">
+<body>
     <div class="container">
         <button class="back-button" onclick="window.location.href='<?= ROOT ?>/ServiceProviderProfile/index?id=<?= htmlspecialchars($data['provider_id'] ?? '') ?>'">
             <span>←</span>
@@ -699,22 +698,9 @@
                 const rate = document.getElementById(`service${idx}Rate`);
                 const desc = document.getElementById(`service${idx}Desc`);
                 const details = document.getElementById(`service${idx}Details`);
-                const item = checkbox.closest('.service-item');
-                if (item) {
-                    item.classList.toggle('service-selected', visible);
-                }
-
-                [rate, desc, details].forEach((el) => {
-                    if (!el) return;
-                    el.style.display = visible ? '' : 'none';
-                    if (visible) {
-                        el.classList.remove('service-visible');
-                        void el.offsetWidth;
-                        el.classList.add('service-visible');
-                    } else {
-                        el.classList.remove('service-visible');
-                    }
-                });
+                if (rate) rate.style.display = visible ? '' : 'none';
+                if (desc) desc.style.display = visible ? '' : 'none';
+                if (details) details.style.display = visible ? '' : 'none';
             }
             checkbox.addEventListener('change', updateVisibility);
             updateVisibility();
