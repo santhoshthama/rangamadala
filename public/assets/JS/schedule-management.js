@@ -260,6 +260,8 @@ function checkDateAvailability() {
     var date = document.getElementById('formScheduledDate').value;
     var startTime = document.getElementById('formStartTime').value;
     var endTime = document.getElementById('formEndTime').value;
+    var eventType = document.getElementById('formEventType').value;
+    var roleId = document.getElementById('formRoleId').value;
     var avail = document.getElementById('dateAvailability');
     var excludeId = document.getElementById('formEventId').value || '';
 
@@ -279,6 +281,8 @@ function checkDateAvailability() {
     var url = ROOT + '/director/check_date_availability?drama_id=' + DRAMA_ID + '&date=' + encodeURIComponent(date);
     if (startTime) url += '&start_time=' + encodeURIComponent(startTime);
     if (endTime) url += '&end_time=' + encodeURIComponent(endTime);
+    if (eventType) url += '&event_type=' + encodeURIComponent(eventType);
+    if (roleId) url += '&role_id=' + encodeURIComponent(roleId);
     if (excludeId) url += '&exclude_id=' + encodeURIComponent(excludeId);
 
     // Debounce
@@ -303,6 +307,22 @@ function checkDateAvailability() {
                             avail.innerHTML += '<ul style="margin: 6px 0 0 16px; padding: 0;">';
                             data.events.forEach(function(ev) {
                                 avail.innerHTML += '<li style="font-size: 12px;">' + escapeHtml(ev.title) + ' (' + ev.start_time.substring(0, 5) + ' - ' + ev.end_time.substring(0, 5) + ')</li>';
+                            });
+                            avail.innerHTML += '</ul>';
+                        }
+
+                        if (data.artist_conflicts && data.artist_conflicts.length > 0) {
+                            avail.innerHTML += '<ul style="margin: 6px 0 0 16px; padding: 0;">';
+                            data.artist_conflicts.slice(0, 5).forEach(function(conflict) {
+                                avail.innerHTML += '<li style="font-size: 12px;">' +
+                                    escapeHtml(conflict.artist_name || 'Artist') +
+                                    ' already has ' +
+                                    escapeHtml(conflict.title || 'an event') +
+                                    ' in ' +
+                                    escapeHtml(conflict.drama_name || 'another drama') +
+                                    ' (' +
+                                    escapeHtml((conflict.start_time || '--:--') + ' - ' + (conflict.end_time || '--:--')) +
+                                    ')</li>';
                             });
                             avail.innerHTML += '</ul>';
                         }

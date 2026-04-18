@@ -47,6 +47,12 @@ $profileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $pr
                 </a>
             </li>
             <li>
+                <a href="<?= ROOT ?>/artistdashboard/calendar">
+                    <i class="bx bx-calendar-week"></i>
+                    <span>Artist Calendar</span>
+                </a>
+            </li>
+            <li>
                 <a href="<?= ROOT ?>/profile">
                     <i class="bx bx-user-circle"></i>
                     <span>My Profile</span>

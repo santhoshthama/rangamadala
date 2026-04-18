@@ -13,6 +13,7 @@ class Artistdashboard
             'vacancies' => false,
             'classes' => false,
             'showings' => false,
+            'calendar' => false,
         ];
 
         if (strpos($requestPath, '/artistdashboard/notifications') !== false) {
@@ -21,6 +22,8 @@ class Artistdashboard
             $sidebarActive['vacancies'] = true;
         } elseif (strpos($requestPath, '/artistdashboard/classes') !== false) {
             $sidebarActive['classes'] = true;
+        } elseif (strpos($requestPath, '/artistdashboard/calendar') !== false) {
+            $sidebarActive['calendar'] = true;
         } elseif ($requestedTab === 'my-showings') {
             $sidebarActive['showings'] = true;
         } else {
@@ -219,6 +222,124 @@ class Artistdashboard
         $data['user'] = $artist_model ? $artist_model->get_artist_by_id($user_id) : null;
         
         $this->view('artist/browse_vacancies', $data);
+    }
+
+    public function calendar()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header('Location: ' . ROOT . '/login');
+            exit;
+        }
+
+        $artistId = (int)$_SESSION['user_id'];
+        $artist_model = $this->getModel('M_artist');
+        $artistCalendarModel = $this->getModel('M_artist_calendar');
+
+        $user = $artist_model ? $artist_model->get_artist_by_id($artistId) : null;
+        $startDate = trim((string)($_GET['start_date'] ?? date('Y-m-01')));
+        $endDate = trim((string)($_GET['end_date'] ?? date('Y-m-t', strtotime('+2 months'))));
+        $dramaId = isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0;
+        $participation = strtolower(trim((string)($_GET['participation'] ?? 'all')));
+        if (!in_array($participation, ['all', 'director', 'actor', 'pm'], true)) {
+            $participation = 'all';
+        }
+        $viewMode = strtolower(trim((string)($_GET['view'] ?? 'month')));
+        if (!in_array($viewMode, ['day', 'week', 'month'], true)) {
+            $viewMode = 'month';
+        }
+
+        $events = $artistCalendarModel
+            ? $artistCalendarModel->getArtistCalendarEvents($artistId, [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'drama_id' => $dramaId > 0 ? $dramaId : null,
+                'participation' => $participation,
+            ])
+            : [];
+
+        $dramas = $artistCalendarModel ? $artistCalendarModel->getArtistDramaOptions($artistId) : [];
+
+        $requestPath = strtolower((string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? ''));
+        $data = [
+            'user' => $user,
+            'profileImageSrc' => $this->resolveProfileImageSrc($user),
+            'calendarEvents' => $events,
+            'calendarDramas' => $dramas,
+            'calendarFilters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'drama_id' => $dramaId,
+                'participation' => $participation,
+                'view' => $viewMode,
+            ],
+            'sidebarActive' => $this->buildSidebarActive($requestPath, ''),
+        ];
+
+        $this->view('artist/calendar', $data);
+    }
+
+    public function calendar_feed()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $artistCalendarModel = $this->getModel('M_artist_calendar');
+        if (!$artistCalendarModel) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Calendar service unavailable']);
+            exit;
+        }
+
+        $startDate = trim((string)($_GET['start_date'] ?? date('Y-m-01')));
+        $endDate = trim((string)($_GET['end_date'] ?? date('Y-m-t', strtotime('+2 months'))));
+        $dramaId = isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0;
+        $participation = strtolower(trim((string)($_GET['participation'] ?? 'all')));
+        if (!in_array($participation, ['all', 'director', 'actor', 'pm'], true)) {
+            $participation = 'all';
+        }
+
+        $events = $artistCalendarModel->getArtistCalendarEvents((int)$_SESSION['user_id'], [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'drama_id' => $dramaId > 0 ? $dramaId : null,
+            'participation' => $participation,
+        ]);
+
+        $serialized = array_map(function ($event) {
+            return [
+                'id' => isset($event->id) ? (int)$event->id : 0,
+                'drama_id' => isset($event->drama_id) ? (int)$event->drama_id : 0,
+                'drama_name' => (string)($event->drama_name ?? ''),
+                'event_type' => (string)($event->event_type ?? ''),
+                'event_title' => (string)($event->event_title ?? ''),
+                'event_description' => (string)($event->event_description ?? ''),
+                'scheduled_date' => (string)($event->scheduled_date ?? ''),
+                'start_time' => isset($event->start_time) ? substr((string)$event->start_time, 0, 5) : '',
+                'end_time' => isset($event->end_time) ? substr((string)$event->end_time, 0, 5) : '',
+                'venue' => (string)($event->venue ?? ''),
+                'status' => (string)($event->status ?? ''),
+                'role_id' => isset($event->role_id) ? (int)$event->role_id : null,
+                'role_name' => (string)($event->role_name ?? ''),
+                'is_director_drama' => !empty($event->is_director_drama),
+                'is_pm_drama' => !empty($event->is_pm_drama),
+                'is_actor_drama' => !empty($event->is_actor_drama),
+                'participation_type' => !empty($event->is_director_drama)
+                    ? 'director'
+                    : (!empty($event->is_pm_drama) ? 'pm' : 'actor'),
+            ];
+        }, $events ?: []);
+
+        echo json_encode([
+            'success' => true,
+            'events' => $serialized,
+            'updated_at' => date('c'),
+        ]);
+        exit;
     }
 
     public function apply_for_role()

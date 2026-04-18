@@ -39,6 +39,12 @@
                 </a>
             </li>
             <li>
+                <a href="<?= ROOT ?>/artistdashboard/calendar">
+                    <i class="bx bx-calendar-week"></i>
+                    <span>Artist Calendar</span>
+                </a>
+            </li>
+            <li>
                 <a href="<?= ROOT ?>/artistdashboard">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Profile</span>

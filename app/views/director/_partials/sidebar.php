@@ -45,5 +45,11 @@ $directorSidebarActive = $directorSidebarActive ?? 'dashboard';
                 <span>Services & Budget</span>
             </a>
         </li>
+        <li>
+            <a href="<?= ROOT ?>/artistdashboard/calendar">
+                <i class="bx bx-calendar-week"></i>
+                <span>Artist Calendar</span>
+            </a>
+        </li>
     </ul>
 </aside>

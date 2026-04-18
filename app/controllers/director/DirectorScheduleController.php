@@ -11,6 +11,7 @@ class DirectorScheduleController
     protected $scheduleModel;
     protected $notificationModel;
     protected $profileModel;
+    protected $artistCalendarModel;
 
     public function __construct()
     {
@@ -19,6 +20,7 @@ class DirectorScheduleController
         $this->scheduleModel = $this->getModel('M_schedule');
         $this->notificationModel = $this->getModel('M_notification');
         $this->profileModel = $this->getModel('M_universal_profile');
+        $this->artistCalendarModel = $this->getModel('M_artist_calendar');
     }
 
     public function schedule_management()
@@ -119,6 +121,24 @@ class DirectorScheduleController
             $_SESSION['message_type'] = 'error';
             header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
             exit;
+        }
+
+        $impactedArtists = $this->resolveImpactedArtists((int)$drama->id, $roleId);
+        if (!empty($impactedArtists)) {
+            $artistIds = array_map(function ($artist) {
+                return (int)$artist['id'];
+            }, $impactedArtists);
+
+            $conflicts = $this->artistCalendarModel
+                ? $this->artistCalendarModel->findConflictsForArtists($artistIds, $scheduledDate, $startTime, $endTime)
+                : [];
+
+            if (!empty($conflicts)) {
+                $_SESSION['message'] = $this->buildArtistConflictMessage($conflicts, $scheduledDate);
+                $_SESSION['message_type'] = 'error';
+                header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+                exit;
+            }
         }
 
         $data = [
@@ -241,6 +261,24 @@ class DirectorScheduleController
             $_SESSION['message_type'] = 'error';
             header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
             exit;
+        }
+
+        $impactedArtists = $this->resolveImpactedArtists((int)$drama->id, $roleId);
+        if (!empty($impactedArtists)) {
+            $artistIds = array_map(function ($artist) {
+                return (int)$artist['id'];
+            }, $impactedArtists);
+
+            $conflicts = $this->artistCalendarModel
+                ? $this->artistCalendarModel->findConflictsForArtists($artistIds, $scheduledDate, $startTime, $endTime, $eventId)
+                : [];
+
+            if (!empty($conflicts)) {
+                $_SESSION['message'] = $this->buildArtistConflictMessage($conflicts, $scheduledDate);
+                $_SESSION['message_type'] = 'error';
+                header('Location: ' . ROOT . '/director/schedule_management?drama_id=' . $drama->id);
+                exit;
+            }
         }
 
         $data = [
@@ -398,6 +436,7 @@ class DirectorScheduleController
         $date = trim((string)($this->getQueryParam('date') ?? ''));
         $startTime = trim((string)($this->getQueryParam('start_time') ?? ''));
         $endTime = trim((string)($this->getQueryParam('end_time') ?? ''));
+        $roleId = (int)($this->getQueryParam('role_id') ?? 0);
         $excludeId = (int)($this->getQueryParam('exclude_id') ?? 0);
 
         if (!$dramaId || !$date) {
@@ -428,6 +467,42 @@ class DirectorScheduleController
             $timeAvailable = $this->scheduleModel->isTimeSlotAvailable($dramaId, $date, $startTime, $endTime, $excludeId ?: null);
         }
 
+        $artistConflictList = [];
+        if ($timeAvailable && $startTime && $endTime && $this->artistCalendarModel) {
+            $impactedArtists = $this->resolveImpactedArtists($dramaId, $roleId > 0 ? $roleId : null);
+            if (!empty($impactedArtists)) {
+                $artistIds = array_map(function ($artist) {
+                    return (int)$artist['id'];
+                }, $impactedArtists);
+
+                $artistConflicts = $this->artistCalendarModel->findConflictsForArtists(
+                    $artistIds,
+                    $date,
+                    $startTime,
+                    $endTime,
+                    $excludeId ?: null
+                );
+
+                if (!empty($artistConflicts)) {
+                    $timeAvailable = false;
+                    foreach ($artistConflicts as $conflict) {
+                        if (!is_object($conflict)) {
+                            continue;
+                        }
+
+                        $artistConflictList[] = [
+                            'artist_id' => (int)($conflict->artist_id ?? 0),
+                            'artist_name' => (string)($conflict->artist_name ?? 'Artist'),
+                            'drama_name' => (string)($conflict->drama_name ?? ''),
+                            'title' => (string)($conflict->event_title ?? 'Event'),
+                            'start_time' => isset($conflict->start_time) ? substr((string)$conflict->start_time, 0, 5) : '',
+                            'end_time' => isset($conflict->end_time) ? substr((string)$conflict->end_time, 0, 5) : '',
+                        ];
+                    }
+                }
+            }
+        }
+
         $eventList = [];
         foreach ($eventsOnDate as $evt) {
             $eventList[] = [
@@ -446,11 +521,14 @@ class DirectorScheduleController
             'date' => $date,
             'events_count' => count($eventsOnDate),
             'events' => $eventList,
+            'artist_conflicts' => $artistConflictList,
             'message' => $timeAvailable
                 ? (count($eventsOnDate) > 0
                     ? 'Date has ' . count($eventsOnDate) . ' event(s) but the selected time slot is available.'
                     : 'Date is completely free. You can schedule your event.')
-                : 'Time slot conflicts with an existing event. Please choose a different time.',
+                : (!empty($artistConflictList)
+                    ? 'Artist conflict detected. One or more assigned artists are already booked for another drama at this time.'
+                    : 'Time slot conflicts with an existing event. Please choose a different time.'),
         ]);
         exit;
     }
@@ -607,6 +685,84 @@ class DirectorScheduleController
         }
 
         return $calendarEvents;
+    }
+
+    protected function resolveImpactedArtists(int $dramaId, ?int $roleId = null): array
+    {
+        if (!$this->roleModel) {
+            return [];
+        }
+
+        $artistMap = [];
+
+        if (!empty($roleId)) {
+            $assignments = $this->roleModel->getAssignmentsByRole((int)$roleId);
+            foreach ($assignments as $assignment) {
+                if (!is_object($assignment) || empty($assignment->artist_id)) {
+                    continue;
+                }
+
+                $artistId = (int)$assignment->artist_id;
+                $artistMap[$artistId] = [
+                    'id' => $artistId,
+                    'name' => trim((string)($assignment->artist_name ?? 'Artist #' . $artistId)),
+                ];
+            }
+
+            return array_values($artistMap);
+        }
+
+        $roles = $this->roleModel->getRolesByDrama($dramaId);
+        foreach ($roles as $role) {
+            if (!is_object($role) || empty($role->id)) {
+                continue;
+            }
+
+            $assignments = $this->roleModel->getAssignmentsByRole((int)$role->id);
+            foreach ($assignments as $assignment) {
+                if (!is_object($assignment) || empty($assignment->artist_id)) {
+                    continue;
+                }
+
+                $artistId = (int)$assignment->artist_id;
+                if (!isset($artistMap[$artistId])) {
+                    $artistMap[$artistId] = [
+                        'id' => $artistId,
+                        'name' => trim((string)($assignment->artist_name ?? 'Artist #' . $artistId)),
+                    ];
+                }
+            }
+        }
+
+        return array_values($artistMap);
+    }
+
+    protected function buildArtistConflictMessage(array $conflicts, string $date): string
+    {
+        $maxDetails = 3;
+        $detailParts = [];
+
+        foreach ($conflicts as $index => $conflict) {
+            if ($index >= $maxDetails || !is_object($conflict)) {
+                break;
+            }
+
+            $artistName = trim((string)($conflict->artist_name ?? 'Artist'));
+            $dramaName = trim((string)($conflict->drama_name ?? 'another drama'));
+            $eventTitle = trim((string)($conflict->event_title ?? 'an event'));
+            $start = isset($conflict->start_time) ? substr((string)$conflict->start_time, 0, 5) : '';
+            $end = isset($conflict->end_time) ? substr((string)$conflict->end_time, 0, 5) : '';
+
+            $timeLabel = ($start !== '' && $end !== '') ? ($start . '-' . $end) : 'scheduled time';
+            $detailParts[] = $artistName . ' already has "' . $eventTitle . '" (' . $timeLabel . ') in ' . $dramaName;
+        }
+
+        $message = 'Scheduling conflict detected for assigned artist(s) on ' . $date . '. ';
+        if (!empty($detailParts)) {
+            $message .= implode('; ', $detailParts) . '.';
+        }
+
+        return $message;
     }
 
 }

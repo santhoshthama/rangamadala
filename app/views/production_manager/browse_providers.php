@@ -40,6 +40,12 @@ $userDisplayInitial = strtoupper(substr($userDisplayName, 0, 1));
                 </a>
             </li>
             <li>
+                <a href="<?= ROOT ?>/artistdashboard/calendar">
+                    <i class="bx bx-calendar-week"></i>
+                    <span>Artist Calendar</span>
+                </a>
+            </li>
+            <li>
                 <a href="<?= ROOT ?>/artistdashboard">
                     <i class="bx bx-arrow-left"></i>
                     <span>Back to Profile</span>

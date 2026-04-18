@@ -14,6 +14,7 @@ $sidebarActiveDefaults = [
     'vacancies' => false,
     'classes' => false,
     'showings' => false,
+    'calendar' => false,
 ];
 
 $sidebarActive = (isset($sidebarActive) && is_array($sidebarActive))
@@ -701,6 +702,12 @@ $infoMessageType = isset($infoMessageType) ? (string)$infoMessageType : 'info';
                 <a href="<?=ROOT?>/artistdashboard?tab=my-showings#my-showings">
                     <i class='bx bx-calendar-event'></i>
                     <span>Showings</span>
+                </a>
+            </li>
+            <li class="<?= $sidebarActive['calendar'] ? 'active' : '' ?>">
+                <a href="<?=ROOT?>/artistdashboard/calendar">
+                    <i class='bx bx-calendar-week'></i>
+                    <span>Artist Calendar</span>
                 </a>
             </li>
         </ul>
