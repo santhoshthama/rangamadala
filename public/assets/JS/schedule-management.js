@@ -10,6 +10,19 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let availabilityTimeout = null;
 
+function setAvailabilityState(type, message) {
+    var avail = document.getElementById('dateAvailability');
+    if (!avail) return;
+
+    avail.className = 'date-availability ' + type;
+    avail.innerHTML = message;
+    avail.style.display = 'block';
+}
+
+function hasInvalidTimeRange(startTime, endTime) {
+    return !!(startTime && endTime && startTime >= endTime);
+}
+
 // ═══════════════════════════════════════════════
 // Tab switching
 // ═══════════════════════════════════════════════
@@ -51,6 +64,8 @@ function openCreateModal(eventType) {
     if (eventType) {
         document.getElementById('formEventType').value = eventType;
         toggleRoleSelect(eventType);
+    } else {
+        toggleRoleSelect('');
     }
 
     // Clear availability indicator
@@ -250,6 +265,11 @@ function checkDateAvailability() {
 
     if (!date) { avail.style.display = 'none'; return; }
 
+    if (hasInvalidTimeRange(startTime, endTime)) {
+        setAvailabilityState('conflict', '<i class="fas fa-exclamation-triangle"></i> End time must be after start time.');
+        return;
+    }
+
     // Show checking state
     avail.className = 'date-availability checking';
     avail.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking availability...';
@@ -359,10 +379,31 @@ document.addEventListener('DOMContentLoaded', function() {
     var dateInput = document.getElementById('formScheduledDate');
     var startInput = document.getElementById('formStartTime');
     var endInput = document.getElementById('formEndTime');
+    var form = document.getElementById('scheduleForm');
 
     if (dateInput) dateInput.addEventListener('change', checkDateAvailability);
     if (startInput) startInput.addEventListener('change', checkDateAvailability);
     if (endInput) endInput.addEventListener('change', checkDateAvailability);
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            var startTime = document.getElementById('formStartTime').value;
+            var endTime = document.getElementById('formEndTime').value;
+            var avail = document.getElementById('dateAvailability');
+
+            if (hasInvalidTimeRange(startTime, endTime)) {
+                e.preventDefault();
+                setAvailabilityState('conflict', '<i class="fas fa-exclamation-triangle"></i> End time must be after start time.');
+                alert('End time must be after start time.');
+                return;
+            }
+
+            if (avail && avail.classList.contains('conflict')) {
+                e.preventDefault();
+                alert('Please resolve the date/time conflict before submitting.');
+            }
+        });
+    }
 });
 
 // Close modals when clicking outside

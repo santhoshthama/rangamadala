@@ -395,13 +395,24 @@ class DirectorScheduleController
         }
 
         $dramaId = (int)($this->getQueryParam('drama_id') ?? 0);
-        $date = $this->getQueryParam('date') ?? '';
-        $startTime = $this->getQueryParam('start_time') ?? '';
-        $endTime = $this->getQueryParam('end_time') ?? '';
+        $date = trim((string)($this->getQueryParam('date') ?? ''));
+        $startTime = trim((string)($this->getQueryParam('start_time') ?? ''));
+        $endTime = trim((string)($this->getQueryParam('end_time') ?? ''));
         $excludeId = (int)($this->getQueryParam('exclude_id') ?? 0);
 
         if (!$dramaId || !$date) {
             echo json_encode(['available' => false, 'message' => 'Missing parameters.']);
+            exit;
+        }
+
+        $parsedDate = DateTime::createFromFormat('Y-m-d', $date);
+        if (!$parsedDate || $parsedDate->format('Y-m-d') !== $date) {
+            echo json_encode(['available' => false, 'message' => 'Invalid date format. Use YYYY-MM-DD.']);
+            exit;
+        }
+
+        if ($startTime !== '' && $endTime !== '' && $startTime >= $endTime) {
+            echo json_encode(['available' => false, 'message' => 'End time must be after start time.']);
             exit;
         }
 

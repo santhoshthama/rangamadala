@@ -124,6 +124,21 @@ $profileImageSrc = directorResolveProfileImageSrc();
             </button>
         </div>
 
+        <div class="schedule-page-actions">
+            <?php
+            $scheduleToolbarConfig = [
+                'showRehearsal' => false,
+                'showInterview' => false,
+                'showCreate' => true,
+                'createLabel' => 'Create Event',
+                'createIcon' => 'bx-plus',
+                'createType' => null,
+            ];
+            include __DIR__ . '/_partials/schedule_toolbar.php';
+            unset($scheduleToolbarConfig);
+            ?>
+        </div>
+
         <!-- ═══════════ TAB: UPCOMING ═══════════ -->
         <div id="upcomingTab" class="tab-content active">
             <div class="content">
@@ -133,12 +148,11 @@ $profileImageSrc = directorResolveProfileImageSrc();
                             <div class="card-section">
                                 <div class="schedule-section-header schedule-section-header-lg">
                                     <h3 class="schedule-section-title"><span>Upcoming Events</span></h3>
-                                    <?php include __DIR__ . '/_partials/schedule_toolbar.php'; ?>
                                 </div>
                                 <div class="schedule-empty-state">
                                     <i class="bx bx-calendar-plus schedule-empty-icon"></i>
                                     <h3 class="schedule-empty-title">No Upcoming Events</h3>
-                                    <p>Schedule a rehearsal or interview to get started.</p>
+                                    <p>Click Create Event to get started.</p>
                                 </div>
                             </div>
                         <?php else: ?>
@@ -146,7 +160,6 @@ $profileImageSrc = directorResolveProfileImageSrc();
                             <div class="card-section">
                                 <div class="schedule-section-header">
                                     <h3 class="schedule-section-title"><span>This Week</span></h3>
-                                    <?php include __DIR__ . '/_partials/schedule_toolbar.php'; ?>
                                 </div>
                                 <?php foreach ($thisWeek as $evt): ?>
                                     <?php include __DIR__ . '/../_partials/_schedule_event_card.php'; ?>
@@ -158,7 +171,6 @@ $profileImageSrc = directorResolveProfileImageSrc();
                             <div class="card-section">
                                 <div class="schedule-section-header">
                                     <h3 class="schedule-section-title"><span>Next Week</span></h3>
-                                    <?php include __DIR__ . '/_partials/schedule_toolbar.php'; ?>
                                 </div>
                                 <?php foreach ($nextWeek as $evt): ?>
                                     <?php include __DIR__ . '/../_partials/_schedule_event_card.php'; ?>
@@ -170,7 +182,6 @@ $profileImageSrc = directorResolveProfileImageSrc();
                             <div class="card-section">
                                 <div class="schedule-section-header">
                                     <h3 class="schedule-section-title"><span>Later</span></h3>
-                                    <?php include __DIR__ . '/_partials/schedule_toolbar.php'; ?>
                                 </div>
                                 <?php foreach ($laterEvents as $evt): ?>
                                     <?php include __DIR__ . '/../_partials/_schedule_event_card.php'; ?>
@@ -191,18 +202,6 @@ $profileImageSrc = directorResolveProfileImageSrc();
                         <div class="card-section">
                             <div class="schedule-section-header">
                                 <h3 class="schedule-section-title">Past Events</h3>
-                                <?php
-                                $scheduleToolbarConfig = [
-                                    'showRehearsal' => false,
-                                    'showInterview' => false,
-                                    'showCreate' => true,
-                                    'createLabel' => 'Create Event',
-                                    'createIcon' => 'bx-plus',
-                                    'createType' => null,
-                                ];
-                                include __DIR__ . '/_partials/schedule_toolbar.php';
-                                unset($scheduleToolbarConfig);
-                                ?>
                             </div>
                             <?php if (empty($pastEvents)): ?>
                                 <div class="schedule-empty-state schedule-empty-state-muted">
@@ -239,7 +238,6 @@ $profileImageSrc = directorResolveProfileImageSrc();
                                         <i class="bx bx-chevron-right"></i>
                                     </button>
                                 </div>
-                                <?php include __DIR__ . '/_partials/schedule_toolbar.php'; ?>
                             </div>
 
                             <!-- Calendar Grid -->

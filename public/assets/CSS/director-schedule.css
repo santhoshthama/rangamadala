@@ -58,6 +58,7 @@
 
 .schedule-stats-spacing { margin-bottom: 24px; }
 .schedule-single-column { grid-template-columns: 1fr; }
+.schedule-page-actions { display: flex; justify-content: flex-end; margin: 12px 0 18px; }
 .event-main { flex: 1; }
 .event-title { font-size: 16px; color: #2f2410; }
 .event-meta-tight { margin-top: 4px; }
