@@ -31,7 +31,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Year <span class="required">*</span></label>
-                                <input type="number" name="year" class="form-input" min="1970" max="<?php echo date('Y'); ?>"
+                                <input type="number" name="year" class="form-input" min="0" max="<?php echo date('Y'); ?>" step="1"
                                     value="<?php echo htmlspecialchars($data['project']->year); ?>" required>
                             </div>
                             <div class="form-group">

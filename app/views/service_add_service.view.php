@@ -78,7 +78,7 @@
                                             <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
                                             <div class="input-wrapper">
                                                 <span class="currency">Rs</span>
-                                                <input type="number" name="services[0][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc0['rate']) ? htmlspecialchars($svc0['rate']) : '' ?>">
+                                                <input type="number" name="services[0][rate]" class="service-rate" min="0" step="1" placeholder="0.00" value="<?= isset($svc0['rate']) ? htmlspecialchars($svc0['rate']) : '' ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -96,7 +96,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Seating Capacity</label>
-                                        <input type="number" name="services[0][seating_capacity]" class="form-input" placeholder="e.g., 500" value="<?= isset($svc0['seating_capacity']) ? htmlspecialchars($svc0['seating_capacity']) : '' ?>">
+                                        <input type="number" name="services[0][seating_capacity]" class="form-input" min="0" step="1" placeholder="e.g., 500" value="<?= isset($svc0['seating_capacity']) ? htmlspecialchars($svc0['seating_capacity']) : '' ?>">
                                     </div>
                                 </div>
                                 <div class="form-row">
@@ -178,7 +178,7 @@
                                             <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
                                             <div class="input-wrapper">
                                                 <span class="currency">Rs</span>
-                                                <input type="number" name="services[1][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc1['rate']) ? htmlspecialchars($svc1['rate']) : '' ?>">
+                                                <input type="number" name="services[1][rate]" class="service-rate" min="0" step="1" placeholder="0.00" value="<?= isset($svc1['rate']) ? htmlspecialchars($svc1['rate']) : '' ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -241,7 +241,7 @@
                                             <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
                                             <div class="input-wrapper">
                                                 <span class="currency">Rs</span>
-                                                <input type="number" name="services[2][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc2['rate']) ? htmlspecialchars($svc2['rate']) : '' ?>">
+                                                <input type="number" name="services[2][rate]" class="service-rate" min="0" step="1" placeholder="0.00" value="<?= isset($svc2['rate']) ? htmlspecialchars($svc2['rate']) : '' ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -259,7 +259,7 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">Maximum Audience Size Supported</label>
-                                        <input type="number" name="services[2][max_audience_size]" class="form-input" placeholder="e.g., 500" value="<?= isset($svc2['max_audience_size']) ? htmlspecialchars($svc2['max_audience_size']) : '' ?>">
+                                        <input type="number" name="services[2][max_audience_size]" class="form-input" min="0" step="1" placeholder="e.g., 500" value="<?= isset($svc2['max_audience_size']) ? htmlspecialchars($svc2['max_audience_size']) : '' ?>">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Equipment Brands</label>
@@ -310,7 +310,7 @@
                                             <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
                                             <div class="input-wrapper">
                                                 <span class="currency">Rs</span>
-                                                <input type="number" name="services[3][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc3['rate']) ? htmlspecialchars($svc3['rate']) : '' ?>">
+                                                <input type="number" name="services[3][rate]" class="service-rate" min="0" step="1" placeholder="0.00" value="<?= isset($svc3['rate']) ? htmlspecialchars($svc3['rate']) : '' ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -332,7 +332,7 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">Number of Crew Members</label>
-                                        <input type="number" name="services[3][num_crew_members]" class="form-input" placeholder="e.g., 3" value="<?= isset($svc3['num_crew_members']) ? htmlspecialchars($svc3['num_crew_members']) : '' ?>">
+                                        <input type="number" name="services[3][num_crew_members]" class="form-input" min="0" step="1" placeholder="e.g., 3" value="<?= isset($svc3['num_crew_members']) ? htmlspecialchars($svc3['num_crew_members']) : '' ?>">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Editing Software Used</label>
@@ -414,7 +414,7 @@
                                             <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
                                             <div class="input-wrapper">
                                                 <span class="currency">Rs</span>
-                                                <input type="number" name="services[4][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc4['rate']) ? htmlspecialchars($svc4['rate']) : '' ?>">
+                                                <input type="number" name="services[4][rate]" class="service-rate" min="0" step="1" placeholder="0.00" value="<?= isset($svc4['rate']) ? htmlspecialchars($svc4['rate']) : '' ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -487,7 +487,7 @@
                                             <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
                                             <div class="input-wrapper">
                                                 <span class="currency">Rs</span>
-                                                <input type="number" name="services[5][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc5['rate']) ? htmlspecialchars($svc5['rate']) : '' ?>">
+                                                <input type="number" name="services[5][rate]" class="service-rate" min="0" step="1" placeholder="0.00" value="<?= isset($svc5['rate']) ? htmlspecialchars($svc5['rate']) : '' ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -527,7 +527,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Number of Costumes Available</label>
-                                        <input type="number" name="services[5][number_of_costumes_available]" class="form-input" placeholder="e.g., 50" value="<?= isset($svc5['number_of_costumes_available']) ? htmlspecialchars($svc5['number_of_costumes_available']) : '' ?>">
+                                        <input type="number" name="services[5][number_of_costumes_available]" class="form-input" min="0" step="1" placeholder="e.g., 50" value="<?= isset($svc5['number_of_costumes_available']) ? htmlspecialchars($svc5['number_of_costumes_available']) : '' ?>">
                                     </div>
                                 </div>
                             </div>
@@ -556,7 +556,7 @@
                                             <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
                                             <div class="input-wrapper">
                                                 <span class="currency">Rs</span>
-                                                <input type="number" name="services[6][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc6['rate']) ? htmlspecialchars($svc6['rate']) : '' ?>">
+                                                <input type="number" name="services[6][rate]" class="service-rate" min="0" step="1" placeholder="0.00" value="<?= isset($svc6['rate']) ? htmlspecialchars($svc6['rate']) : '' ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -574,11 +574,11 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">Experience in Stage Make-up (years)</label>
-                                        <input type="number" name="services[6][experience_stage_makeup_years]" class="form-input" placeholder="e.g., 5" value="<?= isset($svc6['experience_stage_makeup_years']) ? htmlspecialchars($svc6['experience_stage_makeup_years']) : '' ?>">
+                                        <input type="number" name="services[6][experience_stage_makeup_years]" class="form-input" min="0" step="1" placeholder="e.g., 5" value="<?= isset($svc6['experience_stage_makeup_years']) ? htmlspecialchars($svc6['experience_stage_makeup_years']) : '' ?>">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Maximum Actors Per Show</label>
-                                        <input type="number" name="services[6][maximum_actors_per_show]" class="form-input" placeholder="e.g., 50" value="<?= isset($svc6['maximum_actors_per_show']) ? htmlspecialchars($svc6['maximum_actors_per_show']) : '' ?>">
+                                        <input type="number" name="services[6][maximum_actors_per_show]" class="form-input" min="0" step="1" placeholder="e.g., 50" value="<?= isset($svc6['maximum_actors_per_show']) ? htmlspecialchars($svc6['maximum_actors_per_show']) : '' ?>">
                                     </div>
                                 </div>
                                 <div class="form-row">
@@ -659,7 +659,7 @@
                                             <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #6b7280; font-weight: 500;">Rate (Rs):</label>
                                             <div class="input-wrapper">
                                                 <span class="currency">Rs</span>
-                                                <input type="number" name="services[7][rate]" class="service-rate" placeholder="0.00" value="<?= isset($svc7['rate']) ? htmlspecialchars($svc7['rate']) : '' ?>">
+                                                <input type="number" name="services[7][rate]" class="service-rate" min="0" step="1" placeholder="0.00" value="<?= isset($svc7['rate']) ? htmlspecialchars($svc7['rate']) : '' ?>">
                                             </div>
                                         </div>
                                     </div>

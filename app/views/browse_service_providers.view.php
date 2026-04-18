@@ -57,9 +57,9 @@
                         <div class="filter-group">
                             <label><i class="bx bx-dollar"></i> Hourly Rate (Rs)</label>
                             <div class="rate-range">
-                                <input type="number" name="min_rate" placeholder="Min" class="filter-input" value="<?= htmlspecialchars($data['filters']['min_rate'] ?? '') ?>">
+                                <input type="number" name="min_rate" min="0" step="1" placeholder="Min" class="filter-input" value="<?= htmlspecialchars($data['filters']['min_rate'] ?? '') ?>">
                                 <span>to</span>
-                                <input type="number" name="max_rate" placeholder="Max" class="filter-input" value="<?= htmlspecialchars($data['filters']['max_rate'] ?? '') ?>">
+                                <input type="number" name="max_rate" min="0" step="1" placeholder="Max" class="filter-input" value="<?= htmlspecialchars($data['filters']['max_rate'] ?? '') ?>">
                             </div>
                         </div>
 
