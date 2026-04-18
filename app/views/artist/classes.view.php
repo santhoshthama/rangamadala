@@ -35,8 +35,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($storedValue);
     }
 }
-
-$artistSidebarActive = 'classes';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -72,7 +70,10 @@ $artistSidebarActive = 'classes';
     <?php unset($_SESSION['error_message']); ?>
     <?php endif; ?>
 
-    <?php include __DIR__ . '/sidebar.php'; ?>
+    <?php
+    $artistSidebarActive = 'classes';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <main class="main--content">
         <div class="header--wrapper">

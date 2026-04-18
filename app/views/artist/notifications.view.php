@@ -14,8 +14,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
     }
 }
 
-$artistSidebarActive = 'notifications';
-
 $grouped = isset($grouped_notifications) ? $grouped_notifications : [];
 $unreadCount = isset($unread_count) ? (int)$unread_count : 0;
 $allNotifications = isset($all_notifications) ? $all_notifications : [];
@@ -491,7 +489,10 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
 </head>
 <body>
     <!-- Sidebar -->
-    <?php include __DIR__ . '/sidebar.php'; ?>
+    <?php
+    $artistSidebarActive = 'notifications';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <!-- Main Content -->
     <main class="main--content">
@@ -580,7 +581,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                 <i class="bx bx-briefcase"></i> Production Manager <?= $pmUnreadCount > 0 ? '(' . $pmUnreadCount . ')' : '' ?>
             </button>
             <button class="tab-btn" onclick="switchTab('grouped', this)">
-                <i class="bx bx-maskq"></i> By Drama
+                <i class="bx bx-film"></i> By Drama
             </button>
             <button class="tab-btn" onclick="switchTab('unread', this)">
                 <i class="bx bx-envelope"></i> Unread Only
@@ -597,6 +598,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                             <?php if (empty($allNotifications)): ?>
                                 <div class="empty-state">
                                     <i class="bx bx-bell-slash"></i>
+                                    <h3>No Notifications Yet</h3>
                                     <p>You'll receive notifications when directors schedule events, assign roles, or update drama details.</p>
                                 </div>
                             <?php else: ?>
@@ -647,6 +649,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                             <?php if (empty($actorNotifications)): ?>
                                 <div class="empty-state">
                                     <i class="bx bx-inbox"></i>
+                                    <h3>No Actor Notifications Yet</h3>
                                     <p>Actor-origin updates will appear here.</p>
                                 </div>
                             <?php else: ?>
@@ -682,6 +685,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                             <?php if (empty($directorNotifications)): ?>
                                 <div class="empty-state">
                                     <i class="bx bx-inbox"></i>
+                                    <h3>No Director Notifications Yet</h3>
                                     <p>Director-origin updates (role, interview, event) will appear here.</p>
                                 </div>
                             <?php else: ?>
@@ -717,6 +721,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                             <?php if (empty($pmNotifications)): ?>
                                 <div class="empty-state">
                                     <i class="bx bx-inbox"></i>
+                                    <h3>No PM Notifications Yet</h3>
                                     <p>Provider responses and request-stage updates will appear here.</p>
                                 </div>
                             <?php else: ?>
@@ -766,6 +771,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                             <div class="card-section">
                                 <div class="empty-state">
                                     <i class="bx bx-bell-slash"></i>
+                                    <h3>No Notifications Yet</h3>
                                     <p>Notifications will appear here grouped by drama.</p>
                                 </div>
                             </div>
@@ -830,6 +836,7 @@ $pmUnreadCount = count(array_filter($pmNotifications, function ($n) {
                             <?php if (empty($unreadNotifications)): ?>
                                 <div class="empty-state">
                                     <i class="bx bx-check-circle" style="color: #28a745;"></i>
+                                    <h3>All Caught Up!</h3>
                                     <p>You have no unread notifications.</p>
                                 </div>
                             <?php else: ?>

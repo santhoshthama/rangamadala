@@ -13,8 +13,6 @@ if ($profileUser && !empty($profileUser->profile_image)) {
         $profileImageSrc = ROOT . '/uploads/profile_images/' . rawurlencode($imageValue);
     }
 }
-
-$artistSidebarActive = 'vacancies';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,7 +30,10 @@ $artistSidebarActive = 'vacancies';
 
 <body>
     <!-- Sidebar -->
-    <?php include __DIR__ . '/sidebar.php'; ?>
+    <?php
+    $artistSidebarActive = 'vacancies';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <!-- Main Content -->
     <main class="main--content">
