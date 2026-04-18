@@ -30,43 +30,10 @@ if ($profileUser && !empty($profileUser->profile_image)) {
 
 <body>
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" />
-          </div>
-        <ul class="menu">
-            <li>
-                <a href="<?=ROOT?>/artistdashboard">
-                    <i class="bx bxs-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="<?=ROOT?>/artistdashboard/browse_vacancies">
-                    <i class="bx bxs-megaphone"></i>
-                    <span>View All Vacancies</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class="bx bxs-bell"></i>
-                    <span>Notifications</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?=ROOT?>/artistdashboard/classes">
-                    <i class='bx bxs-graduation'></i>
-                    <span>Classes</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?=ROOT?>/artistdashboard?tab=my-showings#my-showings">
-                    <i class='bx bx-calendar-event'></i>
-                    <span>Showings</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php
+    $artistSidebarActive = 'vacancies';
+    include __DIR__ . '/_partials/sidebar.php';
+    ?>
 
     <!-- Main Content -->
     <main class="main--content">
