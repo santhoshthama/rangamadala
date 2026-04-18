@@ -27,7 +27,7 @@ $roleStatuses = [
 
 $dramaId = isset($drama->id) ? (int)$drama->id : 0;
 $roleId = (int)($role->id ?? 0);
-$currentDirectorId = (int)($_SESSION['user_id'] ?? 0);
+$flash = isset($flash) && is_array($flash) ? $flash : null;
 
 $updateDefaults = [
     'role_name' => $role->role_name ?? '',
@@ -46,17 +46,8 @@ if (($role_form_mode ?? null) === 'update' && (int)($role_form_role_id ?? 0) ===
     $updateErrors = $role_form_errors ?? [];
 }
 
-function groupByStatus(array $items, $statusKey = 'status') {
-    $grouped = [];
-    foreach ($items as $item) {
-        $status = strtolower($item->{$statusKey} ?? 'pending');
-        $grouped[$status][] = $item;
-    }
-    return $grouped;
-}
-
-$groupedApplications = groupByStatus($roleApplications, 'status');
-$groupedRequests = groupByStatus($roleRequests, 'status');
+$groupedApplications = isset($groupedApplications) && is_array($groupedApplications) ? $groupedApplications : [];
+$groupedRequests = isset($groupedRequests) && is_array($groupedRequests) ? $groupedRequests : [];
 
 require_once __DIR__ . '/_profile_image_helper.php';
 $profileImageSrc = directorResolveProfileImageSrc();
@@ -120,11 +111,8 @@ $profileImageSrc = directorResolveProfileImageSrc();
             </div>
         </div>
 
-        <?php if (isset($_SESSION['message'])): ?>
-            <div class="card" style="border-left: 4px solid var(--brand); background: rgba(186,142,35,0.1); color: var(--ink);">
-                <?= esc($_SESSION['message']) ?>
-            </div>
-            <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+        <?php if (!empty($flash)): ?>
+            <?php include APPROOT . '/views/_partials/flash.php'; ?>
         <?php endif; ?>
 
         <section class="card">

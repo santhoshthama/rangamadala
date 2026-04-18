@@ -7,7 +7,7 @@ if (!isset($drama) && isset($data['drama'])) {
     $drama = $data['drama'];
 }
 
-$dramaId = isset($drama->id) ? (int)$drama->id : (isset($_GET['drama_id']) ? (int)$_GET['drama_id'] : 0);
+$dramaId = isset($drama->id) ? (int)$drama->id : 0;
 $dashboardStats = isset($dashboardStats) && is_array($dashboardStats) ? $dashboardStats : [];
 
 $totalRoles = (int)($dashboardStats['total_roles'] ?? 0);
@@ -111,7 +111,7 @@ $profileImageSrc = directorResolveProfileImageSrc();
                     <div class="card-section drama-overview-card">
                         <h3>
                             <span>Drama Overview</span>
-                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= isset($drama->id) ? $drama->id : $_GET['drama_id'] ?? 1 ?>" class="btn btn-primary btn-compact">
+                            <a href="<?= ROOT ?>/director/drama_details?drama_id=<?= $dramaId ?>" class="btn btn-primary btn-compact">
                                 <i class="bx bx-eye"></i>
                                 View Details
                             </a>

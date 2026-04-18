@@ -9,7 +9,8 @@ if (!isset($drama) && isset($data['drama'])) {
 
 $currentManager = $data['currentManager'] ?? null;
 $pendingRequests = $data['pendingRequests'] ?? [];
-$drama_id = isset($drama->id) ? (int)$drama->id : ($_GET['drama_id'] ?? 0);
+$drama_id = isset($drama->id) ? (int)$drama->id : 0;
+$flash = isset($flash) && is_array($flash) ? $flash : null;
 
 require_once __DIR__ . '/_profile_image_helper.php';
 $profileImageSrc = directorResolveProfileImageSrc();
@@ -50,12 +51,8 @@ $profileImageSrc = directorResolveProfileImageSrc();
             </div>
         </div>
 
-        <?php if (isset($_SESSION['message'])): ?>
-            <div class="alert alert-<?= $_SESSION['message_type'] ?? 'info' ?>">
-                <i class="bx bx-<?= $_SESSION['message_type'] === 'success' ? 'check-circle' : 'exclamation-circle' ?>"></i>
-                <?= esc($_SESSION['message']) ?>
-            </div>
-            <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+        <?php if (!empty($flash)): ?>
+            <?php include APPROOT . '/views/_partials/flash.php'; ?>
         <?php endif; ?>
 
         <!-- Info Box -->

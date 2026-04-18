@@ -28,6 +28,7 @@ $pendingDecision = $applicationStatus === 'pending';
 $nameSource = $artist->full_name ?? 'A';
 $artistInitial = strtoupper((function_exists('mb_substr') ? mb_substr($nameSource, 0, 1) : substr($nameSource, 0, 1)) ?: 'A');
 $profileImage = !empty($artist->profile_image) ? ROOT . '/uploads/profile_images/' . $artist->profile_image : null;
+$flash = isset($flash) && is_array($flash) ? $flash : null;
 
 require_once __DIR__ . '/_profile_image_helper.php';
 $directorImageSrc = directorResolveProfileImageSrc();
@@ -79,11 +80,8 @@ $directorImageSrc = directorResolveProfileImageSrc();
     <main class="main--content">
         <a class="back-button" href="<?= ROOT ?>/director/manage_roles?drama_id=<?= esc($dramaId) ?>"><i class="bx bx-arrow-left"></i>Back to Manage Roles</a>
 
-        <?php if (isset($_SESSION['message'])): ?>
-            <div class="card" style="border-left: 4px solid var(--brand); background: rgba(186,142,35,0.08); color: var(--ink);">
-                <?= esc($_SESSION['message']) ?>
-            </div>
-            <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+        <?php if (!empty($flash)): ?>
+            <?php include APPROOT . '/views/_partials/flash.php'; ?>
         <?php endif; ?>
 
         <header style="margin-bottom: 24px;">
