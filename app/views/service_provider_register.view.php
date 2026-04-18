@@ -21,7 +21,7 @@
     </a>
   </div>
 
-  <div class="signup-container signup-service">
+  <div class="signup-container">
     <div class="register-card">
       <div class="register-header">
         <h2>Service Provider Signup</h2>
@@ -53,12 +53,6 @@
       <div id="clientErrorBox" class="error-modal" style="display:none; margin: 20px 0 0;" aria-live="polite"></div>
 
       <div class="register-content">
-        <!-- <div class="alert-info">
-          <span class="alert-info-icon">i</span>
-          <div class="alert-info-text">
-            Fill your account, profile, NIC, service types, and past engagements now. You can add full service details after admin approval.
-          </div>
-        </div> -->
 
         <div class="page-indicator">
           <div class="step active" data-step="1"><div class="step-number">1</div></div>
