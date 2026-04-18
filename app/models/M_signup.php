@@ -43,9 +43,9 @@ class M_signup {
         }
 
         $this->db->query("INSERT INTO users 
-            (full_name, email, password, phone, nic_photo, nic_photo_back, role, is_verified, verification_status, created_at) 
+            (full_name, email, password, phone, nic_photo, nic_photo_back, profile_image, role, is_verified, verification_status, created_at) 
             VALUES 
-            (:full_name, :email, :password, :phone, :nic_photo, :nic_photo_back, :role, :is_verified, :verification_status, NOW())");
+            (:full_name, :email, :password, :phone, :nic_photo, :nic_photo_back, :profile_image, :role, :is_verified, :verification_status, NOW())");
 
         $this->db->bind(':full_name', $full_name);
         $this->db->bind(':email', $email);
@@ -53,6 +53,7 @@ class M_signup {
         $this->db->bind(':phone', $phone);
         $this->db->bind(':nic_photo', $nic_photo);
         $this->db->bind(':nic_photo_back', $nic_photo_back);
+        $this->db->bind(':profile_image', 'user_profile.png');
         $this->db->bind(':role', $role);
         $this->db->bind(':is_verified', $is_verified);
         $this->db->bind(':verification_status', $verification_status);

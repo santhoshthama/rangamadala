@@ -88,14 +88,16 @@
 }
 
 .btn-generate {
-    background: #b8860b;
+    background: linear-gradient(135deg, #ba8e23, #9b761d);
     color: white;
+    border: 1px solid transparent;
+    box-shadow: 0 8px 16px rgba(186, 142, 35, 0.28);
 }
 
 .btn-generate:hover {
-    background: #daa520;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(184, 134, 11, 0.3);
+    box-shadow: 0 10px 18px rgba(186, 142, 35, 0.35);
+    filter: saturate(1.05);
 }
 
 .btn-generate:disabled {
@@ -105,12 +107,15 @@
 }
 
 .btn-reset {
-    background: #6c757d;
-    color: white;
+    background: linear-gradient(180deg, #fffdf7 0%, #fff7e6 100%);
+    color: #5a4415;
+    border: 1px solid #f0dfb4;
+    box-shadow: 0 4px 12px rgba(186, 142, 35, 0.12);
 }
 
 .btn-reset:hover {
-    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(186, 142, 35, 0.2);
 }
 
 /* Quick Templates */
@@ -168,45 +173,50 @@
 }
 
 .btn-download-report {
-    background: #b8860b;
+    background: linear-gradient(135deg, #ba8e23, #9b761d);
     color: white;
-    border: none;
+    border: 1px solid transparent;
     padding: 6px 10px;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 12px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: 5px;
     justify-content: center;
     margin-top: 8px;
+    box-shadow: 0 4px 12px rgba(186, 142, 35, 0.2);
 }
 
 .btn-download-report:hover {
-    background: #daa520;
     transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(186, 142, 35, 0.3);
+    filter: saturate(1.05);
 }
 
 .btn-download-small {
-    background: #b8860b;
+    background: linear-gradient(135deg, #ba8e23, #9b761d);
     color: white;
-    border: none;
+    border: 1px solid transparent;
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 13px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: 6px;
     white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(186, 142, 35, 0.2);
 }
 
 .btn-download-small:hover {
-    background: #daa520;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(186, 142, 35, 0.3);
+    filter: saturate(1.05);
 }
 
 @media (max-width: 1200px) {

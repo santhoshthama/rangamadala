@@ -71,14 +71,15 @@ class M_audience {
 
         // Insert the new audience user
         $this->db->query("INSERT INTO users 
-            (full_name, email, password, phone, role) 
+            (full_name, email, password, phone, profile_image, role) 
             VALUES 
-            (:full_name, :email, :password, :phone, :role)");
+            (:full_name, :email, :password, :phone, :profile_image, :role)");
 
         $this->db->bind(':full_name', $full_name);
         $this->db->bind(':email', $email);
         $this->db->bind(':password', $hashedPassword);
         $this->db->bind(':phone', $phone);
+        $this->db->bind(':profile_image', 'user_profile.png');
         $this->db->bind(':role', 'audience');
 
         return $this->db->execute();

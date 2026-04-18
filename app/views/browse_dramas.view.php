@@ -6,6 +6,7 @@
     <title>Browse Dramas - <?= APP_NAME ?></title>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/Button.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/toast.css">
 </head>

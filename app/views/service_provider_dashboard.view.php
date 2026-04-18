@@ -4,7 +4,16 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title><?= isset($pageTitle) ? $pageTitle : 'Dashboard' ?> - Rangamadala</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+        <!-- Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <!-- Boxicons -->
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <!-- Admin Design Library CSS -->
+        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css">
+        <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/Button.css">
+        <!-- Service Provider Styles -->
         <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
         <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     </head>
@@ -28,7 +37,7 @@
                                 <span><?= number_format(abs($revenue_change ?? 0), 1) ?>%</span>
                             </div>
                         </div>
-                        <i class="fas fa-money-bill-wave icon"></i>
+                        <i class="bx bx-wallet icon"></i>
                     </div>
                     <div class="productionCount--card">
                         <div class="Count">
@@ -39,7 +48,7 @@
                                 <span><?= number_format(abs($booking_change ?? 0), 1) ?>%</span>
                             </div>
                         </div>
-                        <i class="fas fa-calendar-check icon light-gold"></i>
+                        <i class="bx bxs-calendar-check icon light-gold"></i>
                     </div>
                     <div class="productionCount--card">
                         <div class="Count">
@@ -50,7 +59,7 @@
                                 <span>Live</span>
                             </div>
                         </div>
-                        <i class="fas fa-star icon"></i>
+                        <i class="bx bxs-star icon"></i>
                     </div>
                     <div class="productionCount--card">
                         <div class="Count">
@@ -60,7 +69,7 @@
                                 <span><?= (int)($completed_services ?? 0) ?> completed</span>
                             </div>
                         </div>
-                        <i class="fas fa-check-circle icon light-gold"></i>
+                        <i class="bx bxs-check-circle icon light-gold"></i>
                     </div>
                 </div>
             </div>

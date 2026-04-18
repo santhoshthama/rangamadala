@@ -6,14 +6,14 @@
     <title>Change Password</title>
     <link rel="stylesheet" href="<?php echo ROOT; ?>/assets/CSS/service provider/service_provider_profile.css">
 </head>
-<body>
-    <div class="container">
+<body class="service-change-password-page">
+    <div class="container change-password-container">
         <button class="back-button" onclick="window.location.href='<?php echo ROOT; ?>/ServiceProviderProfile/index?id=<?php echo $data['provider']->user_id; ?>'">
             <span>←</span>
             <span>Back to Profile</span>
         </button>
 
-        <div class="register-card">
+        <div class="register-card change-password-card">
             <div class="register-header">
                 <h2>Change Password</h2>
                 <p>Update your account password</p>
@@ -26,7 +26,7 @@
                     </div>
                 <?php endif; ?>
 
-                <form method="POST">
+                <form method="POST" class="change-password-form">
                     <div class="section">
                         <div class="form-group">
                             <label class="form-label">Current Password <span class="required">*</span></label>
@@ -34,7 +34,7 @@
                                 placeholder="Enter your current password" required>
                         </div>
 
-                        <div class="form-row">
+                        <div class="form-row change-password-row">
                             <div class="form-group">
                                 <label class="form-label">New Password <span class="required">*</span></label>
                                 <input type="password" name="new_password" class="form-input" 
@@ -48,7 +48,7 @@
                         </div>
                     </div>
 
-                    <div class="buttons-section">
+                    <div class="buttons-section form-actions">
                         <button type="submit" class="btn">Change Password</button>
                         <button type="button" class="btn btn-secondary" 
                             onclick="window.location.href='<?php echo ROOT; ?>/ServiceProviderProfile/index?id=<?php echo $data['provider']->user_id; ?>'">Cancel</button>
