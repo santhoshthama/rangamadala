@@ -25,6 +25,7 @@ $toastSuccessMessage = isset($toastSuccessMessage) ? (string)$toastSuccessMessag
 $toastErrorMessage = isset($toastErrorMessage) ? (string)$toastErrorMessage : '';
 $infoMessage = isset($infoMessage) ? (string)$infoMessage : '';
 $infoMessageType = isset($infoMessageType) ? (string)$infoMessageType : 'info';
+$artistSidebarActive = 'dashboard';
 
 ?>
 <!DOCTYPE html>
@@ -667,51 +668,7 @@ $infoMessageType = isset($infoMessageType) ? (string)$infoMessageType : 'info';
         <?php endif; ?>
 
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <a href="<?=ROOT?>/artistdashboard" class="logo-link">
-                <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
-            </a>
-        </div>
-        <ul class="menu">
-            <li class="<?= $sidebarActive['dashboard'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard">
-                    <i class='bx bx-home'></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['vacancies'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard/browse_vacancies">
-                    <i class='bx bx-volume-full'></i>
-                    <span>View All Vacancies</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['notifications'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class='bx bx-bell'></i>
-                    <span>Notifications</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['classes'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard/classes">
-                    <i class='bx bx-microphone'></i>
-                    <span>Classes</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['showings'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard?tab=my-showings#my-showings">
-                    <i class='bx bx-calendar-event'></i>
-                    <span>Showings</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['calendar'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard/calendar">
-                    <i class='bx bx-calendar-week'></i>
-                    <span>Artist Calendar</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php include __DIR__ . '/artist/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="main--content">
