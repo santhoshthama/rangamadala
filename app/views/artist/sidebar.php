@@ -39,7 +39,7 @@ $artistSidebarLinks = [
     ],
     'showings' => [
         'href' => ROOT . '/artistdashboard?tab=my-showings#my-showings',
-        'icon' => 'bx bx-calendar-event',
+        'icon' => 'bx bx-film',
         'label' => 'Showings',
     ],
     'calendar' => [
