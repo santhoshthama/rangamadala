@@ -9,7 +9,7 @@ $searchTerm = isset($searchTerm) ? (string)$searchTerm : '';
 $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$profileImageSrc = directorResolveProfileImageSrc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
