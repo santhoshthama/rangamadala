@@ -55,59 +55,62 @@ if (isset($_SESSION['user_id']) && (($_SESSION['user_role'] ?? '') === 'service_
 
 <div class="sidebar">
     <div class="logo">
-        <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala" style="width: 100%; max-width: 180px; display: block; margin: 0 auto 30px auto; padding: 20px 0;">
-        <ul class="menu">
-            <li class="<?= $activePage === 'home' ? 'active' : '' ?>">
-                <a href="<?= ROOT ?>/Home">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-            </li>
-            <li class="<?= $activePage === 'dashboard' ? 'active' : '' ?>">
-                <a href="<?= ROOT ?>/ServiceProviderDashboard">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="<?= $activePage === 'requests' ? 'active' : '' ?>">
-                <a href="<?= ROOT ?>/ServiceRequests">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span>Service Requests</span>
-                </a>
-            </li>
-            <li class="<?= $activePage === 'availability' ? 'active' : '' ?>">
-                <a href="<?= ROOT ?>/ServiceAvailability">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Availability</span>
-                </a>
-            </li>
-            <li class="<?= $activePage === 'payments' ? 'active' : '' ?>">
-                <a href="<?= ROOT ?>/ServicePayment">
-                    <i class="fas fa-money-bill-wave"></i>
-                    <span>Payments</span>
-                </a>
-            </li>
-            <li class="<?= $activePage === 'notifications' ? 'active' : '' ?>">
-                <a href="<?= ROOT ?>/ServiceProviderNotifications/open" id="spNotificationsLink">
-                    <i class="fas fa-bell"></i>
-                    <span>Notifications</span>
-                    <span class="notification-dot <?= $spUnreadCount > 0 ? 'is-visible' : '' ?>" id="spNotificationDot"></span>
-                </a>
-            </li>
-            <li class="<?= $activePage === 'reports' ? 'active' : '' ?>">
-                <a href="<?= ROOT ?>/ServiceReports">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Reports</span>
-                </a>
-            </li>
-            <!-- <li class="<?= $activePage === 'profile' ? 'active' : '' ?>">
-                <a href="<?= ROOT ?>/ServiceProviderProfile">
-                    <i class="fas fa-user"></i>
-                    <span>Profile</span>
-                </a>
-            </li> -->
-        </ul>
+        <a href="<?= ROOT ?>/ServiceProviderDashboard" class="logo-link" aria-label="Service Provider Dashboard">
+            <img class="logo-image" src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala">
+        </a>
     </div>
+
+    <ul class="menu">
+        <li class="<?= $activePage === 'home' ? 'active' : '' ?>">
+            <a href="<?= ROOT ?>/Home">
+                <i class="bx bx-home"></i>
+                <span>Home</span>
+            </a>
+        </li>
+        <li class="<?= $activePage === 'dashboard' ? 'active' : '' ?>">
+            <a href="<?= ROOT ?>/ServiceProviderDashboard">
+                <i class="bx bx-tachometer"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="<?= $activePage === 'requests' ? 'active' : '' ?>">
+            <a href="<?= ROOT ?>/ServiceRequests">
+                <i class="bx bx-clipboard"></i>
+                <span>Service Requests</span>
+            </a>
+        </li>
+        <li class="<?= $activePage === 'availability' ? 'active' : '' ?>">
+            <a href="<?= ROOT ?>/ServiceAvailability">
+                <i class="bx bx-calendar-check"></i>
+                <span>Availability</span>
+            </a>
+        </li>
+        <li class="<?= $activePage === 'payments' ? 'active' : '' ?>">
+            <a href="<?= ROOT ?>/ServicePayment">
+                <i class="bx bx-money"></i>
+                <span>Payments</span>
+            </a>
+        </li>
+        <li class="<?= $activePage === 'notifications' ? 'active' : '' ?>">
+            <a href="<?= ROOT ?>/ServiceProviderNotifications/open" id="spNotificationsLink">
+                <i class="bx bx-bell"></i>
+                <span>Notifications</span>
+                <span class="notification-dot <?= $spUnreadCount > 0 ? 'is-visible' : '' ?>" id="spNotificationDot"></span>
+            </a>
+        </li>
+        <li class="<?= $activePage === 'reports' ? 'active' : '' ?>">
+            <a href="<?= ROOT ?>/ServiceReports">
+                <i class="bx bx-file"></i>
+                <span>Reports</span>
+            </a>
+        </li>
+        <!-- <li class="<?= $activePage === 'profile' ? 'active' : '' ?>">
+            <a href="<?= ROOT ?>/ServiceProviderProfile">
+                <i class="bx bx-user"></i>
+                <span>Profile</span>
+            </a>
+        </li> -->
+    </ul>
 </div>
 
 <script>

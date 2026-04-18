@@ -9,7 +9,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
-    <?php $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1); ?>
+    <?php $dramaId = isset($dramaId) ? (int)$dramaId : (int)($drama->id ?? 0); ?>
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
@@ -35,6 +35,12 @@
                 </a>
             </li>
             <li>
+                <a href="<?= ROOT ?>/artistdashboard/calendar">
+                    <i class="bx bx-calendar-week"></i>
+                    <span>Artist Calendar</span>
+                </a>
+            </li>
+            <li>
                 <a href="<?= ROOT ?>/artistdashboard">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back to Profile</span>
@@ -57,10 +63,10 @@
         </a>
 
         <?php 
-            $serviceMissing = isset($_GET['service_missing']);
-            $prefillService = isset($_GET['prefill_service']) ? $_GET['prefill_service'] : '';
-            $showAddModal = isset($_GET['show_add_modal']);
-            $returnUrl = isset($_GET['return_url']) ? $_GET['return_url'] : '';
+            $serviceMissing = !empty($serviceMissing);
+            $prefillService = isset($prefillService) ? (string)$prefillService : '';
+            $showAddModal = !empty($showAddModal);
+            $returnUrl = isset($returnUrl) ? (string)$returnUrl : '';
         ?>
 
         <!-- Header -->
@@ -70,7 +76,7 @@
                 <h2>Service Management</h2>
             </div>
             <div class="header-controls">
-                <a class="btn btn-primary" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= isset($drama->id) ? $drama->id : ($_GET['drama_id'] ?? 0) ?>">
+                <a class="btn btn-primary" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= $dramaId ?>">
                     <i class="bx bx-plus"></i>
                     Browse Service
                 </a>
@@ -110,74 +116,29 @@
 
         <!-- Services List -->
         <div class="requests-list">
+            <?php $groupedServiceCards = isset($groupedServiceCards) && is_array($groupedServiceCards) ? $groupedServiceCards : []; ?>
 
-            <?php 
-                // Check if we have either service requests or drama services to display
-                $hasServiceRequests = isset($services) && is_array($services) && !empty($services);
-                $hasDramaServices = isset($dramaServices) && is_array($dramaServices) && !empty($dramaServices);
-                $hasAnyServices = $hasServiceRequests || $hasDramaServices;
-            ?>
-
-            <?php if ($hasAnyServices): ?>
-                <?php
-                    // Group service requests by service_type
-                    $grouped = [];
-                    if ($hasServiceRequests) {
-                        foreach ($services as $srv) {
-                            if (!is_object($srv)) { continue; }
-                            $typeKey = isset($srv->service_type) && $srv->service_type !== '' ? htmlspecialchars($srv->service_type) : 'Other';
-                            if (!isset($grouped[$typeKey])) { $grouped[$typeKey] = []; }
-                            $grouped[$typeKey][] = $srv;
-                        }
-                    }
-
-                    // Add DB-defined drama services to grouped cards
-                    if (isset($dramaServices) && is_array($dramaServices)) {
-                        foreach ($dramaServices as $dramaSvc) {
-                            $key = htmlspecialchars($dramaSvc->service_type);
-                            if (!isset($grouped[$key])) {
-                                $grouped[$key] = [];
-                            }
-                        }
-                    }
-
-                    // Build meta map from DB
-                    $serviceMetaMap = [];
-                    if (isset($dramaServices) && is_array($dramaServices)) {
-                        foreach ($dramaServices as $dramaSvc) {
-                            $serviceMetaMap[$dramaSvc->service_type] = [
-                                'budget' => $dramaSvc->budget,
-                                'description' => $dramaSvc->description,
-                            ];
-                        }
-                    }
-
-                    $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
-                    $allTypes = [
-                        'Theater Production',
-                        'Lighting Design',
-                        'Sound Systems',
-                        'Video Production',
-                        'Set Design',
-                        'Costume Design',
-                        'Other',
-                        'Makeup & Hair',
-                    ];
-                ?>
-
-                <?php foreach ($grouped as $type => $items): ?>
+            <?php if (!empty($groupedServiceCards)): ?>
+                <?php foreach ($groupedServiceCards as $groupCard): ?>
+                    <?php
+                        $type = (string)($groupCard['type'] ?? 'Other');
+                        $items = is_array($groupCard['items'] ?? null) ? $groupCard['items'] : [];
+                        $meta = $groupCard['meta'] ?? null;
+                        $canRemove = !empty($groupCard['canRemove']);
+                        $browseUrl = (string)($groupCard['browseUrl'] ?? (ROOT . '/BrowseServiceProviders?drama_id=' . $dramaId . '&service_type=' . urlencode($type)));
+                        $removeUrl = (string)($groupCard['removeUrl'] ?? (ROOT . '/production_manager/save_required_services?drama_id=' . $dramaId));
+                    ?>
                     <div class="service-group-card">
-                        <?php $rawType = html_entity_decode($type, ENT_QUOTES, 'UTF-8'); $canRemove = in_array($rawType, array_map(function($s){ return $s->service_type; }, $dramaServices ?? [])); ?>
                         <div class="service-group-card__header">
                             <h3 class="service-group-card__title"><?= htmlspecialchars($type) ?></h3>
                             <div class="service-group-card__actions">
                                 <span class="service-group-card__count"><?= count($items) ?> request(s)</span>
-                                <a class="btn btn-primary service-group-card__browse-button" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= (int)$dramaId ?>&service_type=<?= urlencode($rawType) ?>">
+                                <a class="btn btn-primary service-group-card__browse-button" href="<?= esc($browseUrl) ?>">
                                     <i class="fas fa-search"></i> Browse Service
                                 </a>
                                 <?php if ($canRemove): ?>
-                                    <form method="POST" action="<?= ROOT ?>/production_manager/save_required_services?drama_id=<?= (int)$dramaId ?>" class="service-group-card__remove-form">
-                                        <input type="hidden" name="remove_service_type" value="<?= htmlspecialchars($rawType) ?>">
+                                    <form method="POST" action="<?= esc($removeUrl) ?>" class="service-group-card__remove-form">
+                                        <input type="hidden" name="remove_service_type" value="<?= htmlspecialchars($type) ?>">
                                         <button type="submit" class="btn btn-secondary service-group-card__remove-button">
                                             <i class="fas fa-trash"></i> Remove
                                         </button>
@@ -185,119 +146,64 @@
                                 <?php endif; ?>
                             </div>
                         </div>
-                        <?php if (isset($serviceMetaMap[$rawType])): $meta = $serviceMetaMap[$rawType]; ?>
+
+                        <?php if (is_array($meta)): ?>
                             <div class="service-group-card__meta">
                                 <?php if (!empty($meta['budget'])): ?>
-                                    <div><strong>Budget:</strong> Rs <?= htmlspecialchars($meta['budget']) ?></div>
+                                    <div><strong>Budget:</strong> Rs <?= htmlspecialchars((string)$meta['budget']) ?></div>
                                 <?php endif; ?>
                                 <?php if (!empty($meta['description'])): ?>
-                                    <div><strong>Description:</strong> <?= htmlspecialchars($meta['description']) ?></div>
+                                    <div><strong>Description:</strong> <?= htmlspecialchars((string)$meta['description']) ?></div>
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
+
                         <div class="service-group-card__body">
                             <?php foreach ($items as $service): ?>
-                                <?php 
-                                    $status = isset($service->status) ? strtolower($service->status) : 'pending';
-                                    $statusText = ucfirst($status);
-                                    $statusClass = 'status-badge status-' . htmlspecialchars($status);
-                                    $hideGenericBadge = false;
-                                    
-                                    // Check if payment date is overdue for provider_responded status
-                                    if ($status === 'provider_responded') {
-                                        $serviceDetails = $service->service_details_json ? json_decode($service->service_details_json, true) : [];
-                                        $providerResponse = $serviceDetails['provider_response'] ?? [];
-                                        $advanceDueDate = $providerResponse['advance_due_date'] ?? null;
-                                        $needsAdvance = $providerResponse['needs_advance'] === true || $providerResponse['needs_advance'] === 'true' || $providerResponse['needs_advance'] === 1;
-                                        
-                                        if ($advanceDueDate && $needsAdvance) {
-                                            $dueDate = new DateTime($advanceDueDate);
-                                            $today = new DateTime();
-                                            $today->setTime(0, 0, 0);
-                                            $dueDate->setTime(0, 0, 0);
-                                            
-                                            if ($dueDate < $today) {
-                                                $statusText = 'Payment date overdue';
-                                                $statusClass .= ' status-overdue';
-                                            }
-                                        }
-                                    }
-                                    
-                                    // Hide generic badge for completed with payment pending confirmation
-                                    if ($status === 'completed') {
-                                        $paymentGateway = $service->payment_gateway ?? '';
-                                        $advancePaymentStatus = strtolower($service->advance_payment_status ?? '');
-                                        $hasPendingCashBankPayment = ($paymentGateway === 'cash' || $paymentGateway === 'bank_transfer') && $advancePaymentStatus === 'pending';
-                                        
-                                        if ($hasPendingCashBankPayment) {
-                                            $hideGenericBadge = true;
-                                        }
-                                    }
-                                    
-                                    // Always hide generic badge for completed_paid (uses custom badge)
-                                    if ($status === 'completed_paid') {
-                                        $hideGenericBadge = true;
-                                    }
-                                    
-                                    $budget = isset($service->budget) && $service->budget !== null ? number_format((float)$service->budget, 2) : null;
-                                    $dateLabel = '';
-                                    if (!empty($service->service_date)) {
-                                        $dateLabel = 'Service Date: ' . htmlspecialchars($service->service_date);
-                                    } elseif (!empty($service->start_date) || !empty($service->end_date)) {
-                                        $dateLabel = 'Schedule: ' . htmlspecialchars($service->start_date) . ' to ' . htmlspecialchars($service->end_date);
-                                    }
-                                    $provider = isset($service->provider_name) ? htmlspecialchars($service->provider_name) : 'Provider';
-                                    $title = $provider;
+                                <?php
+                                    $status = (string)($service->view_status ?? strtolower((string)($service->status ?? 'pending')));
+                                    $statusText = (string)($service->view_status_text ?? ucfirst($status));
+                                    $statusClass = (string)($service->view_status_class ?? ('status-badge status-' . $status));
+                                    $hideGenericBadge = !empty($service->view_hide_generic_badge);
+                                    $budget = $service->view_budget ?? null;
+                                    $dateLabel = (string)($service->view_date_label ?? '');
+                                    $title = htmlspecialchars((string)($service->view_provider_name ?? ($service->provider_name ?? 'Provider')));
                                 ?>
                                 <div class="request-item" data-category="<?= htmlspecialchars($status) ?>">
                                     <div class="request-info">
                                         <h3><?= $title ?></h3>
                                         <?php if ($dateLabel): ?><div class="service-date"><?= $dateLabel ?></div><?php endif; ?>
-                                        <?php if (!empty($service->created_at)): ?><div class="request-date" style="font-size: 12px; color: #999; margin-top: 4px;">Requested on <?= date('M d, Y', strtotime($service->created_at)) ?></div><?php endif; ?>
-                                        <?php if (!empty($service->service_required)): ?><div class="request-snippet" style="margin-top: 8px; font-size: 13px; color: #555; line-height: 1.4;"><?= htmlspecialchars(substr($service->service_required, 0, 100)) ?><?= strlen($service->service_required) > 100 ? '...' : '' ?></div><?php endif; ?>
+                                        <?php if (!empty($service->created_at)): ?><div class="request-date" style="font-size: 12px; color: #999; margin-top: 4px;">Requested on <?= date('M d, Y', strtotime((string)$service->created_at)) ?></div><?php endif; ?>
+                                        <?php if (!empty($service->service_required)): ?><div class="request-snippet" style="margin-top: 8px; font-size: 13px; color: #555; line-height: 1.4;"><?= htmlspecialchars(substr((string)$service->service_required, 0, 100)) ?><?= strlen((string)$service->service_required) > 100 ? '...' : '' ?></div><?php endif; ?>
                                     </div>
                                     <div class="request-actions">
                                         <?php if (!$hideGenericBadge): ?><span class="<?= $statusClass ?>"><?= htmlspecialchars($statusText) ?></span><?php endif; ?>
-                                        <?php if ($budget !== null): ?><span class="price">Rs <?= $budget ?></span><?php endif; ?>
-                                        
+                                        <?php if ($budget !== null): ?><span class="price">Rs <?= htmlspecialchars((string)$budget) ?></span><?php endif; ?>
+
                                         <?php if ($status === 'provider_responded'): ?>
-                                            <?php
-                                                $serviceDetails = $service->service_details_json ? json_decode($service->service_details_json, true) : [];
-                                                $providerResponse = $serviceDetails['provider_response'] ?? [];
-                                            ?>
-                                            <button class="btn-details" onclick="openConfirmModal(<?= (int)$service->id ?>, <?= htmlspecialchars(json_encode($providerResponse), ENT_QUOTES, 'UTF-8') ?>)">
-                                                Review & Confirm
-                                            </button>
-                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
-                                                View Details
-                                            </button>
+                                            <?php $providerResponse = is_array($service->view_provider_response ?? null) ? $service->view_provider_response : []; ?>
+                                            <button class="btn-details" onclick="openConfirmModal(<?= (int)$service->id ?>, <?= htmlspecialchars(json_encode($providerResponse), ENT_QUOTES, 'UTF-8') ?>)">Review & Confirm</button>
+                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                         <?php elseif ($status === 'confirmed'): ?>
-                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
-                                                View Details
-                                            </button>
+                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                             <div class="service-group-card__status-row">⏱️ Awaiting Provider Acceptance</div>
                                         <?php elseif ($status === 'accepted'): ?>
-                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
-                                                View Details
-                                            </button>
+                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                             <div class="service-group-card__status-row service-group-card__status-row--success">🟢 In Progress</div>
                                         <?php elseif ($status === 'completed'): ?>
                                             <?php
-                                                $serviceDetailsForPayment = $service->service_details_json ? json_decode($service->service_details_json, true) : [];
-                                                $providerResponseForPayment = $serviceDetailsForPayment['provider_response'] ?? [];
+                                                $providerResponseForPayment = is_array($service->view_provider_response ?? null) ? $service->view_provider_response : [];
                                                 $quoteAmount = (float)($providerResponseForPayment['quote_amount'] ?? ($service->budget ?? 0));
                                                 $advanceAmount = (float)($providerResponseForPayment['advance_amount'] ?? 0);
-                                                $paymentStatus = strtolower($service->calculated_payment_status ?? 'unpaid');
+                                                $paymentStatus = strtolower((string)($service->calculated_payment_status ?? 'unpaid'));
                                                 $remainingAmount = max(0, $quoteAmount - $advanceAmount);
-                                                
-                                                // Check if payment is pending for cash/bank
-                                                $paymentGateway = $service->payment_gateway ?? '';
-                                                $advancePaymentStatus = strtolower($service->advance_payment_status ?? '');
+                                                $paymentGateway = (string)($service->payment_gateway ?? '');
+                                                $advancePaymentStatus = strtolower((string)($service->advance_payment_status ?? ''));
                                                 $hasPendingCashBankPayment = ($paymentGateway === 'cash' || $paymentGateway === 'bank_transfer') && $advancePaymentStatus === 'pending';
                                                 $providerVerificationRejected = false;
                                                 $providerVerificationReason = '';
                                                 if (!empty($service->transaction_response)) {
-                                                    $transactionData = json_decode($service->transaction_response, true);
+                                                    $transactionData = json_decode((string)$service->transaction_response, true);
                                                     if (is_array($transactionData) && (($transactionData['provider_verification_status'] ?? '') === 'rejected')) {
                                                         $providerVerificationRejected = true;
                                                         $providerVerificationReason = trim((string)($transactionData['provider_verification_reason'] ?? ''));
@@ -310,45 +216,28 @@
                                                 <?php else: ?>
                                                     <span class="status-badge status-fully-paid">Fully Paid</span>
                                                 <?php endif; ?>
-                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
-                                                    View Details
-                                                </button>
+                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                                 <?php if ($providerVerificationRejected): ?>
-                                                    <button class="btn-details btn-details--danger" 
-                                                        onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= urlencode(number_format($remainingAmount, 2, '.', '')) ?>&type=remaining'">
-                                                        Re-submit Payment
-                                                    </button>
-                                                    <div class="service-group-card__status-row service-group-card__status-row--danger">
-                                                        ⚠️ Provider could not verify<?= $providerVerificationReason !== '' ? ': ' . htmlspecialchars($providerVerificationReason) : '' ?>
-                                                    </div>
+                                                    <button class="btn-details btn-details--danger" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= urlencode(number_format($remainingAmount, 2, '.', '')) ?>&type=remaining'">Re-submit Payment</button>
+                                                    <div class="service-group-card__status-row service-group-card__status-row--danger">⚠️ Provider could not verify<?= $providerVerificationReason !== '' ? ': ' . htmlspecialchars($providerVerificationReason) : '' ?></div>
                                                 <?php else: ?>
                                                     <div class="service-group-card__status-row">⏳ Awaiting provider's payment confirmation</div>
                                                 <?php endif; ?>
                                             <?php elseif ($paymentStatus === 'partially_paid' && $remainingAmount > 0): ?>
-                                                <button class="btn-details btn-details--success" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($remainingAmount, 2, '.', '') ?>&type=remaining'">
-                                                    Pay Remaining (Rs <?= number_format($remainingAmount, 2) ?>)
-                                                </button>
-                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
-                                                    View Details
-                                                </button>
+                                                <button class="btn-details btn-details--success" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($remainingAmount, 2, '.', '') ?>&type=remaining'">Pay Remaining (Rs <?= number_format($remainingAmount, 2) ?>)</button>
+                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                             <?php else: ?>
-                                                <button class="btn-details btn-details--success" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($quoteAmount, 2, '.', '') ?>&type=full'">
-                                                    Pay Full Amount (Rs <?= number_format($quoteAmount, 2) ?>)
-                                                </button>
-                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
-                                                    View Details
-                                                </button>
+                                                <button class="btn-details btn-details--success" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($quoteAmount, 2, '.', '') ?>&type=full'">Pay Full Amount (Rs <?= number_format($quoteAmount, 2) ?>)</button>
+                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                             <?php endif; ?>
                                         <?php elseif ($status === 'completed_paid'): ?>
                                             <span class="status-badge status-completed_fully_paid">Completed and Fully paid</span>
-                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">
-                                                View Details
-                                            </button>
+                                            <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                         <?php else: ?>
                                             <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                         <?php endif; ?>
-                                        
-                                        <?php if (in_array($status, ['pending'])): ?>
+
+                                        <?php if ($status === 'pending'): ?>
                                             <button class="btn-reject" onclick="cancelServiceRequest(this)" data-id="<?= (int)$service->id ?>">Cancel</button>
                                         <?php endif; ?>
                                     </div>
@@ -362,12 +251,8 @@
                     <i class="fas fa-inbox service-empty-state__icon"></i>
                     <p class="service-empty-state__text">No service requests yet. Start by adding service and request service by existing providers.</p>
                     <div class="service-empty-state__actions">
-                        <button type="button" class="btn btn-secondary service-empty-state__button" onclick="openAddServiceModal()">
-                            <i class="fas fa-plus-circle"></i> Add Service Type
-                        </button>
-                        <a class="btn btn-primary service-empty-state__link" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= isset($drama->id) ? $drama->id : ($_GET['drama_id'] ?? 0) ?>">
-                            <i class="fas fa-search"></i> Browse Service
-                        </a>
+                        <button type="button" class="btn btn-secondary service-empty-state__button" onclick="openAddServiceModal()"><i class="fas fa-plus-circle"></i> Add Service Type</button>
+                        <a class="btn btn-primary service-empty-state__link" href="<?= ROOT ?>/BrowseServiceProviders?drama_id=<?= $dramaId ?>"><i class="fas fa-search"></i> Browse Service</a>
                     </div>
                 </div>
             <?php endif; ?>
@@ -389,18 +274,8 @@
             </div>
             <div class="modal-body">
                 <?php
-                    $allTypes = [
-                        'Theater Production',
-                        'Lighting Design',
-                        'Sound Systems',
-                        'Video Production',
-                        'Set Design',
-                        'Costume Design',
-                        'Other',
-                        'Makeup & Hair',
-                    ];
-                    $existingServices = isset($dramaServices) ? array_map(function($s){ return $s->service_type; }, $dramaServices) : [];
-                    $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 0);
+                    $allTypes = isset($allServiceTypes) && is_array($allServiceTypes) ? $allServiceTypes : [];
+                    $existingServices = isset($existingServiceTypes) && is_array($existingServiceTypes) ? $existingServiceTypes : [];
                 ?>
                 <form method="POST" action="<?= ROOT ?>/production_manager/save_required_services?drama_id=<?= $dramaId ?>" class="form-stack">
                     <?php if (!empty($returnUrl)): ?>

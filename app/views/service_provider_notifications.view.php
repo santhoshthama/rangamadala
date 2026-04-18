@@ -4,17 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($pageTitle) ? $pageTitle : 'Notifications' ?> - Rangamadala</title>
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        crossorigin="anonymous" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Boxicons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Admin Design Library CSS -->
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/Button.css">
+    <!-- Service Provider Styles -->
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <style>
         .notifications-container {
             background: #fff;
             border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             overflow: hidden;
         }
 
@@ -22,8 +28,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid #eee;
+            padding: 20px;
+            border-bottom: 1px solid var(--color-border);
             background: #fafafa;
         }
 
@@ -178,7 +184,7 @@
 
                 <?php if (empty($notifications)): ?>
                     <div class="empty-state">
-                        <i class="fas fa-bell" style="font-size: 24px; margin-bottom: 8px;"></i>
+                        <i class="bx bxs-bell" style="font-size: 24px; margin-bottom: 8px;"></i>
                         <p>No notifications yet.</p>
                     </div>
                 <?php else: ?>

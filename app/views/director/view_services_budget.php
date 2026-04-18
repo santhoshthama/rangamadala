@@ -24,7 +24,7 @@ $getField = static function ($item, string $key, $default = null) {
 };
 
 require_once __DIR__ . '/_profile_image_helper.php';
-$profileImageSrc = directorResolveProfileImageSrc((int)($_SESSION['user_id'] ?? 0));
+$profileImageSrc = directorResolveProfileImageSrc();
 ?>
 <!DOCTYPE html>
 <html lang="en">

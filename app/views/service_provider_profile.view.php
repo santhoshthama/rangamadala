@@ -3,207 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Boxicons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Admin Design Library CSS -->
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/admindashboard.css">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/Button.css">
+    <!-- Service Provider Styles -->
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_dashboard.css">
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/service provider/service_provider_profile.css">
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <title><?= isset($pageTitle) ? $pageTitle : 'Profile' ?> - <?php echo htmlspecialchars($provider->full_name ?? 'Rangamadala'); ?></title>
 </head>
-<body>
-    <?php $activePage = 'profile'; include 'includes/service_provider/sidebar.php'; ?>
+<body class="service-provider-profile-no-sidebar">
 
     <div class="main--content">
         <?php include 'includes/service_provider/header.php'; ?>
 
-        <div class="container">
-            <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert alert-success">
-                    <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
-                </div>
-            <?php endif; ?>
-            
-            <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert alert-danger">
-                    <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-                </div>
-            <?php endif; ?>
+        <a class="back-link" href="<?= ROOT ?>/ServiceProviderDashboard">
+            <i class="bx bx-arrow-left"></i>
+            <span>Back to Dashboard</span>
+        </a>
 
-            <!-- Header -->
-        <div class="header">
-            <?php 
-            // Profile image (SEPARATE from business certificate)
-            $profileImage = ROOT . '/uploads/profile_images/default_user.jpg';
-            if (!empty($data['provider']->profile_image)) {
-                $profileImage = ROOT . '/uploads/profile_images/' . $data['provider']->profile_image;
-            }
-            ?>
-            <div style="position: relative; display: inline-block; margin-bottom: 20px;">
-                <img id="currentProfileImage" src="<?php echo $profileImage; ?>" 
-                     alt="Profile Picture" 
-                     style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-                     onerror="this.src='<?= ROOT ?>/uploads/profile_images/default_user.jpg'">
-                <button onclick="openImageUploadModal()" 
-                        class="btn" 
-                        title="Change profile picture"
-                        style="position: absolute; bottom: 0; right: 0; padding: 8px; border-radius: 50%; width: 36px; height: 36px;">
-                    <i class="fas fa-camera"></i>
-                </button>
-            </div>
-            
-            <h1 class="page-title"><?php echo htmlspecialchars($data['provider']->full_name); ?></h1>
-            <p class="title"><?php echo htmlspecialchars($data['provider']->professional_title); ?></p>
-            <p class="last-updated">Last updated: <?php echo date('F j, Y'); ?></p>
-        </div>
+        <div class="profile-card">
+            <!-- Profile Summary (Left Sidebar) -->
+            <aside class="profile-summary">
+                <?php 
+                // Profile image (SEPARATE from business certificate)
+                $profileImage = ROOT . '/uploads/profile_images/user_profile.png';
+                if (!empty($data['provider']->profile_image)) {
+                    $profileImage = ROOT . '/uploads/profile_images/' . $data['provider']->profile_image;
+                }
+                ?>
+                <div class="profile-image-wrap" style="position: relative; display: inline-block; width: 100%; text-align: center;">
+                    <img id="currentProfileImage" src="<?php echo $profileImage; ?>" 
+                         alt="Profile Picture"
+                         onerror="this.src='<?= ROOT ?>/uploads/profile_images/user_profile.png'">
+                </div>
 
-        <!-- Profile Image Upload Modal -->
-        <div id="imageUploadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
-            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                <h3 style="margin: 0 0 20px 0; color: #333;">Change Profile Picture</h3>
+                <div style="margin-top: 28px;">
+                    <h2><?php echo htmlspecialchars($data['provider']->full_name); ?></h2>
+                    <p><i class="bx bx-envelope"></i> <?php echo htmlspecialchars($data['provider']->email); ?></p>
+                    <p><i class="bx bx-phone"></i> <?php echo htmlspecialchars($data['provider']->phone); ?></p>
+                    <?php if (!empty($data['provider']->location)): ?>
+                    <p><i class="bx bx-map-marker-alt"></i> <?php echo htmlspecialchars($data['provider']->location); ?></p>
+                    <?php endif; ?>
+
+                    <div class="summary-item">
+                        <span>Professional Title</span>
+                        <strong><?php echo htmlspecialchars($data['provider']->professional_title); ?></strong>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Profile Form (Right Section) -->
+            <section class="profile-form">
+                <h1>Profile Details</h1>
+                <p class="subtitle">Keep your information up to date.</p>
+
+                <?php if (isset($_SESSION['success'])): ?>
+                    <div class="alerts">
+                        <div class="alert alert-success">
+                            <i class="bx bx-check-circle"></i> <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 
-                <!-- Preview Area -->
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <img id="imagePreview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 10px; display: none; border: 2px solid #ddd;">
-                    <p id="noImageText" style="color: #999; padding: 40px;">No image selected</p>
-                </div>
-
-                <!-- File Info -->
-                <div id="fileInfo" style="display: none; background: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 14px;">
-                    <p style="margin: 5px 0;"><strong>File:</strong> <span id="fileName"></span></p>
-                    <p style="margin: 5px 0;"><strong>Size:</strong> <span id="fileSize"></span></p>
-                </div>
-
-                <!-- Error Message -->
-                <div id="modalError" style="display: none; background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #f5c6cb;"></div>
-
-                <!-- File Input -->
-                <form id="profileImageForm" method="POST" enctype="multipart/form-data" action="<?= ROOT ?>/ServiceProviderProfile/uploadProfileImage">
-                    <input type="file" id="profileImageUpload" name="profile_image" accept="image/jpeg,image/jpg,image/png,image/gif" style="display: block; width: 100%; padding: 10px; margin-bottom: 20px; border: 2px dashed #ddd; border-radius: 5px; cursor: pointer;" onchange="handleImageSelect(event)">
-                    
-                    <!-- Buttons -->
-                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                        <button type="button" onclick="closeImageUploadModal()" class="btn btn-secondary" style="padding: 10px 20px;">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                        <button type="button" id="uploadBtn" onclick="confirmUpload()" class="btn" style="padding: 10px 20px;" disabled>
-                            <i class="fas fa-upload"></i> Upload
-                        </button>
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alerts">
+                        <div class="alert alert-danger">
+                            <i class="bx bx-exclamation-triangle"></i> <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+                        </div>
                     </div>
-                </form>
+                <?php endif; ?>
 
-                <!-- Loading Overlay -->
-                <div id="uploadingOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); align-items: center; justify-content: center; border-radius: 10px;">
-                    <div style="text-align: center;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #007bff; margin-bottom: 15px;"></i>
-                        <p style="color: #333; font-size: 16px;">Uploading...</p>
-                    </div>
+                <!-- Profile Image Upload Section -->
+                <div class="section profile-image-section" style="margin-top: 32px;">
+                    <h3>Profile Image</h3>
+                    <form id="profileInlineImageForm" class="profile-image-upload-form" method="POST" enctype="multipart/form-data" action="<?= ROOT ?>/ServiceProviderProfile/uploadProfileImage">
+                        <div class="profile-image-upload-row">
+                            <label for="profileImageUploadInput" class="upload-new-image-btn">
+                                <i class="bx bx-upload"></i>
+                                <span>Upload new image</span>
+                            </label>
+                            <span id="selectedProfileImageName" class="selected-profile-image-name"><?php echo !empty($data['provider']->profile_image) ? htmlspecialchars($data['provider']->profile_image) : 'user_profile.png'; ?></span>
+                        </div>
+                        <input type="file" id="profileImageUploadInput" name="profile_image" accept="image/jpeg,image/jpg,image/png,image/gif" onchange="handleProfileImageSelect(event)">
+                        <div id="profileImageError" class="alert alert-danger profile-image-error" style="display: none;"></div>
+                    </form>
                 </div>
-            </div>
-        </div>
 
-        <!-- Basic Information -->
-        <div class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 class="section-title" style="margin: 0;">Basic Information</h2>
-                <a href="<?php echo ROOT; ?>/ServiceProviderProfile/editBasicInfo?id=<?php echo $data['provider_id']; ?>" class="btn" style="text-decoration: none;">
-                    <i class="fas fa-edit"></i> Edit
-                </a>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Full Name</label>
-                    <div class="form-input" style="background: #f8f9fa; cursor: default;">
-                        <?php echo htmlspecialchars($data['provider']->full_name); ?>
+                <!-- Basic Information Section -->
+                <div class="section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>Basic Information</h3>
+                        <a href="<?php echo ROOT; ?>/ServiceProviderProfile/editBasicInfo?id=<?php echo $data['provider_id']; ?>" class="btn" style="text-decoration: none; padding: 10px 16px; font-size: 14px;">
+                            <i class="bx bxs-edit"></i> Edit
+                        </a>
+                    </div>
+                    <form style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" value="<?php echo htmlspecialchars($data['provider']->full_name); ?>" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Professional Title</label>
+                            <input type="text" value="<?php echo htmlspecialchars($data['provider']->professional_title); ?>" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" value="<?php echo htmlspecialchars($data['provider']->email); ?>" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" value="<?php echo htmlspecialchars($data['provider']->phone); ?>" readonly>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Additional Info Section -->
+                <div class="section">
+                    <h3>Additional Information</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input type="text" value="<?php echo htmlspecialchars($data['provider']->location); ?>" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Social Media Link</label>
+                            <input type="text" value="<?php echo $data['provider']->social_media_link ? htmlspecialchars($data['provider']->social_media_link) : 'Not provided'; ?>" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label>Professional Summary</label>
+                        <textarea style="resize: vertical; min-height: 100px;" readonly><?php
+                            $professionalSummary = $data['provider']->professional_summary ?? ($data['provider']->bio ?? '');
+                            echo htmlspecialchars((string)$professionalSummary);
+                        ?></textarea>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Professional Title</label>
-                    <div class="form-input" style="background: #f8f9fa; cursor: default;">
-                        <?php echo htmlspecialchars($data['provider']->professional_title); ?>
+
+                <!-- Availability Section -->
+                <div class="section">
+                    <h3>Availability</h3>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <span>Currently Available for New Projects</span>
+                        <div class="toggle <?php echo $data['provider']->availability ? 'active' : ''; ?>" style="pointer-events: none; width: 50px; height: 25px; background: <?php echo $data['provider']->availability ? '#10b981' : '#ccc'; ?>; border-radius: 25px; position: relative;">
+                            <div style="content: ''; width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2.5px; left: <?php echo $data['provider']->availability ? '27.5px' : '2.5px'; ?>; transition: 0.3s;"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Availability Notes</label>
+                        <textarea readonly><?php echo $data['provider']->availability_notes ? htmlspecialchars($data['provider']->availability_notes) : 'No notes provided'; ?></textarea>
                     </div>
                 </div>
+
+                <!-- Change Password -->
+                <div class="section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3>Security</h3>
+                        <a href="<?php echo ROOT; ?>/ServiceProviderProfile/changePassword" class="btn" style="text-decoration: none; padding: 8px 16px; font-size: 13px;">
+                            <i class="bx bxs-key"></i> Change Password
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Services & Rates Section -->
+                <div class="section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3>Services & Rates</h3>
+                        <a href="<?php echo ROOT; ?>/ServiceProviderProfile/addService?provider_id=<?php echo $data['provider_id']; ?>" class="btn" style="text-decoration: none; padding: 8px 16px; font-size: 13px;">
+                            <i class="bx bxs-plus"></i> Add Service
+                        </a>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <div class="form-input" style="background: #f8f9fa; cursor: default;">
-                        <?php echo htmlspecialchars($data['provider']->email); ?>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Phone Number</label>
-                    <div class="form-input" style="background: #f8f9fa; cursor: default;">
-                        <?php echo htmlspecialchars($data['provider']->phone); ?>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Location</label>
-                    <div class="form-input" style="background: #f8f9fa; cursor: default;">
-                        <?php echo htmlspecialchars($data['provider']->location); ?>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Social Media Link</label>
-                    <div class="form-input" style="background: #f8f9fa; cursor: default;">
-                        <?php echo $data['provider']->social_media_link ? htmlspecialchars($data['provider']->social_media_link) : 'Not provided'; ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Professional Summary</label>
-                <div class="form-input textarea" style="background: #f8f9fa; cursor: default; min-height: 100px;">
-                    <?php
-                        $professionalSummary = $data['provider']->professional_summary ?? ($data['provider']->bio ?? '');
-                        echo nl2br(htmlspecialchars((string)$professionalSummary));
-                    ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Availability -->
-        <div class="section">
-            <h2 class="section-title">Availability</h2>
-            <div class="availability-toggle">
-                <span>Currently Available for New Projects</span>
-                <div class="toggle <?php echo $data['provider']->availability ? 'active' : ''; ?>" style="pointer-events: none;"></div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Availability Notes</label>
-                <div class="form-input" style="background: #f8f9fa; cursor: default;">
-                    <?php echo $data['provider']->availability_notes ? htmlspecialchars($data['provider']->availability_notes) : 'No notes provided'; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Change Password -->
-        <div class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 class="section-title" style="margin: 0;">Password</h2>
-                <a href="<?php echo ROOT; ?>/ServiceProviderProfile/changePassword" class="btn" style="text-decoration: none;">
-                    <i class="fas fa-key"></i> Change Password
-                </a>
-            </div>
-            <p style="color: #6c757d; padding: 20px; background: #f8f9fa; border-radius: 5px;">
-                Keep your account secure by changing your password regularly.
-            </p>
-        </div>
-
-        <!-- Services & Rates -->
-        <div class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 class="section-title" style="margin: 0;">Services & Rates</h2>
-                <a href="<?php echo ROOT; ?>/ServiceProviderProfile/addService?provider_id=<?php echo $data['provider_id']; ?>" class="btn" style="text-decoration: none;">
-                    <i class="fas fa-plus"></i> Add Service
-                </a>
-            </div>
-            
-            <?php if (empty($data['services'])): ?>
-                <p style="color: #6c757d; padding: 20px; text-align: center;">No services added yet.</p>
-            <?php else: ?>
+                    <?php if (empty($data['services'])): ?>
+                        <p style="color: var(--muted); padding: 20px; text-align: center; background: linear-gradient(180deg, #fffdf7, #fff7e6); border-radius: 12px;">No services added yet.</p>
+                    <?php else: ?>
                 <?php foreach ($data['services'] as $service): ?>
                     <?php 
                     $details = $service->details ?? null;
@@ -226,10 +205,10 @@
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/editService?id=<?php echo $service->id; ?>" class="btn btn-secondary" style="text-decoration: none; padding: 5px 10px; font-size: 14px;">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="bx bxs-edit"></i>
                                 </a>
                                 <button onclick="deleteService(<?php echo $service->id; ?>)" class="btn btn-danger" style="padding: 5px 10px; font-size: 14px;">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="bx bxs-trash"></i>
                                 </button>
                             </div>
                         </div>
@@ -636,20 +615,20 @@
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
-        </div>
+                </div>
 
-        <!-- Recent Projects -->
-        <div class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 class="section-title" style="margin: 0;">Recent Projects</h2>
-                <a href="<?php echo ROOT; ?>/ServiceProviderProfile/addProject?provider_id=<?php echo $data['provider_id']; ?>" class="btn" style="text-decoration: none;">
-                    <i class="fas fa-plus"></i> Add Project
-                </a>
-            </div>
-            
-            <?php if (empty($data['projects'])): ?>
-                <p style="color: #6c757d; padding: 20px; text-align: center;">No projects added yet.</p>
-            <?php else: ?>
+                <!-- Recent Projects Section -->
+                <div class="section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3>Recent Projects</h3>
+                        <a href="<?php echo ROOT; ?>/ServiceProviderProfile/addProject?provider_id=<?php echo $data['provider_id']; ?>" class="btn" style="text-decoration: none; padding: 8px 16px; font-size: 13px;">
+                            <i class="bx bxs-plus"></i> Add Project
+                        </a>
+                    </div>
+                    
+                    <?php if (empty($data['projects'])): ?>
+                        <p style="color: var(--muted); padding: 20px; text-align: center; background: linear-gradient(180deg, #fffdf7, #fff7e6); border-radius: 12px;">No projects added yet.</p>
+                    <?php else: ?>
                 <?php foreach ($data['projects'] as $project): ?>
                     <div class="project-item">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
@@ -671,10 +650,10 @@
                             </div>
                             <div style="display: flex; gap: 10px; margin-left: 15px;">
                                 <a href="<?php echo ROOT; ?>/ServiceProviderProfile/editProject?id=<?php echo $project->id; ?>" class="btn btn-secondary" style="text-decoration: none; padding: 5px 10px; font-size: 14px;">
-                                    <i class="fas fa-edit"></i> Edit
+                                    <i class="bx bxs-edit"></i> Edit
                                 </a>
                                 <button onclick="deleteProject(<?php echo $project->id; ?>)" class="btn btn-danger" style="padding: 5px 10px; font-size: 14px;">
-                                    <i class="fas fa-trash"></i> Delete
+                                    <i class="bx bxs-trash"></i> Delete
                                 </button>
                             </div>
                         </div>
@@ -697,141 +676,74 @@
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
+                </div>
+
+                <!-- Profile Statistics Section -->
+                <div class="section">
+                    <h3>Profile Statistics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                        <div style="background: linear-gradient(180deg, #fffdf7, #fff7e6); border: 1px solid #f0dfb4; border-radius: 12px; padding: 16px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: 700; color: #5a4415;"><?php echo $data['total_projects']; ?></div>
+                            <div style="font-size: 13px; color: #7a6121; margin-top: 6px;">Total Projects</div>
+                        </div>
+                        <div style="background: linear-gradient(180deg, #fffdf7, #fff7e6); border: 1px solid #f0dfb4; border-radius: 12px; padding: 16px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: 700; color: #5a4415;"><?php echo $data['provider']->years_experience; ?></div>
+                            <div style="font-size: 13px; color: #7a6121; margin-top: 6px;">Years Experience</div>
+                        </div>
+                        <div style="background: linear-gradient(180deg, #fffdf7, #fff7e6); border: 1px solid #f0dfb4; border-radius: 12px; padding: 16px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: 700; color: #5a4415;"><?php echo count($data['services']); ?></div>
+                            <div style="font-size: 13px; color: #7a6121; margin-top: 6px;">Services Offered</div>
+                        </div>
+                        <div style="background: linear-gradient(180deg, #fffdf7, #fff7e6); border: 1px solid #f0dfb4; border-radius: 12px; padding: 16px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: 700; color: #5a4415;"><?php echo $data['provider']->availability ? 'Available' : 'Unavailable'; ?></div>
+                            <div style="font-size: 13px; color: #7a6121; margin-top: 6px;">Current Status</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
 
-        <!-- Quick Stats -->
-        <div class="section">
-            <h2 class="section-title">Profile Statistics</h2>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo $data['total_projects']; ?></div>
-                    <div class="stat-label">Total Projects</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo $data['provider']->years_experience; ?></div>
-                    <div class="stat-label">Years Experience</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo count($data['services']); ?></div>
-                    <div class="stat-label">Services Offered</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo $data['provider']->availability ? 'Available' : 'Unavailable'; ?></div>
-                    <div class="stat-label">Current Status</div>
-                </div>
-            </div>
-            </div>
-        </div>
     </div>
 
     <script src="<?= ROOT ?>/assets/JS/service_provider_profile.js"></script>
     <script>
-        // Profile Image Upload Functions
-        let selectedFile = null;
+        // Inline profile image upload validation
         const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
         const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
 
-        function openImageUploadModal() {
-            document.getElementById('imageUploadModal').style.display = 'flex';
-            resetModal();
-        }
-
-        function closeImageUploadModal() {
-            document.getElementById('imageUploadModal').style.display = 'none';
-            resetModal();
-        }
-
-        function resetModal() {
-            selectedFile = null;
-            document.getElementById('profileImageUpload').value = '';
-            document.getElementById('imagePreview').style.display = 'none';
-            document.getElementById('noImageText').style.display = 'block';
-            document.getElementById('fileInfo').style.display = 'none';
-            document.getElementById('modalError').style.display = 'none';
-            document.getElementById('uploadBtn').disabled = true;
-        }
-
-        function handleImageSelect(event) {
+        function handleProfileImageSelect(event) {
             const file = event.target.files[0];
-            const errorDiv = document.getElementById('modalError');
+            const errorDiv = document.getElementById('profileImageError');
+            const fileNameEl = document.getElementById('selectedProfileImageName');
             
             errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
             
             if (!file) {
-                resetModal();
+                fileNameEl.textContent = '<?php echo !empty($data['provider']->profile_image) ? htmlspecialchars($data['provider']->profile_image) : 'user_profile.png'; ?>';
                 return;
             }
 
-            // Validate file type
-            const fileType = file.type;
-            if (!ALLOWED_TYPES.includes(fileType)) {
-                showError('Invalid file type. Only JPG, PNG and GIF images are allowed.');
+            fileNameEl.textContent = file.name;
+
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                errorDiv.textContent = 'Invalid file type. Only JPG, PNG and GIF images are allowed.';
+                errorDiv.style.display = 'block';
                 event.target.value = '';
+                fileNameEl.textContent = '<?php echo !empty($data['provider']->profile_image) ? htmlspecialchars($data['provider']->profile_image) : 'user_profile.png'; ?>';
                 return;
             }
 
-            // Validate file size
             if (file.size > MAX_FILE_SIZE) {
-                showError('File too large. Maximum size is 5MB.');
+                errorDiv.textContent = 'File too large. Maximum size is 5MB.';
+                errorDiv.style.display = 'block';
                 event.target.value = '';
+                fileNameEl.textContent = '<?php echo !empty($data['provider']->profile_image) ? htmlspecialchars($data['provider']->profile_image) : 'user_profile.png'; ?>';
                 return;
             }
 
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('imagePreview').src = e.target.result;
-                document.getElementById('imagePreview').style.display = 'block';
-                document.getElementById('noImageText').style.display = 'none';
-                
-                // Show file info
-                document.getElementById('fileName').textContent = file.name;
-                document.getElementById('fileSize').textContent = formatFileSize(file.size);
-                document.getElementById('fileInfo').style.display = 'block';
-                
-                // Enable upload button
-                document.getElementById('uploadBtn').disabled = false;
-                selectedFile = file;
-            };
-            reader.readAsDataURL(file);
+            document.getElementById('profileInlineImageForm').submit();
         }
-
-        function showError(message) {
-            const errorDiv = document.getElementById('modalError');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            document.getElementById('uploadBtn').disabled = true;
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-        }
-
-        function confirmUpload() {
-            if (!selectedFile) {
-                showError('Please select an image first.');
-                return;
-            }
-
-            if (confirm('Are you sure you want to upload this image as your profile picture?')) {
-                // Show loading overlay
-                document.getElementById('uploadingOverlay').style.display = 'flex';
-                
-                // Submit form
-                document.getElementById('profileImageForm').submit();
-            }
-        }
-
-        // Close modal on outside click
-        document.getElementById('imageUploadModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeImageUploadModal();
-            }
-        });
     </script>
 </body>
 </html>

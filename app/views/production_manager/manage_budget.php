@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Management - Rangamadala</title>
-    <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/ui-theme.css">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/production_manager/manage_budget.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
-    <?php $dramaId = isset($drama->id) ? (int)$drama->id : (int)($_GET['drama_id'] ?? 1); ?>
+    <?php $dramaId = isset($dramaId) ? (int)$dramaId : (int)($drama->id ?? 0); ?>
     <?php
         $serviceTypes = (isset($serviceTypes) && is_array($serviceTypes)) ? $serviceTypes : [];
         $serviceRequests = (isset($serviceRequests) && is_array($serviceRequests)) ? $serviceRequests : [];
@@ -35,6 +36,12 @@
                 <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
                     <i class="fas fa-chart-bar"></i>
                     <span>Budget Management</span>
+                </a>
+            </li>
+            <li>
+                <a href="<?= ROOT ?>/artistdashboard/calendar">
+                    <i class="bx bx-calendar-week"></i>
+                    <span>Artist Calendar</span>
                 </a>
             </li>
             <li>
@@ -83,35 +90,35 @@
                 <h3>LKR <?= isset($totalBudget) ? number_format($totalBudget) : '0' ?></h3>
                 <p>Total Allocated</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--success), #1f9b3b);">
+            <div class="stat-card pm-budget-card-spent">
                 <h3>LKR <?= isset($totalSpent) ? number_format($totalSpent) : '0' ?> (<?= isset($percentSpent) ? $percentSpent : '0' ?>%)</h3>
                 <p>Total Spent</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--warning), #e0a800);">
+            <div class="stat-card pm-budget-card-remaining">
                 <h3>LKR <?= isset($remainingBudget) ? number_format($remainingBudget) : '0' ?></h3>
                 <p>Remaining Balance</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--info), #138496);">
+            <div class="stat-card pm-budget-card-total-items">
                 <h3><?= isset($budgetItems) && is_array($budgetItems) ? count($budgetItems) : '0' ?></h3>
                 <p>Total Budget Items</p>
             </div>
         </div>
 
         <!-- Budget Overview Chart -->
-        <div class="content" style="padding: 28px; margin-bottom: 26px;">
-            <h3 style="margin-bottom: 16px;">Budget Breakdown by Category</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <div class="content pm-budget-overview">
+            <h3 class="pm-budget-section-title">Budget Breakdown by Category</h3>
+            <div class="pm-budget-grid">
                 <!-- Chart -->
                 <div>
-                    <div style="background: linear-gradient(135deg, rgba(186,142,35,0.1) 0%, rgba(186,142,35,0.05) 100%); border-radius: 12px; padding: 20px; text-align: center;">
-                        <canvas id="budgetChart" style="max-width: 100%; height: 250px;"></canvas>
+                    <div class="pm-budget-chart-card">
+                        <canvas id="budgetChart" class="pm-budget-chart-canvas"></canvas>
                     </div>
                 </div>
                 <!-- Category Breakdown -->
                 <div>
-                    <div style="background: #f8f9fa; border-radius: 12px; padding: 16px;">
+                    <div class="pm-budget-category-card">
                         <?php if (isset($categorySummary) && is_array($categorySummary) && !empty($categorySummary)): ?>
-                            <ul style="list-style: none; padding: 0;">
+                            <ul class="pm-budget-category-list">
                                 <?php 
                                 $categoryCount = 0;
                                 foreach ($categorySummary as $catData): 
@@ -124,17 +131,17 @@
                                         $percentage = round(($categoryTotal / $totalBudget) * 100);
                                     }
                                 ?>
-                                    <li style="padding: 10px 0; <?= $isLast ? '' : 'border-bottom: 1px solid #eee;' ?> display: flex; justify-content: space-between;">
+                                    <li class="pm-budget-category-item<?= $isLast ? ' pm-budget-category-item--last' : '' ?>">
                                         <span>
                                             <strong><?= esc($categoryName) ?></strong><br>
-                                            <small style="color: var(--muted);"><?= $percentage ?>%</small>
+                                            <small class="pm-budget-muted"><?= $percentage ?>%</small>
                                         </span>
-                                        <span style="font-weight: 700; color: var(--brand);">LKR <?= number_format($categoryTotal) ?></span>
+                                        <span class="pm-budget-category-value">LKR <?= number_format($categoryTotal) ?></span>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
                         <?php else: ?>
-                            <p style="text-align: center; color: var(--muted); padding: 20px;">
+                            <p class="pm-budget-empty">
                                 No budget categories yet
                             </p>
                         <?php endif; ?>
@@ -144,19 +151,19 @@
         </div>
 
         <!-- Budget Items Table -->
-        <div class="content" style="padding: 28px;">
-            <h3 style="margin-bottom: 16px;">Budget Items</h3>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
+        <div class="content pm-budget-table-section">
+            <h3 class="pm-budget-section-title">Budget Items</h3>
+            <div class="pm-budget-table-wrap">
+                <table class="pm-budget-table">
                     <thead>
-                        <tr style="background: #f8f9fa; border-bottom: 2px solid var(--border-strong);">
-                            <th style="padding: 14px; text-align: left; font-weight: 700;">Item Name</th>
-                            <th style="padding: 14px; text-align: left; font-weight: 700;">Category</th>
-                            <th style="padding: 14px; text-align: left; font-weight: 700;">Linked Service</th>
-                            <th style="padding: 14px; text-align: right; font-weight: 700;">Allocated</th>
-                            <th style="padding: 14px; text-align: right; font-weight: 700;">Spent</th>
-                            <th style="padding: 14px; text-align: left; font-weight: 700;">Status</th>
-                            <th style="padding: 14px; text-align: center; font-weight: 700;">Actions</th>
+                        <tr>
+                            <th class="pm-budget-table-header-cell">Item Name</th>
+                            <th class="pm-budget-table-header-cell">Category</th>
+                            <th class="pm-budget-table-header-cell">Linked Service</th>
+                            <th class="pm-budget-table-header-cell pm-budget-table-header-cell--right">Allocated</th>
+                            <th class="pm-budget-table-header-cell pm-budget-table-header-cell--right">Spent</th>
+                            <th class="pm-budget-table-header-cell">Status</th>
+                            <th class="pm-budget-table-header-cell pm-budget-table-header-cell--center">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="budgetItemsTable">
@@ -174,27 +181,27 @@
                                         }
                                     }
                                 ?>
-                                <tr style="border-bottom: 1px solid var(--border);">
-                                    <td style="padding: 14px;"><?= isset($item->item_name) ? esc($item->item_name) : 'N/A' ?></td>
-                                    <td style="padding: 14px;"><?= isset($item->category) ? ucfirst($item->category) : 'N/A' ?></td>
-                                    <td style="padding: 14px;"><?= !empty($item->service_request_id) ? ('Request #' . (int)$item->service_request_id) : 'Manual' ?></td>
-                                    <td style="padding: 14px; text-align: right; font-weight: 700;">LKR <?= isset($item->allocated_amount) ? number_format($item->allocated_amount) : '0' ?></td>
-                                    <td style="padding: 14px; text-align: right; font-weight: 700;">LKR <?= isset($item->spent_amount) ? number_format($item->spent_amount) : '0' ?></td>
-                                    <td style="padding: 14px;"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
-                                    <td style="padding: 14px; text-align: center;">
-                                        <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="editBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
+                                <tr class="pm-budget-row">
+                                    <td class="pm-budget-cell"><?= isset($item->item_name) ? esc($item->item_name) : 'N/A' ?></td>
+                                    <td class="pm-budget-cell"><?= isset($item->category) ? ucfirst($item->category) : 'N/A' ?></td>
+                                    <td class="pm-budget-cell"><?= !empty($item->service_request_id) ? ('Request #' . (int)$item->service_request_id) : 'Manual' ?></td>
+                                    <td class="pm-budget-cell pm-budget-cell--right">LKR <?= isset($item->allocated_amount) ? number_format($item->allocated_amount) : '0' ?></td>
+                                    <td class="pm-budget-cell pm-budget-cell--right">LKR <?= isset($item->spent_amount) ? number_format($item->spent_amount) : '0' ?></td>
+                                    <td class="pm-budget-cell"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
+                                    <td class="pm-budget-cell pm-budget-cell--center">
+                                        <button class="btn btn-secondary pm-budget-action-btn" onclick="editBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
                                             <i class="bx bx-pencil-alt"></i>
                                         </button>
-                                        <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
+                                        <button class="btn btn-danger pm-budget-action-btn" onclick="deleteBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
                                             <i class="bx bx-trash"></i>
                                         </button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr style="border-bottom: 1px solid var(--border);">
-                                <td colspan="7" style="padding: 30px; text-align: center; color: var(--muted);">
-                                    <i class="bx bx-file-invoice-dollar" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
+                            <tr class="pm-budget-row">
+                                <td colspan="7" class="pm-budget-cell pm-budget-cell--center pm-budget-muted">
+                                    <i class="bx bx-file-invoice-dollar pm-budget-empty-icon"></i>
                                     <p>No budget items yet. Add your first budget item to get started.</p>
                                 </td>
                             </tr>
@@ -238,7 +245,7 @@
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <small style="color: var(--muted);">When linked, category and status follow the service/payment lifecycle automatically.</small>
+                <small class="pm-budget-note">When linked, category and status follow the service/payment lifecycle automatically.</small>
             </div>
 
             <div class="form-group">
@@ -270,7 +277,7 @@
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
                 </select>
-                <small style="color: var(--muted);">For linked requests, this is auto-derived from request and payment states.</small>
+                <small class="pm-budget-note">For linked requests, this is auto-derived from request and payment states.</small>
             </div>
 
             <div class="form-group">
@@ -289,6 +296,6 @@
         window.PM_BUDGET_API_BASE = '<?= ROOT ?>/production_manager';
         window.PM_SERVICE_REQUESTS = <?= json_encode($serviceRequests) ?>;
     </script>
-    <script src="/Rangamadala/public/assets/JS/manage-budget.js"></script>
+    <script src="<?= ROOT ?>/assets/JS/manage-budget.js"></script>
 </body>
 </html>
