@@ -155,6 +155,7 @@
 
     <script>
         let currentTab = '<?= htmlspecialchars($initialTab) ?>';
+        let rejectActionType = '';
         const ENDPOINTS = {
             updateStatus: '<?= ROOT ?>/ServiceRequests/updateStatus',
             respond: '<?= ROOT ?>/ServiceProviderRequest/respond',
@@ -236,26 +237,53 @@
 
         async function rejectRequest(button) {
             const id = button.getAttribute('data-id');
-            const reason = prompt('Enter rejection reason:');
-            if (reason === null) return; // cancelled
+            openRejectReasonModal(id, 'pending');
+        }
+
+        function openRejectReasonModal(requestId, actionType) {
+            rejectActionType = actionType;
+            document.getElementById('reject_request_id').value = requestId;
+            document.getElementById('reject_reason_text').value = '';
+            document.getElementById('rejectReasonModalTitle').textContent = actionType === 'confirmed'
+                ? 'Reject Confirmed Terms'
+                : 'Reject Request';
+            document.getElementById('rejectReasonModal').style.display = 'flex';
+            document.getElementById('reject_reason_text').focus();
+        }
+
+        function closeRejectReasonModal() {
+            document.getElementById('rejectReasonModal').style.display = 'none';
+        }
+
+        async function submitRejectReason() {
+            const id = document.getElementById('reject_request_id').value;
+            const reason = document.getElementById('reject_reason_text').value.trim();
+            if (!reason) {
+                showMessage('Please enter a rejection reason.', 'error');
+                return;
+            }
+
+            const endpoint = rejectActionType === 'confirmed' ? ENDPOINTS.rejectConfirmed : ENDPOINTS.updateStatus;
+            const payload = rejectActionType === 'confirmed'
+                ? new URLSearchParams({ request_id: id, reason })
+                : new URLSearchParams({ id, status: 'rejected', reason });
+
             try {
-                const res = await fetch(ENDPOINTS.updateStatus, {
+                const res = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ id, status: 'rejected', reason }),
+                    body: payload,
                 });
                 const json = await parseJsonResponse(res);
                 if (json.success) {
-                    button.classList.add('selected');
-                    button.textContent = 'Rejected';
-                    const badge = button.parentElement.querySelector('.status-badge');
-                    if (badge) { badge.className = 'status-badge status-rejected'; badge.textContent = 'rejected'; }
-                    showMessage('Request rejected', 'error');
+                    closeRejectReasonModal();
+                    showMessage('Request rejected successfully.', 'success');
+                    setTimeout(() => location.reload(), 1200);
                 } else {
                     showMessage(json.error || 'Failed to reject', 'error');
                 }
             } catch (e) {
-                showMessage('Network error while rejecting', 'error');
+                showMessage((e && e.message) ? e.message : 'Network error while rejecting', 'error');
             }
         }
 
@@ -739,25 +767,7 @@
 
         async function rejectConfirmedRequest(button) {
             const id = button.getAttribute('data-id');
-            const reason = prompt('Enter reason for rejecting these terms:');
-            if (reason === null) return;
-            
-            try {
-                const res = await fetch(ENDPOINTS.rejectConfirmed, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ request_id: id, reason }),
-                });
-                const json = await parseJsonResponse(res);
-                if (json.success) {
-                    showMessage('Request rejected', 'error');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showMessage(json.error || 'Failed to reject', 'error');
-                }
-            } catch (e) {
-                showMessage('Network error while rejecting', 'error');
-            }
+            openRejectReasonModal(id, 'confirmed');
         }
 
         // Handle respond form submission
@@ -791,11 +801,15 @@
         window.onclick = function(event) {
             const detailsModal = document.getElementById('detailsModal');
             const respondModal = document.getElementById('respondModal');
+            const rejectReasonModal = document.getElementById('rejectReasonModal');
             if (event.target === detailsModal) {
                 detailsModal.style.display = 'none';
             }
             if (event.target === respondModal) {
                 closeRespondModal();
+            }
+            if (event.target === rejectReasonModal) {
+                closeRejectReasonModal();
             }
         };
     </script>
@@ -923,6 +937,25 @@
             </div>
         </div>
         <input type="hidden" id="acceptConfirmRequestId">
+    </div>
+
+    <!-- Reject Reason Modal -->
+    <div id="rejectReasonModal" style="display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+        <div style="background-color: #fff; width: 90%; max-width: 520px; border-radius: 10px; box-shadow: 0 8px 18px rgba(0,0,0,0.2); overflow: hidden;">
+            <div style="padding: 16px 20px; background: #dc2626; color: #fff; display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="rejectReasonModalTitle" style="margin: 0; font-size: 18px;">Reject Request</h3>
+                <button onclick="closeRejectReasonModal()" style="background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <label for="reject_reason_text" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #374151;">Reason for rejection</label>
+                <textarea id="reject_reason_text" rows="4" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; font-family: inherit; resize: vertical;" placeholder="Enter why you are rejecting this request..."></textarea>
+                <input type="hidden" id="reject_request_id">
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+                    <button type="button" onclick="closeRejectReasonModal()" style="padding: 10px 14px; border: none; border-radius: 6px; background: #e5e7eb; color: #374151; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button type="button" onclick="submitRejectReason()" style="padding: 10px 14px; border: none; border-radius: 6px; background: #dc2626; color: #fff; cursor: pointer; font-weight: 600;">Submit Rejection</button>
+                </div>
+            </div>
+        </div>
     </div>
     </div>
 </body>

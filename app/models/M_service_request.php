@@ -264,6 +264,7 @@ class M_service_request
     {
         $this->db->query("
             SELECT sr.*, 
+                   COALESCE(ps.amount_paid, 0) as amount_paid,
                    p.id as payment_id,
                    p.payment_type,
                    p.amount as payment_amount,
@@ -279,6 +280,12 @@ class M_service_request
                        ELSE 'unpaid'
                    END as calculated_payment_status
             FROM service_requests sr
+                 LEFT JOIN (
+                  SELECT service_request_id,
+                      SUM(CASE WHEN payment_status IN ('completed', 'success') THEN amount ELSE 0 END) AS amount_paid
+                  FROM payments
+                  GROUP BY service_request_id
+                 ) ps ON sr.id = ps.service_request_id
             LEFT JOIN payments p ON sr.id = p.service_request_id 
                 AND p.payment_status != 'canceled'
                 AND p.id = (

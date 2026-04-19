@@ -30,6 +30,36 @@ class Payment
         echo json_encode($payload);
         exit;
     }
+
+    private function getProviderResponse($request): array
+    {
+        $details = !empty($request->service_details_json) ? json_decode((string)$request->service_details_json, true) : [];
+        return is_array($details['provider_response'] ?? null) ? $details['provider_response'] : [];
+    }
+
+    private function calculateExpectedPayableAmount($request, string $type): float
+    {
+        $providerResponse = $this->getProviderResponse($request);
+        $quoteAmount = (float)($providerResponse['quote_amount'] ?? $request->budget ?? 0);
+        $totalPaid = (float)$this->paymentModel->getTotalPaid((int)$request->id);
+        $outstanding = max(0, $quoteAmount - $totalPaid);
+
+        $needsAdvance = !empty($providerResponse['needs_advance']);
+        $advanceAmount = max(0, (float)($providerResponse['advance_amount'] ?? 0));
+
+        if ($type === 'advance') {
+            if (!$needsAdvance) {
+                return 0.0;
+            }
+            return min($advanceAmount, $outstanding);
+        }
+
+        if ($type === 'remaining' || $type === 'full') {
+            return $outstanding;
+        }
+
+        return 0.0;
+    }
     
     /**
      * Display checkout page
@@ -40,6 +70,10 @@ class Payment
         $amount = $_GET['amount'] ?? null;
         $type = $_GET['type'] ?? 'advance';
         $forcedOverdue = isset($_GET['forced_overdue']) && (int)$_GET['forced_overdue'] === 1;
+
+        if (!in_array($type, ['advance', 'remaining', 'full'], true)) {
+            $type = 'advance';
+        }
         
         if (!$requestId || !$amount) {
             $_SESSION['error'] = 'Invalid payment parameters';
@@ -56,8 +90,17 @@ class Payment
         }
         
         // Parse service details for provider response
-        $serviceDetails = $request->service_details_json ? json_decode($request->service_details_json, true) : [];
-        $providerResponse = $serviceDetails['provider_response'] ?? [];
+        $providerResponse = $this->getProviderResponse($request);
+
+        $expectedAmount = $this->calculateExpectedPayableAmount($request, $type);
+        if ($expectedAmount <= 0) {
+            $_SESSION['success'] = 'This request is already fully settled. No additional payment is required.';
+            header('Location: ' . ROOT . '/Production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0));
+            exit;
+        }
+
+        $requestedAmount = is_numeric($amount) ? (float)$amount : 0.0;
+        $amount = number_format((abs($requestedAmount - $expectedAmount) <= 0.01) ? $requestedAmount : $expectedAmount, 2, '.', '');
         
         // Get user details for payment
         $userId = $_SESSION['user_id'];
@@ -126,6 +169,12 @@ class Payment
                 $this->jsonResponse(['success' => false, 'error' => 'Service request not found'], 404);
             }
 
+            $expectedAmount = $this->calculateExpectedPayableAmount($request, $type);
+            if ($expectedAmount <= 0) {
+                $this->jsonResponse(['success' => false, 'error' => 'No additional payment is required for this request'], 400);
+            }
+            $amount = $expectedAmount;
+
             $userId = (int)$_SESSION['user_id'];
 
             // Check if a pending PayHere payment already exists for this request and type
@@ -185,6 +234,10 @@ class Payment
         $amount = $_GET['amount'] ?? null;
         $type = $_GET['type'] ?? 'advance';
 
+        if (!in_array($type, ['advance', 'remaining', 'full'], true)) {
+            $type = 'advance';
+        }
+
         if (!$requestId || !$amount) {
             $_SESSION['error'] = 'Invalid bank payment parameters';
             header('Location: ' . ROOT . '/Production_manager/manage_services');
@@ -197,6 +250,14 @@ class Payment
             header('Location: ' . ROOT . '/Production_manager/manage_services');
             exit;
         }
+
+        $expectedAmount = $this->calculateExpectedPayableAmount($request, $type);
+        if ($expectedAmount <= 0) {
+            $_SESSION['success'] = 'This request is already fully settled. No additional payment is required.';
+            header('Location: ' . ROOT . '/Production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0));
+            exit;
+        }
+        $amount = number_format($expectedAmount, 2, '.', '');
 
         $data = [
             'request' => $request,
@@ -216,6 +277,10 @@ class Payment
         $amount = $_GET['amount'] ?? null;
         $type = $_GET['type'] ?? 'advance';
 
+        if (!in_array($type, ['advance', 'remaining', 'full'], true)) {
+            $type = 'advance';
+        }
+
         if (!$requestId || !$amount) {
             $_SESSION['error'] = 'Invalid cash payment parameters';
             header('Location: ' . ROOT . '/Production_manager/manage_services');
@@ -228,6 +293,14 @@ class Payment
             header('Location: ' . ROOT . '/Production_manager/manage_services');
             exit;
         }
+
+        $expectedAmount = $this->calculateExpectedPayableAmount($request, $type);
+        if ($expectedAmount <= 0) {
+            $_SESSION['success'] = 'This request is already fully settled. No additional payment is required.';
+            header('Location: ' . ROOT . '/Production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0));
+            exit;
+        }
+        $amount = number_format($expectedAmount, 2, '.', '');
 
         $data = [
             'request' => $request,
@@ -254,6 +327,10 @@ class Payment
         $receivedDate = $_POST['received_date'] ?? null;
         $note = trim($_POST['note'] ?? '');
 
+        if (!in_array($type, ['advance', 'remaining', 'full'], true)) {
+            $type = 'advance';
+        }
+
         if (!$requestId || !$amount || !$receivedDate) {
             $_SESSION['error'] = 'Missing required cash payment details';
             header('Location: ' . ROOT . '/Payment/cashForm?request_id=' . (int)$requestId . '&amount=' . urlencode((string)$amount) . '&type=' . urlencode($type));
@@ -266,6 +343,14 @@ class Payment
             header('Location: ' . ROOT . '/Production_manager/manage_services');
             exit;
         }
+
+        $expectedAmount = $this->calculateExpectedPayableAmount($request, $type);
+        if ($expectedAmount <= 0) {
+            $_SESSION['success'] = 'This request is already fully settled. No additional payment is required.';
+            header('Location: ' . ROOT . '/Production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0));
+            exit;
+        }
+        $amount = number_format($expectedAmount, 2, '.', '');
 
         // Cancel any previous rejected payments for this request
         $this->cancelRejectedPayments($requestId);
@@ -320,6 +405,10 @@ class Payment
         $amount = $_POST['amount'] ?? null;
         $type = $_POST['type'] ?? 'advance';
 
+        if (!in_array($type, ['advance', 'remaining', 'full'], true)) {
+            $type = 'advance';
+        }
+
         if (!$requestId || !$amount || !isset($_FILES['bank_slip'])) {
             $_SESSION['error'] = 'Missing required bank payment details';
             header('Location: ' . ROOT . '/Production_manager/manage_services');
@@ -332,6 +421,14 @@ class Payment
             header('Location: ' . ROOT . '/Production_manager/manage_services');
             exit;
         }
+
+        $expectedAmount = $this->calculateExpectedPayableAmount($request, $type);
+        if ($expectedAmount <= 0) {
+            $_SESSION['success'] = 'This request is already fully settled. No additional payment is required.';
+            header('Location: ' . ROOT . '/Production_manager/manage_services?drama_id=' . (int)($request->drama_id ?? 0));
+            exit;
+        }
+        $amount = number_format($expectedAmount, 2, '.', '');
 
         // Cancel any previous rejected payments for this request
         $this->cancelRejectedPayments($requestId);
