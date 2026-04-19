@@ -45,15 +45,29 @@ class DirectorRoleController
                 return (int)($role->id ?? 0);
             }, $publishedRoles));
 
+            $roleTypes = [
+                'lead' => 'Lead',
+                'supporting' => 'Supporting',
+                'other' => 'Other',
+            ];
+
+            $roleStatuses = [
+                'open' => 'Open',
+                'filled' => 'Filled',
+                'closed' => 'Closed',
+            ];
+
             return [
-                'roles' => $roles,
+                'roles' => is_array($roles) ? $roles : [],
                 'roleStats' => $stats,
-                'pendingApplications' => $pendingApplications,
-                'pendingRequests' => $pendingRequests,
-                'publishedRoles' => $publishedRoles,
-                'publishableRoles' => $publishableRoles,
-                'publishedRoleIds' => $publishedRoleIds,
-                'currentDirectorId' => (int)($_SESSION['user_id'] ?? 0),
+                'pendingApplications' => is_array($pendingApplications) ? $pendingApplications : [],
+                'pendingRequests' => is_array($pendingRequests) ? $pendingRequests : [],
+                'publishedRoles' => is_array($publishedRoles) ? $publishedRoles : [],
+                'publishableRoles' => is_array($publishableRoles) ? $publishableRoles : [],
+                'publishedRoleIds' => is_array($publishedRoleIds) ? $publishedRoleIds : [],
+                'roleTypes' => $roleTypes,
+                'roleStatuses' => $roleStatuses,
+                'dramaName' => (string)($drama->drama_name ?? 'Drama'),
             ];
         });
     }
@@ -511,6 +525,115 @@ class DirectorRoleController
         }
 
         $this->respondWithRedirect(false, 'Unable to remove request. It may already be handled.', (int)$drama->id, [
+            'route' => 'manage',
+        ]);
+    }
+
+    public function update_role_request()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $dramaId = $this->getQueryParam('drama_id');
+            if ($dramaId) {
+                $this->redirectToManageRoles((int)$dramaId);
+            }
+            header('Location: ' . ROOT . '/director/dashboard');
+            exit;
+        }
+
+        $drama = $this->authorizeDrama();
+
+        if (!$this->roleModel) {
+            $this->respondWithRedirect(false, 'Role management is currently unavailable.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $requestId = (int)($_POST['request_id'] ?? 0);
+        $status = strtolower(trim((string)($_POST['status'] ?? 'pending')));
+        $note = trim((string)($_POST['note'] ?? ''));
+        $interviewRaw = trim((string)($_POST['interview_at'] ?? ''));
+
+        if ($requestId <= 0) {
+            $this->respondWithRedirect(false, 'Invalid request selected.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $allowedStatuses = ['pending', 'interview'];
+        if (!in_array($status, $allowedStatuses, true)) {
+            $this->respondWithRedirect(false, 'Invalid request status selected.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        if (strlen($note) > 1000) {
+            $this->respondWithRedirect(false, 'Request note is too long. Please keep it under 1000 characters.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $interviewAt = null;
+        if ($interviewRaw !== '') {
+            $timestamp = strtotime($interviewRaw);
+            if ($timestamp === false) {
+                $this->respondWithRedirect(false, 'Invalid interview date/time provided.', (int)$drama->id, [
+                    'route' => 'manage',
+                ]);
+            }
+
+            if ($timestamp <= time()) {
+                $this->respondWithRedirect(false, 'Interview date/time must be in the future.', (int)$drama->id, [
+                    'route' => 'manage',
+                ]);
+            }
+
+            $interviewAt = date('Y-m-d H:i:s', $timestamp);
+        }
+
+        if ($status === 'interview' && $interviewAt === null) {
+            $this->respondWithRedirect(false, 'Provide an interview date/time when setting request status to interview.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        if ($status === 'pending') {
+            $interviewAt = null;
+        }
+
+        $requestRecord = $this->roleModel->getRoleRequestById($requestId);
+        if (!$requestRecord || (int)($requestRecord->drama_id ?? 0) !== (int)$drama->id) {
+            $this->respondWithRedirect(false, 'Request not found or inaccessible.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $updated = $this->roleModel->updateRoleRequestByDirector(
+            $requestId,
+            (int)$_SESSION['user_id'],
+            (int)$drama->id,
+            $status,
+            $note !== '' ? $note : null,
+            $interviewAt
+        );
+
+        if ($updated) {
+            if ($this->notificationModel && !empty($requestRecord->artist_id)) {
+                $this->notificationModel->createNotification([
+                    'user_id' => (int)$requestRecord->artist_id,
+                    'drama_id' => (int)$drama->id,
+                    'type' => 'role_assigned',
+                    'title' => 'Role Request Updated: ' . ($requestRecord->role_name ?? 'Role'),
+                    'message' => 'The director updated your request for "' . ($requestRecord->role_name ?? 'Role') . '" in "' . ($drama->drama_name ?? 'Drama') . '".',
+                    'link' => ROOT . '/artistdashboard',
+                ]);
+            }
+
+            $this->respondWithRedirect(true, 'Role request updated successfully.', (int)$drama->id, [
+                'route' => 'manage',
+            ]);
+        }
+
+        $this->respondWithRedirect(false, 'Unable to update request. It may already be handled.', (int)$drama->id, [
             'route' => 'manage',
         ]);
     }

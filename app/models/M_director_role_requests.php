@@ -159,6 +159,66 @@ class M_director_role_requests
         }
     }
 
+    public function updateRoleRequestByDirector(int $request_id, int $director_id, int $drama_id, string $status, ?string $note = null, ?string $interviewAt = null): bool
+    {
+        try {
+            $allowedStatuses = ['pending', 'interview'];
+            if (!in_array($status, $allowedStatuses, true)) {
+                return false;
+            }
+
+            $this->db->beginTransaction();
+
+            $this->db->query("SELECT rr.id, rr.status
+                              FROM role_requests rr
+                              INNER JOIN drama_roles r ON rr.role_id = r.id
+                              WHERE rr.id = :request_id
+                                AND rr.director_id = :director_id
+                                AND r.drama_id = :drama_id
+                              FOR UPDATE");
+            $this->db->bind(':request_id', $request_id);
+            $this->db->bind(':director_id', $director_id);
+            $this->db->bind(':drama_id', $drama_id);
+            $request = $this->db->single();
+
+            if (!$request) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $currentStatus = strtolower((string)($request->status ?? ''));
+            if (!in_array($currentStatus, ['pending', 'interview'], true)) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $this->db->query("UPDATE role_requests SET
+                              status = :status,
+                              note = :note,
+                              interview_at = :interview_at,
+                              responded_at = NULL
+                              WHERE id = :request_id");
+            $this->db->bind(':status', $status);
+            $this->db->bind(':note', $note);
+            $this->db->bind(':interview_at', $interviewAt);
+            $this->db->bind(':request_id', $request_id);
+
+            $ok = $this->db->execute();
+
+            if (!$ok) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in M_director_role_requests::updateRoleRequestByDirector: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function cancelRoleRequestByDirector(int $request_id, int $director_id, int $drama_id): bool
     {
         try {

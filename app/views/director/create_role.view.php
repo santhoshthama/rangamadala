@@ -25,24 +25,8 @@ $profileImageSrc = directorResolveProfileImageSrc();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Role - <?= esc($dramaName) ?> - Rangamadala</title>
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
+    <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/director-create-role.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<style>
-        .form-card {
-            background: #fff;
-            border-radius: 18px;
-            padding: 28px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm, 0 12px 30px rgba(15, 23, 42, 0.12));
-            max-width: 740px;
-            margin: 0 auto;
-        }
-        .form-grid { display: grid; gap: 18px; }
-        .form-row { display: flex; gap: 18px; flex-wrap: wrap; }
-        .form-group { flex: 1 1 220px; display: flex; flex-direction: column; }
-        label { font-weight: 600; margin-bottom: 6px; }
-        .form-error { color: var(--danger); font-size: 12px; margin-top: 6px; }
-        .form-footer { display: flex; gap: 12px; margin-top: 24px; }
-    </style>
 </head>
 <body class="director-dashboard-page">
     <?php

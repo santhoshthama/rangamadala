@@ -1,4 +1,34 @@
+function initRoleOverviewTabs() {
+    const tabButtons = document.querySelectorAll('.tab-trigger[data-tab]');
+    if (!tabButtons.length) {
+        return;
+    }
+
+    const tabContents = Array.from(tabButtons)
+        .map(button => ({
+            button,
+            panel: document.getElementById(`tab-${button.dataset.tab}`),
+        }))
+        .filter(item => item.panel);
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(tabButton => tabButton.classList.remove('active'));
+            button.classList.add('active');
+
+            tabContents.forEach(item => item.panel.classList.remove('active'));
+
+            const targetPanel = document.getElementById(`tab-${button.dataset.tab}`);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    initRoleOverviewTabs();
+
     const confirmForms = document.querySelectorAll('form[data-confirm]');
     confirmForms.forEach(form => {
         form.addEventListener('submit', event => {

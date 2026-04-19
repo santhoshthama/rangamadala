@@ -169,18 +169,20 @@
 
 .calendar-legend-label {
     font-size: 13px;
+    color: #4a3a14;
 }
 
 .legend-dot {
     width: 16px;
     height: 16px;
     border-radius: 3px;
+    display: inline-block;
+    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .legend-dot-rehearsal { background: #007bff; }
 .legend-dot-interview { background: #28a745; }
 .legend-dot-meeting { background: #ffc107; }
-.legend-dot-performance { background: #6f42c1; }
 .legend-dot-today { background: var(--brand); }
 
 .is-hidden {
