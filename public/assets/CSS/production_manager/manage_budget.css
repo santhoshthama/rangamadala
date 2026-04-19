@@ -1,15 +1,3 @@
-.pm-budget-card-spent {
-    background: linear-gradient(135deg, var(--success), #1f9b3b);
-}
-
-.pm-budget-card-remaining {
-    background: linear-gradient(135deg, var(--warning), #e0a800);
-}
-
-.pm-budget-card-total-items {
-    background: linear-gradient(135deg, var(--info), #138496);
-}
-
 .pm-budget-overview,
 .pm-budget-table-section {
     padding: 28px;

@@ -9,22 +9,26 @@
 }
 
 .back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    text-decoration: none;
     background: transparent;
     color: #d4af37;
-    padding: 8px 14px;
     border: 2px solid #d4af37;
+    padding: 8px 14px;
     border-radius: 6px;
     font-size: 16px;
     font-weight: 500;
-    cursor: pointer;
+    gap: 6px;
+    box-shadow: none;
     transition: 0.3s ease;
 }
 
 .back-btn:hover {
-    background: linear-gradient(180deg, #ffffff 0%, #fefcf8 100%);
+       background: linear-gradient(180deg, #ffffff 0%, #fefcf8 100%);
 
     color: #1a1410;
+    transform: none;
+}
+
+ .back-button i {
+    font-size: 14px;
 }

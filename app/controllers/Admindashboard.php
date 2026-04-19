@@ -193,7 +193,7 @@ class Admindashboard {
             }
         }
 
-        $this->view('admindashboard', ['dashboard_profile_image' => $dashboardProfileImage]);
+        $this->view('admin/dashboard', ['dashboard_profile_image' => $dashboardProfileImage]);
     }
 
     /**

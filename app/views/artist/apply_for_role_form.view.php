@@ -23,8 +23,33 @@ if ($profileUser && !empty($profileUser->profile_image)) {
     <link rel="shortcut icon" href="<?php echo ROOT; ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
     <link rel="apple-touch-icon" href="<?=ROOT?>/assets/images/Rangamadala logo.png">
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/ui-theme.css">
+    <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/Button.css">
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/artist-apply  for-role.css">
     <link rel="stylesheet" href="<?=ROOT?>/assets/CSS/toast.css">
+    <style>
+        .content .card-section {
+            background: linear-gradient(180deg, #fffdf8 0%, #fff8ea 100%);
+            border: 1px solid #edd9a8;
+            border-left: 1px solid #edd9a8;
+            border-radius: 16px;
+            box-shadow: 0 10px 24px rgba(122, 95, 31, 0.12);
+            padding: 24px;
+        }
+
+        .content .card-section h3 {
+            color: #5e4718;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-left: 0;
+            border-bottom: 1px solid rgba(186, 142, 35, 0.22);
+        }
+
+        .content .card-section h3 span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
 
 </head>
 
@@ -37,10 +62,14 @@ if ($profileUser && !empty($profileUser->profile_image)) {
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?=ROOT?>/artistdashboard/browse_vacancies" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Vacancies
-        </a>
+        <div class="back-container">
+            <a href="<?=ROOT?>/artistdashboard/browse_vacancies" class="back-link">
+                <button type="button" class="back-btn">
+                    <i class="bx bx-arrow-left"></i>
+                    Back to Vacancies
+                </button>
+            </a>
+        </div>
 
         <!-- Header -->
         <div class="header--wrapper">
@@ -120,13 +149,13 @@ if ($profileUser && !empty($profileUser->profile_image)) {
 
                             <div class="form-group">
                                 <label>Media Links (Optional)</label>
-                                <textarea name="media_links" class="form-input" rows="4" placeholder="Add links to your portfolio, YouTube videos, social media profiles, etc.&#10;&#10;Example:&#10;YouTube: https://youtube.com/channel/...&#10;Instagram: https://instagram.com/...&#10;Portfolio: https://mywebsite.com"></textarea>
+                                <textarea name="media_links" class="form-input" rows="4"></textarea>
                                 <small style="color: var(--muted); display: block; margin-top: 8px;">Share links to showcase your work (YouTube, Instagram, portfolio website, etc.)</small>
                             </div>
 
                             <div class="form-group">
                                 <label>Cover Letter / Message <span style="color: var(--danger);">*</span></label>
-                                <textarea name="cover_letter" required class="form-input" rows="8" placeholder="Tell the director why you're the perfect fit for this role...&#10;&#10;Example:&#10;- Your relevant experience&#10;- Why you're interested in this role&#10;- What makes you a good fit"></textarea>
+                                <textarea name="cover_letter" required class="form-input" rows="8"></textarea>
                                 <small style="color: var(--muted); display: block; margin-top: 8px;">Introduce yourself and explain why you're interested in this role</small>
                             </div>
 

@@ -116,7 +116,7 @@ foreach ($allShowings as $bookingItem) {
 
           <a href="#" class="dashboard-nav-item" data-view="watched-dramas">
             <i class='bx bx-mask nav-icon'></i>
-            <span class="nav-label">Watched Dramas</span>
+            <span class="nav-label">Bought Dramas</span>
           </a>
 
           <!-- Payment History -->
@@ -668,6 +668,7 @@ foreach ($allShowings as $bookingItem) {
                       <th>Amount</th>
                       <th>Paid At</th>
                       <th>Status</th>
+                      <th>Receipt</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -688,6 +689,12 @@ foreach ($allShowings as $bookingItem) {
                         <td class="payment-amount"><?= htmlspecialchars($showingPriceText !== '' ? $showingPriceText : 'N/A') ?></td>
                         <td><?= htmlspecialchars($paidAtValue) ?></td>
                         <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span></td>
+                        <td>
+                          <a href="<?= ROOT ?>/audiencedashboard/payment_receipt/showing/<?= (int)$payment->id ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;background:rgba(186,142,35,0.12);color:#8f6717;text-decoration:none;font-weight:600;font-size:13px;">
+                            <i class="bx bx-download"></i>
+                            Receipt
+                          </a>
+                        </td>
                       </tr>
                     <?php endforeach; ?>
                   </tbody>
@@ -714,6 +721,7 @@ foreach ($allShowings as $bookingItem) {
                       <th>Amount</th>
                       <th>Paid At</th>
                       <th>Status</th>
+                      <th>Receipt</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -729,6 +737,12 @@ foreach ($allShowings as $bookingItem) {
                         <td class="payment-amount">LKR <?= number_format((float)($payment->amount ?? 0), 2) ?></td>
                         <td><?= htmlspecialchars($paidAtValue) ?></td>
                         <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span></td>
+                        <td>
+                          <a href="<?= ROOT ?>/audiencedashboard/payment_receipt/class/<?= (int)$payment->id ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;background:rgba(186,142,35,0.12);color:#8f6717;text-decoration:none;font-weight:600;font-size:13px;">
+                            <i class="bx bx-download"></i>
+                            Receipt
+                          </a>
+                        </td>
                       </tr>
                     <?php endforeach; ?>
                   </tbody>
@@ -877,7 +891,7 @@ foreach ($allShowings as $bookingItem) {
         <div class="dashboard-view" id="watched-dramas">
           <div class="dashboard-table-container">
             <div class="dashboard-table-header">
-              <h3 class="dashboard-table-title">Watched Dramas</h3>
+              <h3 class="dashboard-table-title">Bought Dramas</h3>
             </div>
 
             <?php if (!empty($watchedShowings)): ?>
@@ -938,7 +952,7 @@ foreach ($allShowings as $bookingItem) {
                 <div class="empty-state-icon">
                   <i class='bx bx-mask'></i>
                 </div>
-                <h3 class="empty-state-title">No Watched Dramas Yet</h3>
+                <h3 class="empty-state-title">No Bought Dramas Yet</h3>
                 <p class="empty-state-description">Only paid bookings with a passed show date will appear here with details and review options.</p>
               </div>
             <?php endif; ?>
@@ -960,8 +974,8 @@ foreach ($allShowings as $bookingItem) {
     </main>
   </div>
 
-  <script src="<?= ROOT ?>/assets/JS/audiencedashboard.js"></script>
-  <script src="<?= ROOT ?>/assets/JS/audiencedashboard-page.js"></script>
+  <script src="<?= ROOT ?>/assets/JS/audience/audiencedashboard.js"></script>
+  <script src="<?= ROOT ?>/assets/JS/audience/audiencedashboard-page.js"></script>
 </body>
 
 </html>

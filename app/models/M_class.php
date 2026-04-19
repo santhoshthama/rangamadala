@@ -223,6 +223,37 @@ class M_class
         }
     }
 
+    public function getEnrollmentPaymentByIdForUser($paymentId, $userId, $userRole = 'audience')
+    {
+        try {
+            $this->db->query("SELECT cep.id,
+                    cep.order_id,
+                    cep.amount,
+                    cep.status,
+                    cep.created_at,
+                    cep.paid_at,
+                    dc.id AS class_id,
+                    dc.title AS class_title,
+                    dc.class_date,
+                    dc.venue,
+                    u.full_name AS creator_name
+                FROM class_enrollment_payments cep
+                INNER JOIN drama_classes dc ON dc.id = cep.class_id
+                LEFT JOIN users u ON u.id = dc.created_by
+                WHERE cep.id = :payment_id
+                  AND cep.user_id = :user_id
+                  AND cep.user_role = :user_role
+                LIMIT 1");
+            $this->db->bind(':payment_id', (int)$paymentId);
+            $this->db->bind(':user_id', (int)$userId);
+            $this->db->bind(':user_role', strtolower(trim((string)$userRole)));
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log('M_class::getEnrollmentPaymentByIdForUser error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     public function createClass($artistId, $data)
     {
         try {
