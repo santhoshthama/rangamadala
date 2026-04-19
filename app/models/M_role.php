@@ -8,7 +8,7 @@ require_once __DIR__ . '/M_director_role_assignments.php';
 class M_role {
     protected $roleCoreModel;
     protected $roleRequestsModel;
-    protected $roleApplicationsModel;
+     protected $roleApplicationsModel;
     protected $roleAssignmentsModel;
 
     public function __construct() {
@@ -135,6 +135,10 @@ class M_role {
 
     public function updateRoleRequestStatus($request_id, string $status, ?string $note = null, ?string $interviewAt = null) {
         return $this->roleRequestsModel->updateRoleRequestStatus($request_id, $status, $note, $interviewAt);
+    }
+
+    public function updateRoleRequestByDirector(int $request_id, int $director_id, int $drama_id, string $status, ?string $note = null, ?string $interviewAt = null): bool {
+        return $this->roleRequestsModel->updateRoleRequestByDirector($request_id, $director_id, $drama_id, $status, $note, $interviewAt);
     }
 
     public function cancelRoleRequestByDirector(int $request_id, int $director_id, int $drama_id): bool {

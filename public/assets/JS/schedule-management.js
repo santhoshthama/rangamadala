@@ -137,8 +137,8 @@ function viewEventDetails(eventId) {
     var evt = findEvent(eventId);
     if (!evt) { alert('Event details not available.'); return; }
 
-    var typeLabels = { rehearsal: 'Rehearsal', interview: 'Interview', meeting: 'Production Meeting', performance: 'Performance' };
-    var typeColors = { rehearsal: '#007bff', interview: '#28a745', meeting: '#ffc107', performance: '#6f42c1' };
+    var typeLabels = { rehearsal: 'Rehearsal', interview: 'Interview', meeting: 'Production Meeting' };
+    var typeColors = { rehearsal: '#007bff', interview: '#28a745', meeting: '#ffc107' };
     var statusColors = { scheduled: '#ffc107', confirmed: '#28a745', completed: '#6c757d', cancelled: '#dc3545', pending: '#ffc107' };
 
     var html = '';
@@ -182,7 +182,7 @@ function generateCalendar(month, year) {
     var daysInMonth = new Date(year, month + 1, 0).getDate();
     var today = new Date();
 
-    var typeColors = { rehearsal: '#007bff', interview: '#28a745', meeting: '#ffc107', performance: '#6f42c1' };
+    var typeColors = { rehearsal: '#007bff', interview: '#28a745', meeting: '#ffc107' };
 
     // Empty cells for days before the 1st
     for (var i = 0; i < firstDay; i++) {

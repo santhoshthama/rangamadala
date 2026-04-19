@@ -1,0 +1,24 @@
+.card { background: #fff; border-radius: 18px; padding: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-sm, 0 6px 18px rgba(15, 23, 42, .08)); margin-bottom: 24px; }
+.grid-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+.list-item { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #fff; }
+.list-item:last-child { margin-bottom: 0; }
+.badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.badge-open { background: rgba(76,175,80,.12); color: #256029; }
+.badge-filled { background: rgba(0,123,255,.12); color: #0b5394; }
+.badge-closed { background: rgba(244,67,54,.12); color: #a52714; }
+.badge-pending { background: rgba(255,193,7,.15); color: #7a4f02; }
+.badge-accepted { background: rgba(76,175,80,.12); color: #256029; }
+.badge-rejected { background: rgba(244,67,54,.12); color: #a52714; }
+.actions-inline { display: flex; gap: 10px; flex-wrap: wrap; }
+.form-error { color: var(--danger); font-size: 12px; margin-top: 4px; }
+.status-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.status-chip.ready { background: rgba(76,175,80,.12); color: #256029; }
+.status-chip.pending { background: rgba(255,193,7,.18); color: #7a4f02; }
+.interview-summary { margin-top: 10px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.application-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.decision-hint { font-size: 12px; color: #a52714; margin: 0; text-align: right; }
+.assignment-actions { min-width: 280px; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+.assignment-remove-form .form-group { margin-bottom: 0; }
+.assignment-remove-form label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+.assignment-remove-form textarea.form-control { min-height: 78px; resize: vertical; }
+.assignment-remove-form .btn { align-self: flex-end; }

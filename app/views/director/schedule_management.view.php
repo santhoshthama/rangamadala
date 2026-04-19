@@ -269,10 +269,6 @@ $profileImageSrc = directorResolveProfileImageSrc();
                                     <span class="calendar-legend-label">Meeting</span>
                                 </div>
                                 <div class="calendar-legend-item">
-                                    <div class="legend-dot legend-dot-performance"></div>
-                                    <span class="calendar-legend-label">Performance</span>
-                                </div>
-                                <div class="calendar-legend-item">
                                     <div class="legend-dot legend-dot-today"></div>
                                     <span class="calendar-legend-label">Today</span>
                                 </div>
@@ -301,7 +297,6 @@ $profileImageSrc = directorResolveProfileImageSrc();
                             <option value="rehearsal">Rehearsal</option>
                             <option value="interview">Interview</option>
                             <option value="meeting">Production Meeting</option>
-                            <option value="performance">Performance</option>
                         </select>
                     </div>
 

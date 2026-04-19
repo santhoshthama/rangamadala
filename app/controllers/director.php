@@ -143,6 +143,11 @@ class Director{
         $this->getDirectorRoleController()->remove_role_request();
     }
 
+    public function update_role_request()
+    {
+        $this->getDirectorRoleController()->update_role_request();
+    }
+
     public function publish_vacancy()
     {
         $this->getDirectorRoleController()->publish_vacancy();
