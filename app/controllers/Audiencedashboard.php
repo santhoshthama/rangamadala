@@ -67,7 +67,7 @@ class Audiencedashboard {
             }
         }
 
-        $this->view('audiencedashboard', $data);
+        $this->view('audience/dashboard', $data);
     }
 
     public function enroll_class()
@@ -229,7 +229,7 @@ class Audiencedashboard {
             'receipt' => $receipt,
         ];
 
-        $this->view('audience_payment_receipt', $data);
+        $this->view('audience/payment_receipt', $data);
     }
 }
 ?>
