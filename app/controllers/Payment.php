@@ -39,6 +39,7 @@ class Payment
         $requestId = $_GET['request_id'] ?? null;
         $amount = $_GET['amount'] ?? null;
         $type = $_GET['type'] ?? 'advance';
+        $forcedOverdue = isset($_GET['forced_overdue']) && (int)$_GET['forced_overdue'] === 1;
         
         if (!$requestId || !$amount) {
             $_SESSION['error'] = 'Invalid payment parameters';
@@ -75,6 +76,8 @@ class Payment
             'type' => $type,
             'provider_response' => $providerResponse,
             'user' => $user,
+            'forced_overdue' => $forcedOverdue,
+            'forced_overdue_message' => $_SESSION['warning_message'] ?? '',
             'payhere_config' => [
                 'merchant_id' => $this->payHereHelper->getConfig('merchant_id'),
                 'sandbox' => $this->payHereHelper->getConfig('sandbox'),
@@ -83,6 +86,10 @@ class Payment
                 'notify_url' => $this->payHereHelper->getConfig('notify_url'),
             ]
         ];
+
+        if (isset($_SESSION['warning_message'])) {
+            unset($_SESSION['warning_message']);
+        }
         
         $this->view('payment_checkout', $data);
     }
