@@ -369,17 +369,8 @@ $currentImageLabel = $user && !empty($user->profile_image)
                         <span>Years of Experience</span>
                         <strong><?= $user && isset($user->years_experience) && $user->years_experience !== null ? esc($user->years_experience) . ' years' : 'Not added yet' ?></strong>
                     </div>
+                         
 
-                    <?php if ($nicDownload): ?>
-                        <div class="summary-actions">
-                            <a href="<?= esc($nicDownload) ?>" target="_blank" rel="noopener">
-                                <i class="bx bx-id-card"></i>
-                                View NIC Upload
-                            </a>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </aside>
 
             <section class="profile-form">
                 <h1>Profile Details</h1>

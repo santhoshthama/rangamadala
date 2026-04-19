@@ -246,6 +246,10 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
                                     </div>
                                 </div>
                                 <div class="artist-footer">
+                                    <a href="<?= ROOT ?>/artistdashboard/edit_class/<?= (int)$class->id ?>" class="btn btn-primary">
+                                        <i class="bx bx-edit"></i> Edit Class
+                                    </a>
+
                                     <form method="POST" action="<?= ROOT ?>/artistdashboard/toggle_class_publish">
                                         <input type="hidden" name="class_id" value="<?= (int)$class->id ?>">
                                         <button type="submit" class="btn btn-secondary">
