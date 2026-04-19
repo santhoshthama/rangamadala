@@ -4,36 +4,64 @@ class M_service_provider extends M_signup {
 
     private $tableExistsCache = [];
 
+    /**
+     * Initializes this model and inherited DB access from the signup base model.
+     * Used automatically whenever service provider controllers instantiate this class.
+     */
     public function __construct() {
         parent::__construct();
     }
 
+    /**
+     * Registers a new service provider account through the shared user registration flow.
+     * Used during service provider signup submission.
+     */
     public function register($full_name, $email, $password, $phone, $nic_photo = null, $nic_photo_back = null) {
         return $this->registerUser($full_name, $email, $password, $phone, 'service_provider', $nic_photo, $nic_photo_back);
     }
 
+    /**
+     * Checks whether a service provider already exists with the given email.
+     * Used for duplicate-email validation in registration/update paths.
+     */
     public function emailExists($email) {
+        // Check duplicate email only among service providers.
         $this->db->query("SELECT COUNT(*) AS cnt FROM users WHERE email = :email AND role = 'service_provider'");
         $this->db->bind(':email', $email);
         $row = $this->db->single();
         return $row && isset($row->cnt) ? ((int)$row->cnt > 0) : false;
     }
 
+    /**
+     * Checks whether a service provider already exists with the given full name.
+     * Used when enforcing uniqueness/business constraints for profile identity.
+     */
     public function nameExists($full_name) {
+        // Count records with the same full name for this role.
         $this->db->query("SELECT COUNT(*) AS cnt FROM users WHERE full_name = :full_name AND role = 'service_provider'");
         $this->db->bind(':full_name', $full_name);
         $row = $this->db->single();
         return $row && isset($row->cnt) ? ((int)$row->cnt > 0) : false;
     }
 
+    /**
+     * Checks whether an email already exists in users regardless of role.
+     * Used by flows that require global email uniqueness.
+     */
     public function emailExistsInUsers($email) {
+        // Global uniqueness check across all roles.
         $this->db->query("SELECT COUNT(*) AS cnt FROM users WHERE email = :email");
         $this->db->bind(':email', $email);
         $row = $this->db->single();
         return $row && isset($row->cnt) ? ((int)$row->cnt > 0) : false;
     }
 
+    /**
+     * Returns user ID by email, optionally scoped to a role.
+     * Used after signup or verification when only email is available.
+     */
     public function getUserIdByEmail($email, $role = null) {
+        // Use role-scoped lookup when role is provided.
         if ($role) {
             $this->db->query("SELECT id FROM users WHERE email = :email AND role = :role LIMIT 1");
             $this->db->bind(':role', $role);
@@ -45,12 +73,18 @@ class M_service_provider extends M_signup {
         return $row ? (int)$row->id : false;
     }
 
+    /**
+     * Loads a complete provider profile by joining serviceprovider and users data.
+     * Used by profile pages/edit forms to render current provider information.
+     */
     public function getProviderById($user_id) {
+        // Detect optional columns to keep this query backward-compatible with older schemas.
         $usersHasYears = $this->columnExists('users', 'years_experience');
         $serviceProviderHasYears = $this->columnExists('serviceprovider', 'years_experience');
         $usersHasBio = $this->columnExists('users', 'bio');
         $serviceProviderHasSummary = $this->columnExists('serviceprovider', 'professional_summary');
 
+        // Build years expression dynamically based on available source columns.
         if ($usersHasYears && $serviceProviderHasYears) {
             $yearsExpr = 'COALESCE(sp.years_experience, u.years_experience)';
         } elseif ($serviceProviderHasYears) {
@@ -61,6 +95,7 @@ class M_service_provider extends M_signup {
             $yearsExpr = 'NULL';
         }
 
+        // Build professional summary expression dynamically for mixed DB versions.
         if ($usersHasBio && $serviceProviderHasSummary) {
             $summaryExpr = "COALESCE(NULLIF(u.bio, ''), sp.professional_summary)";
         } elseif ($usersHasBio) {
@@ -75,7 +110,9 @@ class M_service_provider extends M_signup {
                             sp.user_id,
                             sp.professional_title,
                             sp.location,
+                            sp.birthday,
                             sp.social_media_link,
+                            sp.birthday,
                             {$yearsExpr} AS years_experience,
                             sp.availability,
                             sp.availability_notes,
@@ -84,6 +121,7 @@ class M_service_provider extends M_signup {
                             u.full_name,
                             u.email,
                             u.phone,
+                            u.wphone,
                             u.nic_number,
                             u.nic_photo,
                             u.nic_photo_back,
@@ -96,7 +134,12 @@ class M_service_provider extends M_signup {
         return $this->db->single();
     }
 
+    /**
+     * Returns all service rows linked to a provider, including service type names.
+     * Used on provider profile page and service management screens.
+     */
     public function getServicesByProviderId($user_id) {
+        // Join service type text so UI can render human-readable category names.
         $this->db->query("SELECT s.*, st.service_type 
                           FROM services s 
                           LEFT JOIN service_types st ON s.service_type_id = st.service_type_id 
@@ -105,24 +148,38 @@ class M_service_provider extends M_signup {
         return $this->db->resultSet();
     }
 
+    /**
+     * Returns all projects for a provider ordered by year.
+     * Used in provider profile and project CRUD views.
+     */
     public function getProjectsByProviderId($user_id) {
+        // Show latest projects first on profile screens.
         $this->db->query("SELECT * FROM projects WHERE provider_id = :user_id ORDER BY year DESC");
         $this->db->bind(':user_id', $user_id);
         return $this->db->resultSet();
     }
 
+    /**
+     * Checks whether a serviceprovider profile row exists for a user.
+     * Used to detect partial signups or missing profile records.
+     */
     public function providerProfileExists($user_id) {
         $this->db->query("SELECT 1 FROM serviceprovider WHERE user_id = :user_id LIMIT 1");
         $this->db->bind(':user_id', (int)$user_id);
         return (bool)$this->db->single();
     }
 
+    /**
+     * Creates a minimal provider profile row when one is missing.
+     * Used as a self-healing step before rendering provider profile pages.
+     */
     public function bootstrapProviderProfile($user_id): bool {
         $providerId = (int)$user_id;
         if ($providerId <= 0) {
             return false;
         }
 
+        // Skip insert if profile already exists.
         if ($this->providerProfileExists($providerId)) {
             return true;
         }
@@ -147,6 +204,7 @@ class M_service_provider extends M_signup {
         $this->db->bind(':user_id', $providerId);
 
         try {
+            // Execute minimal profile bootstrap insert.
             return $this->db->execute();
         } catch (Exception $e) {
             error_log('bootstrapProviderProfile failed: ' . $e->getMessage());
@@ -154,10 +212,15 @@ class M_service_provider extends M_signup {
         }
     }
 
+    /**
+     * Removes partially created provider data across related tables.
+     * Used when registration fails mid-process and cleanup is required.
+     */
     public function cleanupIncompleteRegistration($user_id) {
         $providerId = (int)$user_id;
 
         try {
+            // Remove dependent rows first, then base rows, inside one transaction.
             $this->db->beginTransaction();
 
             $this->db->query("DELETE FROM projects WHERE provider_id = :provider_id");
@@ -179,12 +242,17 @@ class M_service_provider extends M_signup {
             $this->db->commit();
             return true;
         } catch (Exception $e) {
+            // Roll back all partial deletions on failure.
             $this->db->rollBack();
             error_log('cleanupIncompleteRegistration failed: ' . $e->getMessage());
             return false;
         }
     }
 
+    /**
+     * Saves full provider profile plus selected services and projects.
+     * Used by registration/profile completion flow as a multi-phase write.
+     */
     public function saveFullProfile($provider, $user_id, $services = [], $projects = []) {
         $providerId = (int)$user_id;
         $serviceProviderHasYears = $this->columnExists('serviceprovider', 'years_experience');
@@ -195,10 +263,12 @@ class M_service_provider extends M_signup {
         try {
             $this->db->beginTransaction();
 
+            // Update users base identity/contact fields first.
             $usersUpdateSql = "UPDATE users SET
                                 full_name = :full_name,
                                 email = :email,
                                 phone = :phone,
+                                wphone = :phone,
                                 nic_number = :nic_number,
                                 nic_photo = :nic_photo,
                                 nic_photo_back = :nic_photo_back,
@@ -216,6 +286,7 @@ class M_service_provider extends M_signup {
             $this->db->bind(':full_name', $provider['full_name'] ?? null);
             $this->db->bind(':email', $provider['email'] ?? null);
             $this->db->bind(':phone', $provider['phone'] ?? null);
+            $this->db->bind(':wphone', $provider['wphone'] ?? null);
             $this->db->bind(':nic_number', $provider['nic_number'] ?? null);
             $this->db->bind(':nic_photo', $provider['nic_photo'] ?? ($provider['nic_photo_front'] ?? null));
             $this->db->bind(':nic_photo_back', $provider['nic_photo_back'] ?? null);
@@ -225,13 +296,14 @@ class M_service_provider extends M_signup {
             }
             $this->db->execute();
 
-            $serviceProviderColumns = ['user_id', 'professional_title', 'location', 'social_media_link', 'availability', 'availability_notes'];
+            // Build provider upsert SQL using optional years_experience column.
+            $serviceProviderColumns = ['user_id', 'professional_title', 'location', 'social_media_link', 'birthday','availability', 'availability_notes'];
             if ($serviceProviderHasYears) {
                 $serviceProviderColumns[] = 'years_experience';
             }
 
             $serviceProviderSql = "INSERT INTO serviceprovider (" . implode(', ', $serviceProviderColumns) . ")
-            VALUES (:user_id, :professional_title, :location, :social_media_link, :availability, :availability_notes";
+            VALUES (:user_id, :professional_title, :location, :social_media_link, :birthday, :availability, :availability_notes";
 
             if ($serviceProviderHasYears) {
                 $serviceProviderSql .= ", :years_experience";
@@ -242,6 +314,7 @@ class M_service_provider extends M_signup {
                 professional_title = VALUES(professional_title),
                 location = VALUES(location),
                 social_media_link = VALUES(social_media_link),
+                birthday = VALUES(birthday),
                 availability = VALUES(availability),
                 availability_notes = VALUES(availability_notes)";
 
@@ -255,12 +328,14 @@ class M_service_provider extends M_signup {
             $this->db->bind(':professional_title', $provider['professional_title'] ?? null);
             $this->db->bind(':location', $provider['location'] ?? null);
             $this->db->bind(':social_media_link', $provider['website'] ?? null);
-            $this->db->bind(':availability', isset($provider['availability']) ? (int)$provider['availability'] : 1);
+            $this->db->bind(':birthday', $provider['birthday'] ?? null);
+                        $this->db->bind(':availability', isset($provider['availability']) ? (int)$provider['availability'] : 1);
             $this->db->bind(':availability_notes', $provider['availability_notes'] ?? null);
             if ($serviceProviderHasYears) {
                 $this->db->bind(':years_experience', $yearsExperience);
             }
 
+            // Commit provider base/profile write before best-effort child writes.
             $this->db->execute();
             $this->db->commit();
         } catch (Exception $e) {
@@ -273,6 +348,7 @@ class M_service_provider extends M_signup {
 
         // Phase 2: Insert services (best-effort, do not rollback provider)
         try {
+            // Replace existing services with submitted set.
             $this->db->query("DELETE FROM services WHERE provider_id = :provider_id");
             $this->db->bind(':provider_id', $providerId);
             $this->db->execute();
@@ -282,12 +358,14 @@ class M_service_provider extends M_signup {
                     if (!empty($svc['selected']) && !empty($svc['name'])) {
                         $typeId = $this->getServiceTypeIdByName($svc['name']);
 
+                        // Insert base service row first.
                         $this->db->query("INSERT INTO services (provider_id, service_type_id)
                                           VALUES (:provider_id, :service_type_id)");
                         $this->db->bind(':provider_id', $providerId);
                         $this->db->bind(':service_type_id', $typeId);
                         $this->db->execute();
 
+                        // Then insert matching detail row into the correct detail table.
                         $serviceId = $this->db->lastInsertId();
                         $detail = $this->buildDetailPayload($svc['name'], $svc);
                         if ($serviceId && $detail) {
@@ -303,6 +381,7 @@ class M_service_provider extends M_signup {
 
         // Phase 3: Insert projects (best-effort, do not rollback provider)
         try {
+            // Replace existing projects with submitted project list.
             $this->db->query("DELETE FROM projects WHERE provider_id = :provider_id");
             $this->db->bind(':provider_id', $providerId);
             $this->db->execute();
@@ -328,16 +407,23 @@ class M_service_provider extends M_signup {
     }
 
     // Service CRUD Methods
+    /**
+     * Creates a service row and writes service-type-specific detail data.
+     * Used when provider adds a new offered service.
+     */
     public function insertService($provider_id, $service_type_name, $description = '', $extras = []) {
         $providerId = (int)$provider_id;
+        // Resolve service type FK (create type if it does not exist).
         $typeId = $this->getServiceTypeIdByName($service_type_name);
 
+        // Insert service base row.
         $this->db->query("INSERT INTO services (provider_id, service_type_id)
                           VALUES (:provider_id, :service_type_id)");
         $this->db->bind(':provider_id', $providerId);
         $this->db->bind(':service_type_id', $typeId);
         $this->db->execute();
 
+        // Build and insert detail payload if this service type has a detail table.
         $serviceId = $this->db->lastInsertId();
         $detail = $this->buildDetailPayload($service_type_name, $extras + ['description' => $description]);
         if ($serviceId && $detail) {
@@ -347,6 +433,10 @@ class M_service_provider extends M_signup {
         return (bool)$serviceId;
     }
 
+    /**
+     * Returns a single service record with resolved service type.
+     * Used by service edit/delete actions to load target service.
+     */
     public function getServiceById($service_id) {
         $this->db->query("SELECT s.*, st.service_type 
                           FROM services s 
@@ -356,6 +446,10 @@ class M_service_provider extends M_signup {
         return $this->db->single();
     }
 
+    /**
+     * Fetches detail row from the correct service detail table by type.
+     * Used for rendering rich service-specific fields in profile/edit pages.
+     */
     public function getServiceDetails($service_id, $service_type = '') {
         $map = [
             'theater production' => 'service_theater_details',
@@ -388,7 +482,7 @@ class M_service_provider extends M_signup {
             }
         }
 
-        // Fallback: detect by scanning all detail tables (handles older rows without service_type)
+        // Fallback: detect by scanning all detail tables for legacy rows.
         foreach ($map as $label => $table) {
             if (!$this->tableExists($table)) {
                 continue;
@@ -409,7 +503,12 @@ class M_service_provider extends M_signup {
         return null;
     }
 
+    /**
+     * Updates service base type and upserts matching service detail payload.
+     * Used when a provider edits an existing service entry.
+     */
     public function updateService($service_id, $service_type_name, $description = '', $extras = []) {
+        // Update base service type FK.
         $typeId = $this->getServiceTypeIdByName($service_type_name);
 
         $this->db->query("UPDATE services SET 
@@ -420,6 +519,7 @@ class M_service_provider extends M_signup {
         $this->db->bind(':id', $service_id);
         $baseUpdated = $this->db->execute();
 
+        // Upsert matching detail data for the selected service type.
         $detail = $this->buildDetailPayload($service_type_name, $extras + ['description' => $description]);
         if ($detail) {
             $this->upsertServiceDetail((int)$service_id, $detail);
@@ -428,12 +528,17 @@ class M_service_provider extends M_signup {
         return $baseUpdated;
     }
 
+    /**
+     * Resolves service type name to ID, creating the type when missing.
+     * Used by insert/update service flows to keep foreign key valid.
+     */
     private function getServiceTypeIdByName(string $serviceTypeName): ?int {
         $name = trim($serviceTypeName);
         if ($name === '') {
             return null;
         }
 
+        // Reuse existing service type when present.
         $this->db->query("SELECT service_type_id FROM service_types WHERE LOWER(service_type) = LOWER(:name) LIMIT 1");
         $this->db->bind(':name', $name);
         $row = $this->db->single();
@@ -441,15 +546,20 @@ class M_service_provider extends M_signup {
             return (int)$row->service_type_id;
         }
 
-        // Create service type if it doesn't exist yet
+        // Create service type if it doesn't exist yet.
         $this->db->query("INSERT INTO service_types (service_type) VALUES (:name)");
         $this->db->bind(':name', $name);
         $this->db->execute();
         return (int)$this->db->lastInsertId();
     }
 
+    /**
+     * Maps generic form data into a normalized table/data payload per service type.
+     * Used before inserting or updating any service detail row.
+     */
     private function buildDetailPayload(string $serviceName, array $svc): ?array {
         $key = strtolower(trim($serviceName));
+        // Convert generic form payload into service-specific table columns.
         switch ($key) {
             case 'theater production':
                 $af = (array)($svc['available_facilities'] ?? []);
@@ -590,11 +700,16 @@ class M_service_provider extends M_signup {
         }
     }
 
+    /**
+     * Inserts a new service detail row into the resolved detail table.
+     * Used right after a new service base record is created.
+     */
     private function insertServiceDetail(int $serviceId, array $detail): void {
         if (empty($detail['table']) || !isset($detail['data'])) {
             return;
         }
 
+        // Guard against missing detail tables in partial migrations.
         if (!$this->tableExists($detail['table'])) {
             error_log('insertServiceDetail skipped. Missing table: ' . $detail['table']);
             return;
@@ -613,11 +728,16 @@ class M_service_provider extends M_signup {
         $this->db->execute();
     }
 
+    /**
+     * Inserts or updates a service detail row using ON DUPLICATE KEY logic.
+     * Used during service edits to keep detail rows in sync.
+     */
     private function upsertServiceDetail(int $serviceId, array $detail): void {
         if (empty($detail['table']) || !isset($detail['data'])) {
             return;
         }
 
+        // Guard against missing detail tables in partial migrations.
         if (!$this->tableExists($detail['table'])) {
             error_log('upsertServiceDetail skipped. Missing table: ' . $detail['table']);
             return;
@@ -641,6 +761,10 @@ class M_service_provider extends M_signup {
         $this->db->execute();
     }
 
+    /**
+     * Deletes a service base record by ID.
+     * Used by provider service delete action (detail tables rely on DB relations/rules).
+     */
     public function deleteService($service_id) {
         $this->db->query("DELETE FROM services WHERE id = :id");
         $this->db->bind(':id', $service_id);
@@ -648,6 +772,10 @@ class M_service_provider extends M_signup {
     }
 
     // Project CRUD Methods
+    /**
+     * Inserts a provider project record.
+     * Used when adding portfolio/history projects in provider profile.
+     */
     public function insertProject($provider_id, $year, $project_name, $services_provided, $description = '') {
         $this->db->query("INSERT INTO projects (provider_id, year, project_name, services_provided, description) 
                          VALUES (:provider_id, :year, :project_name, :services_provided, :description)");
@@ -659,12 +787,20 @@ class M_service_provider extends M_signup {
         return $this->db->execute();
     }
 
+    /**
+     * Returns a single project by ID.
+     * Used by project edit and delete confirmation flows.
+     */
     public function getProjectById($project_id) {
         $this->db->query("SELECT * FROM projects WHERE id = :id");
         $this->db->bind(':id', $project_id);
         return $this->db->single();
     }
 
+    /**
+     * Updates a provider project record.
+     * Used when provider edits a previously added project.
+     */
     public function updateProject($project_id, $year, $project_name, $services_provided, $description = '') {
         $this->db->query("UPDATE projects SET 
                          year = :year, 
@@ -680,6 +816,10 @@ class M_service_provider extends M_signup {
         return $this->db->execute();
     }
 
+    /**
+     * Deletes a project record by ID.
+     * Used by provider project delete action.
+     */
     public function deleteProject($project_id) {
         $this->db->query("DELETE FROM projects WHERE id = :id");
         $this->db->bind(':id', $project_id);
@@ -687,12 +827,18 @@ class M_service_provider extends M_signup {
     }
 
     // Provider Basic Info Update
-    public function updateBasicInfo($provider_id, $full_name, $professional_title, $email, $phone, 
-                                    $location, $website, $years_experience, $professional_summary, 
+    /**
+     * Updates user and serviceprovider basic profile fields in one transaction.
+     * Used by ServiceProviderProfile::editBasicInfo submit handler.
+     */
+    public function updateBasicInfo($provider_id, $full_name, $professional_title, $email, $phone, $wphone,
+                                    $location, $website, $birthday, $years_experience, $professional_summary, 
                                     $availability, $availability_notes) {
         try {
+            // Keep users + serviceprovider updates atomic.
             $this->db->beginTransaction();
 
+            // Detect optional columns for compatibility across DB versions.
             $usersHasBio = $this->columnExists('users', 'bio');
             $serviceProviderHasYears = $this->columnExists('serviceprovider', 'years_experience');
             $serviceProviderHasSummary = $this->columnExists('serviceprovider', 'professional_summary');
@@ -700,7 +846,8 @@ class M_service_provider extends M_signup {
             $usersUpdateSql = "UPDATE users SET
                              full_name = :full_name,
                              email = :email,
-                             phone = :phone";
+                             phone = :phone,
+                             wphone = :wphone";
             if ($usersHasBio) {
                 $usersUpdateSql .= ", bio = :bio";
             }
@@ -711,16 +858,19 @@ class M_service_provider extends M_signup {
             $this->db->bind(':full_name', $full_name);
             $this->db->bind(':email', $email);
             $this->db->bind(':phone', $phone);
+            $this->db->bind(':wphone', $wphone);
             if ($usersHasBio) {
                 $this->db->bind(':bio', $professional_summary);
             }
             $this->db->bind(':user_id', $provider_id);
             $this->db->execute();
 
+            // Update provider-only fields in serviceprovider table.
             $serviceProviderUpdateSql = "UPDATE serviceprovider SET
                              professional_title = :professional_title,
                              location = :location,
                              social_media_link = :social_media_link,
+                             birthday = :birthday,
                              availability = :availability,
                              availability_notes = :availability_notes";
             if ($serviceProviderHasYears) {
@@ -736,6 +886,7 @@ class M_service_provider extends M_signup {
             $this->db->bind(':professional_title', $professional_title);
             $this->db->bind(':location', $location);
             $this->db->bind(':social_media_link', $website);
+            $this->db->bind(':birthday', $birthday);
             if ($serviceProviderHasYears) {
                 $this->db->bind(':years_experience', $years_experience);
             }
@@ -747,9 +898,11 @@ class M_service_provider extends M_signup {
             $this->db->bind(':user_id', $provider_id);
             $this->db->execute();
 
+            // Commit both table updates together.
             $this->db->commit();
             return true;
         } catch (Exception $e) {
+            // Roll back both updates if any step fails.
             $this->db->rollBack();
             error_log('updateBasicInfo failed: ' . $e->getMessage());
             return false;
@@ -757,6 +910,10 @@ class M_service_provider extends M_signup {
     }
 
     // Update password with current password verification
+    /**
+     * Verifies current password and updates to a new hashed password.
+     * Used by service provider change-password flow.
+     */
     public function updatePasswordWithVerification($user_id, $current_password, $new_password) {
         // Get current password hash from users table
         $this->db->query("SELECT password FROM users WHERE id = :user_id");
@@ -772,7 +929,7 @@ class M_service_provider extends M_signup {
             return false;
         }
         
-        // Update to new password
+        // Hash and store new password only after current password is verified.
         $new_password_hash = password_hash($new_password, PASSWORD_DEFAULT);
         $this->db->query("UPDATE users SET password = :password WHERE id = :user_id");
         $this->db->bind(':password', $new_password_hash);
@@ -781,8 +938,13 @@ class M_service_provider extends M_signup {
     }
 
     // Delete Provider Profile (with cascade)
+    /**
+     * Deletes provider-owned records and profile row inside a transaction.
+     * Used when service provider chooses to delete their profile.
+     */
     public function deleteProvider($provider_id) {
         try {
+            // Delete in transaction so partial account removal does not occur.
             $this->db->beginTransaction();
             
             // Delete services
@@ -803,6 +965,7 @@ class M_service_provider extends M_signup {
             $this->db->commit();
             return true;
         } catch (Exception $e) {
+            // Restore state if any delete fails.
             $this->db->rollBack();
             error_log('deleteProvider failed: ' . $e->getMessage());
             return false;
@@ -810,6 +973,10 @@ class M_service_provider extends M_signup {
     }
 
     // Update Profile Image (SEPARATE from business certificate)
+    /**
+     *Stores the profile image filename in users table.
+     * Used after successful upload in profile image update action.
+     */
     public function updateProfileImage($user_id, $filename) {
         $this->db->query("UPDATE users SET profile_image = :profile_image WHERE id = :user_id");
         $this->db->bind(':profile_image', $filename);
@@ -818,7 +985,12 @@ class M_service_provider extends M_signup {
     }
 
     // Browse/Search Methods for Production Managers
+    /**
+     * Returns searchable provider list with service/rate aggregates and filters.
+     * Used by production manager browse service providers pages.
+     */
     public function getAllProvidersWithServices($filters = []) {
+        // Map detail tables so rate/rate_type can be resolved per service category.
         $detailTableMap = [
             ['table' => 'service_theater_details', 'alias' => 'std', 'service_type' => 'Theater Production'],
             ['table' => 'service_lighting_details', 'alias' => 'sld', 'service_type' => 'Lighting Design'],
@@ -834,6 +1006,7 @@ class M_service_provider extends M_signup {
         $rateTypeParts = [];
         $dynamicJoins = '';
 
+        // Build joins/expressions only for tables that actually exist.
         foreach ($detailTableMap as $def) {
             if (!$this->tableExists($def['table'])) {
                 continue;
@@ -845,6 +1018,7 @@ class M_service_provider extends M_signup {
             $rateTypeParts[] = "{$alias}.rate_type";
         }
 
+        // Coalesce rates across all possible detail table aliases.
         $rateExpr = !empty($ratePerHourParts) ? ('COALESCE(' . implode(', ', $ratePerHourParts) . ')') : 'NULL';
         $rateTypeExpr = !empty($rateTypeParts) ? ('COALESCE(' . implode(', ', $rateTypeParts) . ')') : "'hourly'";
 
@@ -913,10 +1087,16 @@ class M_service_provider extends M_signup {
             $this->db->bind(':max_rate', (float)$filters['max_rate']);
         }
 
+        // Return final provider list for browse/search UI.
         return $this->db->resultSet();
     }
 
+    /**
+     * Checks information_schema to see whether a table exists, with in-memory caching.
+     * Used by dynamic detail-table logic and backward-compatible queries.
+     */
     private function tableExists(string $tableName): bool {
+        // Return cached result if previously checked in this request lifecycle.
         if (isset($this->tableExistsCache[$tableName])) {
             return $this->tableExistsCache[$tableName];
         }
@@ -928,12 +1108,18 @@ class M_service_provider extends M_signup {
         $row = $this->db->single();
 
         $exists = $row && isset($row->cnt) && (int)$row->cnt > 0;
+        // Cache to avoid repeated information_schema queries.
         $this->tableExistsCache[$tableName] = $exists;
         return $exists;
     }
 
+    /**
+     * Checks information_schema for a column and caches the result.
+     * Used to support schema differences across deployments/migrations.
+     */
     private function columnExists(string $tableName, string $columnName): bool {
         $cacheKey = $tableName . '.' . $columnName;
+        // Return cached result if available.
         if (isset($this->tableExistsCache[$cacheKey])) {
             return $this->tableExistsCache[$cacheKey];
         }
@@ -948,15 +1134,24 @@ class M_service_provider extends M_signup {
         $row = $this->db->single();
 
         $exists = $row && isset($row->cnt) && (int)$row->cnt > 0;
+        // Cache to reduce repeated schema lookups.
         $this->tableExistsCache[$cacheKey] = $exists;
         return $exists;
     }
 
+    /**
+     * Returns distinct provider locations for browse filter dropdowns.
+     * Used in provider search/filter UI.
+     */
     public function getAllLocations() {
         $this->db->query("SELECT DISTINCT location FROM serviceprovider WHERE location IS NOT NULL ORDER BY location ASC");
         return $this->db->resultSet();
     }
 
+    /**
+     * Returns all services for a provider ordered by service type.
+     * Used by profile and detail pages that list provider service offerings.
+     */
     public function getProviderServices($provider_id) {
         $this->db->query("SELECT s.*, st.service_type 
                           FROM services s 
@@ -967,6 +1162,10 @@ class M_service_provider extends M_signup {
         return $this->db->resultSet();
     }
 
+    /**
+     * Returns all projects for a provider sorted by most recent year.
+     * Used by provider public/profile project history sections.
+     */
     public function getProviderProjects($provider_id) {
         $this->db->query("SELECT * FROM projects WHERE provider_id = :provider_id ORDER BY year DESC");
         $this->db->bind(':provider_id', $provider_id);

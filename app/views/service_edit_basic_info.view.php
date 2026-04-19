@@ -53,6 +53,12 @@
                                 <input type="tel" name="phone" class="form-input" 
                                     value="<?php echo htmlspecialchars($data['provider']->phone); ?>" required>
                             </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Whatsapp Number <span class="required">*</span></label>
+                                <input type="tel" name="wphone" class="form-input" 
+                                    value="<?php echo htmlspecialchars($data['provider']->wphone ?? ''); ?>" required>
+                            </div>
                         </div>
                         
                         <div class="form-row edit-basic-row">
@@ -65,6 +71,13 @@
                                 <label class="form-label">Social Media Link</label>
                                 <input type="url" name="social_media_link" class="form-input" 
                                     value="<?php echo htmlspecialchars($data['provider']->social_media_link ?? ''); ?>">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" name="birthday" class="form-input" 
+                                    value="<?php echo htmlspecialchars($data['provider']->birthday ?? ''); ?>"
+                                    max="<?php echo date('Y-m-d'); ?>">
                             </div>
                         </div>
 

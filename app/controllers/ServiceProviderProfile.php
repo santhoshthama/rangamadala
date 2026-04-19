@@ -560,14 +560,18 @@ class ServiceProviderProfile
 
         // Handle form submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $birthday = trim($_POST['birthday'] ?? '');
+
             $result = $model->updateBasicInfo(
                 $provider_id,
                 $_POST['full_name'],
                 $_POST['professional_title'],
                 $_POST['email'],
                 $_POST['phone'],
+                $_POST['wphone'],
                 $_POST['location'],
                 $_POST['social_media_link'] ?? '',
+                $birthday !== '' ? $birthday : null,
                 $_POST['years_experience'],
                 $_POST['professional_summary'] ?? '',
                 (int)($_POST['availability'] ?? 0),
