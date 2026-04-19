@@ -38,7 +38,7 @@ if ($isEditing && isset($edit_item->id)) {
                 <span>Back to Profile</span>
             </a>
             <h1>Artist Portfolio</h1>
-            <p>Show your past dramas, positions, industry experience, specializations, and education details.</p>
+            <p>Show your past dramas, positions, experience, specializations, and Reference people.</p>
         </div>
 
         <?php if (!empty($success)): ?>
@@ -71,8 +71,8 @@ if ($isEditing && isset($edit_item->id)) {
                 <?php endif; ?>
 
                 <div class="field full">
-                    <label for="past_dramas">Past Dramas</label>
-                    <textarea id="past_dramas" name="past_dramas" rows="3" placeholder="List the dramas you worked in" required><?= esc($form['past_dramas'] ?? '') ?></textarea>
+                    <label for="past_dramas">Past Drama</label>
+                    <textarea id="past_dramas" name="past_dramas" placeholder="Type the drama name" required><?= esc($form['past_dramas'] ?? '') ?></textarea>
                 </div>
 
                 <div class="field">
@@ -81,19 +81,20 @@ if ($isEditing && isset($edit_item->id)) {
                 </div>
 
                 <div class="field">
-                    <label for="years_in_industry">Years in Industry</label>
+                    <label for="years_in_industry">Years worked in the drama</label>
                     <input id="years_in_industry" name="years_in_industry" type="number" min="0" placeholder="e.g. 8" value="<?= esc($form['years_in_industry'] ?? '') ?>" required>
                 </div>
 
                 <div class="field full">
-                    <label for="specialized_fields">Fields Specialized In</label>
+                    <label for="specialized_fields">Fields Specialized During That Drama</label>
                     <textarea id="specialized_fields" name="specialized_fields" rows="3" placeholder="e.g. Stage acting, vocal performance, script analysis" required><?= esc($form['specialized_fields'] ?? '') ?></textarea>
                 </div>
 
                 <div class="field full">
-                    <label for="education_qualifications">Education Qualifications</label>
-                    <textarea id="education_qualifications" name="education_qualifications" rows="3" placeholder="Your education or training related to drama" required><?= esc($form['education_qualifications'] ?? '') ?></textarea>
+                    <label for="education_qualifications">Reference People</label>
+                    <textarea id="education_qualifications" name="education_qualifications" rows="3" placeholder="Names and contact information of people who can vouch for your skills and experience" required><?= esc($form['education_qualifications'] ?? '') ?></textarea>
                 </div>
+
 
                 <div class="actions">
                     <?php if ($isEditing): ?>
@@ -119,11 +120,11 @@ if ($isEditing && isset($edit_item->id)) {
                     <table>
                         <thead>
                             <tr>
-                                <th>Past Dramas</th>
+                                <th>Past Drama</th>
                                 <th>Position</th>
                                 <th>Years</th>
                                 <th>Specializations</th>
-                                <th>Education</th>
+                                <th>References</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
