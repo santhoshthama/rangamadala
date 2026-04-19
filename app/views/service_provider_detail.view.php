@@ -14,7 +14,20 @@
 
     <div class="container">
         <!-- Back Button -->
-        <a href="<?= ROOT ?>/BrowseServiceProviders" class="back-link">
+        <?php
+            $browseBackParams = [];
+            if (!empty($data['drama_id'])) {
+                $browseBackParams['drama_id'] = (int)$data['drama_id'];
+            }
+            if (!empty($data['service_id'])) {
+                $browseBackParams['service_id'] = (int)$data['service_id'];
+            }
+            $browseBackUrl = ROOT . '/BrowseServiceProviders';
+            if (!empty($browseBackParams)) {
+                $browseBackUrl .= '?' . http_build_query($browseBackParams);
+            }
+        ?>
+        <a href="<?= $browseBackUrl ?>" class="back-link">
             <i class="bx bx-arrow-back"></i> Back to Browse
         </a>
 

@@ -204,7 +204,20 @@
                                 </div>
 
                                 <div class="provider-footer">
-                                    <a href="<?= ROOT ?>/BrowseServiceProviders/viewProfile/<?= $provider->user_id ?><?= !empty($data['drama_id']) ? '?drama_id=' . (int)$data['drama_id'] : '' ?>" class="btn-view-profile">
+                                    <?php
+                                        $profileParams = [];
+                                        if (!empty($data['drama_id'])) {
+                                            $profileParams['drama_id'] = (int)$data['drama_id'];
+                                        }
+                                        if (!empty($data['service_id'])) {
+                                            $profileParams['service_id'] = (int)$data['service_id'];
+                                        }
+                                        $profileUrl = ROOT . '/BrowseServiceProviders/viewProfile/' . (int)$provider->user_id;
+                                        if (!empty($profileParams)) {
+                                            $profileUrl .= '?' . http_build_query($profileParams);
+                                        }
+                                    ?>
+                                    <a href="<?= $profileUrl ?>" class="btn-view-profile">
                                         View Profile <i class="bx bx-right-arrow-alt"></i>
                                     </a>
                                 </div>
