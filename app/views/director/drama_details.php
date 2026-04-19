@@ -208,10 +208,7 @@ $profileImageSrc = directorResolveProfileImageSrc();
                             <span class="service-info-label">Last Updated</span>
                             <span class="service-info-value"><?= isset($drama->updated_at) ? esc(date('Y-m-d H:i', strtotime($drama->updated_at))) : 'N/A' ?></span>
                         </div>
-                        <div class="service-info-item">
-                            <span class="service-info-label">Registered By</span>
-                            <span class="service-info-value"><?= isset($drama->creator_name) ? esc($drama->creator_name) : 'N/A' ?></span>
-                        </div>
+                        
                     </div>
 
                 </form>
