@@ -1324,4 +1324,114 @@ class Artistdashboard
         header('Location: ' . ROOT . '/artistdashboard/classes');
         exit;
     }
+
+    public function update_class()
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ROOT . '/artistdashboard/classes');
+            exit;
+        }
+
+        $class_id = isset($_POST['class_id']) ? (int)$_POST['class_id'] : 0;
+        if ($class_id <= 0) {
+            $_SESSION['message'] = 'Invalid class selected.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/classes');
+            exit;
+        }
+
+        $class_model = $this->getModel('M_class');
+        if (!$class_model) {
+            $_SESSION['message'] = 'Class system is unavailable right now.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/classes');
+            exit;
+        }
+
+        $start_time = trim((string)($_POST['start_time'] ?? ''));
+        $end_time = trim((string)($_POST['end_time'] ?? ''));
+        $duration_minutes = 120;
+
+        if ($start_time !== '' || $end_time !== '') {
+            if ($start_time === '' || $end_time === '') {
+                $_SESSION['message'] = 'Please select both start time and end time.';
+                $_SESSION['message_type'] = 'error';
+                header('Location: ' . ROOT . '/artistdashboard/classes');
+                exit;
+            }
+
+            $duration_minutes = $this->calculateDurationMinutes($start_time, $end_time);
+            if ($duration_minutes === null || $duration_minutes < 30) {
+                $_SESSION['message'] = 'Invalid class time range. End time must be after start time, with at least 30 minutes.';
+                $_SESSION['message_type'] = 'error';
+                header('Location: ' . ROOT . '/artistdashboard/classes');
+                exit;
+            }
+        }
+
+        $payload = [
+            'title' => trim($_POST['title'] ?? ''),
+            'description' => trim($_POST['description'] ?? ''),
+            'class_level' => $_POST['class_level'] ?? 'all_levels',
+            'fee' => $_POST['fee'] ?? 0,
+            'capacity' => $_POST['capacity'] ?? 30,
+            'class_date' => $_POST['class_date'] ?? null,
+            'start_time' => $start_time !== '' ? $start_time : null,
+            'duration_minutes' => $duration_minutes,
+            'venue' => trim($_POST['venue'] ?? ''),
+            'is_published' => isset($_POST['is_published']) ? 1 : 0,
+        ];
+
+        $result = $class_model->updateByOwner($class_id, (int)$_SESSION['user_id'], $payload);
+        $_SESSION['message'] = $result['message'];
+        $_SESSION['message_type'] = $result['success'] ? 'success' : 'error';
+
+        header('Location: ' . ROOT . '/artistdashboard/classes');
+        exit;
+    }
+
+    public function edit_class($class_id = 0)
+    {
+        if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'artist') {
+            header("Location: " . ROOT . "/login");
+            exit;
+        }
+
+        $class_id = (int)$class_id;
+        if ($class_id <= 0) {
+            $_SESSION['message'] = 'Invalid class selected.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/classes');
+            exit;
+        }
+
+        $artist_model = $this->getModel('M_artist');
+        $class_model = $this->getModel('M_class');
+        $user_id = (int)$_SESSION['user_id'];
+
+        if (!$class_model) {
+            $_SESSION['message'] = 'Class system is unavailable right now.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/classes');
+            exit;
+        }
+
+        $class = $class_model->getByIdAndOwner($class_id, $user_id);
+        if (!$class) {
+            $_SESSION['message'] = 'Class not found.';
+            $_SESSION['message_type'] = 'error';
+            header('Location: ' . ROOT . '/artistdashboard/classes');
+            exit;
+        }
+
+        $data['user'] = $artist_model ? $artist_model->get_artist_by_id($user_id) : null;
+        $data['class'] = $class;
+
+        $this->view('artist/edit_class', $data);
+    }
 }

@@ -84,6 +84,15 @@ $currentImageLabel = $user && !empty($user->profile_image)
                         <strong><?= $user && isset($user->years_experience) && $user->years_experience !== null ? esc($user->years_experience) . ' years' : 'Not added yet' ?></strong>
                     </div>
 
+                    <?php if ($role === 'artist'): ?>
+                    <div class="summary-actions">
+                        <a href="<?= ROOT ?>/artistportfolio">
+                            <i class="bx bx-briefcase-alt-2"></i>
+                            <span>Manage Portfolio</span>
+                        </a>
+                    </div>
+                    <?php endif; ?>
+
 
                 </div>
             </aside>
@@ -136,10 +145,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
                         <input id="location" name="location" type="text" placeholder="e.g. Colombo, Sri Lanka" value="<?= esc($form['location'] ?? '') ?>">
                     </div>
 
-                    <div class="form-group">
-                        <label for="location">Location</label>
-                        <input id="location" name="location" type="text" placeholder="e.g. Colombo, Sri Lanka" value="<?= esc($form['location'] ?? '') ?>">
-                    </div>
+                    
 
                     <div class="form-group full">
                         <label for="bio">Bio / About Me</label>
@@ -147,7 +153,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
                     </div>
 
                     <div class="form-group full">
-                        <label for="website">Links (Social / Portfolio / Any)</label>
+                        <label for="website">Links (Social Media)</label>
                         <input id="website" name="website" type="text" placeholder="Add one or more links (Instagram, YouTube, portfolio, etc.)" value="<?= esc($form['website'] ?? '') ?>">
                     </div>
 
