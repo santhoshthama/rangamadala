@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Service Providers - <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_service_providers.css">
-    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/Button.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
@@ -13,12 +12,32 @@
     <?php include 'includes/header.php'; ?>
 
     <div class="container">
-        <div class="back-container">
-            <a href="<?= ROOT ?>/artistdashboard" class="back-link back-btn back-button" onclick="if (window.history.length > 1) { window.history.back(); return false; }">
-                <i class="bx bx-arrow-back"></i>
-                Back
-            </a>
-        </div>
+        <?php
+            $currentDramaId = (int)($data['drama_id'] ?? ($_GET['drama_id'] ?? 0));
+            $currentServiceId = (int)($_GET['service_id'] ?? 0);
+
+            $backToManageServices = ROOT . '/production_manager/manage_services';
+            if ($currentDramaId > 0) {
+                $backToManageServices .= '?drama_id=' . $currentDramaId;
+            }
+
+            $clearFiltersUrl = ROOT . '/BrowseServiceProviders';
+            $clearParams = [];
+            if ($currentDramaId > 0) {
+                $clearParams['drama_id'] = $currentDramaId;
+            }
+            if ($currentServiceId > 0) {
+                $clearParams['service_id'] = $currentServiceId;
+            }
+            if (!empty($clearParams)) {
+                $clearFiltersUrl .= '?' . http_build_query($clearParams);
+            }
+        ?>
+        <a href="<?= $backToManageServices ?>" class="back-link">
+            <i class="bx bx-arrow-back"></i>
+            Back to Manage Services
+        </a>
+
         <div class="page-header">
             <h1>Browse Service Providers</h1>
             <p>Find the perfect professional for your drama production needs</p>
@@ -31,6 +50,13 @@
                     <h3><i class="bx bx-filter"></i> Filters</h3>
                     
                     <form method="GET" action="<?= ROOT ?>/BrowseServiceProviders">
+                        <?php if ($currentDramaId > 0): ?>
+                            <input type="hidden" name="drama_id" value="<?= $currentDramaId ?>">
+                        <?php endif; ?>
+                        <?php if ($currentServiceId > 0): ?>
+                            <input type="hidden" name="service_id" value="<?= $currentServiceId ?>">
+                        <?php endif; ?>
+
                         <!-- Service Type Filter -->
                         <div class="filter-group">
                             <label><i class="bx bx-briefcase"></i> Service Type</label>
@@ -79,7 +105,7 @@
                         </div>
 
                         <button type="submit" class="btn-filter"><i class="bx bx-search"></i> Apply Filters</button>
-                        <a href="<?= ROOT ?>/BrowseServiceProviders" class="btn-clear">Clear All</a>
+                        <a href="<?= $clearFiltersUrl ?>" class="btn-clear">Clear All</a>
                     </form>
                 </div>
             </aside>
@@ -177,5 +203,6 @@
         </div>
     </div>
 
+    <?php include 'includes/footer.php'; ?>
 </body>
 </html>

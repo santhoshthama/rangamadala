@@ -185,9 +185,10 @@
                                             <?php
                                                 $providerResponseForPayment = is_array($service->view_provider_response ?? null) ? $service->view_provider_response : [];
                                                 $quoteAmount = (float)($providerResponseForPayment['quote_amount'] ?? ($service->budget ?? 0));
-                                                $advanceAmount = (float)($providerResponseForPayment['advance_amount'] ?? 0);
+                                                $totalPaidAmount = (float)($service->amount_paid ?? 0);
                                                 $paymentStatus = strtolower((string)($service->calculated_payment_status ?? 'unpaid'));
-                                                $remainingAmount = max(0, $quoteAmount - $advanceAmount);
+                                                $remainingAmount = max(0, $quoteAmount - $totalPaidAmount);
+                                                $isFullySettled = $remainingAmount <= 0.0001;
                                                 $paymentGateway = (string)($service->payment_gateway ?? '');
                                                 $advancePaymentStatus = strtolower((string)($service->advance_payment_status ?? ''));
                                                 $hasPendingCashBankPayment = ($paymentGateway === 'cash' || $paymentGateway === 'bank_transfer') && $advancePaymentStatus === 'pending';
@@ -214,11 +215,14 @@
                                                 <?php else: ?>
                                                     <div class="service-group-card__status-row">⏳ Awaiting provider's payment confirmation</div>
                                                 <?php endif; ?>
+                                            <?php elseif ($isFullySettled): ?>
+                                                <span class="status-badge status-fully-paid">Fully Paid</span>
+                                                <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                             <?php elseif ($paymentStatus === 'partially_paid' && $remainingAmount > 0): ?>
                                                 <button class="btn-details btn-details--success" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($remainingAmount, 2, '.', '') ?>&type=remaining'">Pay Remaining (Rs <?= number_format($remainingAmount, 2) ?>)</button>
                                                 <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                             <?php else: ?>
-                                                <button class="btn-details btn-details--success" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($quoteAmount, 2, '.', '') ?>&type=full'">Pay Full Amount (Rs <?= number_format($quoteAmount, 2) ?>)</button>
+                                                <button class="btn-details btn-details--success" onclick="window.location.href='<?= ROOT ?>/Payment/checkout?request_id=<?= (int)$service->id ?>&amount=<?= number_format($remainingAmount, 2, '.', '') ?>&type=full'">Pay Full Outstanding (Rs <?= number_format($remainingAmount, 2) ?>)</button>
                                                 <button class="btn-details" onclick="openPMRequestDetails(event, <?= htmlspecialchars(json_encode((array)$service), ENT_QUOTES, 'UTF-8') ?>)">View Details</button>
                                             <?php endif; ?>
                                         <?php elseif ($status === 'completed_paid'): ?>
@@ -485,7 +489,7 @@
                 <!-- Action Buttons (single set) -->
                 <div class="modal-actions modal-actions--confirm">
                     <button onclick="closeConfirmModal()" class="modal-button modal-button--secondary">Close</button>
-                    <button onclick="rejectProviderResponse()" class="modal-button modal-button--danger">
+                    <button onclick="openRejectResponseModal()" class="modal-button modal-button--danger">
                         Reject
                     </button>
                     <button id="confirmBtn" onclick="acceptProviderResponse()" class="modal-button modal-button--primary">
@@ -574,6 +578,18 @@
             document.getElementById('confirmModal').style.display = 'none';
         }
 
+        function openRejectResponseModal() {
+            const requestId = document.getElementById('confirm_request_id').value;
+            document.getElementById('reject_response_request_id').value = requestId;
+            document.getElementById('reject_response_reason').value = '';
+            document.getElementById('rejectResponseModal').style.display = 'flex';
+            document.getElementById('reject_response_reason').focus();
+        }
+
+        function closeRejectResponseModal() {
+            document.getElementById('rejectResponseModal').style.display = 'none';
+        }
+
         function acceptProviderResponse() {
             const requestId = document.getElementById('confirm_request_id').value;
             const needsAdvance = document.getElementById('confirm_needs_advance').value === '1';
@@ -607,9 +623,12 @@
         }
 
         function rejectProviderResponse() {
-            const requestId = document.getElementById('confirm_request_id').value;
-            const reason = prompt('Enter reason for rejecting this response:');
-            if (reason === null) return;
+            const requestId = document.getElementById('reject_response_request_id').value;
+            const reason = document.getElementById('reject_response_reason').value.trim();
+            if (!reason) {
+                showMessage('Please enter a rejection reason.', 'error');
+                return;
+            }
 
             fetch(CONFIRM_ENDPOINTS.reject, {
                 method: 'POST',
@@ -619,6 +638,8 @@
             .then(parseJsonResponse)
             .then(json => {
                 if (json.success) {
+                    closeRejectResponseModal();
+                    closeConfirmModal();
                     showMessage('Response rejected', 'error');
                     setTimeout(() => location.reload(), 1500);
                 } else {
@@ -631,11 +652,19 @@
         window.onclick = function(event) {
             const confirmModal = document.getElementById('confirmModal');
             const paymentModal = document.getElementById('paymentModal');
+            const pmDetailsModal = document.getElementById('pmDetailsModal');
+            const rejectResponseModal = document.getElementById('rejectResponseModal');
             if (event.target === confirmModal) {
                 closeConfirmModal();
             }
             if (event.target === paymentModal) {
                 paymentModal.style.display = 'none';
+            }
+            if (event.target === pmDetailsModal) {
+                pmDetailsModal.style.display = 'none';
+            }
+            if (event.target === rejectResponseModal) {
+                closeRejectResponseModal();
             }
         };
 
@@ -669,8 +698,8 @@
             let paymentDetailsHTML = '';
             if ((service.status === 'completed' || service.status === 'completed_paid') && providerResponse.quote_amount) {
                 const quoteAmount = parseFloat(providerResponse.quote_amount || 0);
-                const advanceAmount = parseFloat(providerResponse.advance_amount || 0);
-                const remainingAmount = service.calculated_payment_status === 'paid' ? 0 : Math.max(0, quoteAmount - advanceAmount);
+                const totalPaidAmount = parseFloat(service.amount_paid || 0);
+                const remainingAmount = Math.max(0, quoteAmount - totalPaidAmount);
                 
                 let paymentMethodHTML = '';
                 if (service.payment_gateway) {
@@ -720,7 +749,7 @@
                         <strong>Payment Information:</strong>
                         <div style="background: #f9f9f9; padding: 12px; border-radius: 4px; margin-top: 8px;">
                             <p style="margin: 5px 0;"><strong>Total Amount:</strong> Rs ${quoteAmount.toFixed(2)} ${paymentStatusBadge}</p>
-                            ${advanceAmount > 0 ? `<p style="margin: 5px 0;"><strong>Advance Paid:</strong> Rs ${advanceAmount.toFixed(2)}</p>` : ''}
+                            ${totalPaidAmount > 0 ? `<p style="margin: 5px 0;"><strong>Total Paid:</strong> Rs ${totalPaidAmount.toFixed(2)}</p>` : ''}
                             ${remainingAmount > 0 ? `<p style="margin: 5px 0;"><strong>Remaining Amount:</strong> Rs ${remainingAmount.toFixed(2)}</p>` : ''}
                             ${paymentMethodHTML}
                             ${paymentDateHTML}
@@ -907,6 +936,15 @@
                     </div>
                     ` : ''}
 
+                    ${service.rejection_reason ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Rejection Reason:</strong>
+                        <div style="background: #fee2e2; border: 1px solid #fecaca; padding: 12px; border-radius: 4px; margin-top: 8px; color: #991b1b; word-wrap: break-word;">
+                            ${service.rejection_reason}
+                        </div>
+                    </div>
+                    ` : ''}
+
                     <div style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 20px; font-size: 12px; color: #666;">
                         <p style="margin: 5px 0;"><strong>Created:</strong> ${service.created_at ? new Date(service.created_at).toLocaleString() : 'N/A'}</p>
                     </div>
@@ -919,14 +957,26 @@
             document.getElementById('pmDetailsModal').style.display = 'none';
         }
 
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const pmDetailsModal = document.getElementById('pmDetailsModal');
-            if (event.target === pmDetailsModal) {
-                pmDetailsModal.style.display = 'none';
-            }
-        };
     </script>
+
+    <!-- Reject Provider Response Modal -->
+    <div id="rejectResponseModal" class="modal-overlay" style="display: none; z-index: 1200;">
+        <div class="modal-dialog" style="max-width: 520px;">
+            <div class="modal-header" style="background: #dc2626; color: #fff;">
+                <h3 class="modal-title" style="color: #fff;">Reject Provider Response</h3>
+                <button onclick="closeRejectResponseModal()" class="modal-close" style="color: #fff;">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <label for="reject_response_reason" style="display: block; font-weight: 600; margin-bottom: 8px; color: #374151;">Reason for rejection</label>
+                <textarea id="reject_response_reason" rows="4" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; font-family: inherit; resize: vertical;" placeholder="Enter why this response is being rejected..."></textarea>
+                <input type="hidden" id="reject_response_request_id">
+                <div class="modal-actions" style="margin-top: 16px; justify-content: flex-end;">
+                    <button onclick="closeRejectResponseModal()" class="modal-button modal-button--secondary">Cancel</button>
+                    <button onclick="rejectProviderResponse()" class="modal-button modal-button--danger">Submit Rejection</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- PM Request Details Modal -->
     <div id="pmDetailsModal" class="modal-overlay">
