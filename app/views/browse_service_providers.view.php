@@ -68,7 +68,7 @@
                                 <option value="Video Production" <?= ($data['filters']['service_type'] ?? '') === 'Video Production' ? 'selected' : '' ?>>Video Production</option>
                                 <option value="Set Design" <?= ($data['filters']['service_type'] ?? '') === 'Set Design' ? 'selected' : '' ?>>Set Design</option>
                                 <option value="Costume Design" <?= ($data['filters']['service_type'] ?? '') === 'Costume Design' ? 'selected' : '' ?>>Costume Design</option>
-                                <option value="Makeup &amp; Hair" <?= ($data['filters']['service_type'] ?? '') === 'Makeup &amp; Hair' ? 'selected' : '' ?>>Makeup &amp; Hair</option>
+                                <option value="Makeup &amp; Hair" <?= ($data['filters']['service_type'] ?? '') === 'Makeup & Hair' ? 'selected' : '' ?>>Makeup &amp; Hair</option>
                                 <option value="Other" <?= ($data['filters']['service_type'] ?? '') === 'Other' ? 'selected' : '' ?>>Other</option>
                             </select>
                         </div>
@@ -183,10 +183,23 @@
                                     <?php endif; ?>
 
                                     <?php if (!empty($provider->rates)): ?>
-                                        <div class="provider-rate">
-                                            <span class="rate-label">From</span>
-                                            <span class="rate-value">Rs <?= number_format(min(array_map('floatval', explode(',', $provider->rates)))) ?>/hr</span>
-                                        </div>
+                                        <?php
+                                        $rateItems = array_filter(array_map('trim', explode(',', (string)$provider->rates)), static fn($v) => $v !== '');
+                                        $numericRates = [];
+                                        foreach ($rateItems as $rateItem) {
+                                            $parts = explode('|', $rateItem);
+                                            $rawRate = trim((string)($parts[0] ?? ''));
+                                            if ($rawRate !== '' && is_numeric($rawRate)) {
+                                                $numericRates[] = (float)$rawRate;
+                                            }
+                                        }
+                                        ?>
+                                        <?php if (!empty($numericRates)): ?>
+                                            <div class="provider-rate">
+                                                <span class="rate-label">From</span>
+                                                <span class="rate-value">Rs <?= number_format(min($numericRates), 0) ?>/hr</span>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
 
