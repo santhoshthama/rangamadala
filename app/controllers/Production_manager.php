@@ -29,8 +29,33 @@ class Production_manager{
         $this->dashboard();
     }
 
+    private function enforceOverdueFinalPaymentGuard(): void
+    {
+        $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
+        if ($userId <= 0 || !$this->serviceRequestModel || !method_exists($this->serviceRequestModel, 'getFirstOverdueFinalPaymentForManager')) {
+            return;
+        }
+
+        $requestIdInQuery = isset($_GET['request_id']) ? (int)$_GET['request_id'] : 0;
+        $overdue = $this->serviceRequestModel->getFirstOverdueFinalPaymentForManager($userId);
+        if (!$overdue) {
+            return;
+        }
+
+        if ($requestIdInQuery > 0 && $requestIdInQuery === (int)$overdue['request_id']) {
+            return;
+        }
+
+        $_SESSION['warning_message'] = 'Final payment due date has passed. Please complete this payment first.';
+        $amount = number_format((float)$overdue['remaining_amount'], 2, '.', '');
+        header('Location: ' . ROOT . '/Payment/checkout?request_id=' . (int)$overdue['request_id'] . '&amount=' . $amount . '&type=remaining&forced_overdue=1');
+        exit;
+    }
+
     public function dashboard()
     {
+        $this->enforceOverdueFinalPaymentGuard();
+
         // Authorize the drama first
         $drama = $this->authorizeDrama();
         
@@ -98,6 +123,8 @@ class Production_manager{
 
     public function manage_services()
     {
+        $this->enforceOverdueFinalPaymentGuard();
+
         $drama = $this->authorizeDrama();
         $dramaId = (int)($drama->id ?? 0);
         
@@ -330,6 +357,8 @@ class Production_manager{
 
     public function browse_services()
     {
+        $this->enforceOverdueFinalPaymentGuard();
+
         $drama = $this->authorizeDrama();
 
         $providerModel = $this->getModel('M_service_provider');
@@ -356,6 +385,8 @@ class Production_manager{
 
     public function manage_budget()
     {
+        $this->enforceOverdueFinalPaymentGuard();
+
         $drama = $this->authorizeDrama();
         
         // Get budget model and fetch budget data
@@ -701,6 +732,8 @@ class Production_manager{
 
     public function manage_schedule()
     {
+        $this->enforceOverdueFinalPaymentGuard();
+
         $drama = $this->authorizeDrama();
         
         // Get service schedules for this drama
