@@ -3,6 +3,9 @@ $dramaId = isset($dramaId) ? (int)$dramaId : (int)($drama->id ?? 0);
 $profileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
     ? $profileImageSrc
     : ROOT . '/assets/images/default-avatar.jpg';
+$formatCurrency = static function ($amount) {
+    return 'Rs. ' . number_format((float)$amount, 2);
+};
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,59 +16,8 @@ $profileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $pr
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/ui-theme.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="logo-link">
-                <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
-            </a>
-        </div>
-        <ul class="menu">
-            <li class="active">
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-briefcase"></i>
-                    <span>Manage Services</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-chart-bar"></i>
-                    <span>Budget Management</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-calendar-alt"></i>
-                    <span>Service Schedule</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard/calendar">
-                    <i class="bx bx-calendar-week"></i>
-                    <span>Artist Calendar</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/profile">
-                    <i class="bx bx-user-circle"></i>
-                    <span>My Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+<body class="director-dashboard-page">
+    <?php $currentPage = 'dashboard'; require __DIR__ . '/_partials/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="main--content">
@@ -84,44 +36,48 @@ $profileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $pr
                 </p>
             </div>
             <div class="user--info">
-                <div class="role-badge">
-                    <i class="bx bx-user-tie"></i>
-                    Production Manager
-                </div>
-                <img src="<?= esc($profileImageSrc) ?>" alt="PM Avatar" onerror="this.src='<?= ROOT ?>/assets/images/default-avatar.jpg'">
+                <?php
+                    $pmProfileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
+                        ? $profileImageSrc
+                        : (ROOT . '/assets/images/default-avatar.jpg');
+                    $pmRoleLabel = 'Production Manager';
+                    $pmProfileUrl = ROOT . '/profile';
+                    $pmLogoutUrl = ROOT . '/logout';
+                    require __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
         <!-- Quick Stats -->
         <div class="stats-grid">
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--brand), var(--brand-strong));">
-                <h3>LKR <?= isset($totalBudget) ? number_format($totalBudget) : '0' ?></h3>
-                <p>Total Budget Allocated</p>
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Total Budget Allocated</div>
+                    <div class="stat-card-icon primary">
+                        <i class='bx bx-wallet'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $formatCurrency(isset($totalBudget) ? $totalBudget : 0) ?></div>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--brand), var(--brand-strong));">
-                <h3>LKR <?= isset($budgetUsed) ? number_format($budgetUsed) : '0' ?></h3>
-                <p>Budget Used (<?= isset($totalBudget) && $totalBudget > 0 ? round(($budgetUsed / $totalBudget) * 100) : '0' ?>%)</p>
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Budget Used</div>
+                    <div class="stat-card-icon info">
+                        <i class='bx bx-line-chart'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $formatCurrency(isset($budgetUsed) ? $budgetUsed : 0) ?></div>
+                <p>Usage: <?= isset($totalBudget) && $totalBudget > 0 ? round(($budgetUsed / $totalBudget) * 100) : '0' ?>%</p>
             </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, var(--brand), var(--brand-strong));">
-                <h3><?= isset($services) && is_array($services) ? count($services) : '0' ?></h3>
-                <p>Active Service Requests</p>
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Active Service Requests</div>
+                    <div class="stat-card-icon success">
+                        <i class='bx bx-briefcase-alt-2'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= isset($services) && is_array($services) ? count($services) : '0' ?></div>
             </div>
-        </div>
-
-        <!-- Navigation Tab Bar -->
-        <div class="nav-tabs-bar">
-            <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="nav-tab-btn active">
-                <i class="bx bx-home"></i> Dashboard
-            </a>
-            <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="bx bx-briefcase"></i> Manage Services
-            </a>
-            <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="bx bx-chart-bar"></i> Budget Management
-            </a>
-            <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>" class="nav-tab-btn">
-                <i class="bx bx-calendar-alt"></i> Service Schedule
-            </a>
         </div>
 
         <!-- Content Sections -->
@@ -177,28 +133,9 @@ $profileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $pr
         const urlParams = new URLSearchParams(window.location.search);
         const dramaId = urlParams.get('drama_id') || 1;
         
-        // Mark active navigation tab based on current page
-        const currentPage = window.location.pathname.split('/').pop();
-        const navTabs = document.querySelectorAll('.nav-tab-btn');
-        
-        navTabs.forEach(tab => {
-            // Remove active class from all tabs
-            tab.classList.remove('active');
-            
-            // Add active class to matching tab
-            const href = tab.getAttribute('href');
-            if (href && href.includes(currentPage)) {
-                tab.classList.add('active');
-            }
-        });
-        
-        // Special case: if on dashboard.php, mark dashboard tab as active
-        if (currentPage === 'dashboard.php' || currentPage === '') {
-            navTabs[0]?.classList.add('active');
-        }
-        
         console.log('Current Drama ID:', dramaId);
     </script>
     <script src="/Rangamadala/public/assets/JS/production-manager-dashboard.js"></script>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
 </body>
 </html>

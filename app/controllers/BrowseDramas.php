@@ -227,6 +227,58 @@ class BrowseDramas
         $this->renderView('watched_drama_details', $data);
     }
 
+    public function deleteRating()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+            exit;
+        }
+
+        if (($_SESSION['role'] ?? '') !== 'audience') {
+            echo json_encode(['success' => false, 'message' => 'Only audience users can delete reviews']);
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $ratingId = (int)($input['rating_id'] ?? 0);
+
+        if ($ratingId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid review selected']);
+            exit;
+        }
+
+        if (!$this->ratingModel) {
+            echo json_encode(['success' => false, 'message' => 'Rating service unavailable']);
+            exit;
+        }
+
+        $currentRating = $this->ratingModel->getUserRatingById($ratingId, (int)$_SESSION['user_id']);
+        if (!$currentRating) {
+            echo json_encode(['success' => false, 'message' => 'Review not found or not owned by you']);
+            exit;
+        }
+
+        $deleted = $this->ratingModel->deleteRating($ratingId, (int)$_SESSION['user_id']);
+        if ($deleted) {
+            $summary = $this->ratingModel->getDramaRatingSummary((int)$currentRating->drama_id);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Review deleted successfully',
+                'summary' => $summary
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to delete review']);
+        }
+        exit;
+    }
+
     /**
      * Submit or update a drama rating via AJAX
      * POST request with: drama_id, rating (1-5), comment (optional)
@@ -438,6 +490,17 @@ class BrowseDramas
             exit;
         }
 
+        $editBookingId = (int)($_POST['booking_id'] ?? ($_GET['booking_id'] ?? 0));
+        $editBooking = null;
+        if ($editBookingId > 0) {
+            $editBooking = $this->bookingModel->getBookingByIdForAudience($editBookingId, (int)$_SESSION['user_id']);
+            if (!$editBooking || (int)($editBooking->drama_id ?? 0) !== $drama_id) {
+                $editBooking = null;
+            } elseif (strtolower((string)($editBooking->booking_status ?? '')) !== 'pending') {
+                $editBooking = null;
+            }
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $showingPricesRaw = trim((string)($drama->showing_prices ?? ''));
             $ticketPrice = 0.0;
@@ -524,40 +587,54 @@ class BrowseDramas
                 exit;
             }
 
-            $created = $this->bookingModel->createBookingRequest(
-                (int)$_SESSION['user_id'],
-                $drama_id,
-                $ticketPrice,
-                [
-                    'request_sender_name' => $requestSenderName,
-                    'request_contact_phone' => $requestContactPhone,
-                    'request_contact_email' => $requestContactEmail,
-                    'request_venue' => $requestVenue,
-                    'show_date' => date('Y-m-d', $showDateTs),
-                    'show_time' => $showTime,
-                    'show_time_start' => $showTimeStart,
-                    'show_time_end' => $showTimeEnd,
-                    'show_datetime' => date('Y-m-d', $showDateTs) . ' ' . $showTime,
-                    'present_count' => max(0, $presentCount),
-                    'request_notes' => $requestNotes,
-                ]
-            );
+            $requestPayload = [
+                'request_sender_name' => $requestSenderName,
+                'request_contact_phone' => $requestContactPhone,
+                'request_contact_email' => $requestContactEmail,
+                'request_venue' => $requestVenue,
+                'show_date' => date('Y-m-d', $showDateTs),
+                'show_time' => $showTime,
+                'show_time_start' => $showTimeStart,
+                'show_time_end' => $showTimeEnd,
+                'show_datetime' => date('Y-m-d', $showDateTs) . ' ' . $showTime,
+                'present_count' => max(0, $presentCount),
+                'request_notes' => $requestNotes,
+            ];
 
-            if (!$created['success']) {
-                $_SESSION['error_message'] = $created['message'];
-                header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
+            if ($editBooking) {
+                $result = $this->bookingModel->updateBookingRequest(
+                    (int)$editBooking->id,
+                    (int)$_SESSION['user_id'],
+                    $drama_id,
+                    $ticketPrice,
+                    $requestPayload
+                );
+                $redirectUrl = ROOT . '/BrowseDramas/bookShowings/' . $drama_id . '?booking_id=' . (int)$editBooking->id;
+            } else {
+                $result = $this->bookingModel->createBookingRequest(
+                    (int)$_SESSION['user_id'],
+                    $drama_id,
+                    $ticketPrice,
+                    $requestPayload
+                );
+                $redirectUrl = ROOT . '/BrowseDramas/bookShowings/' . $drama_id;
+            }
+
+            if (empty($result['success'])) {
+                $_SESSION['error_message'] = $result['message'];
+                header('Location: ' . $redirectUrl);
                 exit;
             }
 
-            $_SESSION['success_message'] = $created['message'];
-            header('Location: ' . ROOT . '/BrowseDramas/bookShowings/' . $drama_id);
+            $_SESSION['success_message'] = $result['message'];
+            header('Location: ' . $redirectUrl);
             exit;
         }
 
         $userId = (int)$_SESSION['user_id'];
         $userModel = $this->getModel('M_login');
         $audienceUser = $userModel ? $userModel->getUserById($userId) : null;
-        $bookingRequest = $this->bookingModel->getLatestBookingByAudienceDrama($userId, $drama_id);
+        $bookingRequest = $editBooking ?: $this->bookingModel->getLatestBookingByAudienceDrama($userId, $drama_id);
         $bookingStatus = strtolower((string)($bookingRequest->booking_status ?? 'none'));
 
         $data = [

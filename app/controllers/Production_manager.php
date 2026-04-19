@@ -210,6 +210,7 @@ class Production_manager{
             'groupedServiceCards' => $viewData['groupedServiceCards'],
             'allServiceTypes' => $viewData['allServiceTypes'],
             'existingServiceTypes' => $viewData['existingServiceTypes'],
+            'profileImageSrc' => $this->resolveCurrentUserProfileImageSrc(),
         ];
         
         $this->view('production_manager/manage_services', $data);

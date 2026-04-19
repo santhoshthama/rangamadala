@@ -61,7 +61,7 @@ class AudienceRegister
 
         }
 
-        $this->view('audience_register', [
+        $this->view('audience/register', [
             'errors' => $errors,
             'old' => $old,
         ]);

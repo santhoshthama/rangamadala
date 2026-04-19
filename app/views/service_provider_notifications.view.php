@@ -202,7 +202,7 @@
                                 </div>
                                 <p class="notification-message"><?= htmlspecialchars($n->message ?? '') ?></p>
                                 <div class="notification-actions">
-                                    <a class="action-link" href="<?= ROOT ?>/ServiceProviderNotifications/detail?id=<?= (int)($n->id ?? 0) ?>">View Details</a>
+                                    <a class="action-link" href="<?= htmlspecialchars($targetLink, ENT_QUOTES, 'UTF-8') ?>">View Details</a>
                                     <?php if ($isUnread): ?>
                                         <a class="action-mark" href="<?= ROOT ?>/ServiceProviderNotifications/markRead?id=<?= (int)($n->id ?? 0) ?>">Mark as read</a>
                                     <?php endif; ?>

@@ -8,65 +8,13 @@
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/production_manager/manage_schedule.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
+<body class="director-dashboard-page">
     <?php $dramaId = isset($dramaId) ? (int)$dramaId : (int)($drama->id ?? 0); ?>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h2>🎭</h2>
-        </div>
-        <ul class="menu">
-            <li>
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-briefcase"></i>
-                    <span>Manage Services</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Budget Management</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="<?= ROOT ?>/production_manager/manage_schedule?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>Service Schedule</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard/calendar">
-                    <i class="bx bx-calendar-week"></i>
-                    <span>Artist Calendar</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back to Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php $currentPage = 'manage_schedule'; require __DIR__ . '/_partials/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i>
-            Back to Dashboard
-        </a>
+
 
         <!-- Header -->
         <div class="header--wrapper">
@@ -75,11 +23,15 @@
                 <h2>Service Schedule Management</h2>
             </div>
             <div class="user--info">
-                <img src="<?= ROOT ?>/assets/images/default-avatar.jpg" alt="Avatar">
-                <span class="role-badge">
-                    <i class="bx bx-user-tie"></i>
-                    Production Manager
-                </span>
+                <?php
+                    $pmProfileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
+                        ? $profileImageSrc
+                        : (ROOT . '/assets/images/default-avatar.jpg');
+                    $pmRoleLabel = 'Production Manager';
+                    $pmProfileUrl = ROOT . '/profile';
+                    $pmLogoutUrl = ROOT . '/logout';
+                    require __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
@@ -180,5 +132,6 @@
         window.schedules = <?= isset($schedules) && is_array($schedules) ? json_encode($schedules) : '[]' ?>;
     </script>
     <script src="/Rangamadala/public/assets/JS/manage-schedule.js"></script>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
 </body>
 </html>

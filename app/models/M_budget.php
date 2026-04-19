@@ -21,7 +21,7 @@ class M_budget
             ORDER BY category ASC, created_at DESC
         ");
         $this->db->bind(':drama_id', $drama_id);
-        return $this->db->resultSet() ?: [];
+        return $this->normalizeBudgetItems($this->db->resultSet() ?: []);
     }
 
     /**
@@ -31,7 +31,7 @@ class M_budget
     {
         $this->db->query("SELECT * FROM drama_budgets WHERE id = :id");
         $this->db->bind(':id', $id);
-        return $this->db->single();
+        return $this->normalizeBudgetItem($this->db->single());
     }
 
     /**
@@ -84,7 +84,7 @@ class M_budget
         ");
         $this->db->bind(':drama_id', $drama_id);
         $this->db->bind(':category', $category);
-        return $this->db->resultSet() ?: [];
+        return $this->normalizeBudgetItems($this->db->resultSet() ?: []);
     }
 
     /**
@@ -114,7 +114,7 @@ class M_budget
     {
         $columns = [
             'drama_id', 'item_name', 'category', 'allocated_amount', 'spent_amount',
-            'status', 'notes', 'created_by'
+            'status', 'created_by'
         ];
 
         $binds = [
@@ -124,9 +124,18 @@ class M_budget
             ':allocated_amount' => $data['allocated_amount'] ?? 0,
             ':spent_amount' => $data['spent_amount'] ?? 0,
             ':status' => $data['status'] ?? 'pending',
-            ':notes' => $data['notes'] ?? null,
             ':created_by' => $data['created_by'] ?? null,
         ];
+
+        $noteValue = $data['notes'] ?? ($data['note'] ?? null);
+
+        if ($this->hasColumn('drama_budgets', 'notes')) {
+            $columns[] = 'notes';
+            $binds[':notes'] = $noteValue;
+        } elseif ($this->hasColumn('drama_budgets', 'note')) {
+            $columns[] = 'note';
+            $binds[':note'] = $noteValue;
+        }
 
         if ($this->hasColumn('drama_budgets', 'service_request_id')) {
             $columns[] = 'service_request_id';
@@ -170,7 +179,6 @@ class M_budget
             'allocated_amount = :allocated_amount',
             'spent_amount = :spent_amount',
             'status = :status',
-            'notes = :notes',
         ];
 
         $binds = [
@@ -180,8 +188,17 @@ class M_budget
             ':allocated_amount' => $data['allocated_amount'] ?? 0,
             ':spent_amount' => $data['spent_amount'] ?? 0,
             ':status' => $data['status'],
-            ':notes' => $data['notes'] ?? null,
         ];
+
+        $noteValue = $data['notes'] ?? ($data['note'] ?? null);
+
+        if ($this->hasColumn('drama_budgets', 'notes')) {
+            $setParts[] = 'notes = :notes';
+            $binds[':notes'] = $noteValue;
+        } elseif ($this->hasColumn('drama_budgets', 'note')) {
+            $setParts[] = 'note = :note';
+            $binds[':note'] = $noteValue;
+        }
 
         if ($this->hasColumn('drama_budgets', 'service_request_id') && array_key_exists('service_request_id', $data)) {
             $setParts[] = 'service_request_id = :service_request_id';
@@ -221,7 +238,7 @@ class M_budget
 
         $this->db->query("SELECT * FROM drama_budgets WHERE service_request_id = :service_request_id ORDER BY id DESC LIMIT 1");
         $this->db->bind(':service_request_id', $service_request_id);
-        return $this->db->single();
+        return $this->normalizeBudgetItem($this->db->single());
     }
 
     /**
@@ -276,7 +293,7 @@ class M_budget
         ");
         $this->db->bind(':drama_id', $drama_id);
         $this->db->bind(':status', $status);
-        return $this->db->resultSet() ?: [];
+        return $this->normalizeBudgetItems($this->db->resultSet() ?: []);
     }
 
     /**
@@ -295,6 +312,50 @@ class M_budget
         ");
         $this->db->bind(':drama_id', $drama_id);
         return $this->db->single();
+    }
+
+    private function normalizeBudgetItems(array $items): array
+    {
+        foreach ($items as $index => $item) {
+            $items[$index] = $this->normalizeBudgetItem($item);
+        }
+
+        return $items;
+    }
+
+    private function normalizeBudgetItem($item)
+    {
+        if (is_object($item)) {
+            $hasNote = property_exists($item, 'note');
+            $hasNotes = property_exists($item, 'notes');
+
+            if ($hasNote && !$hasNotes) {
+                $item->notes = $item->note;
+            }
+
+            if ($hasNotes && !$hasNote) {
+                $item->note = $item->notes;
+            }
+
+            return $item;
+        }
+
+        if (is_array($item)) {
+            $hasNote = array_key_exists('note', $item);
+            $hasNotes = array_key_exists('notes', $item);
+
+            if ($hasNote && !$hasNotes) {
+                $item['notes'] = $item['note'];
+            }
+
+            if ($hasNotes && !$hasNote) {
+                $item['note'] = $item['notes'];
+            }
+
+            return $item;
+        }
+
+        return $item;
     }
 
     private function hasColumn(string $table, string $column): bool

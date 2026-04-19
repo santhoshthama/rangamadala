@@ -303,7 +303,26 @@ class M_service_request
             ORDER BY sr.created_at DESC
         ");
         $this->db->bind(':drama_id', $drama_id);
-        return $this->db->resultSet();
+        $results = $this->db->resultSet();
+
+        // Merge the decoded service details into each row so manager views
+        // can access the same flattened fields as provider views.
+        foreach ($results as $result) {
+            if (!empty($result->service_details_json)) {
+                try {
+                    $details = json_decode((string)$result->service_details_json, true);
+                    if (is_array($details)) {
+                        foreach ($details as $key => $value) {
+                            $result->$key = $value;
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log('Error parsing service details JSON for drama service ' . ($result->id ?? 'unknown') . ': ' . $e->getMessage());
+                }
+            }
+        }
+
+        return $results;
     }
 
     /**

@@ -121,7 +121,7 @@ class AudienceProfileEdit
             }
         }
 
-        $this->view('audience_profile_edit', $data);
+        $this->view('audience/profile_edit', $data);
     }
 }
 ?>

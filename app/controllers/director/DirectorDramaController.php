@@ -161,17 +161,26 @@ class DirectorDramaController
 
     public function create_drama()
     {
-        $this->renderDramaView('create_drama');
+        header('Location: ' . ROOT . '/createDrama');
+        exit;
     }
 
     public function manage_dramas()
     {
-        $this->renderDramaView('manage_dramas');
+        header('Location: ' . ROOT . '/artistdashboard');
+        exit;
     }
 
     public function role_management()
     {
-        $this->renderDramaView('role_management');
+        $dramaId = $this->getQueryParam('drama_id');
+        if ($dramaId) {
+            header('Location: ' . ROOT . '/director/manage_roles?drama_id=' . (int)$dramaId);
+            exit;
+        }
+
+        header('Location: ' . ROOT . '/director/dashboard');
+        exit;
     }
 
     public function update_drama()

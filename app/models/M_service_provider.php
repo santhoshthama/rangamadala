@@ -1012,8 +1012,7 @@ class M_service_provider extends M_signup {
                 continue;
             }
             $alias = $def['alias'];
-            $serviceType = addslashes($def['service_type']);
-            $dynamicJoins .= "\n                LEFT JOIN {$def['table']} {$alias} ON s.id = {$alias}.service_id AND st.service_type = '{$serviceType}'";
+            $dynamicJoins .= "\n                LEFT JOIN {$def['table']} {$alias} ON s.id = {$alias}.service_id";
             $ratePerHourParts[] = "{$alias}.rate_per_hour";
             $rateTypeParts[] = "{$alias}.rate_type";
         }

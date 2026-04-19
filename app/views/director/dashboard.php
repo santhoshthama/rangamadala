@@ -184,7 +184,8 @@ $profileImageSrc = directorResolveProfileImageSrc();
                                 <a href="<?= ROOT ?>/director/manage_roles?drama_id=<?= $dramaId ?>" class="btn btn-primary btn-compact">
                                     <i class="bx bx-users"></i>
                                     Manage Roles
-                                </a>
+                                </a>   
+                                
                             </h3>
                             <ul>
                                 <?php foreach ($assignedArtists as $artist): ?>
@@ -205,42 +206,12 @@ $profileImageSrc = directorResolveProfileImageSrc();
                         </div>
                     <?php endif; ?>
 
-                    <!-- Services & Budget Overview -->
          
                 </div>
             </div>
         </div>
     </main>
 
-    <script>
-        // Get drama_id from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const dramaId = urlParams.get('drama_id') || 1;
-        
-        // Mark active navigation tab based on current page
-        const currentPage = window.location.pathname.split('/').pop();
-        const navTabs = document.querySelectorAll('.nav-tab-btn');
-        
-        navTabs.forEach(tab => {
-            // Remove active class from all tabs
-            tab.classList.remove('active');
-            
-            // Add active class to matching tab
-            const href = tab.getAttribute('href');
-            if (href && href.includes(currentPage)) {
-                tab.classList.add('active');
-            }
-        });
-        
-        // Special case: if on dashboard.php, mark dashboard tab as active
-        if (currentPage === 'dashboard.php' || currentPage === 'dashboard' || currentPage === '') {
-            navTabs[0]?.classList.add('active');
-        }
-
-        console.log('Current Drama ID:', dramaId);
-        // Backend will use this to load drama-specific data
-    </script>
     <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
-    <script src="/Rangamadala/public/assets/JS/director-dashboard.js"></script>
 </body>
 </html>

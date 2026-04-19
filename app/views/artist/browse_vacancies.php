@@ -510,7 +510,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
             padding: 25px;
             box-shadow: var(--shadow-sm);
             transition: transform 0.3s, box-shadow 0.3s;
-            border-left: 4px solid var(--brand);
         }
 
         .vacancy-card:hover {
@@ -767,7 +766,6 @@ if (isset($user->profile_image) && !empty($user->profile_image)) {
         .vacancy-card {
             background: linear-gradient(180deg, #fffefb 0%, #fff7e7 100%);
             border: 1px solid #efdcb0;
-            border-left: 4px solid #ba8e23;
             box-shadow: 0 8px 20px rgba(186, 142, 35, 0.12);
         }
 

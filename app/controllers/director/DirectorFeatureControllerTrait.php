@@ -25,6 +25,7 @@ trait DirectorFeatureControllerTrait
             'flash' => $this->consumeFlash(),
             'currentDirectorId' => (int)($_SESSION['user_id'] ?? 0),
             'dramaId' => (int)($drama->id ?? 0),
+            'dramaName' => (string)($drama->drama_name ?? 'Drama'),
         ], $data);
 
         $this->view('director/' . $view, $payload);

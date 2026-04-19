@@ -16,7 +16,7 @@
         $data['signup_details'] = $this->model->getSignupDetails($_SESSION['user_id']);
         $data['profile_image'] = $this->model->getProfileImage($_SESSION['user_id']);
         // Profile viewing► logic can be implemented here
-        $this->view('audience_profile',$data);
+        $this->view('audience/profile',$data);
     }
 }
 ?>

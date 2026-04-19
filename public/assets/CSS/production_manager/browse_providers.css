@@ -1,21 +1,22 @@
 .provider-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-lg, 24px);
     margin-top: 24px;
+    margin-bottom: var(--space-2xl, 32px);
 }
 
 .provider-card {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
+    background: var(--card, #ffffff);
+    border: 1px solid var(--border, #e0e0e0);
+    border-radius: var(--radius, 12px);
+    padding: var(--space-lg, 24px);
+    transition: var(--transition, all 0.25s ease);
+    box-shadow: var(--shadow-sm, 0 2px 10px rgba(0, 0, 0, 0.1));
 }
 
 .provider-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-md, 0 8px 32px rgba(0, 0, 0, 0.12));
     transform: translateY(-2px);
 }
 
@@ -98,12 +99,19 @@
     padding: 24px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    position: sticky;
-    top: 20px;
+    position: relative;
+    top: auto;
+}
+
+.filter-sidebar form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr)) auto auto;
+    gap: 12px;
+    align-items: end;
 }
 
 .filter-group {
-    margin-bottom: 20px;
+    margin-bottom: 0;
 }
 
 .filter-group label {
@@ -124,7 +132,7 @@
 
 .content-wrapper {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 1fr;
     gap: 24px;
     margin-top: 24px;
 }
@@ -210,16 +218,19 @@
 }
 
 .bp-btn-full {
-    width: 100%;
+    width: auto;
+    min-width: 140px;
 }
 
 .bp-btn-filter {
-    margin-bottom: 12px;
+    margin-bottom: 0;
 }
 
 .bp-clear-link {
     text-align: center;
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-decoration: none;
 }
 
@@ -286,11 +297,18 @@
 }
 
 @media (max-width: 968px) {
-    .content-wrapper {
-        grid-template-columns: 1fr;
+    .filter-sidebar form {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
     }
 
-    .filter-sidebar {
-        position: relative;
+    .bp-btn-full {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .filter-sidebar form {
+        grid-template-columns: 1fr;
     }
 }

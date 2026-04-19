@@ -4,6 +4,7 @@
     background: transparent;
     border-radius: 0;
     overflow: visible;
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
     border: none;
     padding: 0;
@@ -264,18 +265,6 @@
     background: #fff5e6;
     color: #8a5500;
     border: 1px solid #f4d7a6;
-}
-
-.stat-card--confirmed {
-    background: linear-gradient(135deg, var(--success), #1f9b3b);
-}
-
-.stat-card--pending {
-    background: linear-gradient(135deg, var(--warning), #e0a800);
-}
-
-.stat-card--estimated {
-    background: linear-gradient(135deg, var(--info), #138496);
 }
 
 .service-group-card {

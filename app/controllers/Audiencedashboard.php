@@ -29,7 +29,8 @@ class Audiencedashboard {
         }
 
         // Check if user has audience role
-        if ($_SESSION['role'] !== 'audience') {
+        $sessionRole = $_SESSION['role'] ?? ($_SESSION['user_role'] ?? '');
+        if ($sessionRole !== 'audience') {
             header("Location: " . ROOT . "/Home");
             exit;
         }
@@ -40,6 +41,7 @@ class Audiencedashboard {
             'categories' => $this->dramaModel->getAllCategories(),
             'total_dramas' => 0,
             'my_showings' => [],
+            'show_requests' => [],
             'classes' => [],
             'my_classes' => [],
             'showing_payments' => [],
@@ -50,6 +52,7 @@ class Audiencedashboard {
         $data['total_dramas'] = count($data['dramas']);
         if ($this->bookingModel) {
             $data['my_showings'] = $this->bookingModel->getBookingsByAudience((int)$_SESSION['user_id']);
+            $data['show_requests'] = $this->bookingModel->getShowRequestsByAudience((int)$_SESSION['user_id']);
             $data['showing_payments'] = $this->bookingModel->getShowingPaymentsByAudience((int)$_SESSION['user_id']);
         }
 
@@ -66,7 +69,7 @@ class Audiencedashboard {
             }
         }
 
-        $this->view('audiencedashboard', $data);
+        $this->view('audience/dashboard', $data);
     }
 
     public function enroll_class()
@@ -169,6 +172,97 @@ class Audiencedashboard {
         http_response_code(200);
         echo 'OK';
         exit;
+    }
+
+    public function delete_show_request()
+    {
+        $sessionRole = $_SESSION['role'] ?? ($_SESSION['user_role'] ?? '');
+        if (!isset($_SESSION['user_id']) || $sessionRole !== 'audience') {
+            header('Location: ' . ROOT . '/Login');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ROOT . '/Audiencedashboard#show-requests');
+            exit;
+        }
+
+        $bookingId = (int)($_POST['booking_id'] ?? 0);
+        if ($bookingId <= 0 || !$this->bookingModel) {
+            $_SESSION['error_message'] = 'Invalid request selected.';
+            header('Location: ' . ROOT . '/Audiencedashboard#show-requests');
+            exit;
+        }
+
+        $result = $this->bookingModel->deleteBookingRequest($bookingId, (int)$_SESSION['user_id']);
+        if (!empty($result['success'])) {
+            $_SESSION['success_message'] = $result['message'] ?? 'Request removed successfully.';
+        } else {
+            $_SESSION['error_message'] = $result['message'] ?? 'Unable to remove your request.';
+        }
+
+        header('Location: ' . ROOT . '/Audiencedashboard#show-requests');
+        exit;
+    }
+
+    public function payment_receipt($type = null, $paymentId = null)
+    {
+        if (!isset($_SESSION['user_id']) || (($_SESSION['role'] ?? '') !== 'audience')) {
+            header('Location: ' . ROOT . '/Login');
+            exit;
+        }
+
+        $type = strtolower(trim((string)$type));
+        $paymentId = (int)$paymentId;
+
+        if ($paymentId <= 0 || !in_array($type, ['showing', 'class'], true)) {
+            $_SESSION['error_message'] = 'Invalid receipt request.';
+            header('Location: ' . ROOT . '/audiencedashboard#payments');
+            exit;
+        }
+
+        $receipt = null;
+        $receiptNumber = '';
+
+        if ($type === 'showing') {
+            if (!$this->bookingModel) {
+                $_SESSION['error_message'] = 'Receipt data is unavailable.';
+                header('Location: ' . ROOT . '/audiencedashboard#payments');
+                exit;
+            }
+
+            $receipt = $this->bookingModel->getBookingByIdForAudience($paymentId, (int)$_SESSION['user_id']);
+            if (!$receipt || empty($receipt->paid_at) || empty($receipt->payhere_order_id)) {
+                $_SESSION['error_message'] = 'Receipt not found.';
+                header('Location: ' . ROOT . '/audiencedashboard#payments');
+                exit;
+            }
+
+            $receiptNumber = 'RCP-SHOW-' . str_pad((string)$receipt->id, 6, '0', STR_PAD_LEFT);
+        } else {
+            if (!$this->classModel) {
+                $_SESSION['error_message'] = 'Receipt data is unavailable.';
+                header('Location: ' . ROOT . '/audiencedashboard#payments');
+                exit;
+            }
+
+            $receipt = $this->classModel->getEnrollmentPaymentByIdForUser($paymentId, (int)$_SESSION['user_id'], 'audience');
+            if (!$receipt || strtolower((string)($receipt->status ?? '')) !== 'completed') {
+                $_SESSION['error_message'] = 'Receipt not found.';
+                header('Location: ' . ROOT . '/audiencedashboard#payments');
+                exit;
+            }
+
+            $receiptNumber = 'RCP-CLASS-' . str_pad((string)$receipt->id, 6, '0', STR_PAD_LEFT);
+        }
+
+        $data = [
+            'receipt_type' => $type,
+            'receipt_number' => $receiptNumber,
+            'receipt' => $receipt,
+        ];
+
+        $this->view('audience/payment_receipt', $data);
     }
 }
 ?>

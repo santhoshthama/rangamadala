@@ -223,6 +223,37 @@ class M_class
         }
     }
 
+    public function getEnrollmentPaymentByIdForUser($paymentId, $userId, $userRole = 'audience')
+    {
+        try {
+            $this->db->query("SELECT cep.id,
+                    cep.order_id,
+                    cep.amount,
+                    cep.status,
+                    cep.created_at,
+                    cep.paid_at,
+                    dc.id AS class_id,
+                    dc.title AS class_title,
+                    dc.class_date,
+                    dc.venue,
+                    u.full_name AS creator_name
+                FROM class_enrollment_payments cep
+                INNER JOIN drama_classes dc ON dc.id = cep.class_id
+                LEFT JOIN users u ON u.id = dc.created_by
+                WHERE cep.id = :payment_id
+                  AND cep.user_id = :user_id
+                  AND cep.user_role = :user_role
+                LIMIT 1");
+            $this->db->bind(':payment_id', (int)$paymentId);
+            $this->db->bind(':user_id', (int)$userId);
+            $this->db->bind(':user_role', strtolower(trim((string)$userRole)));
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log('M_class::getEnrollmentPaymentByIdForUser error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     public function createClass($artistId, $data)
     {
         try {
@@ -401,6 +432,64 @@ class M_class
         } catch (Exception $e) {
             error_log('M_class::deleteByOwner error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Unable to delete class.'];
+        }
+    }
+
+    public function updateByOwner($classId, $ownerId, $data)
+    {
+        try {
+            $title = trim((string)($data['title'] ?? ''));
+            if ($title === '') {
+                return ['success' => false, 'message' => 'Class title is required.'];
+            }
+
+            $this->db->query("UPDATE drama_classes
+                SET title = :title,
+                    description = :description,
+                    class_level = :class_level,
+                    fee = :fee,
+                    capacity = :capacity,
+                    class_date = :class_date,
+                    start_time = :start_time,
+                    duration_minutes = :duration_minutes,
+                    venue = :venue,
+                    is_published = :is_published
+                WHERE id = :class_id AND created_by = :owner_id");
+
+            $this->db->bind(':title', $title);
+            $this->db->bind(':description', trim((string)($data['description'] ?? '')) ?: null);
+            $this->db->bind(':class_level', $data['class_level'] ?? 'all_levels');
+            $this->db->bind(':fee', number_format((float)($data['fee'] ?? 0), 2, '.', ''));
+            $this->db->bind(':capacity', max(1, (int)($data['capacity'] ?? 30)));
+            $this->db->bind(':class_date', !empty($data['class_date']) ? $data['class_date'] : null);
+            $this->db->bind(':start_time', !empty($data['start_time']) ? $data['start_time'] : null);
+            $this->db->bind(':duration_minutes', max(30, (int)($data['duration_minutes'] ?? 120)));
+            $this->db->bind(':venue', trim((string)($data['venue'] ?? '')) ?: null);
+            $this->db->bind(':is_published', isset($data['is_published']) ? (int)$data['is_published'] : 0);
+            $this->db->bind(':class_id', (int)$classId);
+            $this->db->bind(':owner_id', (int)$ownerId);
+
+            if ($this->db->execute() && $this->db->rowCount() > 0) {
+                return ['success' => true, 'message' => 'Class updated successfully.'];
+            }
+
+            return ['success' => false, 'message' => 'Class not found or no changes made.'];
+        } catch (Exception $e) {
+            error_log('M_class::updateByOwner error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to update class.'];
+        }
+    }
+
+    public function getByIdAndOwner($classId, $ownerId)
+    {
+        try {
+            $this->db->query("SELECT * FROM drama_classes WHERE id = :class_id AND created_by = :owner_id LIMIT 1");
+            $this->db->bind(':class_id', (int)$classId);
+            $this->db->bind(':owner_id', (int)$ownerId);
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log('M_class::getByIdAndOwner error: ' . $e->getMessage());
+            return null;
         }
     }
 }

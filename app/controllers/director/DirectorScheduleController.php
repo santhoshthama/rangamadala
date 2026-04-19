@@ -89,7 +89,7 @@ class DirectorScheduleController
         $notes = trim($_POST['notes'] ?? '');
 
         $errors = [];
-        if (!in_array($eventType, ['rehearsal', 'interview', 'meeting', 'performance'])) {
+        if (!in_array($eventType, ['rehearsal', 'interview', 'meeting'])) {
             $errors[] = 'Invalid event type.';
         }
         if (empty($eventTitle)) {
@@ -229,7 +229,7 @@ class DirectorScheduleController
         $notes = trim($_POST['notes'] ?? '');
 
         $errors = [];
-        if (!in_array($eventType, ['rehearsal', 'interview', 'meeting', 'performance'])) {
+        if (!in_array($eventType, ['rehearsal', 'interview', 'meeting'])) {
             $errors[] = 'Invalid event type.';
         }
         if (empty($eventTitle)) {
@@ -565,8 +565,6 @@ class DirectorScheduleController
                 return 'bx-user-check';
             case 'meeting':
                 return 'bx-users';
-            case 'performance':
-                return 'bx-star';
             default:
                 return 'bx-calendar';
         }

@@ -29,6 +29,7 @@ $initialDrama = isset($calendarFilters['drama_id']) ? (int)$calendarFilters['dra
 $initialParticipation = isset($calendarFilters['participation']) ? (string)$calendarFilters['participation'] : 'all';
 $initialStartDate = isset($calendarFilters['start_date']) ? (string)$calendarFilters['start_date'] : date('Y-m-01');
 $initialEndDate = isset($calendarFilters['end_date']) ? (string)$calendarFilters['end_date'] : date('Y-m-t', strtotime('+2 months'));
+$artistSidebarActive = 'calendar';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,51 +43,7 @@ $initialEndDate = isset($calendarFilters['end_date']) ? (string)$calendarFilters
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="logo">
-            <a href="<?=ROOT?>/artistdashboard" class="logo-link">
-                <img src="<?= ROOT ?>/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
-            </a>
-        </div>
-        <ul class="menu">
-            <li class="<?= $sidebarActive['dashboard'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard">
-                    <i class='bx bx-home'></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['vacancies'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard/browse_vacancies">
-                    <i class='bx bx-volume-full'></i>
-                    <span>View All Vacancies</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['notifications'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard/notifications">
-                    <i class='bx bx-bell'></i>
-                    <span>Notifications</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['classes'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard/classes">
-                    <i class='bx bx-microphone'></i>
-                    <span>Classes</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['showings'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard?tab=my-showings#my-showings">
-                    <i class='bx bx-calendar-event'></i>
-                    <span>Showings</span>
-                </a>
-            </li>
-            <li class="<?= $sidebarActive['calendar'] ? 'active' : '' ?>">
-                <a href="<?=ROOT?>/artistdashboard/calendar">
-                    <i class='bx bx-calendar-week'></i>
-                    <span>Artist Calendar</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php include __DIR__ . '/sidebar.php'; ?>
 
     <main class="main--content">
         <div class="header--wrapper">

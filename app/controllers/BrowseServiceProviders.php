@@ -26,6 +26,7 @@ class BrowseServiceProviders
         // If drama_id passed, fetch drama name so request form can pre-fill
         $drama_name = null;
         $drama_id = $_GET['drama_id'] ?? null;
+        $service_id = $_GET['service_id'] ?? null;
         if ($drama_id) {
             try {
                 $dramaModel = new M_drama();
@@ -41,6 +42,7 @@ class BrowseServiceProviders
             'locations' => $locations,
             'filters' => $filters,
             'drama_id' => $drama_id,
+            'service_id' => $service_id,
             'drama_name' => $drama_name,
         ];
 
@@ -107,6 +109,7 @@ class BrowseServiceProviders
 
         // If drama_id passed forward it so the service request form can prefill
         $drama_id = $_GET['drama_id'] ?? null;
+        $service_id = $_GET['service_id'] ?? null;
         $drama_name = null;
         $dramaServices = [];
         if ($drama_id) {
@@ -129,6 +132,7 @@ class BrowseServiceProviders
             'projects' => $projects,
             'booked_dates' => $bookedDateList,
             'drama_id' => $drama_id,
+            'service_id' => $service_id,
             'drama_name' => $drama_name,
             'dramaServices' => $dramaServices,
         ];
