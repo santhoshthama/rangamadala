@@ -2,6 +2,8 @@
 // CONTENT MANAGEMENT FUNCTIONALITY
 // ===================================
 
+let swiperSlidesData = [];
+
 // Initialize content management
 document.addEventListener('DOMContentLoaded', function() {
   initContentManagement();
@@ -43,7 +45,7 @@ function loadSwiperSlides() {
   const grid = document.getElementById('swiperGrid');
   grid.classList.remove('is-empty');
   grid.innerHTML = `<div class="loading-state" id="swiperLoading">
-    <span class="material-symbols-rounded spinning">progress_activity</span>
+    <span class="bx bx-loader-alt spinning"></span>
     <p>Loading slides...</p>
   </div>`;
 
@@ -64,8 +66,9 @@ function loadSwiperSlides() {
 
 function renderSwiperSlides(slides) {
   const grid = document.getElementById('swiperGrid');
+  swiperSlidesData = Array.isArray(slides) ? slides : [];
   
-  if (slides.length === 0) {
+  if (swiperSlidesData.length === 0) {
     grid.classList.add('is-empty');
     grid.innerHTML = `<div class="empty-state">
       <div class="empty-state-icon"><span class="bx bxs-carousel"></span></div>
@@ -77,7 +80,7 @@ function renderSwiperSlides(slides) {
 
   grid.classList.remove('is-empty');
 
-  grid.innerHTML = slides.map(slide => `
+  grid.innerHTML = swiperSlidesData.map(slide => `
     ${(() => {
       const isActive = slide.is_active == 1;
       const isDramaSubmission = !!slide.drama_id;
@@ -85,7 +88,6 @@ function renderSwiperSlides(slides) {
         ? (isActive ? 'Visible on Home' : 'Pending Admin Approval')
         : (isActive ? 'Active' : 'Hidden');
       const moderationBadgeClass = isActive ? 'success' : 'warning';
-      const toggleIcon = isActive ? 'visibility_off' : 'visibility';
       const toggleTitle = isActive ? 'Hide from Home' : 'Show on Home';
       const cardTitle = slide.title || slide.linked_drama_name || 'Untitled Slide';
       const sourceLine = isDramaSubmission
@@ -98,10 +100,13 @@ function renderSwiperSlides(slides) {
         <img src="${ROOT}/${slide.image_path}" alt="${slide.title || 'Slide'}">
         <div class="content-card-overlay">
           <button class="btn btn-sm" onclick="toggleStatus('swiper', ${slide.id}, ${slide.is_active == 1 ? 0 : 1})" title="${toggleTitle}">
-            <span class="material-symbols-rounded">${toggleIcon}</span>
+            <span class="material-symbols-rounded">${isActive ? 'visibility_off' : 'visibility'}</span>
+          </button>
+          <button class="btn btn-sm" onclick="showEditSwiperModal(${slide.id})" title="Edit Slide">
+            <span class="bx bx-edit"></span>
           </button>
           <button class="btn btn-sm btn-danger" onclick="deleteSwiper(${slide.id})" title="Delete">
-            <span class="material-symbols-rounded">delete</span>
+            <span class="bx bx-trash"></span>
           </button>
         </div>
       </div>
@@ -116,6 +121,128 @@ function renderSwiperSlides(slides) {
   `).join('');
 }
 
+function showEditSwiperModal(slideId) {
+  const slide = swiperSlidesData.find(item => Number(item.id) === Number(slideId));
+  if (!slide) {
+    toastError('Unable to load selected slide details.');
+    return;
+  }
+
+  const isDramaLinked = !!slide.drama_id;
+  const linkedDramaName = slide.linked_drama_name || '';
+  const linkedDramaDescription = slide.linked_drama_description || '';
+  const currentImagePath = slide.image_path || '';
+
+  const modalHTML = `
+    <div class="modal-overlay active" id="editSwiperModal">
+      <div class="modal-content user-form-modal">
+        <div class="modal-header">
+          <h3>Edit Drama Slide</h3>
+          <button class="modal-close" onclick="closeModal('editSwiperModal')">
+            <span class="bx bx-x"></span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editSwiperForm" enctype="multipart/form-data">
+            <input type="hidden" id="editSwiperId" value="${slide.id}">
+
+            <div class="input-box">
+              <input type="text" id="editSwiperTitle" placeholder="Slide Title" value="${escapeHtml(slide.title || '')}" />
+              <i class="bx bx-font"></i>
+            </div>
+
+            ${isDramaLinked ? `
+            <div class="input-box">
+              <input type="text" id="editSwiperDramaName" placeholder="Drama Name" value="${escapeHtml(linkedDramaName)}" />
+              <i class="bx bx-theater"></i>
+            </div>
+            <div class="input-box">
+              <textarea id="editSwiperDramaDescription" placeholder="Drama public description..." rows="3" style="padding-right:40px;">${escapeHtml(linkedDramaDescription)}</textarea>
+              <i class="bx bx-description" style="top: 15px;"></i>
+            </div>
+            ` : ''}
+
+            <div class="form-hint" style="margin-bottom: 10px; color: #8a6a1f;">
+              ${isDramaLinked
+                ? 'Upload a new poster to change both the linked drama poster and slide image.'
+                : 'Upload a new image if you want to replace this slide image.'}
+            </div>
+
+            <div class="file-upload-box">
+              <input type="file" id="editSwiperImage" accept="image/*" />
+              <label for="editSwiperImage">
+                <span class="bx bx-cloud-upload"></span>
+                <span>Choose New Image (optional)</span>
+              </label>
+              <div class="file-preview" id="editSwiperPreview">
+                ${currentImagePath ? `<img src="${ROOT}/${escapeHtml(currentImagePath)}" alt="Current slide image">` : ''}
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('editSwiperModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitEditSwiper()">
+            <span class="bx bx-save"></span>
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+  const imageInput = document.getElementById('editSwiperImage');
+  if (imageInput) {
+    imageInput.addEventListener('change', function (e) {
+      previewFile(e.target, 'editSwiperPreview');
+    });
+  }
+}
+
+function submitEditSwiper() {
+  const slideId = document.getElementById('editSwiperId')?.value;
+  const title = document.getElementById('editSwiperTitle')?.value || '';
+  const dramaName = document.getElementById('editSwiperDramaName')?.value || '';
+  const dramaDescription = document.getElementById('editSwiperDramaDescription')?.value || '';
+  const imageInput = document.getElementById('editSwiperImage');
+
+  if (!slideId) {
+    toastError('Invalid slide selected.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('slide_id', slideId);
+  formData.append('title', title);
+  formData.append('drama_name', dramaName);
+  formData.append('drama_description', dramaDescription);
+
+  if (imageInput && imageInput.files && imageInput.files.length > 0) {
+    formData.append('image', imageInput.files[0]);
+  }
+
+  fetch(ROOT + '/admindashboard/updateSwiperSlide', {
+    method: 'POST',
+    body: formData
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        closeModal('editSwiperModal');
+        loadSwiperSlides();
+        showToast(data.message || 'Slide updated successfully!', 'success');
+      } else {
+        toastError(data.message || 'Failed to update slide');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      toastError('An error occurred while updating the slide');
+    });
+}
+
 function showAddSwiperModal() {
   const modalHTML = `
     <div class="modal-overlay active" id="addSwiperModal">
@@ -123,7 +250,7 @@ function showAddSwiperModal() {
         <div class="modal-header">
           <h3>Add Drama Slide</h3>
           <button class="modal-close" onclick="closeModal('addSwiperModal')">
-            <span class="material-symbols-rounded">close</span>
+            <span class="bx bx-x"></span>
           </button>
         </div>
         <div class="modal-body">
@@ -132,17 +259,17 @@ function showAddSwiperModal() {
               <select id="swiperDramaSelect">
                 <option value="">Select published drama (optional)</option>
               </select>
-              <i class="material-symbols-rounded">theater_comedy</i>
+              <i class="bx bx-theater"></i>
             </div>
             <div class="form-hint" style="margin-bottom: 12px; color: #8a6a1f;">Choose a published drama to use its poster image and title.</div>
             <div class="input-box">
               <input type="text" id="swiperTitle" placeholder="Slide Title (optional)" />
-              <i class="material-symbols-rounded">title</i>
+              <i class="bx bx-font"></i>
             </div>
             <div class="file-upload-box">
               <input type="file" id="swiperImage" accept="image/*" />
               <label for="swiperImage">
-                <span class="material-symbols-rounded">cloud_upload</span>
+                <span class="bx bx-cloud-upload"></span>
                 <span>Choose Image</span>
               </label>
               <div class="file-preview" id="swiperPreview"></div>
@@ -152,7 +279,7 @@ function showAddSwiperModal() {
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="closeModal('addSwiperModal')">Cancel</button>
           <button class="btn btn-primary" onclick="submitAddSwiper()">
-            <span class="material-symbols-rounded">add</span>
+            <span class="bx bx-add"></span>
             Add Slide
           </button>
         </div>
@@ -234,8 +361,12 @@ function submitAddSwiper() {
   });
 }
 
-function deleteSwiper(id) {
-  if (!confirm('Are you sure you want to delete this slide?')) return;
+async function deleteSwiper(id) {
+  const confirmed = await showConfirm(
+    'Are you sure you want to delete this slide?',
+    { title: 'Delete Drama Slide', confirmText: 'Delete Slide', type: 'warning' }
+  );
+  if (!confirmed) return;
   
   fetch(ROOT + '/admindashboard/deleteSwiperSlide', {
     method: 'POST',
@@ -248,12 +379,12 @@ function deleteSwiper(id) {
       loadSwiperSlides();
       showToast('Slide deleted!', 'success');
     } else {
-      alert(data.message || 'Failed to delete');
+      toastError(data.message || 'Failed to delete slide');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('An error occurred');
+    toastError('An error occurred while deleting the slide');
   });
 }
 
@@ -264,7 +395,7 @@ function deleteSwiper(id) {
 function loadGalleryImages() {
   const grid = document.getElementById('galleryGrid');
   grid.innerHTML = `<div class="loading-state">
-    <span class="material-symbols-rounded spinning">progress_activity</span>
+    <span class="bx bx-loader-alt spinning"></span>
     <p>Loading images...</p>
   </div>`;
 
@@ -288,7 +419,7 @@ function renderGalleryImages(images) {
   
   if (images.length === 0) {
     grid.innerHTML = `<div class="empty-state">
-      <div class="empty-state-icon"><span class="material-symbols-rounded">photo_library</span></div>
+      <div class="empty-state-icon"><span class="bx bx-photo-library"></span></div>
       <h3 class="empty-state-title">No Images Yet</h3>
       <p class="empty-state-description">Add stage highlight images for the gallery.</p>
     </div>`;
@@ -304,7 +435,7 @@ function renderGalleryImages(images) {
             <span class="material-symbols-rounded">${image.is_active == 1 ? 'visibility_off' : 'visibility'}</span>
           </button>
           <button class="btn btn-sm btn-danger" onclick="deleteGallery(${image.id})" title="Delete">
-            <span class="material-symbols-rounded">delete</span>
+            <span class="bx bx-trash"></span>
           </button>
         </div>
       </div>
@@ -323,19 +454,19 @@ function showAddGalleryModal() {
         <div class="modal-header">
           <h3>Add Gallery Image</h3>
           <button class="modal-close" onclick="closeModal('addGalleryModal')">
-            <span class="material-symbols-rounded">close</span>
+            <span class="bx bx-x"></span>
           </button>
         </div>
         <div class="modal-body">
           <form id="addGalleryForm" enctype="multipart/form-data">
             <div class="input-box">
               <input type="text" id="galleryTitle" placeholder="Image Title (optional)" />
-              <i class="material-symbols-rounded">title</i>
+              <i class="bx bx-font"></i>
             </div>
             <div class="file-upload-box">
               <input type="file" id="galleryImage" accept="image/*" required />
               <label for="galleryImage">
-                <span class="material-symbols-rounded">cloud_upload</span>
+                <span class="bx bx-cloud-upload"></span>
                 <span>Choose Image</span>
               </label>
               <div class="file-preview" id="galleryPreview"></div>
@@ -345,7 +476,7 @@ function showAddGalleryModal() {
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="closeModal('addGalleryModal')">Cancel</button>
           <button class="btn btn-primary" onclick="submitAddGallery()">
-            <span class="material-symbols-rounded">add</span>
+            <span class="bx bx-add"></span>
             Add Image
           </button>
         </div>
@@ -392,8 +523,12 @@ function submitAddGallery() {
   });
 }
 
-function deleteGallery(id) {
-  if (!confirm('Are you sure you want to delete this image?')) return;
+async function deleteGallery(id) {
+  const confirmed = await showConfirm(
+    'Are you sure you want to delete this stage highlight image?',
+    { title: 'Delete Stage Highlight', confirmText: 'Delete Image', type: 'warning' }
+  );
+  if (!confirmed) return;
   
   fetch(ROOT + '/admindashboard/deleteGalleryImage', {
     method: 'POST',
@@ -406,12 +541,12 @@ function deleteGallery(id) {
       loadGalleryImages();
       showToast('Image deleted!', 'success');
     } else {
-      alert(data.message || 'Failed to delete');
+      toastError(data.message || 'Failed to delete image');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('An error occurred');
+    toastError('An error occurred while deleting the image');
   });
 }
 
@@ -422,7 +557,7 @@ function deleteGallery(id) {
 function loadTestimonials() {
   const list = document.getElementById('testimonialsList');
   list.innerHTML = `<div class="loading-state">
-    <span class="material-symbols-rounded spinning">progress_activity</span>
+    <span class="bx bx-loader-alt spinning"></span>
     <p>Loading testimonials...</p>
   </div>`;
 
@@ -446,7 +581,7 @@ function renderTestimonials(testimonials) {
   
   if (testimonials.length === 0) {
     list.innerHTML = `<div class="empty-state">
-      <div class="empty-state-icon"><span class="material-symbols-rounded">reviews</span></div>
+      <div class="empty-state-icon"><span class="bx bx-reviews"></span></div>
       <h3 class="empty-state-title">No Testimonials Yet</h3>
       <p class="empty-state-description">Add testimonials from your community members.</p>
     </div>`;
@@ -470,7 +605,7 @@ function renderTestimonials(testimonials) {
           <span class="material-symbols-rounded">${t.is_active == 1 ? 'visibility_off' : 'visibility'}</span>
         </button>
         <button class="btn btn-sm btn-danger" onclick="deleteTestimonial(${t.id})" title="Delete">
-          <span class="material-symbols-rounded">delete</span>
+          <span class="bx bx-trash"></span>
         </button>
         <span class="status-badge ${t.is_active == 1 ? 'success' : 'warning'}">${t.is_active == 1 ? 'Active' : 'Hidden'}</span>
       </div>
@@ -485,14 +620,14 @@ function showAddTestimonialModal() {
         <div class="modal-header">
           <h3>Add Testimonial</h3>
           <button class="modal-close" onclick="closeModal('addTestimonialModal')">
-            <span class="material-symbols-rounded">close</span>
+            <span class="bx bx-x"></span>
           </button>
         </div>
         <div class="modal-body">
           <form id="addTestimonialForm" enctype="multipart/form-data">
             <div class="input-box">
               <input type="text" id="testimonialName" placeholder="Person's Name" required />
-              <i class="material-symbols-rounded">person</i>
+              <i class="bx bx-font"></i>
             </div>
             <div class="input-box select-box">
               <select id="testimonialRole" required>
@@ -502,11 +637,11 @@ function showAddTestimonialModal() {
                 <option value="Audience">Audience</option>
                 <option value="Service Provider">Service Provider</option>
               </select>
-              <i class="material-symbols-rounded">badge</i>
+              <i class="bx bx-badge"></i>
             </div>
             <div class="input-box">
               <textarea id="testimonialMessage" placeholder="Testimonial message..." rows="3" required style="padding-right: 40px;"></textarea>
-              <i class="material-symbols-rounded" style="top: 15px;">chat</i>
+              <i class="bx bx-chat" style="top: 15px;"></i>
             </div>
             <div class="input-box">
               <label style="display: block; margin-bottom: 8px; color: var(--text-color);">Rating</label>
@@ -522,7 +657,7 @@ function showAddTestimonialModal() {
             <div class="file-upload-box">
               <input type="file" id="testimonialImage" accept="image/*" />
               <label for="testimonialImage">
-                <span class="material-symbols-rounded">cloud_upload</span>
+                <span class="bx bx-cloud-upload"></span>
                 <span>Choose Photo (optional)</span>
               </label>
               <div class="file-preview" id="testimonialPreview"></div>
@@ -532,7 +667,7 @@ function showAddTestimonialModal() {
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="closeModal('addTestimonialModal')">Cancel</button>
           <button class="btn btn-primary" onclick="submitAddTestimonial()">
-            <span class="material-symbols-rounded">add</span>
+            <span class="bx bx-add"></span>
             Add Testimonial
           </button>
         </div>
@@ -598,8 +733,12 @@ function submitAddTestimonial() {
   });
 }
 
-function deleteTestimonial(id) {
-  if (!confirm('Are you sure you want to delete this testimonial?')) return;
+async function deleteTestimonial(id) {
+  const confirmed = await showConfirm(
+    'Are you sure you want to delete this testimonial?',
+    { title: 'Delete Testimonial', confirmText: 'Delete Testimonial', type: 'warning' }
+  );
+  if (!confirmed) return;
   
   fetch(ROOT + '/admindashboard/deleteTestimonial', {
     method: 'POST',
@@ -612,12 +751,12 @@ function deleteTestimonial(id) {
       loadTestimonials();
       showToast('Testimonial deleted!', 'success');
     } else {
-      alert(data.message || 'Failed to delete');
+      toastError(data.message || 'Failed to delete testimonial');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('An error occurred');
+    toastError('An error occurred while deleting the testimonial');
   });
 }
 
@@ -675,7 +814,7 @@ function showToast(message, type = 'success') {
   const toast = document.createElement('div');
   toast.className = `admin-toast ${type}`;
   toast.innerHTML = `
-    <span class="material-symbols-rounded">${type === 'success' ? 'check_circle' : 'error'}</span>
+    <span class="bx ${type === 'success' ? 'bx-check-circle' : 'bx-error'}"></span>
     <span>${message}</span>
   `;
   document.body.appendChild(toast);
@@ -698,6 +837,7 @@ window.loadSwiperSlides = loadSwiperSlides;
 window.loadGalleryImages = loadGalleryImages;
 window.loadTestimonials = loadTestimonials;
 window.showAddSwiperModal = showAddSwiperModal;
+window.showEditSwiperModal = showEditSwiperModal;
 window.showAddGalleryModal = showAddGalleryModal;
 window.showAddTestimonialModal = showAddTestimonialModal;
 window.deleteSwiper = deleteSwiper;

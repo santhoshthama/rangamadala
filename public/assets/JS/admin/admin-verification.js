@@ -152,7 +152,7 @@ function renderDramaRequests(requests) {
             View
           </button>
           <button class="btn btn-approve" onclick="approveDramaRequest(${req.id}, '${escapeJsString(req.drama_name)}')">
-            <span class="bx bx-check-circle"></span>
+            <span class="bx bx-bell"></span>
             Approve
           </button>
           <button class="btn btn-reject" onclick="showRejectDramaModal(${req.id}, '${escapeJsString(req.drama_name)}')">
@@ -269,7 +269,7 @@ function showDramaRequestDetails(requestId) {
 
           <div class="input-box readonly">
             <input type="text" value="${escapeHtml(requestDate)}" readonly />
-            <i class="bx bx-schedule">schedule</i>
+            <i class="bx bx-calendar"></i>
             <label>Requested At</label>
           </div>
 
@@ -290,7 +290,7 @@ function showDramaRequestDetails(requestId) {
             Close
           </button>
           <button class="btn btn-approve" onclick="closeDramaRequestDetailsModal(); approveDramaRequest(${request.id}, '${escapeJsString(request.drama_name || 'this drama')}')">
-            <span class="bx bx-check-circle"></span>
+            <span class="bx bx-check"></span>
             Approve
           </button>
           <button class="btn btn-reject" onclick="closeDramaRequestDetailsModal(); showRejectDramaModal(${request.id}, '${escapeJsString(request.drama_name || 'this drama')}')">
@@ -469,7 +469,7 @@ function renderRegistrations(registrations) {
             View
           </button>
           <button class="btn btn-approve" onclick="approveUser(${user.id}, '${user.full_name}')">
-            <span class="bx bx-check-circle"></span>
+            <span class="bx bx-check"></span>
             Approve
           </button>
           <button class="btn btn-reject" onclick="showRejectModal(${user.id}, '${user.full_name}')">

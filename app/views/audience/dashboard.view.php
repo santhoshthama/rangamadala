@@ -102,6 +102,12 @@ foreach ($allShowings as $bookingItem) {
             <span class="nav-label">Browse Dramas</span>
           </a>
 
+          <!-- Show Requests -->
+          <a href="#" class="dashboard-nav-item" data-view="show-requests">
+            <i class='bx bx-send nav-icon'></i>
+            <span class="nav-label">Show Requests</span>
+          </a>
+
           <!-- My Showings -->
           <a href="#" class="dashboard-nav-item" data-view="my-showings">
             <i class='bx bx-calendar nav-icon'></i>
@@ -352,7 +358,7 @@ foreach ($allShowings as $bookingItem) {
                   <?php endforeach; ?>
                 </tbody>
               </table>
-              <div id="overviewShowingsNoResults" class="my-showings-no-results" style="display: none;">
+              <div id="overviewShowingsNoResults" class="my-showings-no-results">
                 No bookings match your filter.
               </div>
             <?php else: ?>
@@ -425,7 +431,7 @@ foreach ($allShowings as $bookingItem) {
                       ?>
                       <p class="drama-description"><?= htmlspecialchars($shortDescription !== '' ? $shortDescription : 'No public description available yet.') ?></p>
 
-                      <div class="drama-info" style="margin-bottom: 8px;">
+                      <div class="drama-info browse-drama-info">
                         <div class="info-item">
                           <i class='bx bx-user'></i>
                           <span>Producer: <?= htmlspecialchars($drama->owner_name ?? 'N/A') ?></span>
@@ -449,7 +455,7 @@ foreach ($allShowings as $bookingItem) {
                       </div>
 
                       <div class="drama-footer">
-                        <div class="form-hint" style="margin: 6px 0 0; width: 100%; color: #666;">
+                        <div class="form-hint browse-form-hint">
                           Showing prices: <?= !empty($drama->showing_prices) ? htmlspecialchars($drama->showing_prices) : 'Not specified' ?>
                         </div>
                         <a class="btn btn-secondary btn-book" href="<?= ROOT ?>/BrowseDramas/bookShowings/<?= $drama->id ?>" data-drama-id="<?= $drama->id ?>">
@@ -476,7 +482,7 @@ foreach ($allShowings as $bookingItem) {
         <!-- Payment History -->
         <div class="dashboard-view" id="classes">
           <div class="dashboard-table-container">
-            <div class="dashboard-table-header" style="margin-bottom: 18px;">
+            <div class="dashboard-table-header dashboard-table-header-spaced">
               <h3 class="dashboard-table-title">Drama Classes</h3>
             </div>
 
@@ -490,7 +496,7 @@ foreach ($allShowings as $bookingItem) {
             </div>
 
             <div class="classes-subtab-panel active" data-classes-panel="available" role="tabpanel">
-              <h4 style="margin-bottom: 12px; color: #4f3a12;">Available Classes</h4>
+              <h4 class="dashboard-subtitle">Available Classes</h4>
               <?php if (!empty($data['classes'])): ?>
                 <div class="dramas-grid">
                   <?php foreach ($data['classes'] as $class): ?>
@@ -546,9 +552,9 @@ foreach ($allShowings as $bookingItem) {
                           <?php endif; ?>
                         </div>
                         <div class="drama-footer">
-                          <form method="POST" action="<?= ROOT ?>/audiencedashboard/start_class_payment" class="class-enroll-payment-form" style="width: 100%;">
+                          <form method="POST" action="<?= ROOT ?>/audiencedashboard/start_class_payment" class="class-enroll-payment-form">
                             <input type="hidden" name="class_id" value="<?= (int)$class->id ?>">
-                            <button type="submit" class="btn btn-book" style="width: 100%; display: inline-flex; justify-content: center; align-items: center;">
+                            <button type="submit" class="btn btn-book class-enroll-payment-btn">
                               <i class='bx bx-book-reader'></i>
                               <span>Enroll Now</span>
                             </button>
@@ -570,7 +576,7 @@ foreach ($allShowings as $bookingItem) {
             </div>
 
             <div class="classes-subtab-panel" data-classes-panel="my" role="tabpanel">
-              <h4 style="margin-bottom: 12px; color: #4f3a12;">My Enrolled Classes</h4>
+              <h4 class="dashboard-subtitle">My Enrolled Classes</h4>
               <?php if (!empty($data['my_classes'])): ?>
                 <div class="dramas-grid">
                   <?php foreach ($data['my_classes'] as $class): ?>
@@ -641,10 +647,109 @@ foreach ($allShowings as $bookingItem) {
           </div>
         </div>
 
+        <!-- Show Requests -->
+        <div class="dashboard-view" id="show-requests">
+          <div class="dashboard-table-container">
+            <div class="dashboard-table-header dashboard-table-header-spaced">
+              <h3 class="dashboard-table-title">Show Requests</h3>
+            </div>
+
+            <?php if (!empty($data['show_requests'])): ?>
+              <table class="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>Drama</th>
+                    <th>Show Date</th>
+                    <th>Time</th>
+                    <th>Venue</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($data['show_requests'] as $request): ?>
+                    <?php
+                      $statusRaw = strtolower((string)($request->booking_status ?? 'pending'));
+                      $requestDetails = [];
+                      if (!empty($request->request_details_json)) {
+                        $decodedRequestDetails = json_decode((string)$request->request_details_json, true);
+                        if (is_array($decodedRequestDetails)) {
+                          $requestDetails = $decodedRequestDetails;
+                        }
+                      }
+
+                      $requestedShowDateRaw = trim((string)($requestDetails['show_date'] ?? ''));
+                      $requestedShowTime = trim((string)($requestDetails['show_time'] ?? ''));
+                      $requestedVenue = trim((string)($requestDetails['request_venue'] ?? ''));
+
+                      $displayShowDate = !empty($requestedShowDateRaw)
+                        ? date('M d, Y', strtotime($requestedShowDateRaw))
+                        : (!empty($request->event_date) ? date('M d, Y', strtotime($request->event_date)) : 'TBA');
+
+                      $displayShowTime = $requestedShowTime !== ''
+                        ? $requestedShowTime
+                        : (!empty($request->event_time) ? (string)$request->event_time : 'TBA');
+
+                      $displayVenue = $requestedVenue !== ''
+                        ? $requestedVenue
+                        : (string)($request->venue ?? 'TBA');
+
+                      if (in_array($statusRaw, ['accepted', 'confirmed', 'completed', 'watched', 'attended'], true)) {
+                        $statusClass = 'success';
+                      } elseif ($statusRaw === 'rejected') {
+                        $statusClass = 'danger';
+                      } else {
+                        $statusClass = 'warning';
+                      }
+                    ?>
+                    <tr>
+                      <td><?= htmlspecialchars($request->title ?? 'Drama') ?></td>
+                      <td><?= htmlspecialchars($displayShowDate) ?></td>
+                      <td><?= htmlspecialchars($displayShowTime) ?></td>
+                      <td><?= htmlspecialchars($displayVenue) ?></td>
+                      <td>
+                        <span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span>
+                        <?php if ($statusRaw === 'rejected' && !empty($request->rejection_reason)): ?>
+                          <div class="show-request-reason">
+                            Reason: <?= htmlspecialchars($request->rejection_reason) ?>
+                          </div>
+                        <?php endif; ?>
+                      </td>
+                      <td>
+                        <?php if ($statusRaw === 'pending'): ?>
+                          <div class="show-request-actions">
+                            <a class="btn btn-secondary" href="<?= ROOT ?>/BrowseDramas/bookShowings/<?= (int)$request->drama_id ?>?booking_id=<?= (int)$request->id ?>">
+                              Edit
+                            </a>
+                            <form method="POST" action="<?= ROOT ?>/audiencedashboard/delete_show_request" onsubmit="return confirm('Remove this show request?');" class="show-request-remove-form">
+                              <input type="hidden" name="booking_id" value="<?= (int)$request->id ?>">
+                              <button type="submit" class="btn btn-pay-now">Remove</button>
+                            </form>
+                          </div>
+                        <?php else: ?>
+                          <span class="hint request-locked-hint">Request locked after artist response.</span>
+                        <?php endif; ?>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            <?php else: ?>
+              <div class="empty-state">
+                <div class="empty-state-icon">
+                  <i class='bx bx-send'></i>
+                </div>
+                <h3 class="empty-state-title">No Show Requests Yet</h3>
+                <p class="empty-state-description">Send a show booking request to see it here with pending, accepted, or rejected status.</p>
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+
         <!-- Payment History -->
         <div class="dashboard-view" id="payments">
           <div class="dashboard-table-container">
-            <div class="dashboard-table-header" style="margin-bottom: 18px;">
+            <div class="dashboard-table-header dashboard-table-header-spaced">
               <h3 class="dashboard-table-title">Payment History</h3>
             </div>
 
@@ -658,7 +763,7 @@ foreach ($allShowings as $bookingItem) {
             </div>
 
             <div class="payments-subtab-panel active" data-payment-panel="showings" role="tabpanel">
-              <h4 style="margin-bottom: 12px; color: #4f3a12;">Showing Payments</h4>
+              <h4 class="dashboard-subtitle">Showing Payments</h4>
               <?php if (!empty($data['showing_payments'])): ?>
                 <table class="dashboard-table">
                   <thead>
@@ -690,7 +795,7 @@ foreach ($allShowings as $bookingItem) {
                         <td><?= htmlspecialchars($paidAtValue) ?></td>
                         <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span></td>
                         <td>
-                          <a href="<?= ROOT ?>/audiencedashboard/payment_receipt/showing/<?= (int)$payment->id ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;background:rgba(186,142,35,0.12);color:#8f6717;text-decoration:none;font-weight:600;font-size:13px;">
+                          <a href="<?= ROOT ?>/audiencedashboard/payment_receipt/showing/<?= (int)$payment->id ?>" target="_blank" rel="noopener noreferrer" class="receipt-link">
                             <i class="bx bx-download"></i>
                             Receipt
                           </a>
@@ -711,7 +816,7 @@ foreach ($allShowings as $bookingItem) {
             </div>
 
             <div class="payments-subtab-panel" data-payment-panel="classes" role="tabpanel">
-              <h4 style="margin-bottom: 12px; color: #4f3a12;">Class Payments</h4>
+              <h4 class="dashboard-subtitle">Class Payments</h4>
               <?php if (!empty($data['class_payments'])): ?>
                 <table class="dashboard-table">
                   <thead>
@@ -738,7 +843,7 @@ foreach ($allShowings as $bookingItem) {
                         <td><?= htmlspecialchars($paidAtValue) ?></td>
                         <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span></td>
                         <td>
-                          <a href="<?= ROOT ?>/audiencedashboard/payment_receipt/class/<?= (int)$payment->id ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;background:rgba(186,142,35,0.12);color:#8f6717;text-decoration:none;font-weight:600;font-size:13px;">
+                          <a href="<?= ROOT ?>/audiencedashboard/payment_receipt/class/<?= (int)$payment->id ?>" target="_blank" rel="noopener noreferrer" class="receipt-link">
                             <i class="bx bx-download"></i>
                             Receipt
                           </a>
@@ -853,7 +958,7 @@ foreach ($allShowings as $bookingItem) {
                       <td>
                         <span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars(ucfirst($statusRaw)) ?></span>
                         <?php if ($statusRaw === 'rejected' && !empty($booking->rejection_reason)): ?>
-                          <div style="margin-top: 6px; font-size: 12px; color: #a3202c;">
+                          <div class="my-showings-reason">
                             Reason: <?= htmlspecialchars($booking->rejection_reason) ?>
                           </div>
                         <?php endif; ?>
@@ -863,7 +968,7 @@ foreach ($allShowings as $bookingItem) {
                           <?= $statusRaw === 'accepted' ? 'Pay Now' : 'View' ?>
                         </a>
                         <?php if ($statusRaw === 'accepted' && ($displayShowDate !== 'TBA' || $displayShowTime !== 'TBA')): ?>
-                          <div style="margin-top: 6px; font-size: 12px; color: #6f5a2e;">
+                          <div class="my-showings-requested">
                             Requested: <?= htmlspecialchars($displayShowDate) ?><?= $displayShowTime !== 'TBA' ? ' | ' . htmlspecialchars($displayShowTime) : '' ?>
                           </div>
                         <?php endif; ?>
@@ -872,7 +977,7 @@ foreach ($allShowings as $bookingItem) {
                   <?php endforeach; ?>
                 </tbody>
               </table>
-              <div id="myShowingsNoResults" class="my-showings-no-results" style="display: none;">
+              <div id="myShowingsNoResults" class="my-showings-no-results">
                 No bookings match your filter.
               </div>
             <?php else: ?>
