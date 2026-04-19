@@ -647,8 +647,8 @@ body {
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
-    /* Hide radio buttons */
-    input[type="radio"] {
+    /* Hide only tab radios */
+    .tabs input[type="radio"] {
         display: none;
     }
 
@@ -662,8 +662,8 @@ body {
     overflow: hidden;
 }
 
-/* Hide radio inputs */
-input[type="radio"] {
+/* Hide only tab radios */
+.tabs input[type="radio"] {
     display: none;
 }
 
@@ -689,7 +689,7 @@ input[type="radio"] {
 }
 
 /* Active tab */
-input[type="radio"]:checked + .tab-label {
+.tabs input[type="radio"]:checked + .tab-label {
     background: linear-gradient(180deg, #f5efe1 0%, #efe6d2 100%);
     color: #b48218;
     border-bottom: 3px solid #b48218;

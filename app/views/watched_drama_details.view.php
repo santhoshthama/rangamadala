@@ -234,7 +234,33 @@
     }
 
     .review-editor .stars {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       margin-bottom: 12px;
+    }
+
+    .review-editor .star {
+      border: 0;
+      background: transparent;
+      color: #d8c7a0;
+      font-size: 30px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.18s ease, transform 0.18s ease;
+    }
+
+    .review-editor .star:hover,
+    .review-editor .star.selected {
+      color: #d4af37;
+      transform: translateY(-1px);
+    }
+
+    .review-editor .star:focus-visible {
+      outline: 2px solid rgba(186, 142, 35, 0.45);
+      outline-offset: 3px;
+      border-radius: 4px;
     }
 
     .review-editor textarea {

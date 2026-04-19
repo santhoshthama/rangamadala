@@ -7,56 +7,9 @@
   <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
-  <style>
-    body { margin: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #fffdf7 0%, #f8f0d8 100%); color: #3f2f12; }
-    .container { max-width: 1180px; margin: 24px auto 40px; padding: 0 20px; }
-    .top-links { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-    .btn { display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 700; text-decoration: none; cursor: pointer; }
-    .btn-muted { background: #fff; color: #7a6121; border: 1px solid #e1c37f; }
-    .btn-primary { background: linear-gradient(135deg, #ba8e23, #9b761d); color: #fff; }
-    .btn-gold { background: linear-gradient(135deg, #d4af37, #aa8c2c); color: #201a11; }
-    .card { background: linear-gradient(180deg, #fffefb 0%, #fff7e7 100%); border: 1px solid #efdcb0; border-radius: 18px; box-shadow: 0 10px 26px rgba(186, 142, 35, 0.12); overflow: hidden; }
-    .stack { display: grid; gap: 16px; }
-    .hero { display: grid; grid-template-columns: 280px 1fr; gap: 18px; padding: 18px; }
-    .poster { width: 100%; height: 340px; object-fit: cover; border-radius: 14px; border: 1px solid #e8cd8f; }
-    .title { margin: 0 0 8px; color: #3f2f12; font-size: 34px; line-height: 1.1; }
-    .meta { display: grid; gap: 8px; color: #6f5a2e; margin: 10px 0 14px; }
-    .meta i { color: #d4af37; margin-right: 8px; }
-    .about { color: #5f4b23; line-height: 1.7; margin: 0; }
-    .section { padding: 18px; }
-    .section h2 { margin: 0 0 12px; color: #5a4415; font-size: 22px; }
-    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-    .section-badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; background: rgba(186, 142, 35, 0.12); color: #7a6121; font-size: 13px; font-weight: 700; }
-    .summary-box { margin-top: 0; padding: 12px 14px; border-radius: 12px; background: #fff9ec; border: 1px solid #efdcb0; color: #5f4b23; }
-    .message { margin-bottom: 12px; padding: 12px 14px; border-radius: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-    .message i { font-size: 18px; }
-    .message.ok { border: 1px solid rgba(21, 128, 61, 0.35); border-left: 4px solid #15803d; background: rgba(21, 128, 61, 0.12); color: #166534; }
-    .message.err { border: 1px solid rgba(220, 53, 69, .45); background: rgba(220, 53, 69, .16); color: #ffe8e8; }
-    .booking-box { margin-top: 14px; padding: 14px; border-radius: 14px; background: #fff9ec; border: 1px solid #efdcb0; }
-    .booking-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-bottom: 10px; }
-    .booking-field { display: flex; flex-direction: column; gap: 5px; }
-    .booking-field label { font-size: 13px; color: #6f5a2e; font-weight: 600; }
-    .booking-field input, .booking-field textarea { border: 1px solid #e4cd95; border-radius: 8px; padding: 8px 10px; font-size: 14px; }
-    .time-range-preview { font-size: 12px; color: #8b6a21; margin-top: 2px; }
-    .hint { color: #7a6121; margin: 8px 0 0; font-size: 14px; }
-    .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-    .info-panel { padding: 14px; border-radius: 12px; background: #fffdf7; border: 1px solid #efdcb0; }
-    .info-panel h3 { margin: 0 0 10px; color: #5a4415; font-size: 17px; }
-    .info-list { display: grid; gap: 10px; color: #5f4b23; font-size: 14px; }
-    .info-row { display: flex; justify-content: space-between; gap: 14px; border-bottom: 1px dashed rgba(186, 142, 35, 0.18); padding-bottom: 8px; }
-    .info-row:last-child { border-bottom: 0; padding-bottom: 0; }
-    .info-row strong { color: #4a3a14; flex: 0 0 auto; }
-    .payment-note { margin: 10px 0 0; color: #7a6121; font-size: 14px; line-height: 1.6; }
-    .empty { color: #8a7442; }
-    @media (max-width: 860px) {
-      .hero { grid-template-columns: 1fr; }
-      .poster { height: 250px; }
-      .title { font-size: 24px; }
-      .detail-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+  <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/audience-drama-book-showings.css">
 </head>
-<body>
+<body class="audience-book-showings-page">
   <?php
     $successMessage = $_SESSION['success_message'] ?? '';
     $errorMessage = $_SESSION['error_message'] ?? '';
@@ -68,6 +21,8 @@
     $canMakePayment = !empty($data['can_make_payment']);
     $payhereConfig = $data['payhere_config'] ?? [];
     $audienceUser = $data['audience_user'] ?? null;
+    $editBookingId = (int)($_GET['booking_id'] ?? 0);
+    $editMode = $editBookingId > 0 && $bookingStatus === 'pending';
     $requestDetails = [];
     if (!empty($bookingRequest->request_details_json)) {
       $decodedRequestDetails = json_decode((string)$bookingRequest->request_details_json, true);
@@ -112,9 +67,16 @@
     $audienceNameParts = preg_split('/\s+/', $audienceFullName, 2);
     $audienceFirstName = $audienceNameParts[0] ?? 'Audience';
     $audienceLastName = $audienceNameParts[1] ?? 'User';
+    $requestSenderNameValue = trim((string)($requestDetails['request_sender_name'] ?? $audienceFullName));
+    $requestContactPhoneValue = trim((string)($requestDetails['request_contact_phone'] ?? ($audienceUser->phone ?? '')));
+    $requestContactEmailValue = trim((string)($requestDetails['request_contact_email'] ?? ($audienceUser->email ?? '')));
+    $requestVenueValue = trim((string)($requestDetails['request_venue'] ?? ''));
+    $showDateValue = trim((string)($requestDetails['show_date'] ?? ''));
+    $presentCountValue = (int)($requestDetails['present_count'] ?? 0);
+    $requestNotesValue = trim((string)($requestDetails['request_notes'] ?? ''));
   ?>
 
-  <div class="container">
+  <div class="container <?= $editMode ? 'edit-mode' : '' ?>">
     <div class="top-links">
       <a class="btn btn-muted" href="<?= ROOT ?>/Audiencedashboard"><i class='bx bx-arrow-back'></i> Back to Dashboard</a>
     </div>
@@ -128,107 +90,115 @@
 
     <?php if (!empty($d)): ?>
       <div class="stack">
-        <div class="card hero section">
-          <div>
-            <?php if (!empty($d->image)): ?>
-              <img class="poster" src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($d->image) ?>" alt="<?= htmlspecialchars($d->title) ?>">
-            <?php else: ?>
-              <div class="poster" style="display:flex;align-items:center;justify-content:center;background:#242424;color:#9d9276;">
-                <i class='bx bx-movie-play' style="font-size:72px;"></i>
+        <?php if (!$editMode): ?>
+          <div class="card hero section">
+            <div>
+              <?php if (!empty($d->image)): ?>
+                <img class="poster" src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($d->image) ?>" alt="<?= htmlspecialchars($d->title) ?>">
+              <?php else: ?>
+                <div class="poster-placeholder">
+                  <i class='bx bx-movie-play'></i>
+                </div>
+              <?php endif; ?>
+            </div>
+            <div>
+              <div class="section-head">
+                <h2 class="description-title">Drama Description</h2>
+                <span class="section-badge"><i class='bx bx-info-circle'></i> Book Showings</span>
               </div>
-            <?php endif; ?>
-          </div>
-          <div>
-            <div class="section-head">
-              <h2 style="margin:0; font-size:22px; color:#7a6121;">Drama Description</h2>
-              <span class="section-badge"><i class='bx bx-info-circle'></i> Book Showings</span>
+              <h1 class="title"><?= htmlspecialchars($d->title) ?></h1>
+              <div class="meta">
+                <div><i class='bx bx-user'></i>Producer: <?= htmlspecialchars($d->owner_name ?? 'N/A') ?></div>
+                <div><i class='bx bx-category'></i>Category: <?= htmlspecialchars($d->category_name ?? 'N/A') ?></div>
+                <div><i class='bx bx-globe'></i>Language: <?= htmlspecialchars($d->language ?? 'N/A') ?></div>
+                <div><i class='bx bx-time-five'></i>Duration: <?= !empty($d->duration_minutes) ? (int)$d->duration_minutes . ' min' : 'N/A' ?></div>
+                <div><i class='bx bx-list-ul'></i>Showing prices: <?= !empty($d->showing_prices) ? htmlspecialchars($d->showing_prices) : 'Not specified' ?></div>
+              </div>
+              <p class="about"><?= nl2br(htmlspecialchars($d->description ?? 'No description available.')) ?></p>
             </div>
-            <h1 class="title"><?= htmlspecialchars($d->title) ?></h1>
-            <div class="meta">
-              <div><i class='bx bx-user'></i>Producer: <?= htmlspecialchars($d->owner_name ?? 'N/A') ?></div>
-              <div><i class='bx bx-category'></i>Category: <?= htmlspecialchars($d->category_name ?? 'N/A') ?></div>
-              <div><i class='bx bx-globe'></i>Language: <?= htmlspecialchars($d->language ?? 'N/A') ?></div>
-              <div><i class='bx bx-time-five'></i>Duration: <?= !empty($d->duration_minutes) ? (int)$d->duration_minutes . ' min' : 'N/A' ?></div>
-              <div><i class='bx bx-list-ul'></i>Showing prices: <?= !empty($d->showing_prices) ? htmlspecialchars($d->showing_prices) : 'Not specified' ?></div>
-            </div>
-            <p class="about"><?= nl2br(htmlspecialchars($d->description ?? 'No description available.')) ?></p>
           </div>
-        </div>
+        <?php endif; ?>
 
         <div class="card section">
           <div class="section-head">
-            <h2>Request Drama</h2>
-            <span class="section-badge"><i class='bx bx-edit-alt'></i> Submit booking request</span>
+            <h2 class="section-title"><?= $editMode ? 'Edit Show Request' : 'Request Drama' ?></h2>
+            <span class="section-badge"><i class='bx bx-edit-alt'></i> <?= $editMode ? 'Update request details' : 'Submit booking request' ?></span>
           </div>
 
           <?php if ($bookingStatus === 'rejected'): ?>
-            <p class="hint" style="color:#8a1f1f; font-weight:600;">Your previous request was rejected.</p>
-            <p class="hint" style="color:#8a1f1f;">Reason: <?= htmlspecialchars($rejectionReason !== '' ? $rejectionReason : 'No reason provided by artist.') ?></p>
+            <p class="hint rejection-strong">Your previous request was rejected.</p>
+            <p class="hint rejection-reason">Reason: <?= htmlspecialchars($rejectionReason !== '' ? $rejectionReason : 'No reason provided by artist.') ?></p>
           <?php endif; ?>
 
           <div class="booking-box">
             <form method="POST" action="<?= ROOT ?>/BrowseDramas/bookShowings/<?= (int)$d->id ?>">
+              <?php if ($editBookingId > 0 && $bookingStatus === 'pending'): ?>
+                <input type="hidden" name="booking_id" value="<?= (int)$editBookingId ?>">
+              <?php endif; ?>
               <div class="booking-grid">
                 <div class="booking-field">
                   <label for="request_sender_name">Request Sender Name *</label>
-                  <input id="request_sender_name" type="text" name="request_sender_name" required value="">
+                  <input id="request_sender_name" type="text" name="request_sender_name" required <?= $editMode ? 'placeholder="' . htmlspecialchars($requestSenderNameValue) . '" value=""' : 'value="' . htmlspecialchars($requestSenderNameValue) . '"' ?>>
                 </div>
                 <div class="booking-field">
                   <label for="request_contact_phone">Contact Phone *</label>
-                  <input id="request_contact_phone" type="text" name="request_contact_phone" required placeholder="Example: 0771234567" value="">
+                  <input id="request_contact_phone" type="text" name="request_contact_phone" required <?= $editMode ? 'placeholder="' . htmlspecialchars($requestContactPhoneValue) . '" value=""' : 'placeholder="Example: 0771234567" value="' . htmlspecialchars($requestContactPhoneValue) . '"' ?>>
                 </div>
                 <div class="booking-field">
                   <label for="request_contact_email">Contact Email</label>
-                  <input id="request_contact_email" type="email" name="request_contact_email" placeholder="Example: name@email.com" value="">
+                  <input id="request_contact_email" type="email" name="request_contact_email" <?= $editMode ? 'placeholder="' . htmlspecialchars($requestContactEmailValue) . '" value=""' : 'placeholder="Example: name@email.com" value="' . htmlspecialchars($requestContactEmailValue) . '"' ?>>
                 </div>
                 <div class="booking-field">
                   <label for="request_venue">Expected Place of Show *</label>
-                  <input id="request_venue" type="text" name="request_venue" required value="">
+                  <input id="request_venue" type="text" name="request_venue" required <?= $editMode ? 'placeholder="' . htmlspecialchars($requestVenueValue) . '" value=""' : 'value="' . htmlspecialchars($requestVenueValue) . '"' ?>>
                 </div>
                 <div class="booking-field">
                   <label for="show_date">Show Date *</label>
-                  <input id="show_date" type="date" name="show_date" required value="">
+                  <input id="show_date" type="date" name="show_date" required value="<?= htmlspecialchars($showDateValue) ?>">
                 </div>
                 <div class="booking-field">
                   <label for="show_time">Show Time *</label>
-                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <input id="show_time_start" type="time" name="show_time_start" required value="">
-                    <input id="show_time_end" type="time" name="show_time_end" required value="">
+                  <div class="time-input-grid">
+                    <input id="show_time_start" type="time" name="show_time_start" required value="<?= htmlspecialchars($showTimeStartValue) ?>">
+                    <input id="show_time_end" type="time" name="show_time_end" required value="<?= htmlspecialchars($showTimeEndValue) ?>">
                   </div>
-                  <input id="show_time" type="hidden" name="show_time" value="">
-                  <div class="time-range-preview" id="show_time_preview">Select start and end time.</div>
+                  <input id="show_time" type="hidden" name="show_time" value="<?= htmlspecialchars($showTimeTextValue) ?>">
+                  <div class="time-range-preview" id="show_time_preview"><?= htmlspecialchars($showTimeTextValue !== '' ? $showTimeTextValue : 'Select start and end time.') ?></div>
                 </div>
                 <div class="booking-field">
                   <label for="present_count">Expected Present Count</label>
-                  <input id="present_count" type="number" name="present_count" min="0" value="">
+                  <input id="present_count" type="number" name="present_count" min="0" <?= $editMode ? 'placeholder="' . (int)$presentCountValue . '" value=""' : 'value="' . (int)$presentCountValue . '"' ?>>
                 </div>
-                <div class="booking-field" style="grid-column: 1 / -1;">
+                <div class="booking-field booking-field-full">
                   <label for="request_notes">Other Required Details</label>
-                  <textarea id="request_notes" name="request_notes" rows="3" placeholder="Mention any additional requirements for the show."></textarea>
+                  <textarea id="request_notes" name="request_notes" rows="3" <?= $editMode ? 'placeholder="' . htmlspecialchars($requestNotesValue !== '' ? $requestNotesValue : 'Mention any additional requirements for the show.') . '"' : 'placeholder="Mention any additional requirements for the show."' ?>><?= $editMode ? '' : htmlspecialchars($requestNotesValue) ?></textarea>
                 </div>
               </div>
-              <button class="btn btn-primary" type="submit"><i class='bx bx-send'></i> Send Request to Artist</button>
+              <button class="btn btn-primary" type="submit"><i class='bx bx-send'></i> <?= $editMode ? 'Update Request' : 'Send Request to Artist' ?></button>
             </form>
-            <p class="hint">After artist approval, card payment with PayHere will be enabled for accepted requests.</p>
+            <?php if (!$editMode): ?>
+              <p class="hint">After artist approval, card payment with PayHere will be enabled for accepted requests.</p>
+            <?php endif; ?>
 
-            <?php if ($bookingStatus === 'pending'): ?>
-              <p class="hint" style="font-weight:600;">Your request is pending artist approval.</p>
+            <?php if (!$editMode && $bookingStatus === 'pending'): ?>
+              <p class="hint pending-strong">Your request is pending artist approval.</p>
               <p class="hint">You can pay only after the artist accepts your request.</p>
-            <?php elseif ($bookingStatus === 'accepted'): ?>
-              <p class="hint" style="color:#176e2a; font-weight:600;">Your request has been accepted by the artist.</p>
+            <?php elseif (!$editMode && $bookingStatus === 'accepted'): ?>
+              <p class="hint accepted-strong">Your request has been accepted by the artist.</p>
               <p class="hint">Complete payment to confirm your showing.</p>
-            <?php elseif ($bookingStatus === 'confirmed'): ?>
-              <p class="hint" style="color:#176e2a; font-weight:600;">Payment completed. Your showing request is confirmed.</p>
-            <?php elseif ($bookingStatus !== 'none'): ?>
+            <?php elseif (!$editMode && $bookingStatus === 'confirmed'): ?>
+              <p class="hint accepted-strong">Payment completed. Your showing request is confirmed.</p>
+            <?php elseif (!$editMode && $bookingStatus !== 'none'): ?>
               <p class="hint">Current request status: <?= htmlspecialchars(ucfirst($bookingStatus)) ?></p>
             <?php endif; ?>
 
-            <?php if ($hasBooking && $bookingStatus !== 'none'): ?>
+            <?php if (!$editMode && $hasBooking && $bookingStatus !== 'none'): ?>
               <p class="hint">Latest request status: <?= htmlspecialchars(ucfirst($bookingStatus)) ?>.</p>
             <?php endif; ?>
           </div>
         </div>
 
+        <?php if (!$editMode): ?>
         <div class="card section">
           <div class="section-head">
             <h2>Payment</h2>
@@ -246,16 +216,17 @@
             <div class="info-panel">
               <h3>Action</h3>
               <?php if ($bookingStatus === 'accepted'): ?>
-                <button class="btn btn-primary" id="payNowBtn" type="button" style="margin-top: 8px; width: 100%; justify-content: center;"><i class='bx bx-credit-card'></i> Pay with PayHere</button>
+                  <button class="btn btn-primary pay-now-btn" id="payNowBtn" type="button"><i class='bx bx-credit-card'></i> Pay with PayHere</button>
                 <p class="payment-note">Complete payment to confirm your showing.</p>
               <?php elseif ($bookingStatus === 'confirmed'): ?>
-                <p class="payment-note" style="color:#176e2a; font-weight:600;">Payment completed. Your showing request is confirmed.</p>
+                  <p class="payment-note success">Payment completed. Your showing request is confirmed.</p>
               <?php else: ?>
                 <p class="payment-note">Payment becomes available after the artist accepts your request.</p>
               <?php endif; ?>
             </div>
           </div>
         </div>
+        <?php endif; ?>
       </div>
     <?php else: ?>
       <div class="card section">

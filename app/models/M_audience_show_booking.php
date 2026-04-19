@@ -153,6 +153,71 @@ class M_audience_show_booking
         }
     }
 
+    public function updateBookingRequest($bookingId, $audienceId, $dramaId, $ticketPrice, $requestDetails = [])
+    {
+        if (!$this->canUseTable() || !$this->hasWorkflowColumns()) {
+            return ['success' => false, 'message' => 'Booking table is not available.'];
+        }
+
+        try {
+            $this->db->query("UPDATE audience_show_bookings
+                              SET drama_id = :drama_id,
+                                  ticket_price = :ticket_price,
+                                  booking_status = 'pending',
+                                  request_details_json = :request_details_json,
+                                  rejection_reason = NULL,
+                                  payhere_order_id = NULL,
+                                  paid_at = NULL
+                              WHERE id = :booking_id
+                                AND audience_id = :audience_id
+                                AND LOWER(booking_status) = 'pending'");
+            $this->db->bind(':booking_id', (int)$bookingId);
+            $this->db->bind(':audience_id', (int)$audienceId);
+            $this->db->bind(':drama_id', (int)$dramaId);
+            $this->db->bind(':ticket_price', number_format((float)$ticketPrice, 2, '.', ''));
+            $this->db->bind(':request_details_json', json_encode($requestDetails));
+
+            if (!$this->db->execute() || $this->db->rowCount() < 1) {
+                return ['success' => false, 'message' => 'Unable to update your request right now.'];
+            }
+
+            return ['success' => true, 'message' => 'Request updated successfully.'];
+        } catch (Exception $e) {
+            error_log('Error in M_audience_show_booking::updateBookingRequest: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to update your request right now.'];
+        }
+    }
+
+    public function deleteBookingRequest($bookingId, $audienceId)
+    {
+        if (!$this->canUseTable()) {
+            return ['success' => false, 'message' => 'Booking table is not available.'];
+        }
+
+        try {
+            $this->db->query("DELETE FROM audience_show_bookings
+                              WHERE id = :booking_id
+                                AND audience_id = :audience_id
+                                AND LOWER(booking_status) = 'pending'") ;
+            $this->db->bind(':booking_id', (int)$bookingId);
+            $this->db->bind(':audience_id', (int)$audienceId);
+
+            if (!$this->db->execute() || $this->db->rowCount() < 1) {
+                return ['success' => false, 'message' => 'Unable to remove your request right now.'];
+            }
+
+            return ['success' => true, 'message' => 'Request removed successfully.'];
+        } catch (Exception $e) {
+            error_log('Error in M_audience_show_booking::deleteBookingRequest: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to remove your request right now.'];
+        }
+    }
+
+    public function getShowRequestsByAudience($audienceId)
+    {
+        return $this->getBookingsByAudience($audienceId);
+    }
+
     public function hasBooking($audienceId, $dramaId)
     {
         if (!$this->canUseTable()) {

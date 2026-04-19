@@ -26,13 +26,13 @@
       <h2>Audience Signup</h2>
       <?php $errors = $errors ?? []; $old = $old ?? []; ?>
       <?php if (!empty($errors)): ?>
-        <div class="error-box" style="margin-bottom: 14px; background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); padding: 10px 12px; border-radius: 10px; color: #b02a37; font-size: 14px;">
+        <div class="error-box audience-error-box">
           <?php foreach ($errors as $error): ?>
-            <p style="margin: 0 0 6px 0;"><?= htmlspecialchars($error) ?></p>
+            <p class="error-box-item"><?= htmlspecialchars($error) ?></p>
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
-      <div id="audienceClientErrorBox" class="error-box" style="display:none; margin-bottom: 14px; background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); padding: 10px 12px; border-radius: 10px; color: #b02a37; font-size: 14px;" aria-live="polite"></div>
+      <div id="audienceClientErrorBox" class="error-box audience-error-box audience-error-box-hidden" aria-live="polite"></div>
       <form id="audienceSignupForm" method="POST" enctype="multipart/form-data" action="<?= ROOT ?>/AudienceRegister">
      
         <div class="input-box">
@@ -74,7 +74,7 @@
       if (!errors.length) return;
       if (audienceClientErrorBox) {
         audienceClientErrorBox.innerHTML = errors.map(function (msg) {
-          return '<p style="margin: 0 0 6px 0;">' + msg + '</p>';
+          return '<p class="error-box-item">' + msg + '</p>';
         }).join('');
         audienceClientErrorBox.style.display = 'block';
         audienceClientErrorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });

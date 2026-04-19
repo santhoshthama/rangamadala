@@ -37,13 +37,13 @@
                         <div class="form-group">
                             <label class="form-label">Rate Type</label>
                             <select name="rate_type" class="form-input">
-                                <option value="hourly" <?php echo (isset($data['service']->rate_type) && $data['service']->rate_type === 'hourly') ? 'selected' : ''; ?>>Per Hour</option>
-                                <option value="daily" <?php echo (isset($data['service']->rate_type) && $data['service']->rate_type === 'daily') ? 'selected' : ''; ?>>Per Day</option>
+                                <option value="hourly" <?php echo (isset($data['details']->rate_type) && $data['details']->rate_type === 'hourly') ? 'selected' : ''; ?>>Per Hour</option>
+                                <option value="daily" <?php echo (isset($data['details']->rate_type) && $data['details']->rate_type === 'daily') ? 'selected' : ''; ?>>Per Day</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Rate (Rs)</label>
-                            <input type="number" name="rate" class="form-input" min="0" step="1" placeholder="0.00" value="<?php echo htmlspecialchars($data['service']->rate_per_hour ?? ''); ?>">
+                            <input type="number" name="rate" class="form-input" min="0" step="1" placeholder="0.00" value="<?php echo htmlspecialchars($data['details']->rate_per_hour ?? ''); ?>">
                         </div>
                     </div>
 
@@ -55,6 +55,23 @@
                     <?php 
                     $serviceName = strtolower(trim($data['service']->service_type ?? ''));
                     $details = $data['details'] ?? null;
+                    $parseMultiValue = static function ($raw) {
+                        if (is_array($raw)) {
+                            return array_values(array_filter(array_map('trim', $raw), static fn($v) => $v !== ''));
+                        }
+
+                        $raw = trim((string)$raw);
+                        if ($raw === '') {
+                            return [];
+                        }
+
+                        $decoded = json_decode($raw, true);
+                        if (is_array($decoded)) {
+                            return array_values(array_filter(array_map('trim', $decoded), static fn($v) => $v !== ''));
+                        }
+
+                        return array_values(array_filter(array_map('trim', explode(',', $raw)), static fn($v) => $v !== ''));
+                    };
                     ?>
 
                     <!-- Service-Specific Fields -->
@@ -89,7 +106,7 @@
 
                     <div class="form-group">
                         <label class="form-label">Available Facilities</label>
-                        <?php $afArr = !empty($details->available_facilities) ? (json_decode($details->available_facilities, true) ?? []) : []; ?>
+                        <?php $afArr = $parseMultiValue($details->available_facilities ?? ''); ?>
                         <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
                             <label><input type="checkbox" name="available_facilities[]" value="Dressing rooms" <?php echo in_array('Dressing rooms', $afArr) ? 'checked' : ''; ?>> Dressing rooms</label>
                             <label><input type="checkbox" name="available_facilities[]" value="AC" <?php echo in_array('AC', $afArr) ? 'checked' : ''; ?>> AC</label>
@@ -101,7 +118,7 @@
 
                     <div class="form-group">
                         <label class="form-label">Technical Facilities</label>
-                        <?php $tfArr = !empty($details->technical_facilities) ? (json_decode($details->technical_facilities, true) ?? []) : []; ?>
+                        <?php $tfArr = $parseMultiValue($details->technical_facilities ?? ''); ?>
                         <div class="checkbox-group" style="display:flex; flex-wrap:wrap; gap:10px;">
                             <label><input type="checkbox" name="technical_facilities[]" value="Lighting system" <?php echo in_array('Lighting system', $tfArr) ? 'checked' : ''; ?>> Lighting system</label>
                             <label><input type="checkbox" name="technical_facilities[]" value="Sound system" <?php echo in_array('Sound system', $tfArr) ? 'checked' : ''; ?>> Sound system</label>
