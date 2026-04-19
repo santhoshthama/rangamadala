@@ -175,7 +175,7 @@ function showAddUserModal() {
                 <option value="audience">Audience</option>
                 <option value="service_provider">Service Provider</option>
               </select>
-              <i class="bx bx-badge">badge</i>
+              <i class="bx bx-badge"></i>
             </div>
             <div class="input-box">
               <input type="password" id="addUserPassword" placeholder="Password (min 6 characters)" required minlength="6" />
@@ -186,7 +186,7 @@ function showAddUserModal() {
               <i class="bx bx-lock-reset"></i>
             </div>
             <p class="form-note">
-              <span class="bx bx-info-circle"></span>
+              <span class="bx bx-check-shield"></span>
               Users added by admin are automatically verified and can log in immediately.
             </p>
           </form>
@@ -417,10 +417,12 @@ function submitEditUser() {
 }
 
 // Confirm and Remove User
-function confirmRemoveUser(userId, userName) {
-  if (!confirm(`Are you sure you want to remove "${userName}"?\n\nThis action cannot be undone.`)) {
-    return;
-  }
+async function confirmRemoveUser(userId, userName) {
+  const confirmed = await showConfirm(
+    `Are you sure you want to remove "${userName}"? This action cannot be undone.`,
+    { title: 'Remove User Account', confirmText: 'Yes, Remove', type: 'warning' }
+  );
+  if (!confirmed) return;
   
   // Submit to server
   fetch(ROOT + '/admindashboard/removeUser', {
@@ -435,15 +437,15 @@ function confirmRemoveUser(userId, userName) {
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert('User removed successfully!');
+      toastSuccess(data.message || 'User removed successfully!');
       loadAllUsers(); // Reload the list
     } else {
-      alert('Error: ' + (data.message || 'Failed to remove user'));
+      toastError(data.message || 'Failed to remove user');
     }
   })
   .catch(error => {
     console.error('Error:', error);
-    alert('An error occurred while removing the user');
+    toastError('An error occurred while removing the user');
   });
 }
 

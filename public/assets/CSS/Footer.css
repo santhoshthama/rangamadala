@@ -95,19 +95,7 @@ a {
 }
 
 /* Hover colors for social icons */
-.social-icons a:hover .fa-facebook {
-  color: #FFD700;
-}
-
-.social-icons a:hover .fa-instagram {
-  color: #FFD700;
-}
-
-.social-icons a:hover .fa-twitter {
-  color: #FFD700;
-}
-
-.social-icons a:hover .fa-youtube {
+.social-icons a:hover i {
   color: #FFD700;
 }
 

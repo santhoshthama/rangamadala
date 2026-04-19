@@ -116,6 +116,7 @@ function updatePageTitle(viewId) {
     overview: "Dashboard",
     browse: "Browse Dramas",
     "my-showings": "My Showings",
+    "show-requests": "Show Requests",
     "watched-dramas": "Watched Dramas",
     classes: "Classes",
     payments: "Payment History",

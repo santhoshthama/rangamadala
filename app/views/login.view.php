@@ -149,6 +149,21 @@
       color: #90EE90;
     }
 
+    .forgot-password-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #d4af37;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+
+    .forgot-password-link:hover {
+      color: #ffd966;
+    }
+
     @keyframes slideDown {
       from {
         opacity: 0;
@@ -421,7 +436,7 @@
 
     <div class="remember-frogot">
       <label><input type="checkbox">Remember me</label>
-      <a href="#">Forgot password?</a>
+      <a href="<?= ROOT ?>/ForgotPassword" class="forgot-password-link">Forgot password?</a>
     </div>
 
     <button type="submit" class="btn">Login</button>
