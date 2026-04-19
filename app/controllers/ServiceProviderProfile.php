@@ -570,7 +570,7 @@ class ServiceProviderProfile
                 $_POST['social_media_link'] ?? '',
                 $_POST['years_experience'],
                 $_POST['professional_summary'] ?? '',
-                $_POST['availability'] ?? 0,
+                (int)($_POST['availability'] ?? 0),
                 $_POST['availability_notes'] ?? ''
             );
             

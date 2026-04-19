@@ -387,6 +387,21 @@
             color: #92400e;
         }
 
+        .overdue-required-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            padding: 14px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            color: #7f1d1d;
+        }
+
+        .overdue-required-box strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .checkout-content {
@@ -414,6 +429,20 @@
                 SSL Encrypted
             </div>
         </div>
+
+        <?php if (!empty($forced_overdue)): ?>
+        <div class="overdue-required-box">
+            <strong>Overdue Final Payment Required</strong>
+            <div>
+                <?= htmlspecialchars($forced_overdue_message ?: 'Final payment due date has passed. Please complete this payment now to continue using Production Manager pages.') ?>
+            </div>
+            <?php if (!empty($provider_response['final_payment_due_date'])): ?>
+                <div style="margin-top:6px;">
+                    Due date: <strong><?= htmlspecialchars($provider_response['final_payment_due_date']) ?></strong>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
 
         <!-- Progress Steps -->
         <div class="progress-steps">
@@ -495,7 +524,7 @@
                     <div class="method-header">
                         <div class="method-info">
                             <div class="method-icon">
-                                <i class="bx bx-university" style="color: #6b7280;"></i>
+                                <i class="bx bx-building" style="color: #6b7280;"></i>
                             </div>
                             <div>
                                 <div class="method-name">Bank Transfer</div>
@@ -510,7 +539,7 @@
                     <div class="method-header">
                         <div class="method-info">
                             <div class="method-icon">
-                                <i class="bx bx-money-bill-wave" style="color: #16a34a;"></i>
+                                <i class="bx bx-money" style="color: #16a34a;"></i>
                             </div>
                             <div>
                                 <div class="method-name">Cash Payment</div>

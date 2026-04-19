@@ -75,10 +75,18 @@
     transition: all 0.2s ease;
 }
 
-.header--wrapper .user-menu.active .user-menu-dropdown {
+.header--wrapper details.user-menu[open] .user-menu-dropdown {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
+}
+
+.header--wrapper .user-menu-trigger {
+    list-style: none;
+}
+
+.header--wrapper .user-menu-trigger::-webkit-details-marker {
+    display: none;
 }
 
 .header--wrapper .user-menu-item {
@@ -147,9 +155,21 @@
     font-size: 18px;
 }
 
-.artist-stat-card .stat-card-icon.primary,
-.artist-stat-card .stat-card-icon.info,
-.artist-stat-card .stat-card-icon.success,
+.artist-stat-card .stat-card-icon.primary {
+    background: rgba(186, 142, 35, 0.14);
+    color: var(--brand);
+}
+
+.artist-stat-card .stat-card-icon.info {
+    background: rgba(186, 142, 35, 0.14);
+    color: var(--brand);
+}
+
+.artist-stat-card .stat-card-icon.success {
+    background: rgba(186, 142, 35, 0.14);
+    color: var(--brand);
+}
+
 .artist-stat-card .stat-card-icon.warning {
     background: rgba(186, 142, 35, 0.14);
     color: var(--brand);
@@ -557,33 +577,17 @@ body.showings-only .nav-tabs-bar {
     box-shadow: 0 4px 10px rgba(166, 125, 30, 0.2);
 }
 
-.artist-info-box--success {
+.artist-flash-success {
     background: #d4edda;
     color: #155724;
 }
 
-.artist-info-box--error {
+.artist-flash-error {
     background: #f8d7da;
     color: #721c24;
 }
 
-@media (max-width: 768px) {
-    #my-showings-tab .pending-showing-card .role-info-item,
-    #my-showings-tab .accepted-showing-card .role-info-item,
-    #my-showings-tab .rejected-showing-card .role-info-item {
-        grid-template-columns: 1fr;
-        align-items: start;
-        gap: 4px;
-    }
-
-    #my-showings-tab .pending-showing-card .role-info-value,
-    #my-showings-tab .accepted-showing-card .role-info-value,
-    #my-showings-tab .rejected-showing-card .role-info-value {
-        text-align: left;
-    }
-}
-
-.artist-flex-between-wrap {
+.artist-vacancies-layout {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -591,28 +595,28 @@ body.showings-only .nav-tabs-bar {
     gap: 20px;
 }
 
-.artist-flex-1 {
+.artist-vacancies-content {
     flex: 1;
 }
 
 .artist-vacancies-title {
-    margin: 0 0 10px 0;
+    margin: 0 0 10px;
     font-size: 24px;
     font-weight: 700;
 }
 
-.artist-vacancies-description {
+.artist-vacancies-copy {
     margin: 0;
     opacity: 0.95;
     font-size: 16px;
     line-height: 1.5;
 }
 
-.artist-font-semibold {
+.artist-btn-semibold {
     font-weight: 600;
 }
 
-.artist-profile-single-col {
+.artist-profile-single-column {
     grid-template-columns: 1fr;
 }
 
@@ -620,32 +624,29 @@ body.showings-only .nav-tabs-bar {
     margin-top: 16px;
 }
 
-.artist-flex-btn {
+.artist-fill-link {
     flex: 1;
-}
-
-.artist-text-center {
     text-align: center;
 }
 
-.artist-manager-header {
+#manager-tab .artist-header.artist-manager-header {
     background: linear-gradient(135deg, #b88920, #8a6718);
 }
 
-.artist-actor-header {
+#actor-tab .artist-header.artist-actor-header {
     background: linear-gradient(135deg, #d3a635, #b7881f);
     color: #2a1f08;
 }
 
-.artist-actor-name {
+#actor-tab .artist-name.artist-actor-name {
     color: #2a1f08;
 }
 
-.artist-brand-value {
+.artist-brand-text {
     color: var(--brand);
 }
 
-.artist-note {
+.artist-interview-intro {
     margin-bottom: 16px;
     color: #5a4b10;
 }
@@ -667,19 +668,27 @@ body.showings-only .nav-tabs-bar {
     margin-bottom: 10px;
 }
 
-.artist-card-highlight-left {
+.artist-interview-card {
     border-left: 4px solid #e0a800;
 }
 
-.artist-flex-between-start-wrap {
+.artist-flex-between-wrap-12 {
     display: flex;
     justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
 }
 
-.artist-heading-zero {
+.artist-m0 {
     margin: 0;
+}
+
+.artist-muted {
+    color: var(--muted);
+}
+
+.artist-normal-weight {
+    font-weight: 400;
 }
 
 .artist-muted-small {
@@ -687,48 +696,42 @@ body.showings-only .nav-tabs-bar {
     color: var(--muted);
 }
 
-.artist-muted-small-normal {
-    color: var(--muted);
-    font-weight: normal;
-}
-
-.artist-status-pill {
+.artist-status-confirmed {
+    background: rgba(40, 167, 69, 0.15);
+    color: #155724;
     text-transform: capitalize;
 }
 
-.artist-status-pill--confirmed {
-    background: rgba(40, 167, 69, 0.15);
-    color: #155724;
-}
-
-.artist-status-pill--declined {
+.artist-status-declined {
     background: rgba(220, 53, 69, 0.15);
     color: #721c24;
+    text-transform: capitalize;
 }
 
-.artist-status-pill--pending {
+.artist-status-pending {
     background: rgba(255, 193, 7, 0.2);
     color: #8a6d1a;
+    text-transform: capitalize;
 }
 
-.artist-role-info-item-mt12 {
+.artist-role-item-mt-12 {
     margin-top: 12px;
 }
 
-.artist-note-box {
+.artist-note-block {
     margin-top: 12px;
     padding: 12px;
     background: rgba(0, 0, 0, 0.04);
     border-radius: 6px;
 }
 
-.artist-note-text {
+.artist-note-copy {
     margin: 6px 0 0;
     color: #4a4a4a;
     white-space: pre-wrap;
 }
 
-.artist-form-stack-mt16 {
+.artist-interview-form {
     margin-top: 16px;
     display: flex;
     flex-direction: column;
@@ -740,18 +743,18 @@ body.showings-only .nav-tabs-bar {
     color: var(--muted);
 }
 
-.artist-flex-wrap-gap-12 {
+.artist-actions-wrap-12 {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
 }
 
-.artist-btn-flex-min-140 {
+.artist-btn-flex-min140 {
     flex: 1;
     min-width: 140px;
 }
 
-.artist-btn-flex-min-120 {
+.artist-btn-flex-min120 {
     flex: 1;
     min-width: 120px;
 }
@@ -774,7 +777,7 @@ body.showings-only .nav-tabs-bar {
     color: var(--ink);
 }
 
-.artist-note-highlight {
+.artist-note-panel {
     margin: 12px 0;
     padding: 12px;
     background: rgba(255, 255, 255, 0.65);
@@ -782,142 +785,48 @@ body.showings-only .nav-tabs-bar {
     border-left: 3px solid var(--brand);
 }
 
-.artist-note-highlight-title {
+.artist-note-title {
     color: var(--ink);
 }
 
-.artist-note-highlight-text {
+.artist-note-text {
     color: #555;
     margin-top: 6px;
     font-size: 14px;
 }
 
-.artist-flex-wrap-gap-10-mt16 {
+.artist-actions-wrap-10 {
     display: flex;
     gap: 10px;
     margin-top: 16px;
     flex-wrap: wrap;
 }
 
-.artist-form-flex-min-180 {
+.artist-form-flex-min180 {
     flex: 1;
     min-width: 180px;
 }
 
-.artist-btn-w-full {
+.artist-form-flex-min220-grid {
+    flex: 1;
+    min-width: 220px;
+    display: grid;
+    gap: 8px;
+}
+
+.artist-btn-full {
     width: 100%;
-}
-
-.artist-reject-form {
-    display: none;
-    margin-top: 12px;
-    gap: 8px;
-}
-
-.artist-flex-wrap-gap-8 {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.artist-nowrap {
-    white-space: nowrap;
 }
 
 .artist-no-results-mb18 {
     margin-bottom: 18px;
 }
 
-.artist-no-results-mb10 {
-    margin-bottom: 10px;
+.artist-text-center {
+    text-align: center;
 }
 
-.artist-card-section-mb24 {
-    margin-bottom: 24px;
-}
-
-.artist-section-title {
-    margin-bottom: 20px;
-    color: var(--ink);
-}
-
-.artist-section-count {
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 600;
-    margin-left: 8px;
-}
-
-.artist-card-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    margin-bottom: 16px;
-}
-
-.artist-card-title-brand {
-    color: var(--brand);
-    margin-bottom: 8px;
-}
-
-.artist-card-title-ink {
-    color: var(--ink);
-    margin-bottom: 8px;
-}
-
-.artist-message-box {
-    margin: 12px 0;
-    padding: 12px;
-    background: rgba(186, 142, 35, 0.08);
-    border-radius: 8px;
-    border-left: 3px solid var(--brand);
-}
-
-.artist-message-title {
-    color: var(--ink);
-}
-
-.artist-message-text {
-    color: #555;
-    margin-top: 6px;
-    font-size: 14px;
-}
-
-.artist-info-box-blue {
-    margin-top: 12px;
-    padding: 10px;
-    background: rgba(33, 150, 243, 0.08);
-    border-radius: 6px;
-}
-
-.artist-info-text-blue {
-    color: #1976d2;
-    font-size: 13px;
-    margin: 0;
-}
-
-.artist-flex-gap-10-mt16 {
-    display: flex;
-    gap: 10px;
-    margin-top: 16px;
-}
-
-.artist-form-flex-1 {
-    flex: 1;
-}
-
-.artist-description-box {
-    margin: 12px 0;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 8px;
-}
-
-.artist-description-title {
-    color: var(--ink);
-}
-
-.artist-rejection-box {
+.artist-rejection-block {
     margin-top: 12px;
     padding: 10px;
     background: rgba(239, 68, 68, 0.08);
@@ -932,4 +841,86 @@ body.showings-only .nav-tabs-bar {
 .artist-rejection-text {
     margin: 6px 0 0;
     color: #7f1d1d;
+}
+
+.artist-no-results-mb10 {
+    margin-bottom: 10px;
+}
+
+.artist-card-section-mb24 {
+    margin-bottom: 24px;
+}
+
+.artist-heading-ink-mb20 {
+    margin-bottom: 20px;
+    color: var(--ink);
+}
+
+.artist-count-label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.artist-flex-between-start-mb16 {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 16px;
+}
+
+.artist-brand-heading-mb8 {
+    color: var(--brand);
+    margin-bottom: 8px;
+}
+
+.artist-info-note {
+    margin-top: 12px;
+    padding: 10px;
+    background: rgba(33, 150, 243, 0.08);
+    border-radius: 6px;
+}
+
+.artist-info-note-copy {
+    color: #1976d2;
+    font-size: 13px;
+    margin: 0;
+}
+
+.artist-actions-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.artist-form-flex {
+    flex: 1;
+}
+
+.artist-description-panel {
+    margin: 12px 0;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+}
+
+.artist-accepted-empty-visible {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    #my-showings-tab .pending-showing-card .role-info-item,
+    #my-showings-tab .accepted-showing-card .role-info-item,
+    #my-showings-tab .rejected-showing-card .role-info-item {
+        grid-template-columns: 1fr;
+        align-items: start;
+        gap: 4px;
+    }
+
+    #my-showings-tab .pending-showing-card .role-info-value,
+    #my-showings-tab .accepted-showing-card .role-info-value,
+    #my-showings-tab .rejected-showing-card .role-info-value {
+        text-align: left;
+    }
 }

@@ -144,6 +144,20 @@ class Login
                     $_SESSION['success_message'] = "Welcome back, " . $user->full_name . "! Login successful.";
                 }
 
+                // If this artist acts as a Production Manager, force overdue final payments first.
+                if ($user->role === 'artist') {
+                    $serviceRequestModel = $this->getModel('M_service_request');
+                    if ($serviceRequestModel && method_exists($serviceRequestModel, 'getFirstOverdueFinalPaymentForManager')) {
+                        $overdue = $serviceRequestModel->getFirstOverdueFinalPaymentForManager((int)$user->id);
+                        if ($overdue) {
+                            $_SESSION['warning_message'] = 'A final payment due date has passed. Please complete the payment to continue.';
+                            $amount = number_format((float)$overdue['remaining_amount'], 2, '.', '');
+                            header('Location: ' . ROOT . '/Payment/checkout?request_id=' . (int)$overdue['request_id'] . '&amount=' . $amount . '&type=remaining&forced_overdue=1');
+                            exit;
+                        }
+                    }
+                }
+
                 // Redirect based on user role
                 if ($user->role === 'admin') {
                     header("Location: " . ROOT . "/Admindashboard");

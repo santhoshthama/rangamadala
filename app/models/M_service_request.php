@@ -264,6 +264,7 @@ class M_service_request
     {
         $this->db->query("
             SELECT sr.*, 
+                   COALESCE(ps.amount_paid, 0) as amount_paid,
                    p.id as payment_id,
                    p.payment_type,
                    p.amount as payment_amount,
@@ -279,6 +280,12 @@ class M_service_request
                        ELSE 'unpaid'
                    END as calculated_payment_status
             FROM service_requests sr
+                 LEFT JOIN (
+                  SELECT service_request_id,
+                      SUM(CASE WHEN payment_status IN ('completed', 'success') THEN amount ELSE 0 END) AS amount_paid
+                  FROM payments
+                  GROUP BY service_request_id
+                 ) ps ON sr.id = ps.service_request_id
             LEFT JOIN payments p ON sr.id = p.service_request_id 
                 AND p.payment_status != 'canceled'
                 AND p.id = (
@@ -296,7 +303,112 @@ class M_service_request
             ORDER BY sr.created_at DESC
         ");
         $this->db->bind(':drama_id', $drama_id);
-        return $this->db->resultSet();
+        $results = $this->db->resultSet();
+
+        // Merge the decoded service details into each row so manager views
+        // can access the same flattened fields as provider views.
+        foreach ($results as $result) {
+            if (!empty($result->service_details_json)) {
+                try {
+                    $details = json_decode((string)$result->service_details_json, true);
+                    if (is_array($details)) {
+                        foreach ($details as $key => $value) {
+                            $result->$key = $value;
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log('Error parsing service details JSON for drama service ' . ($result->id ?? 'unknown') . ': ' . $e->getMessage());
+                }
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Find the first overdue completed request that still has pending final payment
+     * for a Production Manager (artist account assigned as active manager).
+     */
+    public function getFirstOverdueFinalPaymentForManager(int $managerArtistId): ?array
+    {
+        $this->db->query("
+            SELECT
+                sr.id AS request_id,
+                sr.drama_id,
+                sr.service_details_json,
+                sr.budget,
+                COALESCE(SUM(
+                    CASE WHEN p.payment_status IN ('completed', 'success') THEN p.amount ELSE 0 END
+                ), 0) AS amount_paid
+            FROM drama_manager_assignments dma
+            INNER JOIN service_requests sr ON sr.drama_id = dma.drama_id
+            LEFT JOIN payments p
+                ON p.service_request_id = sr.id
+                AND p.payment_status NOT IN ('cancelled', 'canceled')
+            WHERE dma.manager_artist_id = :manager_id
+              AND dma.status = 'active'
+              AND sr.status = 'completed'
+            GROUP BY sr.id
+            ORDER BY sr.completed_at DESC, sr.id DESC
+        ");
+        $this->db->bind(':manager_id', $managerArtistId);
+        $rows = $this->db->resultSet();
+
+        if (!is_array($rows) || empty($rows)) {
+            return null;
+        }
+
+        $today = new DateTime('today');
+        $best = null;
+        $bestDue = null;
+
+        foreach ($rows as $row) {
+            $details = [];
+            if (!empty($row->service_details_json)) {
+                $decoded = json_decode((string)$row->service_details_json, true);
+                if (is_array($decoded)) {
+                    $details = $decoded;
+                }
+            }
+
+            $providerResponse = is_array($details['provider_response'] ?? null) ? $details['provider_response'] : [];
+            $dueRaw = trim((string)($providerResponse['final_payment_due_date'] ?? ''));
+            if ($dueRaw === '') {
+                continue;
+            }
+
+            $dueDate = DateTime::createFromFormat('Y-m-d', $dueRaw);
+            if (!$dueDate) {
+                continue;
+            }
+            $dueDate->setTime(0, 0, 0);
+
+            $quoteAmount = (float)($providerResponse['quote_amount'] ?? $row->budget ?? 0);
+            $amountPaid = (float)($row->amount_paid ?? 0);
+            $remainingAmount = max(0, $quoteAmount - $amountPaid);
+
+            if ($remainingAmount <= 0.0001) {
+                continue;
+            }
+
+            if ($dueDate >= $today) {
+                continue;
+            }
+
+            if ($best === null || $dueDate < $bestDue) {
+                $best = [
+                    'request_id' => (int)$row->request_id,
+                    'drama_id' => (int)$row->drama_id,
+                    'quote_amount' => $quoteAmount,
+                    'amount_paid' => $amountPaid,
+                    'remaining_amount' => $remainingAmount,
+                    'final_payment_due_date' => $dueRaw,
+                ];
+                $bestDue = $dueDate;
+            }
+        }
+
+        return $best;
     }
 
     /**

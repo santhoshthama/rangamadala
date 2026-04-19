@@ -122,11 +122,6 @@
                             <input type="tel" value="<?php echo htmlspecialchars($data['provider']->phone); ?>" readonly>
                         </div>
                     </form>
-                </div>
-
-                <!-- Additional Info Section -->
-                <div class="section">
-                    <h3>Additional Information</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div class="form-group">
                             <label>Location</label>
@@ -144,13 +139,9 @@
                             echo htmlspecialchars((string)$professionalSummary);
                         ?></textarea>
                     </div>
-                </div>
 
-                <!-- Availability Section -->
-                <div class="section">
-                    <h3>Availability</h3>
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                        <span>Currently Available for New Projects</span>
+                        <label style="margin: 0; min-width: 220px;">Currently Available for New Projects</label>
                         <div class="toggle <?php echo $data['provider']->availability ? 'active' : ''; ?>" style="pointer-events: none; width: 50px; height: 25px; background: <?php echo $data['provider']->availability ? '#10b981' : '#ccc'; ?>; border-radius: 25px; position: relative;">
                             <div style="content: ''; width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2.5px; left: <?php echo $data['provider']->availability ? '27.5px' : '2.5px'; ?>; transition: 0.3s;"></div>
                         </div>
