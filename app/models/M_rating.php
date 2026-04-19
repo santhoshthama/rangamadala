@@ -204,6 +204,29 @@ class M_rating
     }
 
     /**
+     * Get a user's rating by rating ID and user ID
+     */
+    public function getUserRatingById($rating_id, $user_id)
+    {
+        if (!$this->canUseTable()) {
+            return null;
+        }
+
+        try {
+            $this->db->query("SELECT * FROM {$this->table} WHERE id = :id AND user_id = :user_id LIMIT 1");
+            $this->db->bind(':id', (int)$rating_id);
+            $this->db->bind(':user_id', (int)$user_id);
+            return $this->db->single();
+        } catch (Throwable $e) {
+            if ($this->isMissingRatingsTableError($e)) {
+                $this->tableReady = false;
+                return null;
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Check if a user has already rated a drama
      * @param int $drama_id The drama ID
      * @param int $user_id The user ID

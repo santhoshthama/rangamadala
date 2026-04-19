@@ -194,6 +194,72 @@
       color: #5f4b23;
     }
 
+    .review-editor {
+      margin-top: 10px;
+      padding: 16px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid rgba(186, 142, 35, 0.18);
+    }
+
+    .review-editor-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .review-editor-title {
+      margin: 0;
+      font-size: 18px;
+      color: #4a3a14;
+    }
+
+    .review-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-outline-danger {
+      background: #fff;
+      color: #b42318;
+      border: 1px solid rgba(180, 35, 24, 0.28);
+    }
+
+    .btn-outline-danger:hover {
+      background: rgba(180, 35, 24, 0.08);
+    }
+
+    .review-editor .stars {
+      margin-bottom: 12px;
+    }
+
+    .review-editor textarea {
+      width: 100%;
+      min-height: 120px;
+      border-radius: 10px;
+      border: 1px solid #e6d7b2;
+      background: #fffdfa;
+      color: #4a3a14;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .review-editor textarea:focus {
+      border-color: #ba8e23;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(186, 142, 35, 0.18);
+    }
+
+    .review-status {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #7a6121;
+    }
+
     .review-preview strong {
       color: #4a3a14;
     }
@@ -237,6 +303,7 @@
     $hasRated = !empty($data['has_rated']);
     $userRating = $data['user_rating'] ?? null;
     $ratings = $data['ratings'] ?? [];
+    $myRating = $userRating ?? null;
 
     $showDateRaw = trim((string)($requestDetails['show_date'] ?? ''));
     $showDateDisplay = $showDateRaw !== '' && strtotime($showDateRaw) !== false ? date('M d, Y', strtotime($showDateRaw)) : (!empty($drama->event_date) ? date('M d, Y', strtotime($drama->event_date)) : 'N/A');
@@ -347,6 +414,39 @@
             </div>
           </div>
         <?php endif; ?>
+
+        <div class="page-section">
+          <h2 class="section-title">My Comment</h2>
+          <?php if (!empty($myRating)): ?>
+            <div class="review-editor" data-rating-id="<?= (int)$myRating->id ?>" data-drama-id="<?= (int)$drama->id ?>">
+              <div class="review-editor-top">
+                <p class="review-editor-title">Edit your review for this watched drama</p>
+                <div class="review-actions">
+                  <button type="button" class="btn btn-secondary" id="saveMyReviewBtn"><i class='bx bx-save'></i> Save Changes</button>
+                  <button type="button" class="btn btn-outline-danger" id="deleteMyReviewBtn"><i class='bx bx-trash'></i> Delete Comment</button>
+                </div>
+              </div>
+              <div class="stars" id="myStarPicker" aria-label="Edit your rating">
+                <button class="star" data-value="1" type="button" aria-label="1 star">★</button>
+                <button class="star" data-value="2" type="button" aria-label="2 stars">★</button>
+                <button class="star" data-value="3" type="button" aria-label="3 stars">★</button>
+                <button class="star" data-value="4" type="button" aria-label="4 stars">★</button>
+                <button class="star" data-value="5" type="button" aria-label="5 stars">★</button>
+              </div>
+              <textarea id="myComment" maxlength="500" placeholder="Write your review"><?= htmlspecialchars($myRating->comment ?? '') ?></textarea>
+              <div class="row">
+                <span class="hint"><span id="myCharCount">0</span>/500 characters</span>
+                <span class="review-status" id="myReviewStatus">You can update or delete only your own review.</span>
+              </div>
+            </div>
+          <?php else: ?>
+            <div class="empty-state-inline">
+              <i class='bx bx-message-square-dots' style="font-size: 42px; display:block; margin-bottom: 10px; color:#ba8e23;"></i>
+              <h3 style="margin:0 0 8px; color:#4a3a14;">No comment yet</h3>
+              <p style="margin:0; color:#7a6121;">Use the review section above to add your comment after watching this drama.</p>
+            </div>
+          <?php endif; ?>
+        </div>
       </div>
     <?php else: ?>
       <div class="watched-card" style="padding: 28px; text-align: center;">
@@ -358,5 +458,136 @@
       </div>
     <?php endif; ?>
   </div>
+
+  <script>
+    const ROOT = '<?= ROOT ?>';
+    const myReviewEditor = document.querySelector('.review-editor');
+    const myStarPicker = document.getElementById('myStarPicker');
+    const myCommentEl = document.getElementById('myComment');
+    const myCharCount = document.getElementById('myCharCount');
+    const saveMyReviewBtn = document.getElementById('saveMyReviewBtn');
+    const deleteMyReviewBtn = document.getElementById('deleteMyReviewBtn');
+    const myReviewStatus = document.getElementById('myReviewStatus');
+
+    let mySelectedRating = <?= !empty($myRating->rating) ? (int)$myRating->rating : 0 ?>;
+    const myReviewId = myReviewEditor ? parseInt(myReviewEditor.dataset.ratingId || '0', 10) : 0;
+    const myStars = myStarPicker ? Array.from(myStarPicker.querySelectorAll('.star')) : [];
+
+    function renderMyStars() {
+      myStars.forEach((star, index) => {
+        if (index < mySelectedRating) {
+          star.classList.add('selected');
+        } else {
+          star.classList.remove('selected');
+        }
+      });
+    }
+
+    function setReviewStatus(message, isError = false) {
+      if (!myReviewStatus) {
+        return;
+      }
+
+      myReviewStatus.textContent = message;
+      myReviewStatus.style.color = isError ? '#b42318' : '#7a6121';
+    }
+
+    if (myCommentEl && myCharCount) {
+      myCharCount.textContent = myCommentEl.value.length;
+      myCommentEl.addEventListener('input', () => {
+        myCharCount.textContent = myCommentEl.value.length;
+      });
+    }
+
+    myStars.forEach((star) => {
+      star.addEventListener('click', () => {
+        mySelectedRating = parseInt(star.dataset.value, 10);
+        renderMyStars();
+      });
+    });
+
+    if (saveMyReviewBtn) {
+      saveMyReviewBtn.addEventListener('click', async () => {
+        if (!myReviewId) {
+          setReviewStatus('No review found to update.', true);
+          return;
+        }
+
+        if (mySelectedRating < 1 || mySelectedRating > 5) {
+          setReviewStatus('Please select a star rating before saving.', true);
+          return;
+        }
+
+        saveMyReviewBtn.disabled = true;
+        const previousText = saveMyReviewBtn.innerHTML;
+        saveMyReviewBtn.innerHTML = '<i class="bx bx-loader-alt"></i> Saving...';
+
+        try {
+          const response = await fetch(`${ROOT}/BrowseDramas/submitRating`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              drama_id: <?= !empty($drama) ? (int)$drama->id : 0 ?>,
+              rating: mySelectedRating,
+              comment: myCommentEl ? myCommentEl.value.trim() : ''
+            })
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            setReviewStatus('Your review was updated successfully.');
+            window.location.reload();
+          } else {
+            setReviewStatus(data.message || 'Unable to update your review.', true);
+          }
+        } catch (error) {
+          setReviewStatus('Network error while updating your review.', true);
+        } finally {
+          saveMyReviewBtn.disabled = false;
+          saveMyReviewBtn.innerHTML = previousText;
+        }
+      });
+    }
+
+    if (deleteMyReviewBtn) {
+      deleteMyReviewBtn.addEventListener('click', async () => {
+        if (!myReviewId) {
+          setReviewStatus('No review found to delete.', true);
+          return;
+        }
+
+        if (!confirm('Delete your comment and rating for this drama?')) {
+          return;
+        }
+
+        deleteMyReviewBtn.disabled = true;
+        const previousText = deleteMyReviewBtn.innerHTML;
+        deleteMyReviewBtn.innerHTML = '<i class="bx bx-loader-alt"></i> Deleting...';
+
+        try {
+          const response = await fetch(`${ROOT}/BrowseDramas/deleteRating`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rating_id: myReviewId })
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            setReviewStatus('Your review was deleted.');
+            window.location.reload();
+          } else {
+            setReviewStatus(data.message || 'Unable to delete your review.', true);
+          }
+        } catch (error) {
+          setReviewStatus('Network error while deleting your review.', true);
+        } finally {
+          deleteMyReviewBtn.disabled = false;
+          deleteMyReviewBtn.innerHTML = previousText;
+        }
+      });
+    }
+
+    renderMyStars();
+  </script>
 </body>
 </html>

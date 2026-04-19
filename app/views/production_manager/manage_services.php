@@ -8,59 +8,21 @@
     <link rel="stylesheet" href="/Rangamadala/public/assets/CSS/production_manager/manage_services.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
-    <?php $dramaId = isset($dramaId) ? (int)$dramaId : (int)($drama->id ?? 0); ?>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h2>🎭</h2>
-        </div>
-        <ul class="menu">
-            <li>
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-briefcase"></i>
-                    <span>Manage Services</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
-                    <i class="bx bx-chart-bar"></i>
-                    <span>Budget Management</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard/calendar">
-                    <i class="bx bx-calendar-week"></i>
-                    <span>Artist Calendar</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back to Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+<body class="director-dashboard-page">
+    <?php
+        $dramaId = isset($dramaId) ? (int)$dramaId : (int)($drama->id ?? 0);
+        $directorProfileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
+            ? $profileImageSrc
+            : (ROOT . '/uploads/profile_images/user_profile.png');
+        $directorRoleLabel = 'Production Manager';
+        $directorProfileUrl = ROOT . '/profile';
+        $directorLogoutUrl = ROOT . '/logout';
+    ?>
+    <?php $currentPage = 'manage_services'; require __DIR__ . '/_partials/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
-            <i class="bx bx-arrow-left"></i>
-            Back to Dashboard
-        </a>
+
 
         <?php 
             $serviceMissing = !empty($serviceMissing);
@@ -84,6 +46,15 @@
                     <i class="bx bx-plus-circle"></i>
                     Add Service
                 </button>
+                <?php
+                    $pmProfileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
+                        ? $profileImageSrc
+                        : (ROOT . '/uploads/profile_images/user_profile.png');
+                    $pmRoleLabel = 'Production Manager';
+                    $pmProfileUrl = ROOT . '/profile';
+                    $pmLogoutUrl = ROOT . '/logout';
+                    require __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
@@ -97,20 +68,40 @@
         <!-- Service Stats -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3><?= isset($totalCount) ? $totalCount : '0' ?></h3>
-                <p>Total Services Requested</p>
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Total Services Requested</div>
+                    <div class="stat-card-icon primary">
+                        <i class='bx bx-list-ul'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= isset($totalCount) ? $totalCount : '0' ?></div>
             </div>
-            <div class="stat-card stat-card--confirmed">
-                <h3><?= isset($confirmedCount) ? $confirmedCount : '0' ?></h3>
-                <p>Confirmed Services</p>
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Confirmed Services</div>
+                    <div class="stat-card-icon success">
+                        <i class='bx bx-badge-check'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= isset($confirmedCount) ? $confirmedCount : '0' ?></div>
             </div>
-            <div class="stat-card stat-card--pending">
-                <h3><?= isset($pendingCount) ? $pendingCount : '0' ?></h3>
-                <p>Pending Responses</p>
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Pending Responses</div>
+                    <div class="stat-card-icon warning">
+                        <i class='bx bx-time-five'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= isset($pendingCount) ? $pendingCount : '0' ?></div>
             </div>
-            <div class="stat-card stat-card--estimated">
-                <h3>-</h3>
-                <p>Estimated Service Costs</p>
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Estimated Service Costs</div>
+                    <div class="stat-card-icon info">
+                        <i class='bx bx-money-withdraw'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value">-</div>
             </div>
         </div>
 
@@ -942,3 +933,4 @@
         <div class="modal-dialog modal-dialog--details modal-content--details" id="pmDetailsContent">
         </div>
     </div>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>

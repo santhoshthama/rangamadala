@@ -8,64 +8,19 @@
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/production_manager/manage_budget.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
+<body class="director-dashboard-page">
     <?php $dramaId = isset($dramaId) ? (int)$dramaId : (int)($drama->id ?? 0); ?>
     <?php
         $serviceTypes = (isset($serviceTypes) && is_array($serviceTypes)) ? $serviceTypes : [];
         $serviceRequests = (isset($serviceRequests) && is_array($serviceRequests)) ? $serviceRequests : [];
+        $formatCurrency = static function ($amount) {
+            return 'Rs. ' . number_format((float)$amount, 2);
+        };
     ?>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h2>🎭</h2>
-        </div>
-        <ul class="menu">
-            <li>
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-briefcase"></i>
-                    <span>Manage Services</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $dramaId ?>">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Budget Management</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard/calendar">
-                    <i class="bx bx-calendar-week"></i>
-                    <span>Artist Calendar</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back to Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+    <?php $currentPage = 'manage_budget'; require __DIR__ . '/_partials/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="main--content">
-        <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $dramaId ?>" class="back-button">
-            <i class="fas fa-arrow-left"></i>
-            Back to Dashboard
-        </a>
-
         <!-- Header -->
         <div class="header--wrapper">
             <div class="header--title">
@@ -81,26 +36,56 @@
                     <i class="bx bx-download"></i>
                     Export Report
                 </button>
+                <?php
+                    $pmProfileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
+                        ? $profileImageSrc
+                        : (ROOT . '/assets/images/default-avatar.jpg');
+                    $pmRoleLabel = 'Production Manager';
+                    $pmProfileUrl = ROOT . '/profile';
+                    $pmLogoutUrl = ROOT . '/logout';
+                    require __DIR__ . '/_partials/user_menu.php';
+                ?>
             </div>
         </div>
 
         <!-- Budget Summary Cards -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>LKR <?= isset($totalBudget) ? number_format($totalBudget) : '0' ?></h3>
-                <p>Total Allocated</p>
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Total Allocated</div>
+                    <div class="stat-card-icon primary">
+                        <i class='bx bx-wallet-alt'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $formatCurrency(isset($totalBudget) ? $totalBudget : 0) ?></div>
             </div>
-            <div class="stat-card pm-budget-card-spent">
-                <h3>LKR <?= isset($totalSpent) ? number_format($totalSpent) : '0' ?> (<?= isset($percentSpent) ? $percentSpent : '0' ?>%)</h3>
-                <p>Total Spent</p>
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Total Spent</div>
+                    <div class="stat-card-icon info">
+                        <i class='bx bx-credit-card-front'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $formatCurrency(isset($totalSpent) ? $totalSpent : 0) ?></div>
+                <p>Spent: <?= isset($percentSpent) ? $percentSpent : '0' ?>%</p>
             </div>
-            <div class="stat-card pm-budget-card-remaining">
-                <h3>LKR <?= isset($remainingBudget) ? number_format($remainingBudget) : '0' ?></h3>
-                <p>Remaining Balance</p>
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Remaining Balance</div>
+                    <div class="stat-card-icon success">
+                        <i class='bx bx-wallet'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= $formatCurrency(isset($remainingBudget) ? $remainingBudget : 0) ?></div>
             </div>
-            <div class="stat-card pm-budget-card-total-items">
-                <h3><?= isset($budgetItems) && is_array($budgetItems) ? count($budgetItems) : '0' ?></h3>
-                <p>Total Budget Items</p>
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-card-title">Total Budget Items</div>
+                    <div class="stat-card-icon warning">
+                        <i class='bx bx-receipt'></i>
+                    </div>
+                </div>
+                <div class="stat-card-value"><?= isset($budgetItems) && is_array($budgetItems) ? count($budgetItems) : '0' ?></div>
             </div>
         </div>
 
@@ -136,7 +121,7 @@
                                             <strong><?= esc($categoryName) ?></strong><br>
                                             <small class="pm-budget-muted"><?= $percentage ?>%</small>
                                         </span>
-                                        <span class="pm-budget-category-value">LKR <?= number_format($categoryTotal) ?></span>
+                                        <span class="pm-budget-category-value"><?= $formatCurrency($categoryTotal) ?></span>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
@@ -185,8 +170,8 @@
                                     <td class="pm-budget-cell"><?= isset($item->item_name) ? esc($item->item_name) : 'N/A' ?></td>
                                     <td class="pm-budget-cell"><?= isset($item->category) ? ucfirst($item->category) : 'N/A' ?></td>
                                     <td class="pm-budget-cell"><?= !empty($item->service_request_id) ? ('Request #' . (int)$item->service_request_id) : 'Manual' ?></td>
-                                    <td class="pm-budget-cell pm-budget-cell--right">LKR <?= isset($item->allocated_amount) ? number_format($item->allocated_amount) : '0' ?></td>
-                                    <td class="pm-budget-cell pm-budget-cell--right">LKR <?= isset($item->spent_amount) ? number_format($item->spent_amount) : '0' ?></td>
+                                    <td class="pm-budget-cell pm-budget-cell--right"><?= $formatCurrency(isset($item->allocated_amount) ? $item->allocated_amount : 0) ?></td>
+                                    <td class="pm-budget-cell pm-budget-cell--right"><?= $formatCurrency(isset($item->spent_amount) ? $item->spent_amount : 0) ?></td>
                                     <td class="pm-budget-cell"><span class="status-badge <?= $statusClass ?>"><?= $statusText ?></span></td>
                                     <td class="pm-budget-cell pm-budget-cell--center">
                                         <button class="btn btn-secondary pm-budget-action-btn" onclick="editBudgetItem(<?= isset($item->id) ? $item->id : 'null' ?>)">
@@ -241,7 +226,7 @@
                             $statusVal = trim((string)($request->status ?? 'pending'));
                         ?>
                         <option value="<?= $rid ?>">
-                            #<?= $rid ?> - <?= esc($serviceType) ?> | <?= esc($providerName) ?> | LKR <?= number_format($budgetVal) ?> | <?= esc(ucfirst($statusVal)) ?>
+                            #<?= $rid ?> - <?= esc($serviceType) ?> | <?= esc($providerName) ?> | <?= $formatCurrency($budgetVal) ?> | <?= esc(ucfirst($statusVal)) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -260,12 +245,12 @@
             </div>
 
             <div class="form-group">
-                <label for="itemAmount">Allocated Amount (LKR)</label>
+                <label for="itemAmount">Allocated Amount (Rs.)</label>
                 <input type="number" id="itemAmount" placeholder="Enter amount" min="0" step="1000">
             </div>
 
             <div class="form-group">
-                <label for="spentAmount">Spent Amount (LKR)</label>
+                <label for="spentAmount">Spent Amount (Rs.)</label>
                 <input type="number" id="spentAmount" placeholder="Enter spent amount" min="0" step="1000" value="0">
             </div>
 
@@ -297,5 +282,6 @@
         window.PM_SERVICE_REQUESTS = <?= json_encode($serviceRequests) ?>;
     </script>
     <script src="<?= ROOT ?>/assets/JS/manage-budget.js"></script>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
 </body>
 </html>

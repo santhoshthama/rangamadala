@@ -615,78 +615,7 @@ button {
   }
 }
 /* Stats Cards */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--space-lg);
-  margin-bottom: var(--space-2xl);
-}
-.stat-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-lg);
-  transition: var(--transition);
-  box-shadow: var(--shadow-sm);
-}
-.stat-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-.stat-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-md);
-}
-.stat-card-title {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  font-weight: var(--weight-medium);
-}
-.stat-card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-xl);
-}
-.stat-card-icon.primary {
-  background: var(--brand-soft);
-  color: var(--brand);
-}
-.stat-card-icon.success {
-  background: var(--color-success-100);
-  color: var(--color-success);
-}
-.stat-card-icon.warning {
-  background: var(--color-warning-100);
-  color: var(--color-warning);
-}
-.stat-card-icon.info {
-  background: var(--color-info-100);
-  color: var(--color-info);
-}
-.stat-card-value {
-  font-size: var(--text-4xl);
-  font-weight: var(--weight-bold);
-  color: var(--color-text);
-  margin-bottom: var(--space-xs);
-}
-.stat-card-change {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: var(--text-sm);
-}
-.stat-card-change.positive {
-  color: var(--color-success);
-}
-.stat-card-change.negative {
-  color: var(--color-error);
-}
+
 /* Chart Cards */
 .chart-grid {
   display: grid;

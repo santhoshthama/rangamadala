@@ -14,51 +14,9 @@ $userDisplayInitial = strtoupper(substr($userDisplayName, 0, 1));
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/production_manager/browse_providers.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h2>🎭</h2>
-        </div>
-        <ul class="menu">
-            <li>
-                <a href="<?= ROOT ?>/production_manager/dashboard?drama_id=<?= $drama->id ?>">
-                    <i class="bx bx-home"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="<?= ROOT ?>/production_manager/manage_services?drama_id=<?= $drama->id ?>">
-                    <i class="bx bx-briefcase"></i>
-                    <span>Manage Services</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/production_manager/manage_budget?drama_id=<?= $drama->id ?>">
-                    <i class="bx bx-chart-bar"></i>
-                    <span>Budget Management</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard/calendar">
-                    <i class="bx bx-calendar-week"></i>
-                    <span>Artist Calendar</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/artistdashboard">
-                    <i class="bx bx-arrow-left"></i>
-                    <span>Back to Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="<?= ROOT ?>/logout">
-                    <i class="bx bx-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </li>
-        </ul>
-    </aside>
+<body class="director-dashboard-page">
+    <?php $dramaId = isset($drama->id) ? (int)$drama->id : 0; ?>
+    <?php $currentPage = 'manage_services'; require __DIR__ . '/_partials/sidebar.php'; ?>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -75,10 +33,15 @@ $userDisplayInitial = strtoupper(substr($userDisplayName, 0, 1));
                     </p>
                 </div>
             </div>
-            <div class="user-menu">
-                <span><?= esc($userDisplayName) ?></span>
-                <div class="avatar"><?= esc($userDisplayInitial) ?></div>
-            </div>
+            <?php
+                $pmProfileImageSrc = isset($profileImageSrc) && is_string($profileImageSrc) && $profileImageSrc !== ''
+                    ? $profileImageSrc
+                    : (ROOT . '/assets/images/default-avatar.jpg');
+                $pmRoleLabel = 'Production Manager';
+                $pmProfileUrl = ROOT . '/profile';
+                $pmLogoutUrl = ROOT . '/logout';
+                require __DIR__ . '/_partials/user_menu.php';
+            ?>
         </div>
 
         <!-- Service Info Banner -->
@@ -290,5 +253,6 @@ $userDisplayInitial = strtoupper(substr($userDisplayName, 0, 1));
             });
         }
     </script>
+    <script src="/Rangamadala/public/assets/JS/director-user-menu.js"></script>
 </body>
 </html>

@@ -11,8 +11,11 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
-            <h2>🎭</h2>
+            <a href="<?= ROOT ?>/director/dashboard?drama_id=<?= $directorSidebarDramaId ?>" class="logo-link">
+                <img src="/Rangamadala/public/assets/images/Rangamadala logo.png" alt="Rangamadala Logo" class="logo-image">
+            </a>
         </div>
+
         <ul class="menu">
             <li>
                 <a href="dashboard.php">

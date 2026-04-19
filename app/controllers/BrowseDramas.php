@@ -227,6 +227,58 @@ class BrowseDramas
         $this->renderView('watched_drama_details', $data);
     }
 
+    public function deleteRating()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+            exit;
+        }
+
+        if (($_SESSION['role'] ?? '') !== 'audience') {
+            echo json_encode(['success' => false, 'message' => 'Only audience users can delete reviews']);
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $ratingId = (int)($input['rating_id'] ?? 0);
+
+        if ($ratingId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid review selected']);
+            exit;
+        }
+
+        if (!$this->ratingModel) {
+            echo json_encode(['success' => false, 'message' => 'Rating service unavailable']);
+            exit;
+        }
+
+        $currentRating = $this->ratingModel->getUserRatingById($ratingId, (int)$_SESSION['user_id']);
+        if (!$currentRating) {
+            echo json_encode(['success' => false, 'message' => 'Review not found or not owned by you']);
+            exit;
+        }
+
+        $deleted = $this->ratingModel->deleteRating($ratingId, (int)$_SESSION['user_id']);
+        if ($deleted) {
+            $summary = $this->ratingModel->getDramaRatingSummary((int)$currentRating->drama_id);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Review deleted successfully',
+                'summary' => $summary
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to delete review']);
+        }
+        exit;
+    }
+
     /**
      * Submit or update a drama rating via AJAX
      * POST request with: drama_id, rating (1-5), comment (optional)

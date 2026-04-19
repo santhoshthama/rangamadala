@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browse Service Providers - <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_service_providers.css">
+    <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/Button.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="shortcut icon" href="<?= ROOT ?>/assets/images/Rangamadala logo.png" type="image/x-icon">
 </head>
@@ -12,6 +13,12 @@
     <?php include 'includes/header.php'; ?>
 
     <div class="container">
+        <div class="back-container">
+            <a href="<?= ROOT ?>/artistdashboard" class="back-link back-btn back-button" onclick="if (window.history.length > 1) { window.history.back(); return false; }">
+                <i class="bx bx-arrow-back"></i>
+                Back
+            </a>
+        </div>
         <div class="page-header">
             <h1>Browse Service Providers</h1>
             <p>Find the perfect professional for your drama production needs</p>
@@ -170,6 +177,5 @@
         </div>
     </div>
 
-    <?php include 'includes/footer.php'; ?>
 </body>
 </html>

@@ -596,6 +596,45 @@ img {
     font-size: 14px;
 }
 
+.director-dashboard-page .stat-card .stat-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.director-dashboard-page .stat-card .stat-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #7a6121;
+}
+
+.director-dashboard-page .stat-card .stat-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.director-dashboard-page .stat-card .stat-card-icon.primary,
+.director-dashboard-page .stat-card .stat-card-icon.info,
+.director-dashboard-page .stat-card .stat-card-icon.success,
+.director-dashboard-page .stat-card .stat-card-icon.warning {
+    background: rgba(186, 142, 35, 0.14);
+    color: var(--brand);
+}
+
+.director-dashboard-page .stat-card .stat-card-value {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+    color: #5a4415;
+}
+
 .status-badge {
     padding: 6px 12px;
     border-radius: 999px;
