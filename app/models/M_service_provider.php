@@ -84,31 +84,30 @@ class M_service_provider extends M_signup {
             $summaryExpr = 'NULL';
         }
 
-        // Location is part of the provider profile payload returned to the profile and detail views.
-        $this->db->query("SELECT
-                            sp.user_id,
-                            sp.professional_title,
-                            sp.location,
-                            sp.birthday,
-                            sp.social_media_link,
-                            sp.birthday,
-                            {$yearsExpr} AS years_experience,
-                            sp.availability,
-                            sp.availability_notes,
-                            sp.created_at,
-                            sp.updated_at,
-                            u.full_name,
-                            u.email,
-                            u.phone,
-                            u.w_no,
-                            u.nic_number,
-                            u.nic_photo,
-                            u.nic_photo_back,
-                            u.profile_image,
-                            {$summaryExpr} AS professional_summary
-                          FROM serviceprovider sp
-                          INNER JOIN users u ON u.id = sp.user_id
-                          WHERE sp.user_id = :user_id");
+                // ...existing code...
+                $this->db->query("SELECT
+                                                        sp.user_id,
+                                                        sp.professional_title,
+                                                        sp.birthday,
+                                                        sp.social_media_link,
+                                                        sp.birthday,
+                                                        {$yearsExpr} AS years_experience,
+                                                        sp.availability,
+                                                        sp.availability_notes,
+                                                        sp.created_at,
+                                                        sp.updated_at,
+                                                        u.full_name,
+                                                        u.email,
+                                                        u.phone,
+                                                        u.w_no,
+                                                        u.nic_number,
+                                                        u.nic_photo,
+                                                        u.nic_photo_back,
+                                                        u.profile_image,
+                                                        {$summaryExpr} AS professional_summary
+                                                    FROM serviceprovider sp
+                                                    INNER JOIN users u ON u.id = sp.user_id
+                                                    WHERE sp.user_id = :user_id");
         $this->db->bind(':user_id', $user_id);
         return $this->db->single();
     }
@@ -154,12 +153,12 @@ class M_service_provider extends M_signup {
 
         $hasYears = $this->columnExists('serviceprovider', 'years_experience');
 
-        $sql = "INSERT INTO serviceprovider (user_id, professional_title, location, social_media_link, availability, availability_notes";
+        $sql = "INSERT INTO serviceprovider (user_id, professional_title, social_media_link, availability, availability_notes";
         if ($hasYears) {
             $sql .= ", years_experience";
         }
         $sql .= ")
-                 SELECT u.id, '', '', '', 1, ''";
+             SELECT u.id, '', '', 1, ''";
         if ($hasYears) {
             $sql .= ", COALESCE(u.years_experience, 0)";
         }
@@ -261,14 +260,13 @@ class M_service_provider extends M_signup {
             $this->db->execute();
 
             // Build provider upsert SQL using optional years_experience column.
-            // Location stays in this table so browse/search and profile screens can read it directly.
-            $serviceProviderColumns = ['user_id', 'professional_title', 'location', 'social_media_link', 'birthday','availability', 'availability_notes'];
+            $serviceProviderColumns = ['user_id', 'professional_title', 'social_media_link', 'birthday','availability', 'availability_notes'];
             if ($serviceProviderHasYears) {
                 $serviceProviderColumns[] = 'years_experience';
             }
 
             $serviceProviderSql = "INSERT INTO serviceprovider (" . implode(', ', $serviceProviderColumns) . ")
-            VALUES (:user_id, :professional_title, :location, :social_media_link, :availability, :availability_notes";
+            VALUES (:user_id, :professional_title, :social_media_link, :birthday, :availability, :availability_notes";
 
             if ($serviceProviderHasYears) {
                 $serviceProviderSql .= ", :years_experience";
@@ -277,8 +275,8 @@ class M_service_provider extends M_signup {
             $serviceProviderSql .= ")
             ON DUPLICATE KEY UPDATE
                 professional_title = VALUES(professional_title),
-                location = VALUES(location),
                 social_media_link = VALUES(social_media_link),
+                birthday = VALUES(birthday),
                 availability = VALUES(availability),
                 availability_notes = VALUES(availability_notes)";
 
@@ -290,9 +288,8 @@ class M_service_provider extends M_signup {
 
             $this->db->bind(':user_id', $providerId);
             $this->db->bind(':professional_title', $provider['professional_title'] ?? null);
-            // Persist the provider location exactly as entered in the registration form.
-            $this->db->bind(':location', $provider['location'] ?? null);
             $this->db->bind(':social_media_link', $provider['website'] ?? null);
+            $this->db->bind(':birthday', $provider['birthday'] ?? null);
             $this->db->bind(':availability', isset($provider['availability']) ? (int)$provider['availability'] : 1);
             $this->db->bind(':availability_notes', $provider['availability_notes'] ?? null);
             if ($serviceProviderHasYears) {
@@ -755,7 +752,7 @@ class M_service_provider extends M_signup {
 
     
     public function updateBasicInfo($provider_id, $full_name, $professional_title, $email, $phone,
-                                    $location, $website, $birthday, $years_experience, $professional_summary, 
+                                    $website, $birthday, $years_experience, $professional_summary, 
                                     $availability, $availability_notes) {
         try {
             // Keep users + serviceprovider updates atomic.
@@ -789,7 +786,6 @@ class M_service_provider extends M_signup {
             // Update provider-only fields in serviceprovider table.
             $serviceProviderUpdateSql = "UPDATE serviceprovider SET
                              professional_title = :professional_title,
-                             location = :location,
                              social_media_link = :social_media_link,
                              birthday = :birthday,
                              availability = :availability,
@@ -805,9 +801,8 @@ class M_service_provider extends M_signup {
 
             $this->db->query($serviceProviderUpdateSql);
             $this->db->bind(':professional_title', $professional_title);
-            // Keep the profile location synced with the edit form.
-            $this->db->bind(':location', $location);
             $this->db->bind(':social_media_link', $website);
+            $this->db->bind(':birthday', $birthday);
             if ($serviceProviderHasYears) {
                 $this->db->bind(':years_experience', $years_experience);
             }
@@ -926,11 +921,10 @@ class M_service_provider extends M_signup {
         $rateExpr = !empty($ratePerHourParts) ? ('COALESCE(' . implode(', ', $ratePerHourParts) . ')') : 'NULL';
         $rateTypeExpr = !empty($rateTypeParts) ? ('COALESCE(' . implode(', ', $rateTypeParts) . ')') : "'hourly'";
 
-        // Location is exposed in browse results so users can filter providers by area.
+        // ...existing code...
         $sql = "SELECT DISTINCT
             sp.user_id,
             sp.professional_title,
-            sp.location,
             sp.social_media_link,
             sp.availability,
             sp.availability_notes,
@@ -1041,8 +1035,8 @@ class M_service_provider extends M_signup {
 
     
     public function getAllLocations() {
-        $this->db->query("SELECT DISTINCT location FROM serviceprovider WHERE location IS NOT NULL ORDER BY location ASC");
-        return $this->db->resultSet();
+        // Removed: location column no longer exists.
+        return [];
     }
 
     

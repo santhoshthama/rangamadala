@@ -128,7 +128,6 @@ class ServiceProviderRegister
             'professional_title' => trim($_POST['professional_title'] ?? ''),
             'email' => trim($_POST['email'] ?? ''),
             'phone' => trim($_POST['phone'] ?? ''),
-            'location' => trim($_POST['location'] ?? ''),
             'nic_number' => trim($_POST['nic_number'] ?? ''),
             'website' => trim($_POST['website'] ?? ''),
             'years_experience' => $_POST['years_experience'] ?? '',

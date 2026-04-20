@@ -11,8 +11,6 @@ class BrowseServiceProviders
         // Get filter parameters
         $filters = [
             'service_type' => $_GET['service_type'] ?? '',
-            // Location is the main geographic filter for provider discovery.
-            'location' => $_GET['location'] ?? '',
             'min_rate' => $_GET['min_rate'] ?? '',
             'max_rate' => $_GET['max_rate'] ?? '',
             'availability' => $_GET['availability'] ?? ''
