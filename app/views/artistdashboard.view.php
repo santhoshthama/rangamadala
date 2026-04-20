@@ -55,7 +55,7 @@ if(isset($data) && is_array($data)) {
         <div class="header--wrapper">
             <div class="header--title">
                 <span>Artist Dashboard</span>
-                <h2><?= isset($user->full_name) ? esc($user->full_name) : 'Artist' ?></h2>
+                <h2><?= isset($user->full_name) ? 'Hi, ' . esc($user->full_name) : 'Hi, Artist' ?></h2>
             </div>
             <div class="user--info">
                 <div class="role-badge">
