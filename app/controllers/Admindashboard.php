@@ -1393,13 +1393,17 @@ class Admindashboard {
             }
 
             if ($hasDramaId) {
-                $db->query("SELECT s.*, d.drama_name AS linked_drama_name
+                $db->query("SELECT s.*, d.drama_name AS linked_drama_name,
+                                   d.public_description AS linked_drama_description,
+                                   d.poster_image AS linked_drama_poster
                         FROM swiper_slides s
                         LEFT JOIN dramas d ON s.drama_id = d.id
                         ORDER BY s.display_order ASC");
                 $slides = $db->resultSet();
             } else {
-                $db->query("SELECT s.*, NULL AS linked_drama_name
+                $db->query("SELECT s.*, NULL AS linked_drama_name,
+                                   NULL AS linked_drama_description,
+                                   NULL AS linked_drama_poster
                         FROM swiper_slides s
                         ORDER BY s.display_order ASC");
                 $slides = $db->resultSet();
@@ -1671,6 +1675,171 @@ class Admindashboard {
             echo json_encode(['success' => false, 'message' => 'Failed to delete slide']);
         }
         exit;
+    }
+
+    /**
+     * Update an existing swiper slide and linked drama details.
+     */
+    public function updateSwiperSlide()
+    {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $slideId = isset($_POST['slide_id']) ? (int)$_POST['slide_id'] : 0;
+        $slideTitle = trim((string)($_POST['title'] ?? ''));
+        $dramaName = trim((string)($_POST['drama_name'] ?? ''));
+        $dramaDescription = trim((string)($_POST['drama_description'] ?? ''));
+
+        if ($slideId <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Slide ID is required']);
+            exit;
+        }
+
+        $db = new Database();
+
+        try {
+            $db->query("SHOW COLUMNS FROM swiper_slides");
+            $slideColumns = $db->resultSet();
+            $hasDramaId = $this->hasColumnFromList($slideColumns, 'drama_id');
+            $hasSlideDescription = $this->hasColumnFromList($slideColumns, 'description');
+            $hasSlideUpdatedAt = $this->hasColumnFromList($slideColumns, 'updated_at');
+
+            $db->query("SHOW COLUMNS FROM dramas");
+            $dramaColumns = $db->resultSet();
+            $hasDramaNameColumn = $this->hasColumnFromList($dramaColumns, 'drama_name');
+            $hasPublicDescription = $this->hasColumnFromList($dramaColumns, 'public_description');
+            $hasPosterImage = $this->hasColumnFromList($dramaColumns, 'poster_image');
+
+            if ($hasDramaId) {
+                $db->query("SELECT id, title, image_path, drama_id FROM swiper_slides WHERE id = :id LIMIT 1");
+            } else {
+                $db->query("SELECT id, title, image_path, NULL AS drama_id FROM swiper_slides WHERE id = :id LIMIT 1");
+            }
+            $db->bind(':id', $slideId);
+            $slide = $db->single();
+
+            if (!$slide) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Slide not found']);
+                exit;
+            }
+
+            $uploadedImagePath = null;
+            $uploadedPosterFile = null;
+
+            if (isset($_FILES['image']) && (int)($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                $extension = strtolower(pathinfo((string)$_FILES['image']['name'], PATHINFO_EXTENSION));
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                if (!in_array($extension, $allowed, true)) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Invalid image format. Allowed: jpg, jpeg, png, gif, webp']);
+                    exit;
+                }
+
+                $uploadDir = '../public/uploads/dramas/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+
+                $uploadedPosterFile = uniqid('poster_') . '_' . basename((string)$_FILES['image']['name']);
+                $uploadPath = $uploadDir . $uploadedPosterFile;
+                if (!move_uploaded_file((string)$_FILES['image']['tmp_name'], $uploadPath)) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Failed to upload poster image']);
+                    exit;
+                }
+
+                $uploadedImagePath = 'uploads/dramas/' . $uploadedPosterFile;
+            }
+
+            $linkedDramaId = (int)($slide->drama_id ?? 0);
+            $resolvedSlideTitle = $slideTitle !== '' ? $slideTitle : trim((string)($slide->title ?? ''));
+
+            if ($linkedDramaId > 0) {
+                $db->query("SELECT id, drama_name, public_description, poster_image
+                            FROM dramas
+                            WHERE id = :id
+                            LIMIT 1");
+                $db->bind(':id', $linkedDramaId);
+                $drama = $db->single();
+
+                if ($drama) {
+                    $dramaSetParts = [];
+
+                    if ($hasDramaNameColumn) {
+                        $dramaSetParts[] = 'drama_name = :drama_name';
+                    }
+                    if ($hasPublicDescription) {
+                        $dramaSetParts[] = 'public_description = :public_description';
+                    }
+                    if ($hasPosterImage && $uploadedPosterFile !== null) {
+                        $dramaSetParts[] = 'poster_image = :poster_image';
+                    }
+
+                    if (!empty($dramaSetParts)) {
+                        $db->query("UPDATE dramas SET " . implode(', ', $dramaSetParts) . " WHERE id = :id");
+                        if ($hasDramaNameColumn) {
+                            $db->bind(':drama_name', $dramaName !== '' ? $dramaName : (string)($drama->drama_name ?? ''));
+                        }
+                        if ($hasPublicDescription) {
+                            $db->bind(':public_description', $dramaDescription !== '' ? $dramaDescription : (string)($drama->public_description ?? ''));
+                        }
+                        if ($hasPosterImage && $uploadedPosterFile !== null) {
+                            $db->bind(':poster_image', $uploadedPosterFile);
+                        }
+                        $db->bind(':id', $linkedDramaId);
+                        $db->execute();
+                    }
+
+                    if ($resolvedSlideTitle === '') {
+                        $resolvedSlideTitle = $dramaName !== '' ? $dramaName : (string)($drama->drama_name ?? 'Untitled Slide');
+                    }
+                }
+            }
+
+            if ($resolvedSlideTitle === '') {
+                $resolvedSlideTitle = 'Untitled Slide';
+            }
+
+            $slideSetParts = ['title = :title'];
+            if ($uploadedImagePath !== null) {
+                $slideSetParts[] = 'image_path = :image_path';
+            }
+            if ($hasSlideDescription && $dramaDescription !== '') {
+                $slideSetParts[] = 'description = :description';
+            }
+            if ($hasSlideUpdatedAt) {
+                $slideSetParts[] = 'updated_at = CURRENT_TIMESTAMP';
+            }
+
+            $db->query("UPDATE swiper_slides SET " . implode(', ', $slideSetParts) . " WHERE id = :id");
+            $db->bind(':title', $resolvedSlideTitle);
+            if ($uploadedImagePath !== null) {
+                $db->bind(':image_path', $uploadedImagePath);
+            }
+            if ($hasSlideDescription && $dramaDescription !== '') {
+                $db->bind(':description', $dramaDescription);
+            }
+            $db->bind(':id', $slideId);
+            $ok = $db->execute();
+
+            header('Content-Type: application/json');
+            if ($ok) {
+                echo json_encode(['success' => true, 'message' => 'Drama slide updated successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to update drama slide']);
+            }
+            exit;
+        } catch (Throwable $e) {
+            error_log('Admindashboard::updateSwiperSlide error: ' . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Failed to update drama slide']);
+            exit;
+        }
     }
 
     /**

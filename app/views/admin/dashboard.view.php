@@ -51,7 +51,7 @@
           <div class="dashboard-nav-section">
             <a href="#" class="dashboard-nav-item active" data-view="overview">
               <span class="nav-icon bx bx-home"></span>
-              <span class="nav-label">Overview</span>
+              <span class="nav-label">Dashboard</span>
             </a>
             <a href="#" class="dashboard-nav-item" data-view="users">
               <span class="nav-icon bx bx-user"></span>

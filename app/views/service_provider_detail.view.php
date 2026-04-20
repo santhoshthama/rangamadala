@@ -14,7 +14,20 @@
 
     <div class="container">
         <!-- Back Button -->
-        <a href="<?= ROOT ?>/BrowseServiceProviders" class="back-link">
+        <?php
+            $browseBackParams = [];
+            if (!empty($data['drama_id'])) {
+                $browseBackParams['drama_id'] = (int)$data['drama_id'];
+            }
+            if (!empty($data['service_id'])) {
+                $browseBackParams['service_id'] = (int)$data['service_id'];
+            }
+            $browseBackUrl = ROOT . '/BrowseServiceProviders';
+            if (!empty($browseBackParams)) {
+                $browseBackUrl .= '?' . http_build_query($browseBackParams);
+            }
+        ?>
+        <a href="<?= $browseBackUrl ?>" class="back-link">
             <i class="bx bx-arrow-back"></i> Back to Browse
         </a>
 
@@ -141,6 +154,23 @@
                                     <?php 
                                     $details = $service->details ?? null;
                                     $serviceName = strtolower(trim($service->service_type ?? ''));
+                                    $parseMultiValue = static function ($raw) {
+                                        if (is_array($raw)) {
+                                            return array_values(array_filter(array_map('trim', $raw), static fn($v) => $v !== ''));
+                                        }
+
+                                        $raw = trim((string)$raw);
+                                        if ($raw === '') {
+                                            return [];
+                                        }
+
+                                        $decoded = json_decode($raw, true);
+                                        if (is_array($decoded)) {
+                                            return array_values(array_filter(array_map('trim', $decoded), static fn($v) => $v !== ''));
+                                        }
+
+                                        return array_values(array_filter(array_map('trim', explode(',', $raw)), static fn($v) => $v !== ''));
+                                    };
                                     ?>
                                     <div class="service-item">
                                         <div class="service-header">
@@ -188,7 +218,7 @@
                                                     <label>Available Facilities:</label>
                                                     <span>
                                                         <?php 
-                                                        $afArr = !empty($details->available_facilities) ? json_decode($details->available_facilities, true) : [];
+                                                        $afArr = $parseMultiValue($details->available_facilities ?? '');
                                                         echo htmlspecialchars(!empty($afArr) ? implode(', ', $afArr) : '-');
                                                         ?>
                                                     </span>
@@ -197,7 +227,7 @@
                                                     <label>Technical Facilities:</label>
                                                     <span>
                                                         <?php 
-                                                        $tfArr = !empty($details->technical_facilities) ? json_decode($details->technical_facilities, true) : [];
+                                                        $tfArr = $parseMultiValue($details->technical_facilities ?? '');
                                                         echo htmlspecialchars(!empty($tfArr) ? implode(', ', $tfArr) : '-');
                                                         ?>
                                                     </span>

@@ -9,22 +9,7 @@
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/browse_dramas.css">
   <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/drama_ratings.css">
-  <style>
-    .details-container{max-width:1100px;margin:20px auto;padding:20px}
-    .details-card{background:rgba(212,175,55,.03);border:2px solid rgba(212,175,55,.2);border-radius:16px;overflow:hidden}
-    .details-hero{display:grid;grid-template-columns: 1.4fr 1fr;gap:24px;padding:24px}
-    .details-img{width:100%;height:360px;object-fit:cover;border-radius:12px;border:2px solid rgba(212,175,55,.2)}
-    .details-title{font-size:36px;color:#d4af37;margin:0 0 10px;font-weight:800}
-    .details-meta{color:#c9b896;display:grid;gap:10px;margin:14px 0}
-    .details-meta i{color:#d4af37;margin-right:8px}
-    .details-desc{color:#f5f0e8;line-height:1.7;margin-top:10px}
-    .details-actions{display:flex;gap:12px;margin-top:16px}
-    .btn{padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:8px}
-    .btn-primary{background:linear-gradient(135deg,#d4af37,#aa8c2c);color:#1a1410}
-    .btn-outline{border:2px solid #d4af37;color:#d4af37}
-    .badge{display:inline-block;background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.3);color:#f5f0e8;padding:6px 10px;border-radius:999px;font-size:12px}
-    @media(max-width:900px){.details-hero{grid-template-columns:1fr}.details-img{height:260px}}
-  </style>
+  <link rel="stylesheet" href="<?= ROOT ?>/assets/CSS/audience-drama-details.css">
 </head>
 <body>
   <?php
@@ -42,12 +27,12 @@
 
   <div class="details-container">
     <?php if (!empty($successMessage)): ?>
-      <div style="margin-bottom:12px; padding:12px 14px; border-radius:10px; border:1px solid rgba(27, 148, 79, .45); background:rgba(27, 148, 79, .16); color:#e8fbe8;">
+      <div class="status-alert success">
         <?= htmlspecialchars($successMessage) ?>
       </div>
     <?php endif; ?>
     <?php if (!empty($errorMessage)): ?>
-      <div style="margin-bottom:12px; padding:12px 14px; border-radius:10px; border:1px solid rgba(220, 53, 69, .45); background:rgba(220, 53, 69, .16); color:#ffe8e8;">
+      <div class="status-alert error">
         <?= htmlspecialchars($errorMessage) ?>
       </div>
     <?php endif; ?>
@@ -59,7 +44,7 @@
             <?php if (!empty($d->image)): ?>
               <img class="details-img" src="<?= ROOT ?>/uploads/dramas/<?= htmlspecialchars($d->image) ?>" alt="<?= htmlspecialchars($d->title) ?>" onerror="this.onerror=null;this.replaceWith(document.createElement('div'))">
             <?php else: ?>
-              <div class="placeholder-image" style="height:360px;border-radius:12px"><i class='bx bx-movie-play'></i></div>
+              <div class="details-placeholder"><i class='bx bx-movie-play'></i></div>
             <?php endif; ?>
           </div>
           <div>
@@ -76,13 +61,13 @@
             
             <!-- Drama Rating Summary -->
             <?php if (!empty($data['rating_summary'])): ?>
-              <div class="rating-summary" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(212,175,55,.2)">
-                <div class="rating-stars" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                  <span style="font-size: 24px; color: #d4af37;">★</span>
-                  <span style="font-size: 18px; font-weight: bold; color: #d4af37;">
+              <div class="rating-summary">
+                <div class="rating-summary-stars">
+                  <span class="rating-summary-star">★</span>
+                  <span class="rating-summary-score">
                     <?= round($data['rating_summary']->average_rating, 1) ?>
                   </span>
-                  <span style="color: #c9b896; font-size: 14px;">
+                  <span class="rating-summary-count">
                     (<?= $data['rating_summary']->total_ratings ?> <?= $data['rating_summary']->total_ratings == 1 ? 'rating' : 'ratings' ?>)
                   </span>
                 </div>
@@ -99,14 +84,14 @@
               <?php endif; ?>
             </div>
             <?php if (isset($_GET['book']) && $_GET['book'] === '1'): ?>
-              <div style="margin-top:10px; padding:10px 12px; border:1px solid rgba(212,175,55,.35); border-radius:10px; color:#f5f0e8; background:rgba(212,175,55,.10);">
+              <div class="details-selected-note">
                 Showing selected. Confirm the schedule details below and proceed with booking steps.
               </div>
             <?php endif; ?>
           </div>
         </div>
-        <div style="padding:0 24px 24px">
-          <h3 style="color:#d4af37;margin:0 0 8px">About</h3>
+        <div class="details-about">
+          <h3 class="details-about-title">About</h3>
           <p class="details-desc"><?= nl2br(htmlspecialchars($d->description ?? 'No description available.')) ?></p>
         </div>
       </div>

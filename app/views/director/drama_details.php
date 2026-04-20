@@ -132,21 +132,7 @@ $profileImageSrc = directorResolveProfileImageSrc();
                 <?php endif; ?>
 
                 <form id="dramaDetailsForm">
-                    <div class="publish-status-card">
-                        <strong>
-                            <i class="bx bx-bullhorn"></i>
-                            Public Status: <?= $isPublished ? 'Published' : 'Not Published Yet' ?>
-                        </strong>
-                        <p class="form-hint" style="margin-top:8px;">
-                            <?= $isPublished
-                                ? 'This drama is visible to audience browsing. You can update details and publish again to refresh poster submission.'
-                                : 'Publish this drama with poster and public details to make it visible in audience browsing.' ?>
-                        </p>
-                        <a href="#publish-section" class="btn btn-primary" style="margin-top:10px; display:inline-flex; width:auto;">
-                            <i class="bx bx-upload"></i>
-                            <?= $isPublished ? 'Update Published Details' : 'Publish Drama' ?>
-                        </a>
-                    </div>
+                 
 
                     <!-- Basic Information -->
                     <h3 style="color: var(--brand); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
@@ -208,10 +194,7 @@ $profileImageSrc = directorResolveProfileImageSrc();
                             <span class="service-info-label">Last Updated</span>
                             <span class="service-info-value"><?= isset($drama->updated_at) ? esc(date('Y-m-d H:i', strtotime($drama->updated_at))) : 'N/A' ?></span>
                         </div>
-                        <div class="service-info-item">
-                            <span class="service-info-label">Registered By</span>
-                            <span class="service-info-value"><?= isset($drama->creator_name) ? esc($drama->creator_name) : 'N/A' ?></span>
-                        </div>
+                        
                     </div>
 
                 </form>
@@ -273,7 +256,7 @@ $profileImageSrc = directorResolveProfileImageSrc();
 
                     <button type="submit" class="btn btn-primary" style="margin-top: 8px; width: 100%;">
                         <i class="bx bx-paper-plane"></i>
-                        <?= $isPublished ? 'Update & Re-submit To Admin' : 'Publish Drama' ?>
+                        <?= $isPublished ? 'Update Details' : 'Publish Drama' ?>
                     </button>
                 </form>
             </div>

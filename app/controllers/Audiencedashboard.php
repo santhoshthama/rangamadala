@@ -41,6 +41,7 @@ class Audiencedashboard {
             'categories' => $this->dramaModel->getAllCategories(),
             'total_dramas' => 0,
             'my_showings' => [],
+            'show_requests' => [],
             'classes' => [],
             'my_classes' => [],
             'showing_payments' => [],
@@ -51,6 +52,7 @@ class Audiencedashboard {
         $data['total_dramas'] = count($data['dramas']);
         if ($this->bookingModel) {
             $data['my_showings'] = $this->bookingModel->getBookingsByAudience((int)$_SESSION['user_id']);
+            $data['show_requests'] = $this->bookingModel->getShowRequestsByAudience((int)$_SESSION['user_id']);
             $data['showing_payments'] = $this->bookingModel->getShowingPaymentsByAudience((int)$_SESSION['user_id']);
         }
 
@@ -169,6 +171,37 @@ class Audiencedashboard {
     {
         http_response_code(200);
         echo 'OK';
+        exit;
+    }
+
+    public function delete_show_request()
+    {
+        $sessionRole = $_SESSION['role'] ?? ($_SESSION['user_role'] ?? '');
+        if (!isset($_SESSION['user_id']) || $sessionRole !== 'audience') {
+            header('Location: ' . ROOT . '/Login');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . ROOT . '/Audiencedashboard#show-requests');
+            exit;
+        }
+
+        $bookingId = (int)($_POST['booking_id'] ?? 0);
+        if ($bookingId <= 0 || !$this->bookingModel) {
+            $_SESSION['error_message'] = 'Invalid request selected.';
+            header('Location: ' . ROOT . '/Audiencedashboard#show-requests');
+            exit;
+        }
+
+        $result = $this->bookingModel->deleteBookingRequest($bookingId, (int)$_SESSION['user_id']);
+        if (!empty($result['success'])) {
+            $_SESSION['success_message'] = $result['message'] ?? 'Request removed successfully.';
+        } else {
+            $_SESSION['error_message'] = $result['message'] ?? 'Unable to remove your request.';
+        }
+
+        header('Location: ' . ROOT . '/Audiencedashboard#show-requests');
         exit;
     }
 

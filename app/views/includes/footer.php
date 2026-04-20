@@ -34,10 +34,10 @@
 <div class="footer-content">
   <h3>Follow us</h3>
   <ul class="social-icons">
-    <li><a href="#"><i class="bx bx-facebook"></i></a></li>
-    <li><a href="#"><i class="bx bx-instagram"></i></a></li>
-    <li><a href="#"><i class="bx bx-twitter"></i></a></li>
-    <li><a href="#"><i class="bx bx-youtube"></i></a></li>
+    <li><a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="bx bxl-facebook"></i></a></li>
+    <li><a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="bx bxl-instagram"></i></a></li>
+    <li><a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><i class="bx bxl-twitter"></i></a></li>
+    <li><a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i class="bx bxl-youtube"></i></a></li>
   </ul>
 </div>
 

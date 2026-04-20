@@ -47,6 +47,7 @@ class Profile
             'bio' => $data['user']->bio ?? '',
             'location' => $data['user']->location ?? '',
             'website' => $data['user']->website ?? ''
+
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {

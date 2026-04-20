@@ -4,7 +4,7 @@ if (isset($data) && is_array($data)) {
 }
 
 $user = $user ?? null;
-$form = $form ?? ['full_name' => '', 'phone' => '', 'years_experience' => '', 'bio' => '', 'location' => '', 'website' => ''];
+$form = $form ?? ['full_name' => '', 'phone' => '', 'years_experience' => '', 'bio' => '', 'location' => '', 'website' => '', 'b_day' => ''];
 $errors = $errors ?? [];
 $success = $success ?? '';
 
@@ -145,7 +145,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
                         <input id="location" name="location" type="text" placeholder="e.g. Colombo, Sri Lanka" value="<?= esc($form['location'] ?? '') ?>">
                     </div>
 
-                    
+
 
                     <div class="form-group full">
                         <label for="bio">Bio / About Me</label>
@@ -156,6 +156,7 @@ $currentImageLabel = $user && !empty($user->profile_image)
                         <label for="website">Links (Social Media)</label>
                         <input id="website" name="website" type="text" placeholder="Add one or more links (Instagram, YouTube, portfolio, etc.)" value="<?= esc($form['website'] ?? '') ?>">
                     </div>
+
 
                     <div class="form-group full">
                         <label>Profile Image</label>
