@@ -61,10 +61,6 @@
                         
                         <div class="provider-quick-info">
                             <span class="info-item">
-                                <i class="bx bxs-map-marker-alt"></i>
-                                <?= htmlspecialchars($data['provider']->location) ?>
-                            </span>
-                            <span class="info-item">
                                 <i class="bx bxs-briefcase"></i>
                                 <?= (int)$data['provider']->years_experience ?> Years Experience
                             </span>
@@ -124,10 +120,7 @@
                                 </a>
                             </div>
                         </div>
-                        <div class="contact-item">
-                            <i class="bx bxs-map-marker-alt"></i>
-
-                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -239,7 +232,6 @@
                                                 </div>
                                                 <div class="detail-item" style="grid-column: 1 / -1;">
                                                     <label>Location / Address:</label>
-                                                    <!-- Service venue address is shown separately from the provider location. -->
                                                     <span><?= htmlspecialchars($details->location_address ?? '-') ?></span>
                                                 </div>
                                                 <div class="detail-item" style="grid-column: 1 / -1;">

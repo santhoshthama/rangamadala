@@ -158,7 +158,6 @@
                                     <p class="provider-title"><?= htmlspecialchars($provider->professional_title) ?></p>
                                     
                                     <div class="provider-meta">
-                                        <span><i class="bx bx-map"></i> <?= htmlspecialchars($provider->location) ?></span>
                                         <span><i class="bx bx-briefcase"></i> <?= (int)$provider->years_experience ?> years exp.</span>
                                     </div>
 

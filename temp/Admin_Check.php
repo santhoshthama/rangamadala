@@ -19,3 +19,7 @@
 <!-- in service provider registration page -->
                   <label class="form-label">Location</label>
                   <input type="text" name="location" class="form-input" placeholder="City, Country" value="<?= htmlspecialchars($formData['location'] ?? '') ?>">
+
+
+<! browse service provider profile page line 161 bafore years of experience!>
+<span><i class="bx bx-map"></i> <?= htmlspecialchars($provider->location) ?></span>
