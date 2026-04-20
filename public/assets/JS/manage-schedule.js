@@ -48,7 +48,7 @@ function initializeServiceData() {
     console.log('Loaded and converted ' + serviceData.length + ' schedule entries');
 }
 
-// Initialize calendar on page load
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeServiceData();
     renderCalendar();
@@ -59,12 +59,12 @@ function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     
-    // Update month/year display
+    
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                        'July', 'August', 'September', 'October', 'November', 'December'];
     document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
     
-    // Get first day of month and number of days
+    
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const daysInPrevMonth = new Date(year, month, 0).getDate();
@@ -72,20 +72,20 @@ function renderCalendar() {
     const calendarGrid = document.getElementById('calendarGrid');
     calendarGrid.innerHTML = '';
     
-    // Previous month dates
+   
     for (let i = firstDay - 1; i >= 0; i--) {
         const date = daysInPrevMonth - i;
         const dateElement = createDateElement(date, month - 1, year, true);
         calendarGrid.appendChild(dateElement);
     }
     
-    // Current month dates
+   
     for (let date = 1; date <= daysInMonth; date++) {
         const dateElement = createDateElement(date, month, year, false);
         calendarGrid.appendChild(dateElement);
     }
     
-    // Next month dates
+    
     const totalCells = calendarGrid.children.length;
     const remainingCells = 42 - totalCells;
     for (let date = 1; date <= remainingCells; date++) {
@@ -102,20 +102,20 @@ function createDateElement(date, month, year, isOtherMonth) {
         div.classList.add('other-month');
     }
     
-    // Check if today
+   
     const today = new Date();
     if (!isOtherMonth && date === today.getDate() && 
         month === today.getMonth() && year === today.getFullYear()) {
         div.classList.add('today');
     }
     
-    // Create date element
+   
     const dateNum = document.createElement('div');
     dateNum.className = 'date-number';
     dateNum.textContent = date;
     div.appendChild(dateNum);
     
-    // Get events for this date
+   
     const eventContainer = document.createElement('div');
     eventContainer.className = 'date-events';
     
@@ -210,7 +210,7 @@ function nextMonth() {
 }
 
 function switchView(view, triggerEl) {
-    // Update buttons
+    
     document.querySelectorAll('.view-toggle button').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -236,7 +236,7 @@ function switchView(view, triggerEl) {
 function filterByStatus(status, triggerEl) {
     currentFilter = status;
     
-    // Update filter buttons
+    
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -244,7 +244,7 @@ function filterByStatus(status, triggerEl) {
         triggerEl.classList.add('active');
     }
     
-    // Re-render both views
+    
     renderCalendar();
     renderTimeline();
 }
