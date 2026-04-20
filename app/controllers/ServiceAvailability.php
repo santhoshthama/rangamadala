@@ -91,18 +91,15 @@ class ServiceAvailability
         $this->view('service_availability', $data);
     }
 
-    /**
-     * Format date from database (Y-m-d) to JavaScript format (M/D/YYYY)
-     */
+    //Format date from database (Y-m-d) to JavaScript format (M/D/YYYY)
+    
     private function formatDateForJS($dbDate)
     {
         $timestamp = strtotime($dbDate);
         return date('n/j/Y', $timestamp);
     }
 
-    /**
-     * Add a new available date via AJAX
-     */
+    //Add a new available date via AJAX
     public function addDate()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id'])) {
@@ -138,9 +135,8 @@ class ServiceAvailability
         }
     }
 
-    /**
-     * Remove an available date via AJAX
-     */
+    //Remove an available date via AJAX
+
     public function removeDate()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id'])) {
@@ -166,9 +162,8 @@ class ServiceAvailability
         }
     }
 
-    /**
-     * Update an available date via AJAX
-     */
+    //Update an available date via AJAX
+
     public function updateDate()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['user_id'])) {
@@ -195,9 +190,7 @@ class ServiceAvailability
         }
     }
 
-    /**
-     * Format date from JavaScript format (M/D/YYYY) to database format (Y-m-d)
-     */
+    //Format date from JavaScript format (M/D/YYYY) to database format (Y-m-d)
     private function formatDateForDB($jsDate)
     {
         $timestamp = strtotime($jsDate);
