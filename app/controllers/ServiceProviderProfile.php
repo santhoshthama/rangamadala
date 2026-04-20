@@ -568,7 +568,6 @@ class ServiceProviderProfile
                 $_POST['professional_title'],
                 $_POST['email'],
                 $_POST['phone'],
-                $_POST['wphone'],
                 $_POST['location'],
                 $_POST['social_media_link'] ?? '',
                 $birthday !== '' ? $birthday : null,

@@ -39,6 +39,7 @@
                                 <input type="text" name="project_name" class="form-input" 
                                     value="<?php echo htmlspecialchars($data['project']->project_name); ?>" required>
                             </div>
+
                         </div>
 
                         <div class="form-group">

@@ -126,13 +126,8 @@
                     </form>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div class="form-group">
-                            <label>Whatsapp Number</label>
-                            <input type="tel" value="<?php echo htmlspecialchars($data['provider']->wphone ?? 'Not provided'); ?>" readonly>
-                        </div>
-                    
-                        <div class="form-group">
                             <label>Location</label>
-                            <input type="text" value="<?php echo htmlspecialchars($data['provider']->location); 'Not provided'?>" readonly>
+                            <input type="text" value="<?php echo htmlspecialchars($data['provider']->location ?? 'Not provided'); ?>" readonly>
                         </div>
                         <div class="form-group">
                             <label>Social Media Link</label>

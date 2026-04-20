@@ -99,7 +99,7 @@ class ServiceProviderRegister
             }
         }
 
-        // 🔹 Send errors to the view
+        // Send errors to the view
         $this->view('service_provider_register', ['errors' => $errors]);
     }
 

@@ -121,7 +121,6 @@ class M_service_provider extends M_signup {
                             u.full_name,
                             u.email,
                             u.phone,
-                            u.wphone,
                             u.nic_number,
                             u.nic_photo,
                             u.nic_photo_back,
@@ -268,7 +267,6 @@ class M_service_provider extends M_signup {
                                 full_name = :full_name,
                                 email = :email,
                                 phone = :phone,
-                                wphone = :phone,
                                 nic_number = :nic_number,
                                 nic_photo = :nic_photo,
                                 nic_photo_back = :nic_photo_back,
@@ -286,7 +284,6 @@ class M_service_provider extends M_signup {
             $this->db->bind(':full_name', $provider['full_name'] ?? null);
             $this->db->bind(':email', $provider['email'] ?? null);
             $this->db->bind(':phone', $provider['phone'] ?? null);
-            $this->db->bind(':wphone', $provider['wphone'] ?? null);
             $this->db->bind(':nic_number', $provider['nic_number'] ?? null);
             $this->db->bind(':nic_photo', $provider['nic_photo'] ?? ($provider['nic_photo_front'] ?? null));
             $this->db->bind(':nic_photo_back', $provider['nic_photo_back'] ?? null);
@@ -771,11 +768,9 @@ class M_service_provider extends M_signup {
         return $this->db->execute();
     }
 
-    // Project CRUD Methods
-    /**
-     * Inserts a provider project record.
-     * Used when adding portfolio/history projects in provider profile.
-     */
+   
+    //     Inserts a provider project record. */
+
     public function insertProject($provider_id, $year, $project_name, $services_provided, $description = '') {
         $this->db->query("INSERT INTO projects (provider_id, year, project_name, services_provided, description) 
                          VALUES (:provider_id, :year, :project_name, :services_provided, :description)");
@@ -831,7 +826,7 @@ class M_service_provider extends M_signup {
      * Updates user and serviceprovider basic profile fields in one transaction.
      * Used by ServiceProviderProfile::editBasicInfo submit handler.
      */
-    public function updateBasicInfo($provider_id, $full_name, $professional_title, $email, $phone, $wphone,
+    public function updateBasicInfo($provider_id, $full_name, $professional_title, $email, $phone,
                                     $location, $website, $birthday, $years_experience, $professional_summary, 
                                     $availability, $availability_notes) {
         try {
@@ -846,8 +841,7 @@ class M_service_provider extends M_signup {
             $usersUpdateSql = "UPDATE users SET
                              full_name = :full_name,
                              email = :email,
-                             phone = :phone,
-                             wphone = :wphone";
+                             phone = :phone";
             if ($usersHasBio) {
                 $usersUpdateSql .= ", bio = :bio";
             }
@@ -858,7 +852,6 @@ class M_service_provider extends M_signup {
             $this->db->bind(':full_name', $full_name);
             $this->db->bind(':email', $email);
             $this->db->bind(':phone', $phone);
-            $this->db->bind(':wphone', $wphone);
             if ($usersHasBio) {
                 $this->db->bind(':bio', $professional_summary);
             }
@@ -972,11 +965,7 @@ class M_service_provider extends M_signup {
         }
     }
 
-    // Update Profile Image (SEPARATE from business certificate)
-    /**
-     *Stores the profile image filename in users table.
-     * Used after successful upload in profile image update action.
-     */
+    // Update Profile Image 
     public function updateProfileImage($user_id, $filename) {
         $this->db->query("UPDATE users SET profile_image = :profile_image WHERE id = :user_id");
         $this->db->bind(':profile_image', $filename);

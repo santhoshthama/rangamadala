@@ -54,11 +54,6 @@
                                     value="<?php echo htmlspecialchars($data['provider']->phone); ?>" required>
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label">Whatsapp Number <span class="required">*</span></label>
-                                <input type="tel" name="wphone" class="form-input" 
-                                    value="<?php echo htmlspecialchars($data['provider']->wphone ?? ''); ?>" required>
-                            </div>
                         </div>
                         
                         <div class="form-row edit-basic-row">

@@ -39,6 +39,7 @@
                                 <input type="text" name="project_name" class="form-input" 
                                     placeholder="e.g., National Theatre Production" required>
                             </div>
+
                         </div>
 
                         <div class="form-group">
