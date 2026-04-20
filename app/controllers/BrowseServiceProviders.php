@@ -11,6 +11,7 @@ class BrowseServiceProviders
         // Get filter parameters
         $filters = [
             'service_type' => $_GET['service_type'] ?? '',
+            // Location is the main geographic filter for provider discovery.
             'location' => $_GET['location'] ?? '',
             'min_rate' => $_GET['min_rate'] ?? '',
             'max_rate' => $_GET['max_rate'] ?? '',
@@ -20,7 +21,7 @@ class BrowseServiceProviders
         // Get all service providers with their services
         $providers = $model->getAllProvidersWithServices($filters);
         
-        // Get unique locations for filter
+        // Get unique locations for the location dropdown filter.
         $locations = $model->getAllLocations();
 
         // If drama_id passed, fetch drama name so request form can pre-fill

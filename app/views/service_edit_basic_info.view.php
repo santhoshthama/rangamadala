@@ -58,11 +58,6 @@
                         
                         <div class="form-row edit-basic-row">
                             <div class="form-group">
-                                <label class="form-label">Location <span class="required">*</span></label>
-                                <input type="text" name="location" class="form-input" 
-                                    value="<?php echo htmlspecialchars($data['provider']->location); ?>" required>
-                            </div>
-                            <div class="form-group">
                                 <label class="form-label">Social Media Link</label>
                                 <input type="url" name="social_media_link" class="form-input" 
                                     value="<?php echo htmlspecialchars($data['provider']->social_media_link ?? ''); ?>">

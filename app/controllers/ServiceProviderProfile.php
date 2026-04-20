@@ -562,13 +562,13 @@ class ServiceProviderProfile
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $birthday = trim($_POST['birthday'] ?? '');
 
+            
             $result = $model->updateBasicInfo(
                 $provider_id,
                 $_POST['full_name'],
                 $_POST['professional_title'],
                 $_POST['email'],
                 $_POST['phone'],
-                $_POST['location'],
                 $_POST['social_media_link'] ?? '',
                 $birthday !== '' ? $birthday : null,
                 $_POST['years_experience'],

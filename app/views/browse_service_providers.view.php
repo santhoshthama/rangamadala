@@ -73,19 +73,6 @@
                             </select>
                         </div>
 
-                        <!-- Location Filter -->
-                        <div class="filter-group">
-                            <label><i class="bx bx-map"></i> Location</label>
-                            <select name="location" class="filter-input">
-                                <option value="">All Locations</option>
-                                <?php foreach ($data['locations'] as $loc): ?>
-                                    <option value="<?= htmlspecialchars($loc->location) ?>" <?= ($data['filters']['location'] ?? '') === $loc->location ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($loc->location) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
                         <!-- Rate Range Filter -->
                         <div class="filter-group">
                             <label><i class="bx bx-dollar"></i> Hourly Rate (Rs)</label>

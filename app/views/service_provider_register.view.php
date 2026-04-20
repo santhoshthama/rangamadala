@@ -120,10 +120,7 @@
               </div>
 
               <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">Location</label>
-                  <input type="text" name="location" class="form-input" placeholder="City, Country" value="<?= htmlspecialchars($formData['location'] ?? '') ?>">
-                </div>
+                
                 <div class="form-group">
                   <label class="form-label">Years of Experience <span class="required">*</span></label>
                   <input type="number" name="years_experience" class="form-input<?= $fieldHasError('years_experience') ? ' input-error' : '' ?>" placeholder="Enter your years of experience" value="<?= htmlspecialchars($formData['years_experience'] ?? '') ?>" min="0" step="1" required>

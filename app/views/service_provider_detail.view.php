@@ -126,10 +126,7 @@
                         </div>
                         <div class="contact-item">
                             <i class="bx bxs-map-marker-alt"></i>
-                            <div>
-                                <label>Location</label>
-                                <span><?= htmlspecialchars($data['provider']->location) ?></span>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -242,6 +239,7 @@
                                                 </div>
                                                 <div class="detail-item" style="grid-column: 1 / -1;">
                                                     <label>Location / Address:</label>
+                                                    <!-- Service venue address is shown separately from the provider location. -->
                                                     <span><?= htmlspecialchars($details->location_address ?? '-') ?></span>
                                                 </div>
                                                 <div class="detail-item" style="grid-column: 1 / -1;">
